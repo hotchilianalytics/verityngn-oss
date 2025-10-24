@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "./venv/bin/python",
+		"terminal.integrated.cwd": "${workspaceFolder}/..",
+		"files.watcherExclude": {
+			"**/outputs_debug/**": true,
+			"**/sherlock_analysis_*/**": true,
+			"**/tmp_*/**": true,
+			"**/__pycache__/**": true
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-python.python",
+			"ms-python.debugpy"
+		]
+	}
+}

@@ -1,0 +1,164 @@
+# VerityNgn .gitignore
+
+# === CRITICAL: Credentials & Secrets ===
+*.json.key
+*service*account*.json
+*credentials*.json
+*.pem
+*.key
+*.p12
+.env
+.env.local
+.env.*.local
+config/credentials/
+config/keys/
+secrets/
+**/*secret*.json
+**/*key*.json
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# === Virtual Environments ===
+venv/
+ENV/
+env/
+.venv
+.conda/
+*.conda
+conda-meta/
+
+# === IDEs ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.cursor/
+
+# === Jupyter Notebooks ===
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# === Testing ===
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# === Logs ===
+*.log
+logs/
+*.log.*
+log_*
+verityngn/logs/
+**/*_logs/
+*.log.json
+
+# === VerityNgn Specific ===
+# Downloaded videos and outputs
+downloads/
+outputs/
+outputs_debug/
+verityngn/downloads/
+verityngn/outputs/
+container_downloads/
+container_outputs/
+cloudrun_local_downloads/
+cloudrun_local_outputs/
+cloudrun_local_logs/
+tmp_downloads/
+tmp_outputs/
+tmp_logs/
+tmp_container/
+test_downloads/
+test_service_downloads/
+
+# Sherlock analysis outputs
+sherlock_analysis_*/
+sb_local_analysis_*/
+
+# Complete markers and intermediate files
+*.complete_markers
+*_report.json
+*_report.md
+*_report.html
+*_claim_*.json
+*_sources.md
+*_sources.html
+.complete_marker
+
+# LLM logging
+llm_logs/
+*.llm_log.json
+
+# Gallery submissions (not yet approved)
+gallery_submissions/
+
+# === Cloud & Container ===
+cloudbuild.yaml.local
+Dockerfile.local
+docker-compose.override.yml
+
+# === Misc ===
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.swn
+*.swo
+*.swp
+.cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Archive files (keep for documentation)
+!papers/versions/
+
+# Configuration files with secrets (keep examples)
+config.yaml
+config.yml
+!config.yaml.example
+!config.yml.example
+
+# Old internal docs with credentials
+CONFIG_SETUP.md
+QUICK_START_WITH_CREDENTIALS.md

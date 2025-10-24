@@ -1,0 +1,220 @@
+# VerityNgn Configuration File
+# Copy this file to config.yaml and customize for your setup
+
+# ============================================================================
+# AUTHENTICATION
+# ============================================================================
+# Choose ONE authentication method:
+#   - service_account: Use JSON key file (recommended for local development)
+#   - adc: Application Default Credentials (recommended for Cloud environments)
+#   - workload_identity: For Kubernetes deployments
+
+authentication:
+  method: adc  # Options: service_account, adc, workload_identity
+  
+  # Only required if method: service_account
+  service_account_path: null
+  # Example: service_account_path: ~/gcp-keys/verityngn-service-account.json
+  # Or with env var: service_account_path: ${GCP_KEY_PATH}
+
+# ============================================================================
+# GOOGLE CLOUD PLATFORM
+# ============================================================================
+
+gcp:
+  project_id: your-project-id  # Replace with your GCP project ID
+  location: us-central1         # GCP region for Vertex AI
+  bucket_name: your-bucket-name # GCS bucket for storing reports
+  
+  # Optional: Vertex AI endpoint override
+  # vertex_endpoint: null
+
+# ============================================================================
+# MODEL CONFIGURATION
+# ============================================================================
+
+models:
+  # Vertex AI / Gemini Models
+  vertex:
+    model_name: gemini-2.5-flash  # Options: gemini-2.5-flash, gemini-2.0-flash, gemini-pro
+    max_output_tokens: 65536      # Maximum tokens per response (65K for 2.5 Flash)
+    temperature: 0.1              # Lower = more deterministic (0.0-1.0)
+    top_p: 0.8                    # Nucleus sampling parameter
+    top_k: 10                     # Top-k sampling parameter
+  
+  # Agent/Orchestration Model
+  agent:
+    model_name: gemini-2.5-flash
+    max_output_tokens: 32768
+    temperature: 0.7
+
+# ============================================================================
+# PROCESSING CONFIGURATION
+# ============================================================================
+
+processing:
+  # Video Processing
+  segment_fps: 1.0                # Frames per second for video analysis
+  max_video_duration: 3600        # Maximum video duration in seconds (1 hour)
+  video_trim_duration: 2000       # Trim videos to this length for analysis (33 min)
+  
+  # Claim Extraction
+  claims_per_minute: 1.8          # Target claims to extract per minute
+  min_claims: 15                  # Minimum claims to extract
+  max_claims: 40                  # Maximum claims to extract
+  
+  # Claim Filtering
+  min_claim_length: 10            # Minimum characters for a valid claim
+  deduplicate_claims: true        # Remove duplicate claims
+  
+  # Evidence Search
+  max_evidence_sources: 10        # Maximum evidence sources per claim
+  evidence_search_timeout: 30     # Timeout for evidence search (seconds)
+
+# ============================================================================
+# LLM LOGGING (Research Transparency)
+# ============================================================================
+# Enable full logging of all LLM interactions for research reproducibility
+
+llm_logging:
+  enabled: true                   # Enable/disable LLM logging
+  
+  # What to log
+  log_prompts: true               # Log full prompt text
+  log_responses: true             # Log full response text
+  log_tokens: true                # Log token counts (input/output)
+  log_timing: true                # Log response timing/latency
+  log_model_version: true         # Log model name and version
+  log_parameters: true            # Log temperature, top_p, etc.
+  
+  # Output Configuration
+  output_dir: ./llm_logs          # Directory for LLM logs
+  format: json                    # Log format: json or jsonl
+  include_metadata: true          # Include video_id, claim_id, etc.
+  
+  # Privacy Settings
+  redact_urls: false              # Redact URLs from logs
+  redact_video_ids: false         # Redact video IDs from logs
+
+# ============================================================================
+# OUTPUT CONFIGURATION
+# ============================================================================
+
+output:
+  # Local Output Directory
+  local_dir: ./outputs            # Base directory for local outputs
+  
+  # Report Formats
+  formats:
+    - json                        # Structured data
+    - markdown                    # Human-readable text
+    - html                        # Interactive web report
+  
+  # Report Content
+  include_metadata: true          # Include video metadata
+  include_evidence: true          # Include full evidence text
+  include_timestamps: true        # Include claim timestamps
+  include_probability_dist: true  # Include probability distributions
+  
+  # GCS Upload (Optional)
+  enable_gcs_upload: false        # Upload reports to GCS
+  gcs_upload_path: vngn_reports   # GCS path prefix
+  use_timestamped_storage: true   # Use timestamped directories
+
+# ============================================================================
+# SEARCH CONFIGURATION
+# ============================================================================
+
+search:
+  # Web Search
+  google_search_api_key: null     # Google Custom Search API key
+  cse_id: null                    # Custom Search Engine ID
+  
+  # YouTube Search
+  youtube_api_key: null           # YouTube Data API key (optional)
+  youtube_api_fallback: false     # Use YouTube API if deep search fails
+  
+  # Counter-Intelligence Search
+  enable_counter_intel: true      # Enable YouTube counter-intelligence
+  counter_intel_max_results: 4    # Max counter-intel sources
+  
+  # Press Release Detection
+  detect_press_releases: true     # Detect and flag promotional content
+  press_release_penalty: 0.15     # Penalty for self-referential content
+
+# ============================================================================
+# FEATURE FLAGS
+# ============================================================================
+
+features:
+  # Analysis Features
+  enable_multimodal_analysis: true   # Use video frames + audio
+  enable_transcript_extraction: true # Extract video transcripts
+  enable_ocr: true                   # Extract text from video frames
+  
+  # Verification Features
+  enable_scientific_weighting: true  # Prioritize scientific sources
+  enable_validation_power: true      # Use validation power scoring
+  enable_semantic_filtering: true    # Filter low-quality sources
+  
+  # Reporting Features
+  enable_html_reports: true          # Generate HTML reports
+  enable_interactive_charts: true    # Include interactive visualizations
+  enable_source_links: true          # Include clickable source links
+
+# ============================================================================
+# PERFORMANCE TUNING
+# ============================================================================
+
+performance:
+  # Concurrency
+  max_concurrent_claims: 5        # Max claims to verify in parallel
+  max_concurrent_downloads: 3     # Max concurrent video downloads
+  
+  # Timeouts
+  video_download_timeout: 600     # Video download timeout (10 min)
+  llm_request_timeout: 120        # LLM request timeout (2 min)
+  search_request_timeout: 30      # Search request timeout (30 sec)
+  
+  # Rate Limiting
+  rate_limit_delay: 2             # Delay between API calls (seconds)
+  enable_caching: true            # Cache LLM responses
+  cache_ttl: 86400                # Cache time-to-live (24 hours)
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+
+logging:
+  level: INFO                     # Options: DEBUG, INFO, WARNING, ERROR
+  format: text                    # Options: text, json
+  output: stdout                  # Options: stdout, file
+  log_file: ./logs/verityngn.log  # Log file path (if output: file)
+  
+  # Module-specific log levels
+  module_levels:
+    verityngn.workflows: INFO
+    verityngn.services: INFO
+    verityngn.llm_logging: DEBUG
+
+# ============================================================================
+# ADVANCED SETTINGS
+# ============================================================================
+
+advanced:
+  # Deployment Mode
+  deployment_mode: local          # Options: local, research, container, production
+  storage_backend: local          # Options: local, gcs
+  
+  # Debug Settings
+  debug: false                    # Enable debug mode
+  verbose: false                  # Enable verbose output
+  save_intermediate: false        # Save intermediate analysis files
+  
+  # Experimental Features (use with caution)
+  experimental:
+    enable_batch_mode: false      # Enable Google Batch integration
+    enable_streaming: false       # Stream LLM responses
+    enable_parallel_analysis: false  # Analyze multiple videos in parallel
+
+

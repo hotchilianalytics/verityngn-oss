@@ -1,0 +1,95 @@
+# Core dependencies
+fastapi>=0.110.0
+uvicorn>=0.27.0
+pydantic>=2.7.4
+python-multipart==0.0.6
+
+# Video processing
+yt-dlp>=2024.12.13
+ffmpeg-python==0.2.0
+
+# AI/ML dependencies
+openai>=1.54.0
+anthropic>=0.52.0
+google-generativeai>=0.8.0
+google-cloud-aiplatform>=1.81.0
+
+# LangChain and related
+langchain>=0.3.17
+langchain-openai>=0.2.8
+langchain-anthropic>=0.2.4
+langchain-google-genai>=2.0.5
+langgraph>=0.2.50
+
+# Storage and cloud
+google-cloud-storage>=2.18.0
+google-auth==2.25.2
+google-auth-oauthlib==1.1.0
+google-cloud-firestore>=2.18.0
+google-cloud-batch>=0.17.0
+google-cloud-pubsub>=2.18.0
+
+# Web scraping and search
+requests==2.31.0
+beautifulsoup4==4.12.2
+selenium==4.15.2
+webdriver-manager==4.0.1
+
+# Utilities
+python-dotenv==1.0.0
+Pillow==10.1.0
+jinja2==3.1.2
+markdown==3.5.1
+html2text==2020.1.16
+
+# Development and testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# Google Cloud dependencies
+google-api-core>=2.19.0
+google-resumable-media>=2.7.2
+grpcio>=1.64.1
+protobuf>=4.25.3
+google-api-python-client>=2.157.0
+
+# LangChain dependencies
+langchain-community>=0.3.17
+langchain-core>=0.3.35
+langchain-google-vertexai>=2.0.13
+langchain-text-splitters>=0.3.6
+
+# Video processing
+pytubefix>=8.10.0
+youtube_transcript_api>=0.6.2
+isodate>=0.6.1
+
+# Utilities
+aiohttp>=3.9.5
+httpx>=0.28.1
+websockets>=14.2
+numpy>=2.1.3
+pandas>=2.2.3
+arrow>=1.3.0
+pydantic-settings>=2.5.2
+cachetools>=5.3.3
+charset-normalizer>=3.3.2
+click>=8.0.3
+colorama>=0.4.6
+idna>=3.7
+markupsafe>=2.1.5
+python-dateutil>=2.9.0
+pyyaml>=6.0.1
+six>=1.16.0
+soupsieve>=2.5
+tqdm>=4.66.4
+urllib3>=2.2.1
+
+# Markdown and HTML processing
+markdown-it-py>=3.0.0
+mdit-py-plugins>=0.4.0
+linkify-it-py>=2.0.3
+
+# Utility dependencies 
+# sentence-transformers>=2.7.0  # disabled to reduce image size
+tldextract>=5.1.2streamlit>=1.28.0
