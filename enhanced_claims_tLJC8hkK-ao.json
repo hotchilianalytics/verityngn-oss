@@ -1,0 +1,14 @@
+{
+  "initial_report": "Initial report could not be extracted from malformed response",
+  "claims": [],
+  "video_analysis_summary": "Multi-pass extraction: 2 \u2192 0 claims",
+  "extraction_metadata": {
+    "initial_claim_count": 2,
+    "after_filtering": 0,
+    "absence_claims": 0,
+    "final_count": 0,
+    "quality_distribution": {
+      "POOR": 2
+    }
+  }
+}

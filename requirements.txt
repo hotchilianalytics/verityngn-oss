@@ -92,4 +92,6 @@ linkify-it-py>=2.0.3
 
 # Utility dependencies 
 # sentence-transformers>=2.7.0  # disabled to reduce image size
-tldextract>=5.1.2streamlit>=1.28.0
+tldextract>=5.1.2
+streamlit>=1.28.0
+scikit-learn>=1.3.0  # For claim clustering and analysis
