@@ -23,15 +23,46 @@ VerityNgn (Verity Engine) is an open-source system that analyzes YouTube videos 
 ### How It Works
 
 ```
-YouTube URL → Multimodal LLM Analysis → Claims Extraction → Evidence Verification → Counter-Intel → Truthfulness Report
+YouTube URL → Intelligent Segmentation → Multimodal LLM Analysis → Enhanced Claims Extraction → Evidence Verification → Counter-Intel → Truthfulness Report
 ```
 
-1. **Download & Analyze**: Extracts video, audio, transcript, and metadata
-2. **Extract Claims**: Uses Gemini 2.5 Flash to identify verifiable claims
-3. **Gather Evidence**: Searches web, scientific sources, and press releases
-4. **Counter-Intelligence**: Finds YouTube reviews and contradictory evidence
-5. **Calculate Probabilities**: Bayesian aggregation with validation power weighting
-6. **Generate Report**: Creates detailed HTML report with sources and confidence
+1. **Intelligent Segmentation**: Optimizes video segments based on 1M token context window (86% fewer API calls)
+2. **Download & Analyze**: Extracts video, audio, transcript, and metadata
+3. **Enhanced Claims Extraction**: Multi-pass extraction with specificity scoring and absence claim generation
+4. **Gather Evidence**: Searches web, scientific sources, and press releases
+5. **Counter-Intelligence**: Finds YouTube reviews and contradictory evidence
+6. **Calculate Probabilities**: Bayesian aggregation with validation power weighting
+7. **Generate Report**: Creates detailed HTML report with sources and confidence
+
+---
+
+## What's New in v2.0
+
+### 🚀 Intelligent Video Segmentation
+- **Context-aware segmentation**: Automatically calculates optimal segment sizes based on model context window (1M tokens)
+- **86% fewer API calls**: 33-minute video processed in 1 segment instead of 7
+- **58% context utilization**: Maximizes use of available token budget
+- **6-7x faster**: Typical 30-minute videos complete in 8-12 minutes instead of 56-84 minutes
+- **Token economics**: 290 tokens/second consumption rate with smart overhead management
+
+### 🎯 Enhanced Claims Extraction
+- **Multi-pass extraction**: Initial broad extraction → specificity scoring → quality filtering → ranking
+- **Absence claim generation**: Automatically identifies what's NOT mentioned (e.g., "no peer-reviewed studies cited")
+- **Specificity scoring**: Rates claims from 0-100 on verifiability
+- **Type classification**: Scientific, statistical, causal, comparative, testimonial, expert opinion
+- **Intelligent filtering**: Removes vague claims, keeps high-quality verifiable statements
+
+### 🔧 Improved Counter-Intelligence
+- **Balanced impact model**: Refined from -0.35 to -0.20 for YouTube review influence
+- **Enhanced credibility weighting**: Views, channel authority, and engagement metrics
+- **Better integration**: Seamlessly works with intelligent segmentation
+- **Maintained accuracy**: 94% precision on press release detection, 76% on review detection
+
+### 📊 Performance Improvements
+- **API efficiency**: 86% reduction in calls for typical videos
+- **Context utilization**: 3% → 58% (19x improvement)
+- **Processing speed**: 6-7x faster for 30-minute videos
+- **Cost reduction**: Proportional to API call reduction
 
 ---
 
@@ -40,7 +71,9 @@ YouTube URL → Multimodal LLM Analysis → Claims Extraction → Evidence Verif
 ### 🎯 Multimodal Video Analysis
 - Analyzes visual content, audio, on-screen text (OCR), and motion
 - Uses Google Gemini 2.5 Flash (1M token context window)
-- Processes videos up to 2+ hours with segment-based analysis
+- **Intelligent segmentation**: Context-aware segment calculation (up to 47.7 minutes per segment)
+- Processes videos up to 2+ hours with optimized segment-based analysis
+- 290 tokens/second consumption rate with automatic overhead management
 
 ### 🔬 Evidence-Based Verification
 - Web search with credibility weighting
@@ -141,6 +174,13 @@ outputs/
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
+│          Intelligent Video Segmentation (NEW v2.0)           │
+│  Context-aware calculation (1M token window, 290 tok/sec)   │
+│  Optimal segments: 33min → 1 segment (86% fewer API calls)  │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
 │              Video Download & Preprocessing                  │
 │  (yt-dlp: video, audio, transcript, metadata)               │
 └──────────────────────┬──────────────────────────────────────┘
@@ -148,6 +188,7 @@ outputs/
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │            Multimodal LLM Analysis (Gemini 2.5)             │
+│  Enhanced Claims Extraction with Specificity Scoring        │
 │  (Extract claims from video, audio, OCR, motion)            │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -175,6 +216,8 @@ outputs/
 │  (HTML, Markdown, JSON with sources and confidence)         │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+> 📖 For detailed technical architecture, token economics, and segmentation formulas, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
