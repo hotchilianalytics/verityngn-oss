@@ -53,8 +53,9 @@ class ClaimProcessor:
         self.video_duration_minutes = video_duration_minutes
         self.target_claims_per_minute = target_claims_per_minute
         # Calculate target claims with reasonable min/max bounds
+        # SHERLOCK FIX: Reduced max to 10 to avoid 429 rate limiting
         calculated_claims = int(video_duration_minutes * target_claims_per_minute)
-        self.max_claims = max(10, min(25, calculated_claims))  # Ensure 10-25 claims range
+        self.max_claims = max(5, min(10, calculated_claims))  # Reduced to 5-10 claims range to respect API quotas
         
         # Claim sources
         self.video_analysis_claims = []

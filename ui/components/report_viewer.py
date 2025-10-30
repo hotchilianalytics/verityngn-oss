@@ -12,13 +12,38 @@ import streamlit.components.v1 as components
 
 def load_report(video_id: str, output_dir: Path) -> dict:
     """Load report JSON for a video ID."""
-    report_path = output_dir / video_id / 'report.json'
+    video_dir = output_dir / video_id
     
-    if not report_path.exists():
+    if not video_dir.exists():
         return None
     
-    with open(report_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    # Try direct path first (old format)
+    report_path = video_dir / 'report.json'
+    if report_path.exists():
+        with open(report_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    
+    # Try new format with timestamped subdirectories
+    # Look for most recent *_complete/ directory
+    complete_dirs = sorted(
+        [d for d in video_dir.glob('*_complete') if d.is_dir()],
+        key=lambda x: x.stat().st_mtime,
+        reverse=True
+    )
+    
+    for complete_dir in complete_dirs:
+        # Try both naming conventions
+        report_paths = [
+            complete_dir / 'report.json',
+            complete_dir / f'{video_id}_report.json'
+        ]
+        
+        for rpath in report_paths:
+            if rpath.exists():
+                with open(rpath, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+    
+    return None
 
 
 def render_claims_table(claims: list):
@@ -71,21 +96,60 @@ def render_report_viewer_tab():
     
     st.header("📊 View Reports")
     
-    # Get output directory
+    # Get output directory - check DEBUG_OUTPUTS environment variable
+    import os
+    
     try:
-        output_dir = Path(st.session_state.config.get('output.local_dir', './outputs'))
+        # First check if DEBUG_OUTPUTS is set
+        if os.getenv("DEBUG_OUTPUTS", "False").lower() == "true":
+            output_dir = Path('./verityngn/outputs_debug')
+        else:
+            output_dir = Path(st.session_state.config.get('output.local_dir', './outputs'))
     except:
-        output_dir = Path('./outputs')
+        # Fallback: check both locations
+        debug_dir = Path('./verityngn/outputs_debug')
+        normal_dir = Path('./outputs')
+        
+        if debug_dir.exists():
+            output_dir = debug_dir
+            st.info(f"ℹ️ Using debug outputs directory: {output_dir}")
+        else:
+            output_dir = normal_dir
     
     if not output_dir.exists():
-        st.warning("⚠️ No reports directory found. Run a verification first!")
+        st.warning(f"⚠️ No reports directory found at {output_dir}. Run a verification first!")
+        st.info("💡 Tip: Reports may be in `verityngn/outputs_debug/` if DEBUG_OUTPUTS=true")
         return
     
     # List available reports
-    report_dirs = [d for d in output_dir.iterdir() if d.is_dir() and (d / 'report.json').exists()]
+    # Check for both old format (video_id/report.json) and new format (video_id/*/video_id_report.json)
+    report_dirs = []
+    
+    for d in output_dir.iterdir():
+        if not d.is_dir():
+            continue
+        
+        # Check if this directory has reports
+        has_report = False
+        
+        # Old format: direct report.json
+        if (d / 'report.json').exists():
+            has_report = True
+        
+        # New format: timestamped subdirectories with reports
+        if not has_report:
+            complete_dirs = list(d.glob('*_complete'))
+            for complete_dir in complete_dirs:
+                if (complete_dir / f'{d.name}_report.json').exists() or (complete_dir / 'report.json').exists():
+                    has_report = True
+                    break
+        
+        if has_report:
+            report_dirs.append(d)
     
     if not report_dirs:
         st.info("📭 No reports found yet. Complete a verification to generate reports.")
+        st.info(f"📂 Looking in: {output_dir.absolute()}")
         return
     
     # Sort by modification time (most recent first)

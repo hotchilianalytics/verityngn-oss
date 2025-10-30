@@ -68,16 +68,33 @@ def render_gallery_tab():
     
     st.markdown("---")
     
-    # Example gallery items (placeholder - in production, load from gallery/)
+    # Load actual gallery items from gallery/ directory
     st.subheader("📚 Examples")
     
-    # Placeholder examples (thumbnails will be generated from YouTube)
-    examples = [
-        {
-            "id": "example1",
-            "title": "Miracle Weight Loss Supplement Claims",
-            "category": "🏥 Health & Medicine",
-            "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    # Try to load from gallery/approved/ directory
+    import os
+    gallery_dir = Path('./ui/gallery/approved')
+    examples = []
+    
+    if gallery_dir.exists():
+        for item in gallery_dir.iterdir():
+            if item.is_file() and item.suffix == '.json':
+                try:
+                    with open(item, 'r') as f:
+                        example = json.load(f)
+                        examples.append(example)
+                except:
+                    continue
+    
+    # Fallback to placeholder examples if no gallery items found
+    if not examples:
+        st.info("📭 No gallery items yet. Placeholder examples shown below.")
+        examples = [
+            {
+                "id": "example1",
+                "title": "Miracle Weight Loss Supplement Claims",
+                "category": "🏥 Health & Medicine",
+                "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             "video_id": "dQw4w9WgXcQ",
             "truthfulness_score": 0.25,
             "claims_count": 18,

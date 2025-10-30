@@ -91,29 +91,81 @@ def search_for_evidence(query: str, num_results: int = 10) -> List[Dict[str, Any
         press_release_query = f"{query} press release announcement"
         pr_domains = "globenewswire.com,prnewswire.com,businesswire.com,newswire.com,prweb.com,apnews.com,marketwatch.com"
         
-        # Run searches in parallel
+        # Run searches in parallel with detailed logging
+        logger.info("🔍 [SHERLOCK] Starting parallel evidence searches (5 concurrent)")
         with ThreadPoolExecutor(max_workers=5) as executor:
             # Regular search
+            logger.debug("📡 [SEARCH] Launching regular search")
             regular_future = executor.submit(google_search, query, num_results)
             # Scientific search
+            logger.debug("📡 [SEARCH] Launching scientific search")
             scientific_future = executor.submit(google_search, scientific_query, num_results, 
                                              additional_params={"as_sitesearch": "nih.gov,nature.com,sciencedirect.com,scholar.google.com,ncbi.nlm.nih.gov"})
             # Wikipedia and fact check search
+            logger.debug("📡 [SEARCH] Launching wiki/fact-check search")
             wiki_fact_future = executor.submit(google_search, fact_check_query, num_results,
                                             additional_params={"as_sitesearch": "wikipedia.org,snopes.com,factcheck.org,politifact.com"})
             # Medical/health search
+            logger.debug("📡 [SEARCH] Launching medical search")
             medical_future = executor.submit(google_search, medical_query, num_results,
                                          additional_params={"as_sitesearch": "mayoclinic.org,cdc.gov,who.int,webmd.com,health.harvard.edu"})
             # Press release/newswire search (domain-targeted)
+            logger.debug("📡 [SEARCH] Launching press release search")
             press_release_future = executor.submit(google_search, press_release_query, num_results,
                                               additional_params={"as_sitesearch": pr_domains})
             
-            # Collect results
-        regular_results = regular_future.result()
-        scientific_results = scientific_future.result()
-        wiki_fact_results = wiki_fact_future.result()
-        medical_results = medical_future.result()
-        press_release_results = press_release_future.result()
+            # Collect results with timeouts to prevent indefinite hangs
+            # SHERLOCK FIX: Add 60-second timeout per search to prevent evidence gathering hangs
+            import time
+            
+            logger.info("⏱️ [SHERLOCK] Collecting search results with 60s timeout per search")
+            start_time = time.time()
+            
+            try:
+                logger.debug("📥 [SEARCH] Waiting for regular search...")
+                regular_results = regular_future.result(timeout=60.0)
+                logger.debug(f"✅ [SEARCH] Regular search completed in {time.time() - start_time:.1f}s")
+            except Exception as e:
+                logger.warning(f"⚠️ [SEARCH] Regular search timed out or failed after {time.time() - start_time:.1f}s: {e}")
+                regular_results = []
+            
+            start_time = time.time()
+            try:
+                logger.debug("📥 [SEARCH] Waiting for scientific search...")
+                scientific_results = scientific_future.result(timeout=60.0)
+                logger.debug(f"✅ [SEARCH] Scientific search completed in {time.time() - start_time:.1f}s")
+            except Exception as e:
+                logger.warning(f"⚠️ [SEARCH] Scientific search timed out or failed after {time.time() - start_time:.1f}s: {e}")
+                scientific_results = []
+            
+            start_time = time.time()
+            try:
+                logger.debug("📥 [SEARCH] Waiting for wiki/fact-check search...")
+                wiki_fact_results = wiki_fact_future.result(timeout=60.0)
+                logger.debug(f"✅ [SEARCH] Wiki/fact-check search completed in {time.time() - start_time:.1f}s")
+            except Exception as e:
+                logger.warning(f"⚠️ [SEARCH] Wiki/fact-check search timed out or failed after {time.time() - start_time:.1f}s: {e}")
+                wiki_fact_results = []
+            
+            start_time = time.time()
+            try:
+                logger.debug("📥 [SEARCH] Waiting for medical search...")
+                medical_results = medical_future.result(timeout=60.0)
+                logger.debug(f"✅ [SEARCH] Medical search completed in {time.time() - start_time:.1f}s")
+            except Exception as e:
+                logger.warning(f"⚠️ [SEARCH] Medical search timed out or failed after {time.time() - start_time:.1f}s: {e}")
+                medical_results = []
+            
+            start_time = time.time()
+            try:
+                logger.debug("📥 [SEARCH] Waiting for press release search...")
+                press_release_results = press_release_future.result(timeout=60.0)
+                logger.debug(f"✅ [SEARCH] Press release search completed in {time.time() - start_time:.1f}s")
+            except Exception as e:
+                logger.warning(f"⚠️ [SEARCH] Press release search timed out or failed after {time.time() - start_time:.1f}s: {e}")
+                press_release_results = []
+            
+            logger.info("✅ [SHERLOCK] All evidence searches completed")
         
         # Format and combine results, adding source type metadata
         # Regular search results
@@ -288,15 +340,17 @@ def google_search(query: str, num_results: int = 5, additional_params: Dict[str,
         session.mount("https://", adapter)
         
         # Make the request with enhanced error handling
-        for attempt in range(3):
+        # SHERLOCK FIX: Reduced to 2 attempts with shorter timeout for faster failure
+        for attempt in range(2):
             try:
-                response = session.get(url, params=params, timeout=30, verify=True)
+                # Reduced timeout from 30s to 20s for faster failure detection
+                response = session.get(url, params=params, timeout=20, verify=True)
                 
                 # Check if the request was successful
                 if response.status_code != 200:
                     logger.error(f"Error performing Google search: {response.status_code}")
-                    if attempt < 2:  # Retry on error
-                        time.sleep(2 ** attempt)  # Exponential backoff
+                    if attempt < 1:  # Retry on error (only 1 retry now)
+                        time.sleep(2)  # Fixed 2s delay instead of exponential
                         continue
                     return []
                     
@@ -307,27 +361,35 @@ def google_search(query: str, num_results: int = 5, additional_params: Dict[str,
                 return items
                 
             except (requests.exceptions.SSLError, ssl.SSLError) as ssl_err:
-                logger.warning(f"SSL error on attempt {attempt + 1}: {ssl_err}")
-                if attempt < 2:
-                    time.sleep(2 ** attempt)
+                logger.warning(f"SSL error on attempt {attempt + 1}/2: {ssl_err}")
+                if attempt < 1:  # Only 1 retry
+                    time.sleep(2)  # Fixed 2s delay
                     continue
-                logger.error(f"SSL error after all retries: {ssl_err}")
+                logger.error(f"SSL error after 2 attempts: {ssl_err}")
                 return []
                 
             except (requests.exceptions.ConnectionError, BrokenPipeError) as conn_err:
-                logger.warning(f"Connection error on attempt {attempt + 1}: {conn_err}")
-                if attempt < 2:
-                    time.sleep(2 ** attempt)
+                logger.warning(f"Connection error on attempt {attempt + 1}/2: {conn_err}")
+                if attempt < 1:  # Only 1 retry
+                    time.sleep(2)  # Fixed 2s delay
                     continue
-                logger.error(f"Connection error after all retries: {conn_err}")
+                logger.error(f"Connection error after 2 attempts: {conn_err}")
+                return []
+            
+            except requests.exceptions.Timeout as timeout_err:
+                logger.warning(f"⏱️ Request timeout on attempt {attempt + 1}/2: {timeout_err}")
+                if attempt < 1:  # Only 1 retry
+                    time.sleep(1)  # Shorter delay for timeouts
+                    continue
+                logger.error(f"⏱️ Request timed out after 2 attempts")
                 return []
                 
             except Exception as e:
-                logger.warning(f"Request error on attempt {attempt + 1}: {e}")
-                if attempt < 2:
-                    time.sleep(2 ** attempt)
+                logger.warning(f"Request error on attempt {attempt + 1}/2: {e}")
+                if attempt < 1:  # Only 1 retry
+                    time.sleep(2)  # Fixed 2s delay
                     continue
-                logger.error(f"Request failed after all retries: {e}")
+                logger.error(f"Request failed after 2 attempts: {e}")
                 return []
         
         return []
