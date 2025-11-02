@@ -108,7 +108,7 @@ dependencies:
   - google-api-core=2.19.0
   - google-api-core-grpc=2.19.0
   - google-api-python-client=2.157.0
-  - google-auth=2.30.0
+  - google-auth>=2.30.0
   - google-auth-httplib2=0.2.0
   - google-cloud-bigquery-core=3.24.0
   - google-cloud-core=2.4.1
