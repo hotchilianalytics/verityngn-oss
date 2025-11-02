@@ -1,371 +1,150 @@
 """
-Report Viewer Tab Component
+Report Viewer Tab Component - SIMPLIFIED VERSION
 
-View and interact with generated verification reports.
+Just displays the HTML report directly instead of parsing JSON.
+Much simpler and more reliable!
 """
 
 import streamlit as st
-import json
-from pathlib import Path
 import streamlit.components.v1 as components
-
-
-def load_report(video_id: str, output_dir: Path) -> dict:
-    """Load report JSON for a video ID."""
-    video_dir = output_dir / video_id
-    
-    if not video_dir.exists():
-        return None
-    
-    # Try direct path first (old format)
-    report_path = video_dir / 'report.json'
-    if report_path.exists():
-        with open(report_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    
-    # Try new format with timestamped subdirectories
-    # Look for most recent *_complete/ directory
-    complete_dirs = sorted(
-        [d for d in video_dir.glob('*_complete') if d.is_dir()],
-        key=lambda x: x.stat().st_mtime,
-        reverse=True
-    )
-    
-    for complete_dir in complete_dirs:
-        # Try both naming conventions
-        report_paths = [
-            complete_dir / 'report.json',
-            complete_dir / f'{video_id}_report.json'
-        ]
-        
-        for rpath in report_paths:
-            if rpath.exists():
-                with open(rpath, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-    
-    return None
-
-
-def render_claims_table(claims: list):
-    """Render claims in an interactive table."""
-    if not claims:
-        st.info("No claims found in this report.")
-        return
-    
-    for i, claim in enumerate(claims, 1):
-        with st.expander(f"**Claim {i}:** {claim.get('claim_text', 'N/A')[:100]}..."):
-            col1, col2 = st.columns([2, 1])
-            
-            with col1:
-                st.markdown(f"**Full Claim:** {claim.get('claim_text', 'N/A')}")
-                
-                # Evidence summary
-                st.markdown("**Evidence Summary:**")
-                st.write(claim.get('evidence_summary', 'No summary available'))
-                
-                # Conclusion
-                st.markdown("**Conclusion:**")
-                st.write(claim.get('conclusion_summary', 'No conclusion available'))
-            
-            with col2:
-                # Probability distribution
-                prob_dist = claim.get('probability_distribution', {})
-                
-                st.markdown("**Probability Distribution:**")
-                for outcome, prob in prob_dist.items():
-                    if prob > 0:
-                        color = "🟢" if outcome == "TRUE" else "🔴" if outcome == "FALSE" else "🟡"
-                        st.metric(f"{color} {outcome}", f"{prob:.1%}")
-                
-                # Sources count
-                sources = claim.get('sources', [])
-                st.metric("Evidence Sources", len(sources))
-            
-            # Show sources
-            if sources:
-                st.markdown("**Sources:**")
-                for j, source in enumerate(sources[:5], 1):  # Show first 5
-                    st.markdown(f"{j}. [{source.get('title', 'Source')}]({source.get('url', '#')})")
-                
-                if len(sources) > 5:
-                    st.caption(f"... and {len(sources) - 5} more sources")
+from pathlib import Path
 
 
 def render_report_viewer_tab():
-    """Render the report viewer tab."""
+    """Render the report viewer tab - displays HTML reports directly."""
     
-    st.header("📊 View Reports")
+    st.header("📊 View Enhanced Reports")
     
-    # Get output directory - check DEBUG_OUTPUTS environment variable
-    import os
+    # 🎯 SIMPLIFIED: Just find the outputs_debug directory
+    # Try multiple possible locations
+    possible_dirs = [
+        Path.cwd() / 'verityngn' / 'outputs_debug',  # From project root
+        Path.cwd() / 'outputs_debug',  # Alternative
+        Path(__file__).parent.parent.parent / 'verityngn' / 'outputs_debug',  # Relative to this file
+    ]
     
-    try:
-        # First check if DEBUG_OUTPUTS is set
-        if os.getenv("DEBUG_OUTPUTS", "False").lower() == "true":
-            output_dir = Path('./verityngn/outputs_debug')
-        else:
-            output_dir = Path(st.session_state.config.get('output.local_dir', './outputs'))
-    except:
-        # Fallback: check both locations
-        debug_dir = Path('./verityngn/outputs_debug')
-        normal_dir = Path('./outputs')
-        
-        if debug_dir.exists():
-            output_dir = debug_dir
-            st.info(f"ℹ️ Using debug outputs directory: {output_dir}")
-        else:
-            output_dir = normal_dir
+    output_dir = None
+    for dir_path in possible_dirs:
+        if dir_path.exists():
+            output_dir = dir_path
+            print(f"✅ Found output directory: {output_dir.absolute()}")
+            break
     
-    if not output_dir.exists():
-        st.warning(f"⚠️ No reports directory found at {output_dir}. Run a verification first!")
-        st.info("💡 Tip: Reports may be in `verityngn/outputs_debug/` if DEBUG_OUTPUTS=true")
+    if not output_dir:
+        st.warning(f"⚠️ No reports directory found. Run a verification first!")
+        with st.expander("🔍 Debug Info"):
+            st.info(f"Searched in:\n- {possible_dirs[0]}\n- {possible_dirs[1]}\n- {possible_dirs[2]}")
         return
     
-    # List available reports
-    # Check for both old format (video_id/report.json) and new format (video_id/*/video_id_report.json)
-    report_dirs = []
+    # 🎯 SIMPLIFIED: Find all video directories with HTML reports
+    report_options = {}
     
-    for d in output_dir.iterdir():
-        if not d.is_dir():
+    for video_dir in output_dir.iterdir():
+        if not video_dir.is_dir():
             continue
         
-        # Check if this directory has reports
-        has_report = False
+        video_id = video_dir.name
         
-        # Old format: direct report.json
-        if (d / 'report.json').exists():
-            has_report = True
+        # Look for HTML reports in timestamped _complete directories
+        complete_dirs = sorted(
+            [d for d in video_dir.glob('*_complete') if d.is_dir()],
+            key=lambda x: x.stat().st_mtime,
+            reverse=True  # Most recent first
+        )
         
-        # New format: timestamped subdirectories with reports
-        if not has_report:
-            complete_dirs = list(d.glob('*_complete'))
-            for complete_dir in complete_dirs:
-                if (complete_dir / f'{d.name}_report.json').exists() or (complete_dir / 'report.json').exists():
-                    has_report = True
-                    break
-        
-        if has_report:
-            report_dirs.append(d)
+        for complete_dir in complete_dirs:
+            html_path = complete_dir / f'{video_id}_report.html'
+            if html_path.exists():
+                # Try to get title from JSON if available
+                json_path = complete_dir / f'{video_id}_report.json'
+                title = video_id
+                if json_path.exists():
+                    try:
+                        import json
+                        with open(json_path, 'r') as f:
+                            data = json.load(f)
+                            title = data.get('title', video_id)
+                    except:
+                        pass
+                
+                report_options[f"{title} ({video_id})"] = {
+                    'video_id': video_id,
+                    'html_path': html_path,
+                    'timestamp': complete_dir.name
+                }
+                break  # Use most recent report
     
-    if not report_dirs:
-        st.info("📭 No reports found yet. Complete a verification to generate reports.")
+    if not report_options:
+        st.info("📭 No HTML reports found yet. Complete a verification to generate reports.")
         st.info(f"📂 Looking in: {output_dir.absolute()}")
         return
-    
-    # Sort by modification time (most recent first)
-    report_dirs = sorted(report_dirs, key=lambda x: x.stat().st_mtime, reverse=True)
     
     # Report selector
     st.subheader("📋 Select Report")
     
-    # Create options dict
-    report_options = {}
-    for report_dir in report_dirs:
-        video_id = report_dir.name
-        report = load_report(video_id, output_dir)
-        if report:
-            title = report.get('title', video_id)
-            report_options[f"{title} ({video_id})"] = video_id
-    
-    if not report_options:
-        st.warning("No valid reports found.")
-        return
-    
-    # Dropdown selector
     selected_option = st.selectbox(
         "Choose a report:",
         options=list(report_options.keys()),
         index=0
     )
     
-    selected_video_id = report_options[selected_option]
-    
-    # Load selected report
-    report = load_report(selected_video_id, output_dir)
-    
-    if not report:
-        st.error("Failed to load report.")
-        return
+    selected_report = report_options[selected_option]
+    selected_video_id = selected_report['video_id']
+    html_path = selected_report['html_path']
+    timestamp = selected_report['timestamp']
     
     st.markdown("---")
     
-    # Report header
-    st.subheader(f"🎥 {report.get('title', 'Video Report')}")
-    
-    # Key metrics
-    col1, col2, col3, col4 = st.columns(4)
-    
+    # Display report info
+    col1, col2 = st.columns([3, 1])
     with col1:
-        truth_score = report.get('overall_truthfulness_score', 0)
-        if truth_score >= 0.7:
-            st.metric("Truthfulness", f"{truth_score:.1%}", delta="High", delta_color="normal")
-        elif truth_score >= 0.4:
-            st.metric("Truthfulness", f"{truth_score:.1%}", delta="Mixed", delta_color="off")
-        else:
-            st.metric("Truthfulness", f"{truth_score:.1%}", delta="Low", delta_color="inverse")
-    
+        st.info(f"📅 Report generated: {timestamp.replace('_', ' ')}")
     with col2:
-        claims_count = len(report.get('verified_claims', []))
-        st.metric("Claims Verified", claims_count)
+        st.info(f"📁 Video ID: {selected_video_id}")
     
-    with col3:
-        true_claims = sum(1 for c in report.get('verified_claims', []) 
-                         if c.get('probability_distribution', {}).get('TRUE', 0) > 0.5)
-        st.metric("True Claims", true_claims)
+    # 🎯 SIMPLE: Just display the HTML report directly!
+    st.subheader("📄 Full Report")
     
-    with col4:
-        false_claims = sum(1 for c in report.get('verified_claims', []) 
-                          if c.get('probability_distribution', {}).get('FALSE', 0) > 0.5)
-        st.metric("False Claims", false_claims)
-    
-    st.markdown("---")
-    
-    # Video embed
-    if report.get('youtube_url'):
-        st.subheader("📹 Original Video")
-        st.video(report['youtube_url'])
-    
-    st.markdown("---")
-    
-    # Tab view for different sections
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 Claims", "📊 Summary", "📄 Raw JSON", "💾 Download"])
-    
-    with tab1:
-        st.subheader("Verified Claims")
-        claims = report.get('verified_claims', [])
-        render_claims_table(claims)
-    
-    with tab2:
-        st.subheader("Executive Summary")
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
         
-        # Overall assessment
-        st.markdown("### Overall Assessment")
-        summary_text = report.get('summary', 'No summary available.')
-        st.write(summary_text)
+        # Display the HTML in a large scrollable container
+        components.html(html_content, height=1000, scrolling=True)
         
-        # Key findings
-        st.markdown("### Key Findings")
+        st.markdown("---")
         
-        true_claims = [c for c in report.get('verified_claims', []) 
-                      if c.get('probability_distribution', {}).get('TRUE', 0) > 0.5]
-        false_claims = [c for c in report.get('verified_claims', []) 
-                       if c.get('probability_distribution', {}).get('FALSE', 0) > 0.5]
-        uncertain_claims = [c for c in report.get('verified_claims', []) 
-                           if c.get('probability_distribution', {}).get('UNCERTAIN', 0) > 0.5]
-        
-        if true_claims:
-            with st.expander(f"✅ True Claims ({len(true_claims)})"):
-                for claim in true_claims[:5]:
-                    st.markdown(f"- {claim.get('claim_text', 'N/A')}")
-        
-        if false_claims:
-            with st.expander(f"❌ False Claims ({len(false_claims)})"):
-                for claim in false_claims[:5]:
-                    st.markdown(f"- {claim.get('claim_text', 'N/A')}")
-        
-        if uncertain_claims:
-            with st.expander(f"❓ Uncertain Claims ({len(uncertain_claims)})"):
-                for claim in uncertain_claims[:5]:
-                    st.markdown(f"- {claim.get('claim_text', 'N/A')}")
-        
-        # Visualization
-        st.markdown("### Claims Distribution")
-        
-        import pandas as pd
-        dist_data = pd.DataFrame({
-            'Category': ['True', 'False', 'Uncertain'],
-            'Count': [len(true_claims), len(false_claims), len(uncertain_claims)]
-        })
-        
-        st.bar_chart(dist_data.set_index('Category'))
-    
-    with tab3:
-        st.subheader("Raw JSON Report")
-        st.json(report)
-    
-    with tab4:
-        st.subheader("Download Reports")
-        
-        report_dir = output_dir / selected_video_id
-        
-        # JSON download
-        col_d1, col_d2, col_d3 = st.columns(3)
+        # Download section
+        col_d1, col_d2 = st.columns(2)
         
         with col_d1:
-            json_path = report_dir / 'report.json'
+            st.download_button(
+                label="📥 Download HTML Report",
+                data=html_content,
+                file_name=f"{selected_video_id}_report.html",
+                mime="text/html",
+                use_container_width=True
+            )
+        
+        with col_d2:
+            # Check if JSON also exists
+            json_path = html_path.parent / f'{selected_video_id}_report.json'
             if json_path.exists():
-                with open(json_path, 'r', encoding='utf-8') as f:
+                with open(json_path, 'r') as f:
                     json_content = f.read()
-                
                 st.download_button(
-                    "📄 Download JSON",
-                    json_content,
+                    label="📥 Download JSON Data",
+                    data=json_content,
                     file_name=f"{selected_video_id}_report.json",
                     mime="application/json",
                     use_container_width=True
                 )
         
-        with col_d2:
-            md_path = report_dir / 'report.md'
-            if md_path.exists():
-                with open(md_path, 'r', encoding='utf-8') as f:
-                    md_content = f.read()
-                
-                st.download_button(
-                    "📝 Download Markdown",
-                    md_content,
-                    file_name=f"{selected_video_id}_report.md",
-                    mime="text/markdown",
-                    use_container_width=True
-                )
-        
-        with col_d3:
-            html_path = report_dir / 'report.html'
-            if html_path.exists():
-                with open(html_path, 'r', encoding='utf-8') as f:
-                    html_content = f.read()
-                
-                st.download_button(
-                    "🌐 Download HTML",
-                    html_content,
-                    file_name=f"{selected_video_id}_report.html",
-                    mime="text/html",
-                    use_container_width=True
-                )
-        
-        # Preview HTML report
-        if html_path.exists():
-            st.markdown("---")
-            st.subheader("HTML Report Preview")
-            
-            with open(html_path, 'r', encoding='utf-8') as f:
-                html_content = f.read()
-            
-            # Render HTML in iframe
-            components.html(html_content, height=600, scrolling=True)
-    
-    # Delete report option
-    st.markdown("---")
-    with st.expander("🗑️ Danger Zone"):
-        st.warning("**Delete this report?** This action cannot be undone.")
-        
-        col_del1, col_del2 = st.columns([1, 3])
-        
-        with col_del1:
-            if st.button("Delete Report", type="secondary"):
-                # Confirm deletion
-                st.session_state.confirm_delete = selected_video_id
-        
-        if st.session_state.get('confirm_delete') == selected_video_id:
-            st.error("Are you sure? Click again to confirm.")
-            if st.button("⚠️ Yes, Delete Permanently"):
-                import shutil
-                try:
-                    shutil.rmtree(output_dir / selected_video_id)
-                    st.success("Report deleted successfully!")
-                    del st.session_state.confirm_delete
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to delete report: {e}")
+    except Exception as e:
+        st.error(f"❌ Error loading report: {e}")
+        st.info(f"Report path: {html_path}")
+        import traceback
+        with st.expander("🔍 Error Details"):
+            st.code(traceback.format_exc())
 
 

@@ -10,7 +10,31 @@ def clean_gemini_json(content: str) -> str:
     - Excessive repetition (model getting stuck)
     - Incomplete JSON structures
     - Trailing commas
+    - Malformed escape sequences
     """
+    
+    # Step 0: SHERLOCK FIX - Fix malformed escapes without breaking valid JSON
+    # The LLM sometimes outputs escaped quotes in wrong places:
+    # - "key\": " should be "key": "
+    # - \"\" (double quotes) -> \"
+    # CRITICAL: Don't remove ALL backslashes - that breaks valid JSON escapes like \"
+    
+    # Fix escaped quotes in JSON keys (common Gemini error pattern)
+    # Pattern: "key\": or "key\":[
+    content = re.sub(r'"([^"]+)\\":', r'"\1":', content)  # Fix escaped quotes in keys
+    content = re.sub(r'"([^"]+)\\":', r'"\1":', content)  # Fix double-escaped quotes in keys
+    
+    # Fix escaped quotes at end of values before comma/brace
+    content = re.sub(r'\\"([,}\]])', r'"\1', content)  # \"} -> "}
+    
+    # Fix double-escaped quotes (common Gemini error)
+    content = re.sub(r'\\+"', r'\\"', content)  # Multiple backslashes -> single escape
+    
+    # Remove control characters (but preserve valid escapes)
+    import string
+    control_chars = ''.join(chr(i) for i in range(32) if chr(i) not in '\n\r\t')
+    for char in control_chars:
+        content = content.replace(char, '')
     
     # Step 1: Remove markdown code blocks
     content = content.strip()

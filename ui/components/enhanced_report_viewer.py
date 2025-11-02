@@ -299,24 +299,70 @@ def render_enhanced_report_viewer_tab():
 
     st.header("📊 View Enhanced Reports")
 
-    # Get output directory
-    try:
-        output_dir = Path(st.session_state.config.get("output.local_dir", "./outputs"))
-    except (AttributeError, KeyError):
-        output_dir = Path("./outputs")
+    # 🎯 FIXED: Use same logic as simplified report_viewer.py
+    # Find outputs_debug directory (where reports actually are)
+    possible_dirs = [
+        Path.cwd() / 'verityngn' / 'outputs_debug',
+        Path.cwd() / 'outputs_debug',
+        Path(__file__).parent.parent.parent / 'verityngn' / 'outputs_debug',
+    ]
+    
+    output_dir = None
+    for dir_path in possible_dirs:
+        if dir_path.exists():
+            output_dir = dir_path
+            print(f"✅ Found output directory: {output_dir.absolute()}")
+            break
+    
+    # Fallback to config if outputs_debug not found
+    if not output_dir:
+        try:
+            output_dir = Path(
+                st.session_state.config.get("output.local_dir", "./outputs")
+            )
+        except (AttributeError, KeyError):
+            output_dir = Path("./outputs")
 
-    if not output_dir.exists():
+    if not output_dir or not output_dir.exists():
         st.warning("⚠️ No reports directory found. Run a verification first!")
+        with st.expander("🔍 Debug Info"):
+            st.info(f"Searched in:\n- {possible_dirs[0]}\n- {possible_dirs[1]}\n- {possible_dirs[2]}")
         return
 
-    # List available reports
-    report_dirs = [d for d in output_dir.iterdir() if d.is_dir()]
-    report_files = [
-        d / "report.json" for d in report_dirs if (d / "report.json").exists()
-    ]
+    # 🎯 FIXED: List available reports from timestamped _complete directories
+    report_files = []
+    
+    for video_dir in output_dir.iterdir():
+        if not video_dir.is_dir():
+            continue
+        
+        video_id = video_dir.name
+        
+        # Look for reports in timestamped _complete directories
+        complete_dirs = sorted(
+            [d for d in video_dir.glob('*_complete') if d.is_dir()],
+            key=lambda x: x.stat().st_mtime,
+            reverse=True  # Most recent first
+        )
+        
+        for complete_dir in complete_dirs:
+            # Try both naming conventions
+            report_paths = [
+                complete_dir / f'{video_id}_report.json',
+                complete_dir / 'report.json',
+            ]
+            
+            for report_path in report_paths:
+                if report_path.exists():
+                    report_files.append(report_path)
+                    break
+            
+            if report_files and report_files[-1].parent == complete_dir:
+                break  # Found report in this video_dir, move to next
 
     if not report_files:
         st.info("📭 No reports found yet. Complete a verification to generate reports.")
+        st.info(f"📂 Looking in: {output_dir.absolute()}")
         return
 
     # Sort by modification time
@@ -348,11 +394,41 @@ def render_enhanced_report_viewer_tab():
     # Report header
     st.subheader(f"🎥 {report.get('title', 'Video Report')}")
 
+    # 🔍 SHERLOCK FIX: Extract claims from correct key
+    # Old format: 'verified_claims' or 'claims'
+    # New format: 'claims_breakdown'
+    claims = (report.get("verified_claims", []) or 
+              report.get("claims", []) or 
+              report.get("claims_breakdown", []))
+    
+    # 🔍 SHERLOCK FIX: Extract truthfulness score
+    # Old format: 'overall_truthfulness_score'
+    # New format: parse from 'overall_assessment'
+    truth_score = report.get("overall_truthfulness_score")
+    
+    if truth_score is None:
+        # Try to extract from overall_assessment
+        assessment = report.get('overall_assessment', [])
+        if isinstance(assessment, list) and len(assessment) >= 2:
+            # Parse percentage from text like "100.0% of claims appear false"
+            assessment_text = assessment[1]
+            if 'false' in assessment_text.lower() and '100.0%' in assessment_text:
+                truth_score = 0.0  # All false
+            elif 'false' in assessment_text.lower():
+                truth_score = 0.25  # Mostly false
+            elif 'true' in assessment_text.lower() and '100.0%' in assessment_text:
+                truth_score = 1.0  # All true
+            elif 'true' in assessment_text.lower():
+                truth_score = 0.75  # Mostly true
+            else:
+                truth_score = 0.5  # Mixed
+        else:
+            truth_score = 0.0  # Default
+
     # Enhanced key metrics
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        truth_score = report.get("overall_truthfulness_score", 0)
         if truth_score >= 0.7:
             st.metric("Truthfulness", f"{truth_score:.1%}", delta="✅ High")
         elif truth_score >= 0.4:
@@ -361,7 +437,6 @@ def render_enhanced_report_viewer_tab():
             st.metric("Truthfulness", f"{truth_score:.1%}", delta="❌ Low")
 
     with col2:
-        claims = report.get("verified_claims", []) or report.get("claims", [])
         st.metric("Total Claims", len(claims))
 
     with col3:
@@ -402,13 +477,23 @@ def render_enhanced_report_viewer_tab():
     st.markdown("---")
     st.markdown("## 🎯 Final Verdict")
 
-    verdict = report.get(
-        "verdict", report.get("quick_summary", {}).get("verdict", "Unknown")
-    )
-    explanation = report.get(
-        "explanation",
-        report.get("quick_summary", {}).get("summary", "No explanation available"),
-    )
+    # 🔍 SHERLOCK FIX: Extract verdict and explanation
+    # Old format: 'verdict' and 'explanation' keys
+    # New format: 'overall_assessment' array [status, description]
+    verdict = report.get("verdict")
+    explanation = report.get("explanation")
+    
+    if not verdict:
+        # Try new format
+        assessment = report.get('overall_assessment', [])
+        if isinstance(assessment, list) and len(assessment) >= 2:
+            verdict = assessment[0]  # e.g., "Likely to be False"
+            explanation = assessment[1]  # Full description
+        else:
+            # Fallback to quick_summary
+            quick_summary = report.get("quick_summary", {})
+            verdict = quick_summary.get("verdict", "Unknown")
+            explanation = quick_summary.get("summary", "No explanation available")
 
     if "false" in verdict.lower() or truth_score < 0.4:
         verdict_color = "#dc3545"
@@ -429,3 +514,38 @@ def render_enhanced_report_viewer_tab():
     """,
         unsafe_allow_html=True,
     )
+    
+    # 🎯 USER REQUESTED: Display HTML Report
+    st.markdown("---")
+    st.markdown("## 📄 Full HTML Report")
+    
+    # Find the HTML report in the same directory as the JSON
+    html_path = selected_report_file.parent / f"{selected_report_file.parent.parent.name}_report.html"
+    
+    if html_path.exists():
+        try:
+            import streamlit.components.v1 as components
+            
+            with open(html_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            
+            # Display HTML in iframe
+            components.html(html_content, height=1000, scrolling=True)
+            
+            st.markdown("---")
+            
+            # Download button
+            st.download_button(
+                label="📥 Download Full HTML Report",
+                data=html_content,
+                file_name=html_path.name,
+                mime="text/html",
+                use_container_width=True
+            )
+            
+        except Exception as e:
+            st.error(f"❌ Error loading HTML report: {e}")
+            st.info(f"Expected HTML at: {html_path}")
+    else:
+        st.warning(f"📄 HTML report not found at: {html_path}")
+        st.info("The enhanced JSON view above shows all available data.")

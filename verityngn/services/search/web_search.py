@@ -348,7 +348,31 @@ def google_search(query: str, num_results: int = 5, additional_params: Dict[str,
                 
                 # Check if the request was successful
                 if response.status_code != 200:
-                    logger.error(f"Error performing Google search: {response.status_code}")
+                    # Enhanced error logging for 400 errors
+                    try:
+                        error_data = response.json()
+                        error_message = error_data.get('error', {}).get('message', 'Unknown error')
+                        error_reason = error_data.get('error', {}).get('errors', [{}])[0].get('reason', 'unknown')
+                        
+                        if response.status_code == 400:
+                            logger.error(f"❌ Google Search API 400 Bad Request: {error_message}")
+                            logger.error(f"   Reason: {error_reason}")
+                            logger.error(f"   Query: {query[:100]}")
+                            logger.error(f"   API Key present: {bool(GOOGLE_SEARCH_API_KEY)}")
+                            logger.error(f"   API Key preview: {GOOGLE_SEARCH_API_KEY[:10] + '...' if GOOGLE_SEARCH_API_KEY else 'MISSING'}")
+                            logger.error(f"   CSE ID present: {bool(CSE_ID)}")
+                            logger.error(f"   CSE ID preview: {CSE_ID[:10] + '...' if CSE_ID else 'MISSING'}")
+                            
+                            # Check for placeholder values
+                            if GOOGLE_SEARCH_API_KEY and ('your-' in GOOGLE_SEARCH_API_KEY.lower() or 'placeholder' in GOOGLE_SEARCH_API_KEY.lower()):
+                                logger.error("   ⚠️  WARNING: API key appears to be a placeholder value!")
+                            if CSE_ID and ('your-' in CSE_ID.lower() or 'placeholder' in CSE_ID.lower()):
+                                logger.error("   ⚠️  WARNING: CSE ID appears to be a placeholder value!")
+                        else:
+                            logger.error(f"Error performing Google search: {response.status_code} - {error_message}")
+                    except:
+                        logger.error(f"Error performing Google search: {response.status_code} (could not parse error response)")
+                    
                     if attempt < 1:  # Retry on error (only 1 retry now)
                         time.sleep(2)  # Fixed 2s delay instead of exponential
                         continue

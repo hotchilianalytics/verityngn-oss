@@ -14,17 +14,20 @@ from pathlib import Path
 repo_root = Path(__file__).parent.parent
 sys.path.insert(0, str(repo_root))
 
-# Load .env file FIRST (before checking auth)
+# Load secrets FIRST (handles both .env and Streamlit Cloud secrets)
 try:
-    from dotenv import load_dotenv
-
-    env_file = repo_root / ".env"
-    if env_file.exists():
-        load_dotenv(env_file)
-except ImportError:
-    pass  # python-dotenv not installed
-except Exception:
-    pass  # .env loading failed, continue anyway
+    from ui import secrets_loader
+    # secrets_loader auto-loads on import
+except ImportError as e:
+    st.warning(f"Could not import secrets_loader: {e}")
+    # Fallback: try loading .env directly
+    try:
+        from dotenv import load_dotenv
+        env_file = repo_root / ".env"
+        if env_file.exists():
+            load_dotenv(env_file)
+    except Exception:
+        pass
 
 
 def check_google_cloud_auth():
@@ -258,7 +261,7 @@ def main():
             from pathlib import Path
 
             output_dir = Path(
-                st.session_state.config.get("output.local_dir", "./outputs")
+                st.session_state.config.get("output.local_dir", "./outputs_debug")
             )
             if output_dir.exists():
                 report_count = len(list(output_dir.glob("*/report.json")))

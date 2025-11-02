@@ -1,0 +1,40 @@
+"""
+FastAPI application for serving VerityNgn reports.
+
+This API server provides endpoints to serve HTML, JSON, and Markdown reports,
+making all links in HTML reports work correctly.
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from verityngn.api.routes import reports
+
+app = FastAPI(
+    title="VerityNgn Report API",
+    description="API for serving verification reports",
+    version="1.0.0",
+)
+
+# CORS middleware for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include report routes
+app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+

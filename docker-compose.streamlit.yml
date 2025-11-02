@@ -1,0 +1,76 @@
+# Docker Compose for VerityNgn Streamlit UI
+#
+# Usage:
+#   1. Copy .streamlit/secrets.toml.example to .streamlit/secrets.toml
+#   2. Update secrets.toml with your credentials
+#   3. Run: docker-compose -f docker-compose.streamlit.yml up -d
+#   4. Access: http://localhost:8501
+
+version: '3.8'
+
+services:
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: verityngn-streamlit
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount secrets (read-only)
+      - ./.streamlit/secrets.toml:/app/.streamlit/secrets.toml:ro
+      
+      # Optional: Mount service account JSON directly
+      # - ./verityngn/config/service-account.json:/secrets/service-account.json:ro
+      
+      # Mount outputs for persistence
+      - ./outputs:/app/outputs
+      - ./verityngn/outputs_debug:/app/verityngn/outputs_debug
+      
+      # Mount gallery for persistence
+      - ./ui/gallery:/app/ui/gallery
+    
+    environment:
+      # Optional: Set GOOGLE_APPLICATION_CREDENTIALS if mounting JSON directly
+      # - GOOGLE_APPLICATION_CREDENTIALS=/secrets/service-account.json
+      
+      # Application settings
+      - DEPLOYMENT_MODE=research
+      - DEBUG_OUTPUTS=true
+      - STORAGE_BACKEND=local
+    
+    restart: unless-stopped
+    
+    # Optional: resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Optional: Add a reverse proxy (nginx) for HTTPS
+# Uncomment if you want nginx in front
+#
+# nginx:
+#   image: nginx:alpine
+#   container_name: verityngn-nginx
+#   ports:
+#     - "80:80"
+#     - "443:443"
+#   volumes:
+#     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#     - ./ssl:/etc/nginx/ssl:ro
+#   depends_on:
+#     - streamlit
+#   restart: unless-stopped
+
