@@ -1,0 +1,40 @@
+# Streamlit UI Requirements
+# This file is specifically for Streamlit Cloud deployment
+
+# Core Streamlit
+streamlit>=1.28.0
+
+# Configuration and secrets
+python-dotenv==1.0.0
+pyyaml>=6.0.1
+
+# Data processing
+pandas>=2.2.3
+numpy>=2.1.3
+
+# Utilities
+requests==2.31.0
+Pillow==10.1.0
+
+# For report rendering
+markdown==3.5.1
+jinja2==3.1.2
+
+# For gallery and components
+arrow>=1.3.0
+python-dateutil>=2.9.0
+
+# JSON processing
+pydantic>=2.7.4
+
+# Google Cloud (if needed for API calls from UI)
+google-cloud-storage>=2.18.0
+google-auth==2.25.2
+google-api-python-client>=2.157.0
+
+# YouTube API
+google-api-core>=2.19.0
+
+# For video embeddings
+beautifulsoup4==4.12.2
+
