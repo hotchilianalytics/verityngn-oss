@@ -32,46 +32,17 @@ Since the app is at `ui/streamlit_app.py`, Streamlit Cloud expected `ui/requirem
 ## ✅ Solution
 
 ### 1. Created `ui/requirements.txt`
-Streamlit-specific dependencies for the UI-only deployment:
+**IMPORTANT:** Must include ALL dependencies for running verifications, not just UI!
 
-```txt
-# Core Streamlit
-streamlit>=1.28.0
+The Streamlit app needs:
+- ✅ Streamlit itself
+- ✅ **LangChain & LangGraph** (for workflow execution)
+- ✅ **Google Cloud AI** (Vertex AI, Gemini)
+- ✅ **Video processing** (yt-dlp, youtube_transcript_api)
+- ✅ **Web scraping** (requests, beautifulsoup4)
+- ✅ All workflow dependencies
 
-# Configuration and secrets
-python-dotenv==1.0.0
-pyyaml>=6.0.1  ← The missing dependency!
-
-# Data processing
-pandas>=2.2.3
-numpy>=2.1.3
-
-# Utilities
-requests==2.31.0
-Pillow==10.1.0
-
-# For report rendering
-markdown==3.5.1
-jinja2==3.1.2
-
-# For gallery and components
-arrow>=1.3.0
-python-dateutil>=2.9.0
-
-# JSON processing
-pydantic>=2.7.4
-
-# Google Cloud (for API calls)
-google-cloud-storage>=2.18.0
-google-auth==2.25.2
-google-api-python-client>=2.157.0
-
-# YouTube API
-google-api-core>=2.19.0
-
-# For video embeddings
-beautifulsoup4==4.12.2
-```
+See `ui/requirements.txt` for the complete list (~80 packages)
 
 ### 2. Created `.streamlit/config.toml`
 Streamlit Cloud configuration:
