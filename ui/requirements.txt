@@ -30,7 +30,7 @@ langchain-text-splitters>=0.3.6
 langgraph>=0.2.50
 
 # ==================== GOOGLE CLOUD ====================
-google-cloud-storage>=2.18.0
+google-cloud-storage>=3.0.0
 google-auth>=2.25.2
 google-auth-oauthlib>=1.1.0
 google-api-python-client>=2.157.0
@@ -42,6 +42,7 @@ protobuf>=4.25.3
 
 # ==================== VIDEO PROCESSING ====================
 yt-dlp>=2024.12.13
+ffmpeg-python==0.2.0
 pytubefix>=8.10.0
 youtube_transcript_api>=0.6.2
 isodate>=0.6.1
