@@ -31,8 +31,8 @@ langgraph>=0.2.50
 
 # ==================== GOOGLE CLOUD ====================
 google-cloud-storage>=2.18.0
-google-auth==2.25.2
-google-auth-oauthlib==1.1.0
+google-auth>=2.25.2
+google-auth-oauthlib>=1.1.0
 google-api-python-client>=2.157.0
 google-api-core>=2.19.0
 google-cloud-firestore>=2.18.0
