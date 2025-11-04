@@ -385,3 +385,4 @@ async def get_claim_sources(video_id: str, claim_id: str):
         logger.error(f"Error getting claim sources: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+

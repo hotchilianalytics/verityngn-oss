@@ -529,3 +529,4 @@ print(f"Optimal: {num_segments} segment(s) of {segment_duration}s each")
 **Version:** 2.0  
 **Author:** VerityNgn Research Team
 
+

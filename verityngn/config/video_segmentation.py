@@ -271,3 +271,4 @@ if __name__ == "__main__":
     print(f"Optimal: {total_segs} segment(s) of {segment_dur/60:.1f} minutes each")
     print(f"Expected time: {total_segs * 8}-{total_segs * 12} minutes")
 
+

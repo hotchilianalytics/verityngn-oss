@@ -364,3 +364,4 @@ def log_query_effectiveness(
         logger.warning("⚠️  Query returned poor results. Consider refinement.")
 
 
+

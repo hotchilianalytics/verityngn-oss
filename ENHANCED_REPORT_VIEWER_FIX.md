@@ -207,3 +207,4 @@ streamlit run ui/streamlit_app.py
 
 Then navigate to **"📊 View Reports"** tab - you should see all 4 reports!
 
+
