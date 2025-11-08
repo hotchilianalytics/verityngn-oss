@@ -4,7 +4,7 @@
 
 Your UI is **already running** locally!
 
-**Access it at:** http://localhost:8501
+**Access it at:** <http://localhost:8501>
 
 ---
 
@@ -25,7 +25,7 @@ docker compose restart ui
 docker compose stop ui
 ```
 
-**Access:** http://localhost:8501
+**Access:** <http://localhost:8501>
 
 ### Option 2: Run UI Directly (Alternative)
 
@@ -48,7 +48,7 @@ streamlit run ui/streamlit_app.py
 ### Prerequisites
 
 ✅ **GitHub Account** - To host the code  
-✅ **Streamlit Community Account** - Free at https://share.streamlit.io  
+✅ **Streamlit Community Account** - Free at <https://share.streamlit.io>  
 ✅ **ngrok Tunnel Running** - Your API at `https://oriented-flea-large.ngrok-free.app`
 
 ---
@@ -78,7 +78,7 @@ git push origin main
 
 ### Step 2: Deploy to Streamlit Community
 
-1. **Go to:** https://share.streamlit.io
+1. **Go to:** <https://share.streamlit.io>
 
 2. **Sign in** with GitHub
 
@@ -101,7 +101,7 @@ git push origin main
 
 After deployment starts, you need to add your ngrok URL as a secret.
 
-#### In Streamlit Cloud Dashboard:
+#### In Streamlit Cloud Dashboard
 
 1. **Click:** Your app name
 2. **Click:** ⚙️ Settings (bottom left)
@@ -127,10 +127,12 @@ url = "https://oriented-flea-large.ngrok-free.app"
 
 1. **Wait for deployment** (usually 1-2 minutes)
 
-2. **Access your app:** 
+2. **Access your app:**
+
    ```
    https://verityngn.streamlit.app
    ```
+
    (or whatever subdomain you chose)
 
 3. **Test submission:**
@@ -201,10 +203,12 @@ The app will automatically rebuild and redeploy when you push to main.
 ### ngrok URL Management
 
 **Free ngrok plan:** URL changes on restart
+
 - You'll need to update Streamlit secrets when ngrok restarts
 - Consider upgrading to ngrok Personal ($8/mo) for persistent URLs
 
 **Paid ngrok plan:** Reserve a domain
+
 - URL never changes
 - Update secrets once, never again!
 
@@ -239,12 +243,14 @@ Your Streamlit app is public, but it connects to your local API via ngrok.
 ### Don't Expose Secrets
 
 Never commit to git:
+
 - ❌ `.env` files
 - ❌ `secrets.toml`
 - ❌ Service account JSON files
 - ❌ API keys
 
 These should only be in:
+
 - ✅ `.gitignore`
 - ✅ Streamlit Cloud secrets
 - ✅ Local development only
@@ -256,6 +262,7 @@ These should only be in:
 ### Streamlit Cloud Dashboard
 
 View app health:
+
 - **Logs:** Real-time logs
 - **Analytics:** Visitor stats
 - **Resources:** CPU/memory usage
@@ -263,7 +270,8 @@ View app health:
 ### ngrok Web Interface
 
 Monitor API calls:
-- **URL:** http://localhost:4040
+
+- **URL:** <http://localhost:4040>
 - Shows all requests from Streamlit to your API
 
 ---
@@ -273,11 +281,13 @@ Monitor API calls:
 ### "Cannot connect to API"
 
 **Check:**
+
 1. Is ngrok still running? Check terminal
 2. Is API healthy? `curl http://localhost:8080/health`
 3. Is ngrok URL correct in secrets?
 
 **Fix:**
+
 ```bash
 # Restart ngrok
 ngrok http 8080
@@ -293,6 +303,7 @@ ngrok http 8080
 **Check:** `ui/requirements.txt` has all dependencies
 
 **Current UI dependencies:**
+
 ```txt
 streamlit>=1.28.0
 requests>=2.31.0
@@ -307,6 +318,7 @@ These are lightweight and should install quickly!
 ### App is slow to load
 
 **Streamlit Community limitations:**
+
 - Free tier has resource limits
 - Apps "sleep" after inactivity
 - First load after sleep is slower
@@ -335,6 +347,7 @@ gcloud run services describe verityngn-api \
 ```
 
 This gives you:
+
 - ✅ Persistent URL
 - ✅ No ngrok needed
 - ✅ Scalable infrastructure
@@ -345,6 +358,7 @@ This gives you:
 ## 📚 Quick Reference
 
 ### Local Testing
+
 ```bash
 # UI at http://localhost:8501
 docker compose up ui
@@ -354,12 +368,14 @@ streamlit run ui/streamlit_app.py
 ```
 
 ### Streamlit Community
+
 ```
 Deploy: https://share.streamlit.io
 Docs: https://docs.streamlit.io/streamlit-community-cloud
 ```
 
 ### Your URLs
+
 ```
 Local UI: http://localhost:8501
 Ngrok API: https://oriented-flea-large.ngrok-free.app
@@ -370,7 +386,7 @@ Streamlit App: https://your-subdomain.streamlit.app
 
 ## ✅ Deployment Checklist
 
-- [ ] Local UI tested at http://localhost:8501
+- [ ] Local UI tested at <http://localhost:8501>
 - [ ] ngrok tunnel running
 - [ ] Repo pushed to GitHub (public)
 - [ ] Streamlit Community account created
@@ -381,5 +397,4 @@ Streamlit App: https://your-subdomain.streamlit.app
 
 ---
 
-**Ready to deploy?** Go to https://share.streamlit.io and click "New app"! 🚀
-
+**Ready to deploy?** Go to <https://share.streamlit.io> and click "New app"! 🚀
