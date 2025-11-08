@@ -61,11 +61,11 @@ VERTEX_MODEL_NAME = "gemini-2.5-flash"
 #AGENT_MODEL_NAME = os.getenv("AGENT_MODEL_NAME", "gemini-1.5-pro")
 AGENT_MODEL_NAME = "gemini-2.5-flash"
 # AI Parameter settings
-#MAX_OUTPUT_TOKENS_2_5_FLASH = 8192  # 8K tokens for Gemini 2.5 Flash (Cloud Run compatibility)
-MAX_OUTPUT_TOKENS_2_5_FLASH = 65536  # 64K tokens for Gemini 2.5 Flash
-MAX_OUTPUT_TOKENS_2_0_FLASH = 8192  # 8K tokens for Gemini 2.0 Flash
-# For genai multimodal calls that input a YouTube video, cap to 8K
-GENAI_VIDEO_MAX_OUTPUT_TOKENS = 8192
+# Read from ENV or default to 32K tokens for Gemini 2.5 Flash
+MAX_OUTPUT_TOKENS_2_5_FLASH = int(os.getenv("MAX_OUTPUT_TOKENS_2_5_FLASH", "32768"))
+MAX_OUTPUT_TOKENS_2_0_FLASH = int(os.getenv("MAX_OUTPUT_TOKENS_2_0_FLASH", "8192"))
+# For genai multimodal calls that input a YouTube video (read from ENV or default to 8K)
+GENAI_VIDEO_MAX_OUTPUT_TOKENS = int(os.getenv("GENAI_VIDEO_MAX_OUTPUT_TOKENS", "8192"))
 # UNIFIED PRODUCTION PATH: Always use Vertex AI YouTube URL analysis
 USE_GENAI_YOUTUBE_URL = False
 USE_VERTEX_YOUTUBE_URL = True

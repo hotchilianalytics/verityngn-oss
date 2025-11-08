@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 TOKENS_PER_FRAME = 258  # Average tokens per video frame
 TOKENS_PER_SECOND_AUDIO = 32  # Average tokens per second of audio
 PROMPT_OVERHEAD_TOKENS = 5000  # System prompt + instructions
+THINKING_BUDGET_TOKENS = 100000  # Reserve tokens for LLM thinking/reasoning (reduces input budget)
 SAFETY_MARGIN_PERCENT = 10  # Reserve 10% for variability
 
 
@@ -26,7 +27,7 @@ SAFETY_MARGIN_PERCENT = 10  # Reserve 10% for variability
 MODEL_SPECS = {
     "gemini-2.5-flash": {
         "context_window": 1_000_000,  # 1M tokens
-        "max_output_tokens": 65_536,   # 64K tokens
+        "max_output_tokens": 32_768,   # 32K tokens (conservative limit to prevent truncation)
         "recommended_fps": 1.0,         # Frames per second
     },
     "gemini-2.0-flash": {
@@ -92,11 +93,13 @@ def calculate_optimal_segment_duration(
     max_output_tokens = custom_output_tokens or specs["max_output_tokens"]
     
     # Calculate available tokens for input
+    # Reserve space for: output, prompt overhead, thinking/reasoning, and safety margin
     safety_margin_tokens = int(context_window * (SAFETY_MARGIN_PERCENT / 100))
     available_input_tokens = (
         context_window 
         - max_output_tokens 
         - PROMPT_OVERHEAD_TOKENS 
+        - THINKING_BUDGET_TOKENS
         - safety_margin_tokens
     )
     
@@ -270,5 +273,10 @@ if __name__ == "__main__":
     segment_dur, total_segs = get_segmentation_for_video(1998, "gemini-2.5-flash", 1.0)
     print(f"Optimal: {total_segs} segment(s) of {segment_dur/60:.1f} minutes each")
     print(f"Expected time: {total_segs * 8}-{total_segs * 12} minutes")
+
+
+
+
+
 
 

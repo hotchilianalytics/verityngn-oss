@@ -472,18 +472,19 @@ def optimize_explanation_format(explanation: str, claim_index: int = None, video
     ci_links = []
     
     # Check for counter-intelligence and add appropriate links
+    # Use relative paths for standalone viewing compatibility
     if counter_intel_points and claim_index is not None and video_id:
-        ci_links.append(f"[🕵️ CI Analysis](/api/v1/reports/{video_id}/claim/claim_{claim_index}/counter_intel.html)")
+        ci_links.append(f"[🕵️ CI Analysis](claim/claim_{claim_index}/counter_intel.html)")
     
     # Add YouTube counter-intelligence link if detected
     if any("youtube" in point.lower() for point in counter_intel_points):
         if claim_index is not None and video_id:
-            ci_links.append(f"[📺 YouTube CI](/api/v1/reports/{video_id}/claim/claim_{claim_index}/youtube_ci.html)")
+            ci_links.append(f"[📺 YouTube CI](claim/claim_{claim_index}/youtube_ci.html)")
     
     # Add press release counter-intelligence link if detected  
     if any("press" in point.lower() for point in counter_intel_points):
         if claim_index is not None and video_id:
-            ci_links.append(f"[Press CI](/api/v1/reports/{video_id}/claim/claim_{claim_index}/press_ci.html)")
+            ci_links.append(f"[Press CI](claim/claim_{claim_index}/press_ci.html)")
     
     # 🎯 SHERLOCK: Final fallback if no meaningful points extracted
     if not all_points:
@@ -584,10 +585,10 @@ def create_counter_intelligence_claim_file(claim: Claim, counter_intel_data: Dic
                     content += f"- {point}\n"
                 content += "\n"
             
-            # Link to detailed analysis if available
+            # Link to detailed analysis if available (use relative path)
             video_id = video.get('id', '')
             if video_id:
-                content += f"**Detailed Analysis:** [View {video_id}.summary.json](/api/v1/reports/counter_intelligence/{video_id}/summary.json)\n\n"
+                content += f"**Detailed Analysis:** [View {video_id}.summary.json](counter_intelligence/{video_id}/summary.json)\n\n"
             
             content += "---\n\n"
     else:
@@ -1151,7 +1152,8 @@ def generate_main_report_content(report: VerityReport) -> str:
             quality_indicators = generate_source_quality_indicators(verification_sources)
             
             claim_id_str_for_link = f"claim_{i}"
-            source_link = f"[{num_sources} sources](/api/v1/reports/{video_id}/claim/{claim_id_str_for_link}/sources.html)"
+            # Use relative path for standalone viewing compatibility
+            source_link = f"[{num_sources} sources](claim/{claim_id_str_for_link}/sources.html)"
             
             # Enhanced display with quality indicators
             odds_sources_raw = f"**True:** {prob_true_pct:.0f}%<br>**False:** {prob_false_pct:.0f}%<br>**Uncertain:** {prob_uncertain_pct:.0f}%<br><br>{quality_indicators}<br>{source_link}"
@@ -1174,7 +1176,8 @@ def generate_main_report_content(report: VerityReport) -> str:
             claim_id_str_for_link = f"claim_{i}"
             time_cell = str(claim.timestamp or "-").replace("|", "\\|").replace("\n", " ")
             source_file_name = f"{video_id}_{claim_id_str_for_link}_sources.html"
-            link_cell = f"[View Sources for Claim {i+1}](/api/v1/reports/{video_id}/claim/{claim_id_str_for_link}/sources.html)"
+            # Use relative path for standalone viewing compatibility
+            link_cell = f"[View Sources for Claim {i+1}](claim/{claim_id_str_for_link}/sources.html)"
             report_content.append(f"| {i+1:<7} | {time_cell:<9} | {link_cell} |")
 
     report_content.append("")
@@ -1217,13 +1220,15 @@ def generate_main_report_content(report: VerityReport) -> str:
         # YouTube Counter-Intelligence
         total_yt = len(youtube_counter_intel) if youtube_counter_intel else youtube_evidence_count
         if total_yt > 0:
-            yt_link = f"[{total_yt} YouTube Videos](/api/v1/reports/{video_id}/youtube-counter-intel.html)"
+            # Use relative path for standalone viewing compatibility
+            yt_link = f"[{total_yt} YouTube Videos](youtube-counter-intel.html)"
             report_content.append(f"| YouTube Counter-Intelligence | {total_yt} | {yt_link} |")
         
         # Press Release Counter-Intelligence  
         total_pr = len(press_release_counter) if press_release_counter else press_release_evidence_count
         if total_pr > 0:
-            pr_link = f"[{total_pr} Press Releases](/api/v1/reports/{video_id}/press-release-counter.html)"
+            # Use relative path for standalone viewing compatibility
+            pr_link = f"[{total_pr} Press Releases](press-release-counter.html)"
             report_content.append(f"| Press Release Analysis | {total_pr} | {pr_link} |")
         
         if total_yt == 0 and total_pr == 0:

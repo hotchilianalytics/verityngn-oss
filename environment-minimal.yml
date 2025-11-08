@@ -1,0 +1,71 @@
+name: verityngn
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Core Python
+  - python=3.12
+  
+  # Web framework
+  - fastapi
+  - uvicorn
+  - pydantic
+  - python-multipart
+  
+  # YouTube processing (updated to latest version)
+  - yt-dlp=2025.1.12
+  - ffmpeg
+  
+  # Google Cloud and AI (Core packages from conda, latest from pip)
+  - google-cloud-storage
+  - google-auth
+  - google-cloud-firestore
+  - google-cloud-batch
+  - google-cloud-pubsub
+  
+  # LangChain (essential for agents/workflows)
+  - pip
+  - pip:
+    - ffmpeg-python
+    - mdit-py-plugins
+    - markdown-it-py
+    - linkify-it-py
+    # Google Cloud AI packages (latest available versions via pip)
+    - google-cloud-aiplatform>=1.117.0
+    - google-generativeai>=0.8.0
+    # LangChain
+    - langchain==0.3.18
+    - langchain-openai==0.3.27
+    - langchain-anthropic
+    - langchain-google-genai>=2.0.10
+    - langchain-google-vertexai>=2.0.15
+    - langchain-community==0.3.17
+    - langchain-core==0.3.68
+    - langchain-text-splitters==0.3.6
+    - langgraph
+    - google-api-python-client>=2.157.0
+    # ML and embeddings
+    - scikit-learn
+    # - sentence-transformers   # disabled to reduce image size
+    # - torch                   # disabled to reduce image size
+    
+  # Web requests and utilities
+  - requests
+  - beautifulsoup4
+  - python-dotenv
+  - jinja2
+  - markdown
+  - html2text
+  - moviepy
+  
+  # Data processing
+  - numpy
+  - pandas
+  - pillow
+  
+  # Additional utilities
+  - aiohttp
+  - httpx
+  - websockets
+  - psutil
+  - isodate 

@@ -36,6 +36,57 @@ YouTube URL → Intelligent Segmentation → Multimodal LLM Analysis → Enhance
 
 ---
 
+## 🚀 Quick Start
+
+VerityNgn supports three deployment options:
+
+### Option 1: Local Deployment (Recommended for Testing)
+
+**Requirements**: Docker, Docker Compose
+
+```bash
+# Clone repository
+git clone https://github.com/hotchilianalytics/verityngn-oss.git
+cd verityngn-oss
+
+# Configure environment
+cp env.example .env
+# Edit .env with your API keys
+
+# Start services
+docker-compose up
+```
+
+**Access**:
+- Streamlit UI: http://localhost:8501
+- API Backend: http://localhost:8080
+
+See [docs/DEPLOYMENT_LOCAL.md](docs/DEPLOYMENT_LOCAL.md) for details.
+
+### Option 2: Cloud Deployment (Recommended for Production)
+
+Deploy API to Google Cloud Run + Streamlit to Streamlit Cloud:
+
+```bash
+# Deploy API
+gcloud run deploy verityngn-api \
+  --image=$REGION-docker.pkg.dev/$PROJECT_ID/verityngn/api:latest \
+  --platform=managed \
+  --region=us-central1
+```
+
+See [docs/DEPLOYMENT_CLOUD_RUN.md](docs/DEPLOYMENT_CLOUD_RUN.md) for details.
+
+### Option 3: Google Colab (Easiest for Trying Out)
+
+Open the Colab notebook and connect to any API endpoint:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hotchilianalytics/verityngn-oss/blob/main/notebooks/VerityNgn_Colab_Demo.ipynb)
+
+See [docs/DEPLOYMENT_COLAB.md](docs/DEPLOYMENT_COLAB.md) for details.
+
+---
+
 ## What's New in v2.0
 
 ### 🚀 Intelligent Video Segmentation

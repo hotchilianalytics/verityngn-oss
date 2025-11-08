@@ -15,12 +15,15 @@ def render_report_viewer_tab():
     
     st.header("📊 View Enhanced Reports")
     
-    # 🎯 SIMPLIFIED: Just find the outputs_debug directory
-    # Try multiple possible locations
+    # 🎯 SIMPLIFIED: Find the outputs directory
+    # Priority: /app/outputs (Docker mount) > outputs (local) > outputs_debug (legacy)
     possible_dirs = [
-        Path.cwd() / 'verityngn' / 'outputs_debug',  # From project root
-        Path.cwd() / 'outputs_debug',  # Alternative
+        Path('/app/outputs'),  # Docker mount point (highest priority)
+        Path.cwd() / 'outputs',  # Standard outputs directory
+        Path.cwd() / 'verityngn' / 'outputs_debug',  # Legacy location
+        Path.cwd() / 'outputs_debug',  # Legacy alternative
         Path(__file__).parent.parent.parent / 'verityngn' / 'outputs_debug',  # Relative to this file
+        Path(__file__).parent.parent / 'outputs',  # From UI directory
     ]
     
     output_dir = None
@@ -33,7 +36,7 @@ def render_report_viewer_tab():
     if not output_dir:
         st.warning(f"⚠️ No reports directory found. Run a verification first!")
         with st.expander("🔍 Debug Info"):
-            st.info(f"Searched in:\n- {possible_dirs[0]}\n- {possible_dirs[1]}\n- {possible_dirs[2]}")
+            st.info(f"Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
         return
     
     # 🎯 SIMPLIFIED: Find all video directories with HTML reports

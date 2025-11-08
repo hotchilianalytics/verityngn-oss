@@ -1,232 +1,304 @@
-# VerityNgn Streamlit UI
+# 🚀 VerityNgn UI - Streamlit Community Cloud Deployment
 
-Interactive web interface for YouTube video verification.
+## Overview
 
-## 🚀 Quick Start
+This is the VerityNgn UI - a web interface for verifying YouTube video truthfulness using AI. The UI connects to a VerityNgn API server (running locally via ngrok or deployed to Cloud Run).
 
-### Install Dependencies
+## Features
+
+- 📹 Submit YouTube videos for verification
+- 📊 View truthfulness reports with claim analysis
+- 🔍 Browse verification history
+- 🎨 Modern, responsive interface
+
+## Live Demo
+
+Deploy your own instance to Streamlit Community Cloud in minutes!
+
+---
+
+## 🎯 Quick Deploy to Streamlit Community Cloud
+
+### Prerequisites
+
+1. **GitHub Account** (to host the code)
+2. **Streamlit Community Account** (free at <https://share.streamlit.io>)
+3. **VerityNgn API** running either:
+   - Locally with ngrok tunnel
+   - Deployed to Google Cloud Run
+
+### Step 1: Fork/Push to GitHub
+
+This repo should already be on GitHub. If not:
 
 ```bash
-pip install streamlit>=1.28.0
-# Or install all dependencies
-pip install -r requirements.txt
+cd /Users/ajjc/proj/verityngn-oss
+git add .
+git commit -m "Prepare for Streamlit Community deployment"
+git push origin main
 ```
 
-### Run the UI
+### Step 2: Deploy to Streamlit Community
 
-```bash
-streamlit run ui/streamlit_app.py
+1. **Go to:** <https://share.streamlit.io>
+2. **Click:** "New app"
+3. **Repository:** Select your `verityngn-oss` repo
+4. **Branch:** `main`
+5. **Main file path:** `ui/streamlit_app.py`
+6. **App URL:** Choose your subdomain (e.g., `verityngn`)
+
+### Step 3: Configure Secrets
+
+1. In Streamlit Cloud dashboard, click **"⚙️ Settings"**
+2. Go to **"Secrets"** tab
+3. Add your configuration:
+
+```toml
+# Your ngrok URL or Cloud Run URL
+VERITYNGN_API_URL = "https://your-url-here.ngrok-free.app"
+
+# Alternative format (also works)
+[api]
+url = "https://your-url-here.ngrok-free.app"
 ```
 
-The UI will open in your browser at `http://localhost:8501`.
+4. **Click "Save"**
 
-## 📱 Features
+### Step 4: Deploy
 
-### 1. Video Input Tab 🎬
-- Enter YouTube URL for verification
-- Configure model settings
-- Advanced options (temperature, max claims, output formats)
-- View recent verifications
-- Load example videos
+Click **"Deploy"** and wait ~2-3 minutes for the app to start.
 
-### 2. Processing Tab ⚙️
-- Real-time workflow progress
-- Stage indicators (download → analyze → verify → report)
-- Workflow logs with timestamps
-- Cancel/retry options
-- Resource monitoring
+Your app will be live at: `https://verityngn.streamlit.app` (or your chosen URL)
 
-### 3. Report Viewer Tab 📊
-- Browse all verification reports
-- Interactive claims table with probability distributions
-- Executive summary with key findings
-- Claims distribution visualization
-- Download reports (JSON, Markdown, HTML)
-- HTML report preview
-- Delete reports
-
-### 4. Gallery Tab 🖼️
-- Browse community example verifications
-- Filter by category (Health, Finance, Science, etc.)
-- Search and sort examples
-- Submit your reports to gallery
-- View gallery statistics
-
-### 5. Settings Tab ⚙️
-- **Authentication:** Configure ADC, service account, or workload identity
-- **Model Config:** Select model, temperature, tokens, cost estimates
-- **Processing:** Segment FPS, claims range, search API keys
-- **Output:** Formats, directories, timestamps
-- **Advanced:** LLM logging, performance tuning, debug mode
-- Export/import configuration
-
-## 🎨 UI Components
-
-The UI is modular, with each tab in its own component:
-
-```
-ui/
-├── streamlit_app.py          # Main application
-├── components/
-│   ├── __init__.py
-│   ├── video_input.py        # Video submission
-│   ├── processing.py         # Progress monitoring
-│   ├── report_viewer.py      # Report display
-│   ├── gallery.py            # Example gallery
-│   └── settings.py           # Configuration
-└── README.md                 # This file
-```
+---
 
 ## 🔧 Configuration
 
-The UI reads configuration from:
-1. `config.yaml` (if exists)
-2. Environment variables (`VERITYNGN_*`)
-3. Session state (UI overrides)
+### API URL
 
-## 💡 Usage Tips
+The UI needs to know where your VerityNgn API is running. Set this via Streamlit secrets:
 
-### First Time Setup
+**Option 1: Using ngrok (development)**
 
-1. **Configure Authentication:**
-   - Go to Settings → Authentication
-   - Choose ADC (easiest for local dev)
-   - Run `gcloud auth application-default login`
-
-2. **Set GCP Project:**
-   - Go to Settings → Authentication
-   - Enter your GCP Project ID
-
-3. **Add Search API Keys:**
-   - Go to Settings → Processing
-   - Enter Google Search API Key and CSE ID
-
-4. **Test with Example:**
-   - Go to Verify Video tab
-   - Click "Load Example 1"
-   - Click "Start Verification"
-   - Monitor progress in Processing tab
-
-### Processing Videos
-
-**For Short Videos (<5 min):**
-- Use default settings
-- Should complete in 2-5 minutes
-
-**For Long Videos (>30 min):**
-- Increase max_claims in Advanced Options
-- May take 10-30 minutes
-- Monitor in Processing tab
-
-### Viewing Reports
-
-1. Go to View Reports tab
-2. Select report from dropdown
-3. View different sections:
-   - **Claims:** Detailed verification of each claim
-   - **Summary:** Key findings and visualizations
-   - **Raw JSON:** Full report data
-   - **Download:** Export in multiple formats
-
-### Gallery Submissions
-
-To submit a verified video to the gallery:
-1. Complete verification
-2. Go to Gallery tab
-3. Expand "Submit to Gallery"
-4. Enter video ID, category, tags
-5. Agree to CC BY 4.0 license
-6. Submit (will be reviewed before publication)
-
-## 🐛 Troubleshooting
-
-### "Failed to load configuration"
-- Ensure `config.yaml.example` exists
-- Copy to `config.yaml` and configure
-- Or set environment variables
-
-### "ADC not found"
-- Run: `gcloud auth application-default login`
-- Ensure you have gcloud CLI installed
-
-### "Processing stuck"
-- Check Processing tab logs for errors
-- Verify API keys in Settings
-- Check GCP quotas and permissions
-
-### "No reports found"
-- Complete at least one verification
-- Check output directory in Settings
-- Verify path permissions
-
-## 📊 System Requirements
-
-- **Python:** 3.9+
-- **RAM:** 8GB recommended (4GB minimum)
-- **Storage:** 1GB per video (temporary)
-- **Network:** Stable internet for downloads/API calls
-
-## 🔐 Security Notes
-
-- Service account keys are never stored by the UI
-- API keys are stored in session state only
-- Use environment variables for sensitive data
-- Clear browser cache to remove sensitive info
-
-## 🎯 Performance Tips
-
-1. **Use ADC for local dev** (faster than service accounts)
-2. **Enable LLM logging** for debugging
-3. **Adjust max_claims** based on video complexity
-4. **Use gemini-2.5-flash** for speed (vs gemini-pro)
-5. **Process multiple videos sequentially** (not parallel)
-
-## 📚 Advanced Features
-
-### Custom Styling
-Edit `streamlit_app.py` to customize CSS:
-```python
-st.markdown("""
-<style>
-    .your-custom-class {
-        /* your styles */
-    }
-</style>
-""", unsafe_allow_html=True)
+```toml
+VERITYNGN_API_URL = "https://oriented-flea-large.ngrok-free.app"
 ```
 
-### Adding New Components
-1. Create new file in `components/`
-2. Define `render_your_tab()` function
-3. Import in `streamlit_app.py`
-4. Add to tab navigation
+**Option 2: Using Cloud Run (production)**
 
-### Integration with Batch Processing
-The UI is local-first, but can be extended to submit to Google Batch:
-- Add "Submit to Batch" option in Advanced Options
-- Use `services.batch.job_submitter` (if available)
-- Monitor batch jobs in Processing tab
+```toml
+VERITYNGN_API_URL = "https://verityngn-api-xxxxxx.run.app"
+```
 
-## 🤝 Contributing
+### Required Secrets
 
-Contributions welcome! Areas for improvement:
-- [ ] Better progress indicators (actual stage detection)
-- [ ] Real-time log streaming
-- [ ] Batch job submission UI
-- [ ] User authentication
-- [ ] Report comparison view
-- [ ] Mobile-responsive design
-- [ ] Dark mode toggle
+- ✅ `VERITYNGN_API_URL` - The API base URL (required)
+- ❌ `GOOGLE_APPLICATION_CREDENTIALS` - NOT needed (API handles this)
+- ❌ `GOOGLE_CLOUD_PROJECT` - NOT needed (API handles this)
 
-## 📄 License
+---
 
-MIT License - see LICENSE file
+## 📋 File Structure
 
-## 🔗 Links
+```
+ui/
+├── streamlit_app.py          # Main app entry point
+├── requirements.txt           # Minimal dependencies for UI
+├── packages.txt              # System dependencies
+├── .streamlit/
+│   ├── config.toml           # Streamlit configuration
+│   └── secrets.toml.example  # Secrets template
+├── components/               # UI components
+│   ├── video_input.py       # Video URL input
+│   ├── processing_api.py    # API client
+│   └── report_viewer.py     # Report display
+└── README.md                 # This file
+```
 
-- [Main Documentation](../README.md)
-- [Configuration Guide](../docs/guides/configuration.md)
-- [API Reference](../docs/api/README.md)
-- [GitHub Issues](https://github.com/.../verityngn-oss/issues)
+---
 
+## 🧪 Test Locally First
 
+Before deploying, test the UI locally:
+
+### Option 1: Using Docker (recommended)
+
+```bash
+docker compose up ui
+open http://localhost:8501
+```
+
+### Option 2: Using Python directly
+
+```bash
+cd ui
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
+
+---
+
+## 🔍 Troubleshooting
+
+### "Connection refused" or API errors
+
+**Problem:** UI can't reach the API
+
+**Solutions:**
+
+1. Check your ngrok tunnel is running
+2. Verify API URL in secrets is correct
+3. Test API directly: `curl https://your-url/health`
+
+### "Secrets not found"
+
+**Problem:** Streamlit Cloud can't find secrets
+
+**Solution:**
+
+1. Go to app settings → Secrets
+2. Add `VERITYNGN_API_URL`
+3. Restart app
+
+### App won't start
+
+**Problem:** Dependency or configuration issue
+
+**Solution:**
+
+1. Check app logs in Streamlit Cloud dashboard
+2. Verify `requirements.txt` is correct
+3. Check Python version compatibility (3.12 required)
+
+### ngrok URL changed
+
+**Problem:** Free ngrok URLs change on restart
+
+**Solutions:**
+
+- **Quick fix:** Update secrets in Streamlit Cloud with new URL
+- **Better fix:** Get paid ngrok account for persistent URLs
+- **Best fix:** Deploy API to Cloud Run for permanent URL
+
+---
+
+## 🎨 Customization
+
+### Change Theme
+
+Edit `ui/.streamlit/config.toml`:
+
+```toml
+[theme]
+primaryColor = "#YOUR_COLOR"
+backgroundColor = "#YOUR_COLOR"
+```
+
+### Modify Pages
+
+UI components are in `ui/components/`:
+
+- `video_input.py` - Video submission form
+- `processing_api.py` - API integration
+- `report_viewer.py` - Report display
+
+---
+
+## 🚀 Production Deployment
+
+### Recommended Setup
+
+1. **API:** Deploy to Google Cloud Run (permanent URL)
+
+   ```bash
+   gcloud run deploy verityngn-api \
+     --source . \
+     --region us-central1
+   ```
+
+2. **UI:** Deploy to Streamlit Community (free)
+   - Point to Cloud Run URL
+   - No more ngrok dependency!
+
+### Why This Setup?
+
+- ✅ **Free:** Streamlit Community is free
+- ✅ **Reliable:** Cloud Run has SLA guarantees
+- ✅ **Fast:** Both are globally distributed
+- ✅ **Secure:** Cloud Run handles authentication
+- ✅ **Scalable:** Handles traffic spikes
+
+---
+
+## 📊 Monitoring
+
+### Streamlit Cloud Dashboard
+
+View at: <https://share.streamlit.io>
+
+Shows:
+
+- App status
+- Resource usage
+- Logs
+- Error traces
+
+### Check API Health
+
+From Streamlit app, the UI automatically checks API health on startup.
+
+Or test manually:
+
+```bash
+curl https://your-api-url/health
+```
+
+---
+
+## 🔐 Security
+
+### What the UI Does
+
+- ✅ Calls API endpoints only
+- ✅ Displays results
+- ❌ Does NOT process videos directly
+- ❌ Does NOT need Google Cloud credentials
+- ❌ Does NOT store sensitive data
+
+### Best Practices
+
+1. **Use HTTPS** for API (ngrok/Cloud Run provide this)
+2. **Don't commit secrets** to Git
+3. **Use Streamlit secrets** for configuration
+4. **Keep dependencies updated**
+
+---
+
+## 📚 Links
+
+- **Streamlit Community:** <https://share.streamlit.io>
+- **Streamlit Docs:** <https://docs.streamlit.io>
+- **VerityNgn API Docs:** `https://your-api-url/docs`
+- **GitHub Issues:** Report bugs in the main repo
+
+---
+
+## ✅ Deployment Checklist
+
+Before deploying:
+
+- [ ] API is running (ngrok or Cloud Run)
+- [ ] API health check works: `curl https://your-api-url/health`
+- [ ] Code is pushed to GitHub
+- [ ] Created Streamlit Community account
+- [ ] Configured `VERITYNGN_API_URL` secret
+- [ ] Tested locally first
+- [ ] Ready to deploy!
+
+---
+
+**Need help?** Check the main repo README or open an issue on GitHub.
+
+**Ready to deploy?** Click the button below! 👇
+
+[![Deploy to Streamlit Cloud](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)

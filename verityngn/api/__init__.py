@@ -7,11 +7,11 @@ making all links in HTML reports work correctly.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from verityngn.api.routes import reports
+from verityngn.api.routes import reports, verification
 
 app = FastAPI(
-    title="VerityNgn Report API",
-    description="API for serving verification reports",
+    title="VerityNgn API",
+    description="API for video verification and serving reports",
     version="1.0.0",
 )
 
@@ -24,8 +24,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include report routes
+# Include routes
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
+app.include_router(verification.router, prefix="/api/v1/verification", tags=["verification"])
 
 
 @app.get("/health")
@@ -37,5 +38,8 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
 
 

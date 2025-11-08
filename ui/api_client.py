@@ -1,0 +1,363 @@
+"""
+VerityNgn API Client
+
+HTTP client for communicating with the VerityNgn API backend.
+Supports local, containerized, and cloud-deployed APIs.
+
+Usage:
+    client = VerityNgnAPIClient()
+    task_id = client.submit_verification(video_url)
+    status = client.get_status(task_id)
+    report = client.get_report(video_id, format='html')
+"""
+
+import os
+import time
+import requests
+from typing import Dict, Any, Optional, List, Tuple
+from urllib.parse import urljoin
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class VerityNgnAPIClient:
+    """Client for interacting with VerityNgn API backend."""
+    
+    def __init__(self, api_url: Optional[str] = None, timeout: int = 300):
+        """
+        Initialize API client.
+        
+        Args:
+            api_url: Base URL of the API (e.g., 'http://localhost:8080')
+                     If None, uses VERITYNGN_API_URL environment variable
+                     or defaults to http://localhost:8080
+            timeout: Request timeout in seconds (default: 300)
+        """
+        self.api_url = api_url or os.getenv('VERITYNGN_API_URL', 'http://localhost:8080')
+        self.timeout = timeout
+        
+        # Ensure no trailing slash
+        self.api_url = self.api_url.rstrip('/')
+        
+        logger.info(f"🌐 API Client initialized with URL: {self.api_url}")
+    
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> requests.Response:
+        """
+        Make HTTP request to API.
+        
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            endpoint: API endpoint path (will be joined with base URL)
+            **kwargs: Additional arguments to pass to requests
+            
+        Returns:
+            requests.Response object
+            
+        Raises:
+            requests.RequestException: On connection or HTTP errors
+        """
+        url = urljoin(self.api_url + '/', endpoint.lstrip('/'))
+        
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                timeout=kwargs.pop('timeout', self.timeout),
+                **kwargs
+            )
+            response.raise_for_status()
+            return response
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"❌ Connection error to {url}: {e}")
+            raise ConnectionError(
+                f"Cannot connect to API at {self.api_url}. "
+                f"Is the API server running? Start it with: python -m verityngn.api"
+            )
+        except requests.exceptions.Timeout as e:
+            logger.error(f"⏱️ Request timeout to {url}: {e}")
+            raise TimeoutError(f"Request to {url} timed out after {self.timeout}s")
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"❌ HTTP error {response.status_code} from {url}: {e}")
+            raise
+    
+    def health_check(self) -> Tuple[bool, str]:
+        """
+        Check if API is healthy and responsive.
+        
+        Returns:
+            Tuple of (is_healthy, message)
+        """
+        try:
+            response = self._make_request('GET', '/health', timeout=5)
+            data = response.json()
+            return True, data.get('status', 'OK')
+        except Exception as e:
+            return False, str(e)
+    
+    def submit_verification(self, video_url: str, config: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Submit a video for verification.
+        
+        Args:
+            video_url: YouTube video URL
+            config: Optional configuration overrides
+                    {
+                        'model_name': 'gemini-2.0-flash-exp',
+                        'max_claims': 20,
+                        'temperature': 0.7,
+                        'enable_llm_logging': True,
+                        'output_formats': ['html', 'json', 'md']
+                    }
+        
+        Returns:
+            task_id: Unique task identifier for tracking
+            
+        Raises:
+            ValueError: If video_url is invalid
+            requests.RequestException: On API errors
+        """
+        if not video_url or not video_url.strip():
+            raise ValueError("video_url cannot be empty")
+        
+        payload = {
+            'video_url': video_url.strip(),
+            'config': config or {}
+        }
+        
+        logger.info(f"📤 Submitting verification for: {video_url}")
+        
+        try:
+            response = self._make_request(
+                'POST',
+                '/api/v1/verification/verify',
+                json=payload
+            )
+            data = response.json()
+            task_id = data.get('task_id')
+            
+            if not task_id:
+                raise ValueError("API did not return a task_id")
+            
+            logger.info(f"✅ Task submitted successfully: {task_id}")
+            return task_id
+            
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"❌ Failed to submit verification: {e}")
+            if e.response is not None:
+                try:
+                    error_detail = e.response.json().get('detail', str(e))
+                    raise ValueError(f"API Error: {error_detail}")
+                except:
+                    pass
+            raise
+    
+    def get_status(self, task_id: str) -> Dict[str, Any]:
+        """
+        Get verification task status.
+        
+        Args:
+            task_id: Task identifier from submit_verification()
+        
+        Returns:
+            Status dictionary:
+            {
+                'task_id': str,
+                'status': 'pending'|'processing'|'completed'|'error',
+                'progress': float (0-100),
+                'current_stage': str,
+                'video_id': str (if available),
+                'error_message': str (if error),
+                'estimated_completion': str (if available)
+            }
+        """
+        logger.debug(f"📊 Checking status for task: {task_id}")
+        
+        response = self._make_request(
+            'GET',
+            f'/api/v1/verification/status/{task_id}'
+        )
+        return response.json()
+    
+    def get_report(
+        self,
+        video_id: str,
+        format: str = 'html'
+    ) -> str:
+        """
+        Get verification report.
+        
+        Args:
+            video_id: YouTube video ID
+            format: Report format ('html', 'json', 'md')
+        
+        Returns:
+            Report content as string
+        """
+        valid_formats = ['html', 'json', 'md']
+        if format not in valid_formats:
+            raise ValueError(f"format must be one of {valid_formats}")
+        
+        logger.info(f"📄 Fetching {format} report for video: {video_id}")
+        
+        response = self._make_request(
+            'GET',
+            f'/api/v1/reports/{video_id}/report.{format}'
+        )
+        
+        return response.text
+    
+    def get_report_data(self, video_id: str) -> Dict[str, Any]:
+        """
+        Get report as JSON data structure.
+        
+        Args:
+            video_id: YouTube video ID
+        
+        Returns:
+            Report data dictionary
+        """
+        logger.info(f"📊 Fetching report data for video: {video_id}")
+        
+        response = self._make_request(
+            'GET',
+            f'/api/v1/reports/{video_id}/report.json'
+        )
+        
+        return response.json()
+    
+    def list_reports(self) -> List[Dict[str, Any]]:
+        """
+        List all available reports.
+        
+        Returns:
+            List of report metadata dictionaries
+        """
+        logger.info("📋 Listing available reports")
+        
+        response = self._make_request(
+            'GET',
+            '/api/v1/reports/list'
+        )
+        
+        return response.json()
+    
+    def poll_until_complete(
+        self,
+        task_id: str,
+        poll_interval: int = 5,
+        max_wait: int = 3600,
+        callback: Optional[callable] = None
+    ) -> Dict[str, Any]:
+        """
+        Poll task status until completion or timeout.
+        
+        Args:
+            task_id: Task identifier
+            poll_interval: Seconds between status checks (default: 5)
+            max_wait: Maximum seconds to wait (default: 3600 = 1 hour)
+            callback: Optional function called on each status update
+                      Signature: callback(status_dict) -> None
+        
+        Returns:
+            Final status dictionary
+            
+        Raises:
+            TimeoutError: If max_wait exceeded
+            ValueError: If task ends in error state
+        """
+        logger.info(f"⏳ Polling task {task_id} until complete (max {max_wait}s)")
+        
+        start_time = time.time()
+        
+        while True:
+            elapsed = time.time() - start_time
+            
+            if elapsed > max_wait:
+                raise TimeoutError(
+                    f"Task {task_id} did not complete within {max_wait}s"
+                )
+            
+            status = self.get_status(task_id)
+            
+            if callback:
+                try:
+                    callback(status)
+                except Exception as e:
+                    logger.warning(f"⚠️ Callback error: {e}")
+            
+            task_status = status.get('status', '').lower()
+            
+            if task_status == 'completed':
+                logger.info(f"✅ Task {task_id} completed successfully")
+                return status
+            
+            elif task_status == 'error':
+                error_msg = status.get('error_message', 'Unknown error')
+                logger.error(f"❌ Task {task_id} failed: {error_msg}")
+                raise ValueError(f"Task failed: {error_msg}")
+            
+            elif task_status in ['pending', 'processing']:
+                logger.debug(
+                    f"⏳ Task {task_id} {task_status} "
+                    f"({status.get('progress', 0):.1f}%)"
+                )
+                time.sleep(poll_interval)
+            
+            else:
+                logger.warning(f"⚠️ Unknown task status: {task_status}")
+                time.sleep(poll_interval)
+
+
+def get_default_client() -> VerityNgnAPIClient:
+    """
+    Get default API client instance.
+    
+    Convenience function for creating a client with default settings.
+    
+    Returns:
+        VerityNgnAPIClient instance
+    """
+    return VerityNgnAPIClient()
+
+
+# Example usage
+if __name__ == "__main__":
+    # Enable debug logging
+    logging.basicConfig(level=logging.INFO)
+    
+    # Create client
+    client = VerityNgnAPIClient()
+    
+    # Check health
+    is_healthy, msg = client.health_check()
+    print(f"API Health: {'✅ Healthy' if is_healthy else '❌ Unhealthy'} - {msg}")
+    
+    if is_healthy:
+        # Example: Submit and poll
+        video_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        
+        task_id = client.submit_verification(video_url)
+        print(f"Task ID: {task_id}")
+        
+        def print_progress(status):
+            print(f"Progress: {status.get('progress', 0):.1f}% - {status.get('current_stage', 'Unknown')}")
+        
+        try:
+            final_status = client.poll_until_complete(
+                task_id,
+                poll_interval=5,
+                callback=print_progress
+            )
+            
+            video_id = final_status.get('video_id')
+            if video_id:
+                report = client.get_report(video_id, format='html')
+                print(f"Report length: {len(report)} characters")
+        
+        except (TimeoutError, ValueError) as e:
+            print(f"Error: {e}")
+
+
+
+

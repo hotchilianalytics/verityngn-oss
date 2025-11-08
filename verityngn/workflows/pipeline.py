@@ -229,7 +229,13 @@ def run_verification(
         logger.info(f"📊 Claims processed: {len(final_state.get('claims', []))}")
         logger.info(f"📄 Reports saved to: {out_dir_path}")
         
-        return final_state, out_dir_path
+        # Return dict for API compatibility (not tuple)
+        return {
+            "video_id": video_id,
+            "output_dir": str(out_dir_path),
+            "claims_count": len(final_state.get('claims', [])),
+            "state": final_state
+        }
         
     except Exception as e:
         logger.error(f"❌ Workflow failed: {e}", exc_info=True)

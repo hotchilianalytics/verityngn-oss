@@ -1,0 +1,90 @@
+{
+  "description": "Quality-critical parameters for VerityNgn video analysis and claim extraction. These parameters are locked to prevent regression in analysis quality.",
+  "last_updated": "2025-11-07",
+  "version": "2.3.1",
+  
+  "claim_extraction": {
+    "description": "Parameters for multimodal video analysis and claim extraction",
+    "max_output_tokens": 32768,
+    "max_output_tokens_env_var": "MAX_OUTPUT_TOKENS_2_5_FLASH",
+    "genai_video_max_output_tokens": 8192,
+    "genai_video_max_output_tokens_env_var": "GENAI_VIDEO_MAX_OUTPUT_TOKENS",
+    "target_segment_duration_seconds": 2628,
+    "segment_duration_env_var": "SEGMENT_DURATION_SECONDS",
+    "segment_fps": 1.0,
+    "segment_fps_env_var": "SEGMENT_FPS",
+    "min_claims_per_segment": 15,
+    "thinking_budget_tokens": 100000,
+    "prompt_overhead_tokens": 5000,
+    "safety_margin_percent": 10,
+    "model_name": "gemini-2.5-flash",
+    "context_window": 1000000
+  },
+  
+  "claim_selection": {
+    "description": "Parameters for claim downsampling and selection",
+    "target_claims_long_video_min": 15,
+    "target_claims_long_video_max": 25,
+    "target_claims_medium_video_min": 10,
+    "target_claims_medium_video_max": 15,
+    "target_claims_short_video_min": 5,
+    "target_claims_short_video_max": 10,
+    "long_video_threshold_minutes": 30,
+    "medium_video_threshold_minutes": 15,
+    "clustering_divisor": 2,
+    "clustering_divisor_description": "Divide claim count by this to get cluster count (lower = less aggressive clustering)",
+    "min_clusters": 5
+  },
+  
+  "video_segmentation_calculation": {
+    "description": "How optimal segment duration is calculated",
+    "formula": "available_input_tokens / tokens_per_second",
+    "available_input_tokens_formula": "context_window - max_output_tokens - prompt_overhead - thinking_budget - safety_margin",
+    "tokens_per_second_formula": "(frames_per_second * tokens_per_frame) + tokens_per_second_audio",
+    "tokens_per_frame": 258,
+    "tokens_per_second_audio": 32,
+    "example_calculation": {
+      "context_window": 1000000,
+      "max_output_tokens": 32768,
+      "prompt_overhead": 5000,
+      "thinking_budget": 100000,
+      "safety_margin": 100000,
+      "available_input_tokens": 762232,
+      "fps": 1.0,
+      "tokens_per_second": 290,
+      "optimal_segment_seconds": 2628,
+      "optimal_segment_minutes": 43.8
+    }
+  },
+  
+  "quality_thresholds": {
+    "description": "Minimum quality thresholds to prevent regressions",
+    "min_claims_50min_video": 15,
+    "min_claims_30min_video": 10,
+    "min_claims_15min_video": 5,
+    "max_downsampling_ratio": 0.6,
+    "max_downsampling_ratio_description": "Final claims should be at least 60% of extracted claims (e.g., 27 extracted -> min 16 final)",
+    "min_output_tokens_per_segment": 8000,
+    "min_output_tokens_per_segment_description": "Each segment should produce at least 8K tokens of output to avoid truncation"
+  },
+  
+  "regression_detection": {
+    "description": "How to detect quality regressions",
+    "log_claim_counts": true,
+    "log_output_token_counts": true,
+    "log_segmentation_plan": true,
+    "alert_if_claims_below_threshold": true,
+    "alert_if_output_truncated": true,
+    "alert_if_downsampling_too_aggressive": true
+  },
+  
+  "notes": {
+    "why_32k_output_tokens": "32K output tokens prevents truncation while leaving room for thinking tokens. Previous 64K setting caused excessive token usage.",
+    "why_2628s_segments": "Targets ~762K input tokens, leaving ~238K for output (32K) + thinking (100K) + overhead (5K) + safety (100K). Maximizes global video analysis while ensuring full output.",
+    "why_15_25_claims_long_video": "Sufficient coverage for comprehensive verification without overwhelming API rate limits. Previous 5-10 cap was too aggressive.",
+    "why_clustering_divisor_2": "Creates fewer clusters (27 claims -> 13-14 clusters instead of 9), preserving more diverse claims. Previous divisor of 3 was too aggressive.",
+    "regression_root_cause": "MAX_OUTPUT_TOKENS_2_5_FLASH was hardcoded to 65536 instead of reading from ENV (32768), causing wrong segmentation calculation and potential truncation."
+  }
+}
+
+

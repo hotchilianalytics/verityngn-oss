@@ -432,7 +432,7 @@ class UnifiedReportGenerator:
     </style>
 </head>
 <body>
-    <a href="/api/v1/reports/{self.video_id}/report.html" class="back-link">← Back to Main Report</a>
+    <a href="../report.html" class="back-link">← Back to Main Report</a>
     {html_body}
 </body>
 </html>"""
@@ -498,7 +498,7 @@ class UnifiedReportGenerator:
     </style>
 </head>
 <body>
-    <a href="/api/v1/reports/{self.video_id}/report.html" class="back-link">← Back to Main Report</a>
+    <a href="../report.html" class="back-link">← Back to Main Report</a>
     <div class="ci-header">
         <h1>🕵️ Counter-Intelligence Analysis</h1>
         <p>Detailed counter-intelligence findings for this specific claim</p>

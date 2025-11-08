@@ -1,0 +1,116 @@
+# VerityNgn API Dockerfile
+# Multi-stage build using conda for robust dependency management
+# Based on Dockerfile.conda from private repo, adapted for OSS structure
+#
+# Build: docker build -f Dockerfile.api -t verityngn-api .
+# Run:   docker run -p 8080:8080 --env-file .env verityngn-api
+
+FROM condaforge/mambaforge:latest as builder
+
+# Set timezone
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy conda environment file (minimal version for dependency resolution)
+COPY environment-minimal.yml .
+
+# Create conda environment
+# Using environment-minimal.yml - lets conda/mamba resolve dependencies automatically
+RUN mamba env create -f environment-minimal.yml && \
+    mamba clean -afy
+
+# Install debugpy into the verityngn environment from conda-forge
+RUN mamba install -n verityngn -c conda-forge -y debugpy && \
+    mamba clean -afy
+
+FROM condaforge/mambaforge:latest as runtime
+
+# Copy conda environment from builder
+COPY --from=builder /opt/conda/envs/verityngn /opt/conda/envs/verityngn
+
+# Install runtime dependencies (curl for health checks)
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy application code - OSS structure
+COPY verityngn/ ./verityngn/
+COPY ui/ ./ui/
+COPY examples/ ./examples/
+COPY gallery/ ./gallery/
+
+# Create necessary directories
+RUN mkdir -p outputs logs downloads
+
+# Set essential environment variables
+ENV PYTHONPATH=/app
+ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/opt/conda/envs/verityngn/bin:$PATH"
+
+# Default configuration (can be overridden by docker-compose or Cloud Run)
+ENV DEPLOYMENT_MODE=container
+ENV STORAGE_BACKEND=local
+ENV DOWNLOADS_DIR=/app/downloads
+ENV OUTPUTS_DIR=/app/outputs
+ENV LOGS_DIR=/app/logs
+
+# GCS Configuration (optional, for cloud deployment)
+ENV GCS_BUCKET_NAME=""
+ENV PROJECT_ID=""
+ENV LOCATION=us-central1
+
+# AI Model Configuration
+ENV VERTEX_MODEL_NAME=gemini-2.5-flash
+ENV AGENT_MODEL_NAME=gemini-2.5-flash
+
+# Multimodal analysis defaults (safe for extension by Batch/Cloud Run)
+ENV USE_VERTEX_YOUTUBE_URL=true
+ENV USE_VERTEX_SEGMENTED_YOUTUBE=true
+ENV SEGMENTED_URL_ANALYSIS=true
+ENV USE_GENAI_YOUTUBE_URL=false
+
+# Conservative token limits to prevent 503 errors
+ENV MAX_OUTPUT_TOKENS_2_5_FLASH=32768
+ENV GENAI_VIDEO_MAX_OUTPUT_TOKENS=8192
+
+# Conservative segmentation settings
+ENV SEGMENT_DURATION_SECONDS=3000
+ENV SEGMENT_FPS=1.0
+ENV THINKING_BUDGET=0
+
+# Aggressive retry and rate limiting configuration
+ENV VERTEX_RETRY_ENABLED=true
+ENV VERTEX_BASE_DELAY=5.0
+ENV VERTEX_MAX_RETRIES=3
+ENV SEGMENT_RATE_LIMIT_ENABLED=true
+ENV SEGMENT_PROCESSING_DELAY=2.0
+
+# API Keys placeholders (override via environment or .env file)
+# ENV GOOGLE_SEARCH_API_KEY=""
+# ENV CSE_ID=""
+# ENV GOOGLE_APPLICATION_CREDENTIALS=""
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/health || curl -f http://localhost:8080/isalive || exit 1
+
+EXPOSE 8080
+
+# Run API server
+# The API module is at verityngn/api/__main__.py which handles port detection
+CMD ["/opt/conda/envs/verityngn/bin/python", "-m", "verityngn.api"]
+
+
+
+

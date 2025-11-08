@@ -346,7 +346,7 @@ def generate_youtube_counter_intelligence_file(video_id: str, youtube_counter_so
     </style>
 </head>
 <body>
-    <a href="/api/v1/reports/{video_id}" class="back-link">← Back to Main Report</a>
+    <a href="../../report.html" class="back-link">← Back to Main Report</a>
     {html_body}
 </body>
 </html>"""
@@ -503,7 +503,7 @@ def generate_press_release_counter_intelligence_file(video_id: str, press_releas
     </style>
 </head>
 <body>
-    <a href=\"/api/v1/reports/{video_id}\" class=\"back-link\">← Back to Main Report</a>
+    <a href=\"../../report.html\" class=\"back-link\">← Back to Main Report</a>
     {html_body}
 </body>
 </html>"""

@@ -1,3 +1,5 @@
-ffmpeg
+# System packages required by Streamlit Community Cloud
+# These will be installed via apt-get
 
-
+# Required for Python dependencies
+build-essential

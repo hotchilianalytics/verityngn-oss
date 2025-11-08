@@ -53,9 +53,15 @@ class ClaimProcessor:
         self.video_duration_minutes = video_duration_minutes
         self.target_claims_per_minute = target_claims_per_minute
         # Calculate target claims with reasonable min/max bounds
-        # SHERLOCK FIX: Reduced max to 10 to avoid 429 rate limiting
+        # Adjusted for quality: Allow 15-25 claims for longer videos
         calculated_claims = int(video_duration_minutes * target_claims_per_minute)
-        self.max_claims = max(5, min(10, calculated_claims))  # Reduced to 5-10 claims range to respect API quotas
+        # For videos >30 min: target 15-20 claims; shorter videos: 10-15 claims; very short: 5-10 claims
+        if video_duration_minutes > 30:
+            self.max_claims = max(15, min(25, calculated_claims))
+        elif video_duration_minutes > 15:
+            self.max_claims = max(10, min(15, calculated_claims))
+        else:
+            self.max_claims = max(5, min(10, calculated_claims))
         
         # Claim sources
         self.video_analysis_claims = []
@@ -269,8 +275,9 @@ class ClaimProcessor:
             return self._simple_keyword_clustering(claims)
         
         # Determine optimal number of clusters
+        # Reduced clustering aggressiveness: use // 2 instead of // 3 to preserve more claims
         if n_clusters is None:
-            n_clusters = min(self.max_claims, max(5, len(claims) // 3))
+            n_clusters = min(self.max_claims, max(5, len(claims) // 2))
         
         logger.info(f"🎯 Clustering {len(claims)} claims into {n_clusters} clusters")
         

@@ -300,11 +300,15 @@ def render_enhanced_report_viewer_tab():
     st.header("📊 View Enhanced Reports")
 
     # 🎯 FIXED: Use same logic as simplified report_viewer.py
-    # Find outputs_debug directory (where reports actually are)
+    # Find outputs directory (where reports actually are)
+    # Priority: /app/outputs (Docker mount) > outputs (local) > outputs_debug (legacy)
     possible_dirs = [
-        Path.cwd() / 'verityngn' / 'outputs_debug',
-        Path.cwd() / 'outputs_debug',
-        Path(__file__).parent.parent.parent / 'verityngn' / 'outputs_debug',
+        Path('/app/outputs'),  # Docker mount point (highest priority)
+        Path.cwd() / 'outputs',  # Standard outputs directory
+        Path.cwd() / 'verityngn' / 'outputs_debug',  # Legacy location
+        Path.cwd() / 'outputs_debug',  # Legacy alternative
+        Path(__file__).parent.parent.parent / 'verityngn' / 'outputs_debug',  # Relative to this file
+        Path(__file__).parent.parent / 'outputs',  # From UI directory
     ]
     
     output_dir = None
@@ -314,7 +318,7 @@ def render_enhanced_report_viewer_tab():
             print(f"✅ Found output directory: {output_dir.absolute()}")
             break
     
-    # Fallback to config if outputs_debug not found
+    # Fallback to config if not found
     if not output_dir:
         try:
             output_dir = Path(
@@ -326,7 +330,7 @@ def render_enhanced_report_viewer_tab():
     if not output_dir or not output_dir.exists():
         st.warning("⚠️ No reports directory found. Run a verification first!")
         with st.expander("🔍 Debug Info"):
-            st.info(f"Searched in:\n- {possible_dirs[0]}\n- {possible_dirs[1]}\n- {possible_dirs[2]}")
+            st.info(f"Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
         return
 
     # 🎯 FIXED: List available reports from timestamped _complete directories

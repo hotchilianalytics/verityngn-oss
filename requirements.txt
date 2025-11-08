@@ -23,7 +23,7 @@ langgraph>=0.2.50
 
 # Storage and cloud
 google-cloud-storage>=2.18.0
-google-auth==2.25.2
+google-auth>=2.26.1  # Relaxed constraint to resolve dependency conflicts with google-cloud-storage
 google-auth-oauthlib==1.1.0
 google-cloud-firestore>=2.18.0
 google-cloud-batch>=0.17.0

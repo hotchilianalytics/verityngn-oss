@@ -8,6 +8,7 @@ Run: streamlit run ui/streamlit_app.py
 
 import streamlit as st
 import sys
+import os
 from pathlib import Path
 
 # Add parent directory to path
@@ -17,12 +18,14 @@ sys.path.insert(0, str(repo_root))
 # Load secrets FIRST (handles both .env and Streamlit Cloud secrets)
 try:
     from ui import secrets_loader
+
     # secrets_loader auto-loads on import
 except ImportError as e:
     st.warning(f"Could not import secrets_loader: {e}")
     # Fallback: try loading .env directly
     try:
         from dotenv import load_dotenv
+
         env_file = repo_root / ".env"
         if env_file.exists():
             load_dotenv(env_file)
@@ -133,8 +136,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Check authentication before continuing
-if not check_google_cloud_auth():
+# Check authentication before continuing (skip in API mode - API handles auth)
+# In API-first architecture, only the backend needs Google Cloud credentials
+# The UI just makes HTTP calls to the API
+API_MODE = os.getenv("VERITYNGN_API_URL") is not None
+
+if not API_MODE and not check_google_cloud_auth():
     show_auth_error()
 
 # Custom CSS for better styling
@@ -188,7 +195,17 @@ st.markdown(
 
 # Import components
 from components.video_input import render_video_input_tab
-from components.processing import render_processing_tab
+
+# Import API-based processing (preferred for production)
+# Use processing_api for API calls, or processing for local in-process execution
+try:
+    from components.processing_api import render_processing_tab
+
+    USING_API_MODE = True
+except ImportError:
+    from components.processing import render_processing_tab
+
+    USING_API_MODE = False
 
 try:
     # Use enhanced report viewer if available
@@ -260,8 +277,9 @@ def main():
         try:
             from pathlib import Path
 
-            output_dir = Path(
-                st.session_state.config.get("output.local_dir", "./outputs_debug")
+            # Check Docker mount first, then local outputs
+            output_dir = Path("/app/outputs") if Path("/app/outputs").exists() else Path(
+                st.session_state.config.get("output.local_dir", "./outputs")
             )
             if output_dir.exists():
                 report_count = len(list(output_dir.glob("*/report.json")))

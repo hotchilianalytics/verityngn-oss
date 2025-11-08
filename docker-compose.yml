@@ -1,0 +1,182 @@
+# VerityNgn Docker Compose Configuration
+# Orchestrates API backend and Streamlit UI containers
+#
+# Usage:
+#   docker-compose up                    # Start both services
+#   docker-compose up api                # Start API only
+#   docker-compose up ui                 # Start UI only
+#   docker-compose down                  # Stop all services
+#   docker-compose logs -f api           # View API logs
+#   docker-compose logs -f ui            # View UI logs
+
+version: '3.8'
+
+services:
+  # API Backend Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: verityngn-api:latest
+    container_name: verityngn-api
+    ports:
+      - "8080:8080"
+    environment:
+      # Deployment configuration
+      - DEPLOYMENT_MODE=container
+      - STORAGE_BACKEND=local
+      - PORT=8080
+      
+      # Directory paths (use container paths)
+      - DOWNLOADS_DIR=/app/downloads
+      - OUTPUTS_DIR=/app/outputs
+      - LOGS_DIR=/app/logs
+      
+      # AI Model configuration
+      - VERTEX_MODEL_NAME=${VERTEX_MODEL_NAME:-gemini-2.5-flash}
+      - AGENT_MODEL_NAME=${AGENT_MODEL_NAME:-gemini-2.5-flash}
+      
+      # API Keys (from .env file or environment)
+      - GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
+      - CSE_ID=${CSE_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
+      
+      # Optional: GCS configuration for cloud storage
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-}
+      - PROJECT_ID=${PROJECT_ID:-}
+      
+      # Multimodal analysis settings
+      - USE_VERTEX_YOUTUBE_URL=true
+      - USE_VERTEX_SEGMENTED_YOUTUBE=true
+      - SEGMENTED_URL_ANALYSIS=true
+      
+      # Token limits
+      - MAX_OUTPUT_TOKENS_2_5_FLASH=32768
+      - GENAI_VIDEO_MAX_OUTPUT_TOKENS=8192
+      - SEGMENT_FPS=1.0
+      
+      # Retry configuration
+      - VERTEX_RETRY_ENABLED=true
+      - VERTEX_BASE_DELAY=5.0
+      - VERTEX_MAX_RETRIES=3
+    
+    volumes:
+      # Persist outputs and downloads
+      - ./outputs:/app/outputs
+      - ./downloads:/app/downloads
+      - ./logs:/app/logs
+      
+      # Mount service account credentials if using local file
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-./service-account.json}:/app/service-account.json:ro
+    
+    networks:
+      - verityngn-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    restart: unless-stopped
+
+  # Streamlit UI Service
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    image: verityngn-streamlit:latest
+    container_name: verityngn-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      # Point to API service
+      - VERITYNGN_API_URL=http://api:8080
+      
+      # Streamlit configuration
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_HEADLESS=true
+      
+      # API Keys (for direct access if needed)
+      - GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
+      - CSE_ID=${CSE_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-}
+    
+    volumes:
+      # Share outputs directory with API (read-only for UI)
+      - ./outputs:/app/outputs:ro
+      - ./downloads:/app/downloads:ro
+      
+      # Mount gallery for report browsing
+      - ./gallery:/app/gallery:ro
+      
+      # Mount credentials file (if it exists)
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-./service-account.json}:/app/credentials.json:ro
+    
+    networks:
+      - verityngn-network
+    
+    depends_on:
+      api:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    restart: unless-stopped
+
+networks:
+  verityngn-network:
+    driver: bridge
+
+volumes:
+  # Named volumes for persistent data
+  outputs-data:
+  downloads-data:
+  logs-data:
+
+# Configuration notes:
+#
+# 1. Environment Variables:
+#    Create a .env file in the same directory with your API keys:
+#    
+#    GOOGLE_SEARCH_API_KEY=your_key_here
+#    CSE_ID=your_cse_id_here
+#    GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+#    GOOGLE_CLOUD_PROJECT=your-project-id
+#
+# 2. Service Account:
+#    Place your service-account.json in the project root, or set the path
+#    in GOOGLE_APPLICATION_CREDENTIALS environment variable.
+#
+# 3. Networking:
+#    - API accessible at: http://localhost:8080
+#    - UI accessible at: http://localhost:8501
+#    - Services communicate via internal network
+#
+# 4. Data Persistence:
+#    - outputs/, downloads/, logs/ directories are mounted as volumes
+#    - Data persists across container restarts
+#    - Clear with: docker-compose down -v (removes volumes)
+#
+# 5. Scaling:
+#    - For production, use separate docker-compose.prod.yml
+#    - Consider using external reverse proxy (nginx, traefik)
+#    - Add SSL/TLS termination at proxy level
+#
+# 6. Development:
+#    - Mount source code as volumes for hot reloading
+#    - Use docker-compose.override.yml for local overrides
+#    - See docs/DEPLOYMENT_LOCAL.md for details
+
+
+
+

@@ -21,6 +21,7 @@ from verityngn.config.settings import (
     YT_CI_PER_QUERY_RESULTS,
     YT_CI_TOTAL_RESULTS,
     AGENT_MODEL_NAME,
+    OUTPUTS_DIR,
 )
 from verityngn.utils.llm_utils import build_langchain_vertex_kwargs
 
@@ -183,7 +184,7 @@ class YouTubeSearchService:
         import glob
         candidate_patterns = [
             f"sherlock_analysis_{video_id}/vngn_reports/{video_id}/analysis/{video_id}.info.json",
-            f"outputs_debug/{video_id}/**/{video_id}.info.json",
+            f"{OUTPUTS_DIR.name}/{video_id}/**/{video_id}.info.json",
             f"downloads/{video_id}/{video_id}.info.json",
         ]
         for pattern in candidate_patterns:
@@ -1025,7 +1026,7 @@ Guidelines:
         # Location 3: Timestamped outputs (if available in context)
         try:
             # Try to get the current timestamped directory if we're in report generation context
-            timestamped_ci_dir = os.path.join("outputs_debug", main_video_id, "latest", "counter_intelligence")
+            timestamped_ci_dir = os.path.join(str(OUTPUTS_DIR), main_video_id, "latest", "counter_intelligence")
             os.makedirs(timestamped_ci_dir, exist_ok=True)
             deliverable_locations["timestamped_outputs"] = timestamped_ci_dir
         except:

@@ -1,0 +1,132 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Python cache and artifacts
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints
+*.ipynb
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.cover
+.hypothesis/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+service-account.json
+credentials.json
+*.toml
+!.streamlit/config.toml.example
+!.streamlit/secrets.toml.example
+
+# Output directories (don't include in image, mount as volumes)
+outputs/
+outputs_debug/
+downloads/
+logs/
+sherlock_analysis_*/
+tmp*/
+container_*/
+cloudrun_*/
+
+# Large data files
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+
+# Checkpoint and debug files
+CHECKPOINT_*.md
+SHERLOCK_*.md
+DEPLOYMENT_*.md
+debug_*.py
+test_*.py
+*_DEBUG*.md
+*_FIX*.md
+*_SUMMARY*.md
+READY_*.md
+RELEASE_*.md
+
+# Scripts that are for local development only
+commit_*.sh
+run_*.sh
+authenticate.sh
+check_env_complete.sh
+set_api_keys.sh
+
+# Temporary and backup files
+*.bak
+*.tmp
+*.temp
+.cache/
+
+# Docker files (don't need in image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Package manager files (keep these for Docker build!)
+# requirements*.txt
+# environment*.yml
+# packages.txt
+
+

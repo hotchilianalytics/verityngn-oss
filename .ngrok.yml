@@ -1,0 +1,22 @@
+version: "3"
+agent:
+    authtoken: k2vbAzood88ZRPrzYV5S_ecgudCohqtEf17n5Akeh
+
+# Tunnel configurations for VerityNgn
+tunnels:
+    verityngn-api:
+        proto: http
+        addr: 8080
+        # Uncomment and set if you have a reserved domain
+        # domain: verityngn-api.ngrok.app
+        inspect: true
+        metadata: "VerityNgn API - Video Verification Service"
+        
+    # Alternative tunnel for UI (if needed)
+    verityngn-ui:
+        proto: http
+        addr: 8501
+        # Uncomment and set if you have a reserved domain
+        # domain: verityngn-ui.ngrok.app
+        inspect: true
+        metadata: "VerityNgn UI - Streamlit Interface"
