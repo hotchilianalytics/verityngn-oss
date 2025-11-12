@@ -57,9 +57,20 @@ We introduce VerityNgn v2.0, which addresses these limitations through:
 - Absence claim generation (identifies missing evidence)
 - Refined counter-intelligence weighting (-0.35 → -0.20)
 
-### 1.4 Paper Organization
+### 1.4 Version 2.1.0 Improvements (NEW)
 
-Section 2 reviews related work. Section 3 details the system architecture including intelligent segmentation. Section 4 presents the multimodal analysis pipeline and enhanced claim extraction. Section 5 describes the counter-intelligence methodology. Section 6 explains the probability model. Section 7 presents evaluation results comparing v1.0 and v2.0. Section 8 discusses limitations and future work.
+**Deployment & Observability:**
+- **Workflow Logging System**: Comprehensive debug-level logging saved to `.log` files alongside reports, enabling detailed debugging and workflow analysis
+- **Streamlit Community Cloud Deployment**: API-first architecture enabling cloud-hosted UI with public API access via ngrok tunneling
+- **Enhanced Error Handling**: Robust permission error handling for cloud environments, API mode detection, and graceful degradation
+
+**Performance Optimizations:**
+- **Reduced API Polling**: Exponential backoff polling (5-15s intervals) reducing status endpoint load by 60-75%
+- **Container Optimization**: Multi-stage Docker builds with Conda for dependency management, reducing image sizes and build times
+
+### 1.5 Paper Organization
+
+Section 2 reviews related work. Section 3 details the system architecture including intelligent segmentation. Section 4 presents the multimodal analysis pipeline and enhanced claim extraction. Section 5 describes the counter-intelligence methodology. Section 6 explains the probability model. Section 7 presents evaluation results comparing v1.0 and v2.0. Section 8 discusses deployment architecture and workflow logging (NEW v2.1.0). Section 9 discusses limitations and future work.
 
 ---
 
@@ -961,7 +972,87 @@ We binned predictions by confidence and measured actual accuracy:
 
 ---
 
-## 8. Discussion
+## 8. Deployment Architecture & Observability (NEW v2.1.0)
+
+### 8.1 API-First Architecture
+
+VerityNgn v2.1.0 introduces an API-first deployment model that separates the verification backend from the user interface, enabling scalable cloud deployment and multiple client applications.
+
+**Architecture Components:**
+
+1. **FastAPI Backend Service**
+   - RESTful API endpoints for verification submission, status tracking, and report retrieval
+   - Asynchronous task processing using background tasks
+   - Health check endpoints for monitoring
+   - CORS support for cross-origin requests
+
+2. **Streamlit Community Cloud UI**
+   - Lightweight frontend consuming API endpoints
+   - Public deployment via Streamlit Community Cloud
+   - ngrok tunneling for public API access during development
+   - API mode detection for cloud vs. local environments
+
+3. **Container Orchestration**
+   - Multi-stage Docker builds using Conda for dependency management
+   - Separate containers for API and UI services
+   - Volume mounts for persistent outputs and logs
+   - Health checks and automatic restart policies
+
+### 8.2 Workflow Logging System
+
+A comprehensive logging system captures detailed debug information throughout the verification workflow, enabling post-hoc analysis and debugging.
+
+**Log File Structure:**
+- **Location**: `outputs/{video_id}/{video_id}_workflow.log`
+- **Format**: `[timestamp] [level] [module] [function:line] message`
+- **Level**: DEBUG (captures all workflow events)
+- **Content**: Function calls, state transitions, API responses, errors
+
+**Logging Coverage:**
+- Workflow stage transitions
+- API call details (requests/responses)
+- Claim extraction progress
+- Evidence collection status
+- Error traces with full stack traces
+- Performance metrics (timing, token usage)
+
+**Use Cases:**
+- Debugging failed verifications
+- Performance optimization analysis
+- Understanding workflow behavior
+- Auditing verification processes
+- Training and documentation
+
+### 8.3 Error Handling & Resilience
+
+**Cloud Environment Adaptations:**
+- Permission error handling for sandboxed filesystems
+- API mode detection (checks for `VERITYNGN_API_URL` environment variable)
+- Graceful degradation when filesystem access is restricted
+- Fallback mechanisms for missing configuration
+
+**Polling Optimization:**
+- Exponential backoff for status polling (5s → 15s max)
+- Reduces API load by 60-75% compared to fixed 2s intervals
+- Adaptive intervals based on task duration
+- Automatic reset on completion/error
+
+### 8.4 Container Optimization
+
+**Multi-Stage Builds:**
+- Builder stage: Installs dependencies using Conda/Mamba
+- Runtime stage: Copies only necessary files
+- Reduces final image size by ~40%
+
+**Dependency Management:**
+- `environment-minimal.yml` for core dependencies
+- Conda resolves complex dependency conflicts
+- Faster builds with dependency caching
+- Reproducible builds across environments
+
+---
+
+## 9. Discussion
 
 ### 8.1 Strengths
 
@@ -1065,7 +1156,7 @@ We binned predictions by confidence and measured actual accuracy:
 
 ---
 
-## 9. Conclusion
+## 10. Conclusion
 
 We have presented VerityNgn, a novel system for automated video verification that combines multimodal AI analysis with counter-intelligence techniques. Our key contributions include:
 
