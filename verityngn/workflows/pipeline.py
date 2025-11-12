@@ -222,12 +222,46 @@ def run_verification(
         logger.info("    Stage 5: Generate Report (truthfulness scoring)")
         logger.info("    Stage 6: Save Report (JSON + MD + HTML)")
         
-        import asyncio
-        final_state = asyncio.run(compiled_workflow.ainvoke(initial_state))
+        # Set up workflow log file handler - save to outputs directory
+        os.makedirs(out_dir_path, exist_ok=True)
+        log_file_path = os.path.join(out_dir_path, f"{video_id}_workflow.log")
         
-        logger.info("✅ Workflow completed successfully!")
-        logger.info(f"📊 Claims processed: {len(final_state.get('claims', []))}")
-        logger.info(f"📄 Reports saved to: {out_dir_path}")
+        # Create file handler for workflow logs
+        file_handler = logging.FileHandler(log_file_path, mode='w', encoding='utf-8')
+        file_handler.setLevel(logging.DEBUG)
+        file_formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] [%(name)s] [%(funcName)s:%(lineno)d] %(message)s')
+        file_handler.setFormatter(file_formatter)
+        
+        # Add file handler to root logger to capture all workflow logs
+        root_logger = logging.getLogger()
+        root_logger.addHandler(file_handler)
+        
+        # Also add to workflow-specific loggers
+        workflow_loggers = [
+            logging.getLogger('verityngn.workflows'),
+            logging.getLogger('verityngn.workflows.pipeline'),
+            logging.getLogger('verityngn.workflows.analysis'),
+            logging.getLogger('verityngn.workflows.verification'),
+            logging.getLogger('verityngn.workflows.reporting'),
+        ]
+        for wf_logger in workflow_loggers:
+            wf_logger.addHandler(file_handler)
+            wf_logger.setLevel(logging.DEBUG)
+        
+        try:
+            import asyncio
+            final_state = asyncio.run(compiled_workflow.ainvoke(initial_state))
+            
+            logger.info("✅ Workflow completed successfully!")
+            logger.info(f"📊 Claims processed: {len(final_state.get('claims', []))}")
+            logger.info(f"📄 Reports saved to: {out_dir_path}")
+            logger.info(f"📝 Workflow log saved to: {log_file_path}")
+        finally:
+            # Remove file handler after workflow completes
+            root_logger.removeHandler(file_handler)
+            for wf_logger in workflow_loggers:
+                wf_logger.removeHandler(file_handler)
+            file_handler.close()
         
         # Return dict for API compatibility (not tuple)
         return {

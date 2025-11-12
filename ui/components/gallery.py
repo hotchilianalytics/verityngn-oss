@@ -82,8 +82,15 @@ def render_gallery_tab():
                 try:
                     with open(item, 'r') as f:
                         example = json.load(f)
+                        # Ensure all required fields exist with defaults
+                        example.setdefault('submitted_at', datetime.now().strftime('%Y-%m-%d'))
+                        example.setdefault('submitted_by', 'anonymous')
+                        example.setdefault('tags', [])
+                        example.setdefault('truthfulness_score', 0.0)
+                        example.setdefault('claims_count', 0)
                         examples.append(example)
-                except:
+                except Exception as e:
+                    # Skip invalid files
                     continue
     
     # Fallback to placeholder examples if no gallery items found
@@ -150,7 +157,11 @@ def render_gallery_tab():
     
     # Sort examples
     if sort_by == "Most Recent":
-        filtered_examples = sorted(filtered_examples, key=lambda x: x['submitted_at'], reverse=True)
+        filtered_examples = sorted(
+            filtered_examples, 
+            key=lambda x: x.get('submitted_at', '1970-01-01'), 
+            reverse=True
+        )
     elif sort_by == "Highest Score":
         filtered_examples = sorted(filtered_examples, key=lambda x: x['truthfulness_score'], reverse=True)
     elif sort_by == "Lowest Score":
@@ -197,7 +208,9 @@ def render_gallery_tab():
                             # In production, load actual report
                         
                         # Metadata
-                        st.caption(f"By {example['submitted_by']} • {example['submitted_at']}")
+                        submitted_by = example.get('submitted_by', 'anonymous')
+                        submitted_at = example.get('submitted_at', 'Unknown')
+                        st.caption(f"By {submitted_by} • {submitted_at}")
                         
                         st.markdown("---")
     

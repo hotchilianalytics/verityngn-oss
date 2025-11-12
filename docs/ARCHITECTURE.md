@@ -536,3 +536,13 @@ print(f"Optimal: {num_segments} segment(s) of {segment_duration}s each")
 
 
 
+
+
+
+
+
+
+
+
+
+

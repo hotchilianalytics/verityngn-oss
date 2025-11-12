@@ -33,6 +33,9 @@ def render_processing_tab():
     if 'api_status' not in st.session_state:
         st.session_state.api_status = {}
     
+    if 'poll_interval' not in st.session_state:
+        st.session_state.poll_interval = 5  # Start with 5 second polling interval
+    
     # Check if workflow should be started
     if st.session_state.get('workflow_started', False) and st.session_state.processing_status == 'processing':
         video_url = st.session_state.get('current_video_url', '')
@@ -139,6 +142,8 @@ def render_processing_tab():
             if task_status == 'completed':
                 st.success("✅ Verification completed successfully!")
                 st.session_state.processing_status = 'complete'
+                # Reset polling interval for next task
+                st.session_state.poll_interval = 5
                 
                 video_id = api_status.get('video_id')
                 if video_id:
@@ -153,11 +158,17 @@ def render_processing_tab():
                 error_msg = api_status.get('error_message', 'Unknown error')
                 st.error(f"❌ Verification failed: {error_msg}")
                 st.session_state.processing_status = 'error'
+                # Reset polling interval
+                st.session_state.poll_interval = 5
                 st.rerun()
             
             else:
-                # Still processing - auto-refresh
-                time.sleep(2)
+                # Still processing - auto-refresh with longer interval to reduce API load
+                # Use exponential backoff: start with 5s, max 15s
+                poll_interval = st.session_state.get('poll_interval', 5)
+                time.sleep(poll_interval)
+                # Increase interval gradually (capped at 15s) to reduce load on long-running tasks
+                st.session_state.poll_interval = min(poll_interval + 1, 15)
                 st.rerun()
         
         except Exception as e:

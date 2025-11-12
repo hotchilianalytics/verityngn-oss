@@ -39,6 +39,11 @@ from verityngn.services.storage.workflow_logger import get_workflow_logger
 from verityngn.services.video_service import download_video, get_video_info
 from verityngn.services.video.transcription import get_video_transcript
 
+# Initialize logger for this module
+logger = logging.getLogger(__name__)
+# Set to INFO level to ensure diagnostic logs are shown
+logger.setLevel(logging.INFO)
+
 
 def structure_claim(
     claim_data: Union[str, Dict[str, Any]], claim_id: int
@@ -4003,41 +4008,165 @@ OUTPUT FORMAT: Provide detailed JSON with:
                 )
                 return ""
 
-        # Try to get text, but handle multiple content parts gracefully
+        # ============================================================
+        # DIAGNOSTIC LOGGING: Deep inspection of response structure
+        # ============================================================
+        logger.info("[VERTEX DIAGNOSTIC] ========== RESPONSE OBJECT INSPECTION ==========")
+        logger.info(f"[VERTEX DIAGNOSTIC] Response type: {type(resp)}")
+        logger.info(f"[VERTEX DIAGNOSTIC] Response dir: {[x for x in dir(resp) if not x.startswith('_')]}")
+        
+        # Check for internal/raw response attributes
+        if hasattr(resp, '_raw_response'):
+            logger.info(f"[VERTEX DIAGNOSTIC] Has _raw_response: {type(resp._raw_response)}")
+        if hasattr(resp, '_pb'):
+            logger.info(f"[VERTEX DIAGNOSTIC] Has _pb: {type(resp._pb)}")
+            try:
+                pb_text = resp._pb.candidates[0].content.parts[0].text if resp._pb.candidates else "N/A"
+                logger.info(f"[VERTEX DIAGNOSTIC] _pb text length: {len(pb_text) if pb_text else 0}")
+                logger.info(f"[VERTEX DIAGNOSTIC] _pb text preview: {pb_text[:200] if pb_text else 'EMPTY'}")
+            except Exception as pb_ex:
+                logger.info(f"[VERTEX DIAGNOSTIC] _pb access failed: {pb_ex}")
+        
+        # Inspect candidates
+        if hasattr(resp, "candidates") and resp.candidates:
+            logger.info(f"[VERTEX DIAGNOSTIC] Candidates count: {len(resp.candidates)}")
+            cand = resp.candidates[0]
+            logger.info(f"[VERTEX DIAGNOSTIC] Candidate type: {type(cand)}")
+            logger.info(f"[VERTEX DIAGNOSTIC] Candidate dir: {[x for x in dir(cand) if not x.startswith('_')]}")
+            
+            # Inspect content
+            if hasattr(cand, "content"):
+                content = cand.content
+                logger.info(f"[VERTEX DIAGNOSTIC] Content type: {type(content)}")
+                logger.info(f"[VERTEX DIAGNOSTIC] Content dir: {[x for x in dir(content) if not x.startswith('_')]}")
+                
+                # Inspect parts
+                if hasattr(content, "parts"):
+                    logger.info(f"[VERTEX DIAGNOSTIC] Parts count: {len(content.parts)}")
+                    for i, part in enumerate(content.parts):
+                        logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] type: {type(part)}")
+                        logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] dir: {[x for x in dir(part) if not x.startswith('_')]}")
+                        logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] is dict: {isinstance(part, dict)}")
+                        
+                        # Try different access methods
+                        logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] hasattr 'text': {hasattr(part, 'text')}")
+                        if hasattr(part, 'text'):
+                            text_val = getattr(part, 'text', None)
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] .text value: {text_val}")
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] .text type: {type(text_val)}")
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] .text length: {len(text_val) if text_val else 0}")
+                            if text_val:
+                                logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] .text preview: {text_val[:200]}")
+                        
+                        # Try direct attribute access
+                        try:
+                            direct_text = part.text
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] direct .text: {len(direct_text) if direct_text else 0} chars")
+                        except Exception as direct_ex:
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] direct .text failed: {direct_ex}")
+                        
+                        # Try dict access
+                        if isinstance(part, dict):
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] dict keys: {list(part.keys())}")
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] dict['text']: {part.get('text', 'N/A')}")
+                        
+                        # Check for _pb on part
+                        if hasattr(part, '_pb'):
+                            logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] has _pb: {type(part._pb)}")
+                            try:
+                                pb_part_text = part._pb.text if hasattr(part._pb, 'text') else "N/A"
+                                logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] _pb.text: {len(pb_part_text) if pb_part_text else 0} chars")
+                            except Exception as pb_part_ex:
+                                logger.info(f"[VERTEX DIAGNOSTIC] Part[{i}] _pb.text failed: {pb_part_ex}")
+        
+        logger.info("[VERTEX DIAGNOSTIC] ========== END INSPECTION ==========")
+        
+        # ============================================================
+        # TEXT EXTRACTION: Try multiple approaches
+        # ============================================================
         text = ""
+        
+        # Approach 1: Standard .text attribute
         try:
             text = getattr(resp, "text", None) or ""
+            if text:
+                logger.info(f"[VERTEX] ✅ Approach 1 (resp.text): Extracted {len(text)} chars")
         except ValueError as e:
-            # Handle "Multiple content parts are not supported" error
-            logger.warning(
-                f"[VERTEX] Multiple content parts detected: {e}. Extracting manually."
-            )
-
+            logger.warning(f"[VERTEX] ❌ Approach 1 (resp.text): {e}")
+        
+        # Approach 2: Extract from candidates[0].content.parts via protobuf
+        if not text and hasattr(resp, '_pb'):
+            try:
+                if resp._pb.candidates and resp._pb.candidates[0].content.parts:
+                    pb_parts = resp._pb.candidates[0].content.parts
+                    pb_texts = [p.text for p in pb_parts if hasattr(p, 'text') and p.text]
+                    if pb_texts:
+                        text = '\n'.join(pb_texts) if len(pb_texts) > 1 else pb_texts[0]
+                        logger.info(f"[VERTEX] ✅ Approach 2 (_pb protobuf): Extracted {len(text)} chars from {len(pb_texts)} part(s)")
+            except Exception as pb_ex:
+                logger.warning(f"[VERTEX] ❌ Approach 2 (_pb protobuf): {pb_ex}")
+        
+        # Approach 3: Extract from candidates[0].content.parts via getattr
         if not text and hasattr(resp, "candidates") and resp.candidates:
             try:
                 cand = resp.candidates[0]
                 parts = getattr(cand, "content", None)
                 if parts and hasattr(parts, "parts"):
-                    # Extract text from all parts and join them
-                    part_texts = [
-                        getattr(p, "text", "")
-                        for p in parts.parts
-                        if getattr(p, "text", None)
-                    ]
+                    part_texts = []
+                    for p in parts.parts:
+                        # Try multiple ways to get text
+                        p_text = None
+                        
+                        # Method A: getattr
+                        p_text = getattr(p, "text", None)
+                        
+                        # Method B: direct access if getattr failed
+                        if not p_text and hasattr(p, "text"):
+                            try:
+                                p_text = p.text
+                            except:
+                                pass
+                        
+                        # Method C: _pb access if still no text
+                        if not p_text and hasattr(p, "_pb") and hasattr(p._pb, "text"):
+                            try:
+                                p_text = p._pb.text
+                            except:
+                                pass
+                        
+                        if p_text:
+                            part_texts.append(p_text)
+                    
                     if part_texts:
-                        # If parts are identical (common with duplicate responses), just use the first one
-                        if len(set(part_texts)) == 1:
-                            text = part_texts[0]
-                            logger.info(
-                                f"[VERTEX] Extracted text from {len(part_texts)} identical duplicate parts"
-                            )
+                        # Deduplicate identical parts (common with Gemini 2.5 Flash)
+                        unique_parts = list(set(part_texts))
+                        if len(unique_parts) == 1:
+                            # All parts are identical - use just one copy
+                            text = unique_parts[0]
+                            logger.info(f"[VERTEX] ✅ Approach 3 (candidates.parts multi-method): Extracted {len(text)} chars from {len(part_texts)} duplicate part(s)")
                         else:
-                            text = "\n".join(part_texts)
-                            logger.info(
-                                f"[VERTEX] Extracted and merged text from {len(part_texts)} different parts"
-                            )
+                            # Parts are different - try to merge intelligently
+                            # For JSON responses, take the longest/most complete one
+                            text = max(unique_parts, key=len)
+                            logger.info(f"[VERTEX] ✅ Approach 3 (candidates.parts multi-method): Extracted {len(text)} chars from {len(unique_parts)} unique part(s) out of {len(part_texts)} total")
             except Exception as ex:
-                logger.error(f"[VERTEX] Failed to extract text from parts: {ex}")
+                logger.warning(f"[VERTEX] ❌ Approach 3 (candidates.parts): {ex}")
+        
+        # Approach 4: Check if response is iterable (streaming)
+        if not text:
+            try:
+                if hasattr(resp, '__iter__'):
+                    chunks = list(resp)
+                    if chunks:
+                        chunk_texts = [getattr(c, 'text', '') for c in chunks if hasattr(c, 'text')]
+                        if chunk_texts:
+                            text = ''.join(chunk_texts)
+                            logger.info(f"[VERTEX] ✅ Approach 4 (iterator/streaming): Extracted {len(text)} chars from {len(chunks)} chunk(s)")
+            except Exception as iter_ex:
+                logger.warning(f"[VERTEX] ❌ Approach 4 (iterator): {iter_ex}")
+        
+        if not text:
+            logger.error("[VERTEX] ❌ ALL TEXT EXTRACTION APPROACHES FAILED - Response generated tokens but no text accessible!")
         usage = getattr(resp, "usage_metadata", None)
         finish = None
         try:
