@@ -299,6 +299,28 @@ def render_enhanced_report_viewer_tab():
 
     st.header("📊 View Enhanced Reports")
 
+    # 🎯 STREAMLIT CLOUD FIX: Check if API mode is enabled (Streamlit Cloud)
+    import os
+    API_MODE = os.getenv("VERITYNGN_API_URL") is not None
+    
+    if API_MODE:
+        # Use API-based report retrieval for Streamlit Cloud
+        try:
+            from ui.api_client import get_default_client
+            api_client = get_default_client()
+            
+            st.info("🌐 Using API mode - reports will be fetched from the API")
+            
+            # For now, show a message that API-based report listing is coming soon
+            # Users can view reports via the processing tab after completion
+            st.warning("⚠️ Report viewer in API mode: View reports from the 'Process Video' tab after verification completes.")
+            st.info("💡 Tip: After submitting a verification, use the 'View Report' buttons in the processing tab.")
+            return
+            
+        except Exception as e:
+            st.error(f"❌ Error initializing API client: {e}")
+            return
+
     # 🎯 FIXED: Use same logic as simplified report_viewer.py
     # Find outputs directory (where reports actually are)
     # Priority: /app/outputs (Docker mount) > outputs (local) > outputs_debug (legacy)
@@ -313,10 +335,14 @@ def render_enhanced_report_viewer_tab():
     
     output_dir = None
     for dir_path in possible_dirs:
-        if dir_path.exists():
-            output_dir = dir_path
-            print(f"✅ Found output directory: {output_dir.absolute()}")
-            break
+        try:
+            if dir_path.exists():
+                output_dir = dir_path
+                print(f"✅ Found output directory: {output_dir.absolute()}")
+                break
+        except (PermissionError, OSError) as e:
+            # Skip directories we don't have permission to access (e.g., Streamlit Cloud)
+            continue
     
     # Fallback to config if not found
     if not output_dir:
@@ -327,7 +353,13 @@ def render_enhanced_report_viewer_tab():
         except (AttributeError, KeyError):
             output_dir = Path("./outputs")
 
-    if not output_dir or not output_dir.exists():
+    # Check if output_dir exists (with error handling)
+    try:
+        dir_exists = output_dir.exists()
+    except (PermissionError, OSError):
+        dir_exists = False
+
+    if not output_dir or not dir_exists:
         st.warning("⚠️ No reports directory found. Run a verification first!")
         with st.expander("🔍 Debug Info"):
             st.info(f"Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
@@ -336,41 +368,59 @@ def render_enhanced_report_viewer_tab():
     # 🎯 FIXED: List available reports from timestamped _complete directories
     report_files = []
     
-    for video_dir in output_dir.iterdir():
-        if not video_dir.is_dir():
-            continue
-        
-        video_id = video_dir.name
-        
-        # Look for reports in timestamped _complete directories
-        complete_dirs = sorted(
-            [d for d in video_dir.glob('*_complete') if d.is_dir()],
-            key=lambda x: x.stat().st_mtime,
-            reverse=True  # Most recent first
-        )
-        
-        for complete_dir in complete_dirs:
-            # Try both naming conventions
-            report_paths = [
-                complete_dir / f'{video_id}_report.json',
-                complete_dir / 'report.json',
-            ]
+    try:
+        for video_dir in output_dir.iterdir():
+            try:
+                if not video_dir.is_dir():
+                    continue
+            except (PermissionError, OSError):
+                continue
             
-            for report_path in report_paths:
-                if report_path.exists():
-                    report_files.append(report_path)
-                    break
+            video_id = video_dir.name
             
-            if report_files and report_files[-1].parent == complete_dir:
-                break  # Found report in this video_dir, move to next
+            # Look for reports in timestamped _complete directories
+            try:
+                complete_dirs = sorted(
+                    [d for d in video_dir.glob('*_complete') if d.is_dir()],
+                    key=lambda x: x.stat().st_mtime,
+                    reverse=True  # Most recent first
+                )
+            except (PermissionError, OSError):
+                continue
+            
+            for complete_dir in complete_dirs:
+                # Try both naming conventions
+                report_paths = [
+                    complete_dir / f'{video_id}_report.json',
+                    complete_dir / 'report.json',
+                ]
+                
+                for report_path in report_paths:
+                    try:
+                        if report_path.exists():
+                            report_files.append(report_path)
+                            break
+                    except (PermissionError, OSError):
+                        continue
+                
+                if report_files and report_files[-1].parent == complete_dir:
+                    break  # Found report in this video_dir, move to next
+    except (PermissionError, OSError) as e:
+        st.error(f"❌ Permission error accessing reports directory: {e}")
+        st.info("💡 In Streamlit Cloud, use API mode to view reports via the API.")
+        return
 
     if not report_files:
         st.info("📭 No reports found yet. Complete a verification to generate reports.")
         st.info(f"📂 Looking in: {output_dir.absolute()}")
         return
 
-    # Sort by modification time
-    report_files = sorted(report_files, key=lambda x: x.stat().st_mtime, reverse=True)
+    # Sort by modification time (with error handling)
+    try:
+        report_files = sorted(report_files, key=lambda x: x.stat().st_mtime, reverse=True)
+    except (PermissionError, OSError):
+        # If we can't get modification times, just use the order we found them
+        pass
 
     # Report selector
     st.subheader("📋 Select Report")
