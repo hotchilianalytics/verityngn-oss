@@ -88,6 +88,14 @@ def render_gallery_tab():
                         example.setdefault('tags', [])
                         example.setdefault('truthfulness_score', 0.0)
                         example.setdefault('claims_count', 0)
+                        example.setdefault('youtube_url', '')
+                        example.setdefault('video_id', '')
+                        example.setdefault('title', 'Untitled')
+                        example.setdefault('category', '✨ All Categories')
+                        example.setdefault('id', item.stem)
+                        # Skip if no youtube_url (can't display video)
+                        if not example.get('youtube_url'):
+                            continue
                         examples.append(example)
                 except Exception as e:
                     # Skip invalid files
@@ -181,30 +189,41 @@ def render_gallery_tab():
                 with col:
                     # Card-like display
                     with st.container():
-                        # Show video embed instead of thumbnail
-                        st.video(example['youtube_url'])
+                        # Show video embed instead of thumbnail (with error handling)
+                        youtube_url = example.get('youtube_url', '')
+                        if youtube_url:
+                            try:
+                                st.video(youtube_url)
+                            except Exception as e:
+                                st.warning(f"Could not load video: {youtube_url}")
+                        else:
+                            st.info("No video URL available")
                         
-                        st.markdown(f"**{example['title']}**")
-                        st.caption(f"{example['category']}")
+                        st.markdown(f"**{example.get('title', 'Untitled')}**")
+                        st.caption(f"{example.get('category', '✨ All Categories')}")
                         
                         # Metrics
                         met_col1, met_col2 = st.columns(2)
                         
                         with met_col1:
-                            score = example['truthfulness_score']
+                            score = example.get('truthfulness_score', 0.0)
                             color = "🟢" if score > 0.7 else "🟡" if score > 0.4 else "🔴"
                             st.metric("Truth", f"{color} {score:.0%}")
                         
                         with met_col2:
-                            st.metric("Claims", example['claims_count'])
+                            st.metric("Claims", example.get('claims_count', 0))
                         
                         # Tags
-                        tags_str = " ".join([f"`{tag}`" for tag in example['tags'][:3]])
-                        st.markdown(tags_str)
+                        tags = example.get('tags', [])
+                        if tags:
+                            tags_str = " ".join([f"`{tag}`" for tag in tags[:3]])
+                            st.markdown(tags_str)
                         
                         # View button
-                        if st.button("View Report", key=f"view_{example['id']}", use_container_width=True):
-                            st.info(f"Loading report for: {example['title']}")
+                        example_id = example.get('id', 'unknown')
+                        example_title = example.get('title', 'Untitled')
+                        if st.button("View Report", key=f"view_{example_id}", use_container_width=True):
+                            st.info(f"Loading report for: {example_title}")
                             # In production, load actual report
                         
                         # Metadata
