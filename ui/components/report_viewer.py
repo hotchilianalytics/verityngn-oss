@@ -35,9 +35,10 @@ def render_report_viewer_tab():
             return
     
     # 🎯 SIMPLIFIED: Find the outputs directory
-    # Priority: /app/outputs (Docker mount) > outputs (local) > outputs_debug (legacy)
+    # Priority: Gallery html_reports > /app/outputs (Docker mount) > outputs (local) > outputs_debug (legacy)
     possible_dirs = [
-        Path('/app/outputs'),  # Docker mount point (highest priority)
+        Path(__file__).parent.parent / 'gallery' / 'html_reports',  # Gallery HTML reports (highest priority)
+        Path('/app/outputs'),  # Docker mount point
         Path.cwd() / 'outputs',  # Standard outputs directory
         Path.cwd() / 'verityngn' / 'outputs_debug',  # Legacy location
         Path.cwd() / 'outputs_debug',  # Legacy alternative
@@ -62,53 +63,82 @@ def render_report_viewer_tab():
             st.info(f"Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
         return
     
-    # 🎯 SIMPLIFIED: Find all video directories with HTML reports
+    # 🎯 SIMPLIFIED: Find all HTML reports
     report_options = {}
     
     try:
-        for video_dir in output_dir.iterdir():
-            try:
-                if not video_dir.is_dir():
-                    continue
-            except (PermissionError, OSError):
-                continue
-            
-            video_id = video_dir.name
-            
-            # Look for HTML reports in timestamped _complete directories
-            try:
-                complete_dirs = sorted(
-                    [d for d in video_dir.glob('*_complete') if d.is_dir()],
-                    key=lambda x: x.stat().st_mtime,
-                    reverse=True  # Most recent first
-                )
-            except (PermissionError, OSError):
-                continue
-            
-            for complete_dir in complete_dirs:
-                html_path = complete_dir / f'{video_id}_report.html'
+        # Check if this is the gallery html_reports directory
+        if output_dir.name == 'html_reports':
+            # Load from gallery HTML reports directory
+            for html_file in output_dir.glob('*.html'):
                 try:
-                    if html_path.exists():
-                        # Try to get title from JSON if available
-                        json_path = complete_dir / f'{video_id}_report.json'
-                        title = video_id
+                    video_id = html_file.stem.split('_')[0]  # Extract video_id from filename
+                    title = html_file.stem.replace(f'{video_id}_', '').replace('_', ' ')
+                    
+                    # Try to get title from corresponding JSON in approved directory
+                    approved_dir = output_dir.parent / 'approved'
+                    json_file = approved_dir / f"{html_file.stem}.json"
+                    if json_file.exists():
                         try:
-                            if json_path.exists():
-                                import json
-                                with open(json_path, 'r') as f:
-                                    data = json.load(f)
-                                    title = data.get('title', video_id)
+                            import json
+                            with open(json_file, 'r') as f:
+                                data = json.load(f)
+                                title = data.get('title', title)
                         except:
                             pass
-                        
-                        report_options[f"{title} ({video_id})"] = {
-                            'video_id': video_id,
-                            'html_path': html_path,
-                            'timestamp': complete_dir.name
-                        }
-                        break  # Use most recent report
+                    
+                    report_options[f"{title} ({video_id})"] = {
+                        'video_id': video_id,
+                        'html_path': html_file,
+                        'timestamp': 'gallery'
+                    }
                 except (PermissionError, OSError):
                     continue
+        else:
+            # Standard outputs directory structure
+            for video_dir in output_dir.iterdir():
+                try:
+                    if not video_dir.is_dir():
+                        continue
+                except (PermissionError, OSError):
+                    continue
+                
+                video_id = video_dir.name
+                
+                # Look for HTML reports in timestamped _complete directories
+                try:
+                    complete_dirs = sorted(
+                        [d for d in video_dir.glob('*_complete') if d.is_dir()],
+                        key=lambda x: x.stat().st_mtime,
+                        reverse=True  # Most recent first
+                    )
+                except (PermissionError, OSError):
+                    continue
+                
+                for complete_dir in complete_dirs:
+                    html_path = complete_dir / f'{video_id}_report.html'
+                    try:
+                        if html_path.exists():
+                            # Try to get title from JSON if available
+                            json_path = complete_dir / f'{video_id}_report.json'
+                            title = video_id
+                            try:
+                                if json_path.exists():
+                                    import json
+                                    with open(json_path, 'r') as f:
+                                        data = json.load(f)
+                                        title = data.get('title', video_id)
+                            except:
+                                pass
+                            
+                            report_options[f"{title} ({video_id})"] = {
+                                'video_id': video_id,
+                                'html_path': html_path,
+                                'timestamp': complete_dir.name
+                            }
+                            break  # Use most recent report
+                    except (PermissionError, OSError):
+                        continue
     except (PermissionError, OSError) as e:
         st.error(f"❌ Permission error accessing reports directory: {e}")
         st.info("💡 In Streamlit Cloud, use API mode to view reports via the API.")
@@ -142,15 +172,15 @@ def render_report_viewer_tab():
     with col2:
         st.info(f"📁 Video ID: {selected_video_id}")
     
-    # 🎯 SIMPLE: Just display the HTML report directly!
+    # 🎯 SIMPLE: Just display the HTML report directly! FULL PAGE
     st.subheader("📄 Full Report")
     
     try:
         with open(html_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
         
-        # Display the HTML in a large scrollable container
-        components.html(html_content, height=1000, scrolling=True)
+        # Display the HTML in full page - no clipping, use full width
+        components.html(html_content, height=1200, scrolling=True, width=None)
         
         st.markdown("---")
         

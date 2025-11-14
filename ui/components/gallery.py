@@ -284,22 +284,44 @@ def render_gallery_tab():
                                 if st.button("📄 View Report", key=f"view_{example_id}", use_container_width=True):
                                     st.session_state[report_state_key] = not st.session_state.get(report_state_key, False)
                                 
-                                # Show report if state is True
+                                # Show report if state is True - FULL PAGE DISPLAY
                                 if st.session_state.get(report_state_key, False):
-                                    with st.expander(f"📄 Full Report: {example_title}", expanded=True):
-                                        try:
-                                            import streamlit.components.v1 as components
-                                            with open(html_path, 'r', encoding='utf-8') as f:
-                                                html_content = f.read()
-                                            components.html(html_content, height=1000, scrolling=True)
-                                            
-                                            # Close button
-                                            if st.button("❌ Close Report", key=f"close_{example_id}"):
-                                                st.session_state[report_state_key] = False
-                                                st.rerun()
-                                        except Exception as e:
-                                            st.error(f"Error loading HTML report: {e}")
-                                            st.info(f"Report path: {html_path}")
+                                    # Close button at top
+                                    col_close, col_title = st.columns([1, 10])
+                                    with col_close:
+                                        if st.button("❌ Close", key=f"close_{example_id}", use_container_width=True):
+                                            st.session_state[report_state_key] = False
+                                            st.rerun()
+                                    with col_title:
+                                        st.markdown(f"### 📄 Full Report: {example_title}")
+                                    
+                                    st.markdown("---")
+                                    
+                                    # Display HTML in full page (no expander, use full width)
+                                    try:
+                                        import streamlit.components.v1 as components
+                                        with open(html_path, 'r', encoding='utf-8') as f:
+                                            html_content = f.read()
+                                        
+                                        # Use full height and width - no clipping
+                                        components.html(html_content, height=1200, scrolling=True, width=None)
+                                        
+                                        st.markdown("---")
+                                        
+                                        # Download button
+                                        st.download_button(
+                                            label="📥 Download HTML Report",
+                                            data=html_content,
+                                            file_name=f"{video_id}_report.html",
+                                            mime="text/html",
+                                            use_container_width=True
+                                        )
+                                    except Exception as e:
+                                        st.error(f"Error loading HTML report: {e}")
+                                        st.info(f"Report path: {html_path}")
+                                        import traceback
+                                        with st.expander("🔍 Error Details"):
+                                            st.code(traceback.format_exc())
                             else:
                                 st.button("View Report", key=f"view_{example_id}", use_container_width=True, disabled=True)
                                 st.caption("Report file not found")
