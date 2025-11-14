@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verity Report - </title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 2px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+
+        h3 {
+            font-size: 1.4em;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        pre {
+            background-color: #f6f8fa;
+            border-radius: 3px;
+            padding: 16px;
+            overflow: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1em;
+        }
+
+        th,
+        td {
+            border: 1px solid #dfe2e5;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f6f8fa;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .video-embed {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .video-embed img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-embed p {
+            margin-top: 10px;
+            color: #666;
+        }
+
+        /* Modal styles for source viewing */
+        .source-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .source-modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .source-modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .source-modal-close:hover,
+        .source-modal-close:focus {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>QACheck Demo</h1>
+<div class="video-embed">
+    <a href="https://www.youtube.com/watch?v=ju8kxSldM64" target="_blank">
+        <img src="https://img.youtube.com/vi/ju8kxSldM64/maxresdefault.jpg" alt="Video thumbnail for QACheck Demo" width="560" style="max-width: 100%; height: auto;">
+    </a>
+    <p>Video ID: ju8kxSldM64</p>
+</div><!-- VIDEO_CONTAINER_END -->
+<h2>Internal YouTube Description</h2>
+<p>This is the demonstration video for the paper &quot;QACHECK: A Demonstration System for Question-Guided Multi-Hop Fact-Checking&quot;.</p>
+<h2>Executive Summary</h2>
+<p>Total Claims: 1</p>
+<ul>
+<li>Highly Likely True: 1</li>
+<li>Likely True: 0</li>
+<li>Leaning True: 0</li>
+<li>Uncertain: 0</li>
+<li>Leaning False: 0</li>
+<li>Likely False: 0</li>
+<li>Highly Likely False: 0</li>
+</ul>
+<p>Claims with Press Release/Newswire Evidence: 0
+Claims with YouTube Counter-Intelligence Evidence: 0</p>
+<h2>2. Overall Truthfulness Assessment: Highly Likely True</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Category</th>
+<th style="text-align:center">Count</th>
+<th style="text-align:center">Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Total Claims</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">100%</td>
+</tr>
+<tr>
+<td style="text-align:left">Highly Likely True</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">100.0%</td>
+</tr>
+<tr>
+<td style="text-align:left">Likely True</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0.0%</td>
+</tr>
+<tr>
+<td style="text-align:left">Leaning True</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0.0%</td>
+</tr>
+<tr>
+<td style="text-align:left">Uncertain</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0.0%</td>
+</tr>
+<tr>
+<td style="text-align:left">Leaning False</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0.0%</td>
+</tr>
+<tr>
+<td style="text-align:left">Likely False</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0.0%</td>
+</tr>
+<tr>
+<td style="text-align:left">Highly Likely False</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0.0%</td>
+</tr>
+</tbody>
+</table>
+<p>Based on the analysis of 1 claims, this video demonstrates generally reliable content, with a strong majority of claims assessed as true.</p>
+<h2>3. Summary of Key Findings</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Category</th>
+<th style="text-align:left">Description</th>
+<th style="text-align:left">Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Overall Assessment</td>
+<td style="text-align:left">Highly Likely True</td>
+<td style="text-align:left">Provides context for the overall message reliability.</td>
+</tr>
+<tr>
+<td style="text-align:left">Evidence Quality</td>
+<td style="text-align:left">4 of 15 sources (26.7%) identified as high-quality.</td>
+<td style="text-align:left">Affects the confidence level of verification results.</td>
+</tr>
+<tr>
+<td style="text-align:left">Verification Status</td>
+<td style="text-align:left">1 of 1 claims (100.0%) received a True/False assessment.</td>
+<td style="text-align:left">Indicates the proportion of claims where a determination could be made.</td>
+</tr>
+<tr>
+<td style="text-align:left">Source Diversity</td>
+<td style="text-align:left">Claims supported by sources from 3 different categories.</td>
+<td style="text-align:left">Broader diversity can enhance reliability if sources are high-quality.</td>
+</tr>
+<tr>
+<td style="text-align:left">Time Distribution</td>
+<td style="text-align:left">Claims analyzed across 1 distinct timestamps.</td>
+<td style="text-align:left">Helps identify patterns or concentration of claims over time.</td>
+</tr>
+</tbody>
+</table>
+<h2>4. Key Findings Identified</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Category</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Claim Accuracy</td>
+<td style="text-align:left">The single claim evaluated is assessed as Highly Likely True, indicating strong factual accuracy for the specific statement about the Nobel Prize in Chemistry.</td>
+</tr>
+<tr>
+<td style="text-align:left">Scientific Evidence Discrepancy</td>
+<td style="text-align:left">Despite the scientific nature of the claim (Nobel Prize in Chemistry), none of the three provided scientific sources were found to support it, which is a significant anomaly that raises questions about the relevance or application of the scientific evidence.</td>
+</tr>
+<tr>
+<td style="text-align:left">Reliance on Independent Validation</td>
+<td style="text-align:left">The claim's validation appears to stem entirely from 15 independent sources, suggesting a heavy reliance on broader, unbiased perspectives rather than direct scientific or academic corroboration for this specific scientific fact.</td>
+</tr>
+</tbody>
+</table>
+<h2>5. Evidence Summary</h2>
+<h3>Evidence Types Used in Verification</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Category</th>
+<th style="text-align:center">Count</th>
+<th style="text-align:left">Potential Reliability</th>
+<th style="text-align:left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Academic Research</td>
+<td style="text-align:center">3</td>
+<td style="text-align:left">High</td>
+<td style="text-align:left">Peer-reviewed studies and academic publications</td>
+</tr>
+<tr>
+<td style="text-align:left">Government Publications</td>
+<td style="text-align:center">1</td>
+<td style="text-align:left">High</td>
+<td style="text-align:left">Official government documents and reports</td>
+</tr>
+<tr>
+<td style="text-align:left">Scientific Journals</td>
+<td style="text-align:center">0</td>
+<td style="text-align:left">High</td>
+<td style="text-align:left">Professional scientific publications</td>
+</tr>
+<tr>
+<td style="text-align:left">Expert Opinions</td>
+<td style="text-align:center">0</td>
+<td style="text-align:left">Medium</td>
+<td style="text-align:left">Analysis from subject matter experts</td>
+</tr>
+<tr>
+<td style="text-align:left">Fact-checking Organizations</td>
+<td style="text-align:center">0</td>
+<td style="text-align:left">High</td>
+<td style="text-align:left">Professional fact-checking services</td>
+</tr>
+<tr>
+<td style="text-align:left">News Articles</td>
+<td style="text-align:center">0</td>
+<td style="text-align:left">Medium</td>
+<td style="text-align:left">Reputable news outlets</td>
+</tr>
+<tr>
+<td style="text-align:left">Web Pages/Blogs</td>
+<td style="text-align:center">11</td>
+<td style="text-align:left">Low</td>
+<td style="text-align:left">General web content, may vary in reliability</td>
+</tr>
+</tbody>
+</table>
+<h2>6. Claims Breakdown with Verification Results</h2>
+<p><em>This section shows primary video analysis claims. Counter-intelligence claims are reported separately in Section 8.</em></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Time</th>
+<th style="text-align:left">Speaker</th>
+<th style="text-align:left">Claim</th>
+<th style="text-align:left">Initial Assessment</th>
+<th style="text-align:left">Verification Result</th>
+<th style="text-align:left">Explanation</th>
+<th style="text-align:left">Odds &amp; Sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">00:53-00:58</td>
+<td style="text-align:left">Visual Text</td>
+<td style="text-align:left">The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars Onsager for the discovery of the reciprocal relations bearing his name, which are fundamental for the</td>
+<td style="text-align:left">HIGHLY_LIKELY_TRUE</td>
+<td style="text-align:left">HIGHLY_LIKELY_TRUE</td>
+<td style="text-align:left">Analysis of 15 sources, including 1 scientific/research sources. The claim is strongly supported by the provided evidence, confirming the year, recipient, prize, and the specific scientific discovery for which it was awarded. SCIENTIFIC EVIDENCE: 3 scientific sources (power=3. Evidence quality is mixed with limited authoritative sources. Assessment shows high confidence in claim validity based on 15 sources.</td>
+<td style="text-align:left"><strong>True:</strong> 90%<br><strong>False:</strong> 5%<br><strong>Uncertain:</strong> 5%<br><br>Mixed Quality<br>1 scientific • 3 academic • 12 general<br><a href="claim/claim_0/sources.html">15 sources</a></td>
+</tr>
+</tbody>
+</table>
+<h2>7. Sources</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Claim #</th>
+<th style="text-align:left">Timestamp</th>
+<th style="text-align:left">Source Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:left">00:53-00:58</td>
+<td style="text-align:left"><a href="claim/claim_0/sources.html">View Sources for Claim 1</a></td>
+</tr>
+</tbody>
+</table>
+<h2>8. Counter-Intelligence Analysis</h2>
+<p>No counter-intelligence analysis data was available for this report.</p>
+<h2>9. CRAAP Analysis</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Criterion</th>
+<th style="text-align:left">Score</th>
+<th style="text-align:left">Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Currency</td>
+<td style="text-align:left">CredibilityLevel.HIGH</td>
+<td style="text-align:left">The video is titled &quot;QACheck Demo,&quot; indicating it showcases a current software or feature. Demos are typically produced to highlight the most recent capabilities and relevance of a tool in its current state.</td>
+</tr>
+<tr>
+<td style="text-align:left">Relevance</td>
+<td style="text-align:left">CredibilityLevel.HIGH</td>
+<td style="text-align:left">The video is highly relevant to anyone interested in fact-checking, quality assurance, or automated information verification. It directly addresses the need for reliable assessment of claims, which is a critical concern in today's information landscape.</td>
+</tr>
+<tr>
+<td style="text-align:left">Authority</td>
+<td style="text-align:left">CredibilityLevel.MEDIUM</td>
+<td style="text-align:left">The video's authority stems from the creators of QACheck, who are demonstrating their own tool. While the tool itself appears to use a structured approach with &quot;scientific&quot; and &quot;independent&quot; evidence, the ultimate authority rests with the developers of QACheck, whose specific credentials are not provided in this context.</td>
+</tr>
+<tr>
+<td style="text-align:left">Accuracy</td>
+<td style="text-align:left">CredibilityLevel.HIGH</td>
+<td style="text-align:left">The provided example demonstrates a high level of accuracy, with a claim assessed as &quot;HIGHLY_LIKELY_TRUE&quot; and a clear explanation of how the evidence supports it. The mention of &quot;SCIENTIFIC EVIDENCE&quot; and &quot;INDEPENDENT EVIDENCE&quot; with &quot;validation power&quot; suggests a methodical and robust approach to verifying information.</td>
+</tr>
+<tr>
+<td style="text-align:left">Purpose</td>
+<td style="text-align:left">CredibilityLevel.HIGH</td>
+<td style="text-align:left">The explicit title &quot;QACheck Demo&quot; clearly indicates the video's purpose is to demonstrate the functionality and capabilities of the QACheck tool. It aims to inform and potentially persuade viewers about the effectiveness of the software in verifying claims.</td>
+</tr>
+</tbody>
+</table>
+<h2>9. Recommendations</h2>
+<ol>
+<li>Verify information from reputable sources before making decisions</li>
+<li>Consult experts in the field for professional advice</li>
+<li>Be cautious of claims that seem too good to be true</li>
+<li>Cross-reference information with multiple independent sources</li>
+</ol>
+
+
+        <footer>
+            <p>Generated by VerityNgn on 2025-11-13 07:08:28</p>
+        </footer>
+    </div>
+
+    <!-- Modal for displaying claim sources -->
+    <div id="sourceModal" class="source-modal">
+        <div class="source-modal-content">
+            <span class="source-modal-close" onclick="closeSourceModal()">&times;</span>
+            <div id="sourceContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Handle claim source links
+        document.addEventListener('DOMContentLoaded', function () {
+            // Find all links that point to claim sources (both absolute and relative paths)
+            const sourceLinks = document.querySelectorAll('a[href*="/claim/"][href*="/sources.html"], a[href*="_sources.html"], a[href^="claim/"]');
+
+            sourceLinks.forEach(link => {
+                const originalHref = link.getAttribute('href');
+
+                // If it's a relative path, the link will work natively for file:// viewing
+                // If it's an absolute API path and we're viewing as file://, intercept
+                if (originalHref.startsWith('/api/')) {
+                    link.onclick = function (e) {
+                        const isFileProtocol = window.location.protocol === 'file:';
+
+                        if (isFileProtocol) {
+                            e.preventDefault();
+                            const message = `
+                                <h3>⚠️ Sources Not Available in File View</h3>
+                                <p>You are viewing this report as a local file. To access claim sources:</p>
+                                <ol>
+                                    <li><strong>Option 1:</strong> Start the API server: <code>python -m verityngn.api</code></li>
+                                    <li><strong>Option 2:</strong> Navigate to the source file directly in your file browser</li>
+                                </ol>
+                            `;
+                            showSourceModal(message);
+                            return false;
+                        }
+                    };
+                }
+            });
+        });
+
+        function getVideoId() {
+            // Try to extract video ID from the page content
+            const videoEmbed = document.querySelector('.video-embed a[href*="youtube.com"]');
+            if (videoEmbed) {
+                const match = videoEmbed.href.match(/[?&]v=([^&]+)/);
+                if (match) return match[1];
+            }
+
+            // Fallback: try to get from title or other elements
+            const titleMatch = document.title.match(/([A-Za-z0-9_-]{11})/);
+            if (titleMatch) return titleMatch[1];
+
+            return 'VIDEO_ID';
+        }
+
+        function showSourceModal(content) {
+            const modal = document.getElementById('sourceModal');
+            const contentDiv = document.getElementById('sourceContent');
+            contentDiv.innerHTML = content;
+            modal.style.display = 'block';
+        }
+
+        function closeSourceModal() {
+            document.getElementById('sourceModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function (event) {
+            const modal = document.getElementById('sourceModal');
+            if (event.target === modal) {
+                closeSourceModal();
+            }
+        };
+    </script>
+</body>
+
+</html>

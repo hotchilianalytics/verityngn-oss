@@ -1,0 +1,214 @@
+{
+  "media_embed": {
+    "title": "QACheck Demo",
+    "video_id": "ju8kxSldM64",
+    "thumbnail_url": "https://img.youtube.com/vi/ju8kxSldM64/maxresdefault.jpg",
+    "video_url": "https://www.youtube.com/watch?v=ju8kxSldM64",
+    "description": "This is the demonstration video for the paper \"QACHECK: A Demonstration System for Question-Guided Multi-Hop Fact-Checking\".",
+    "timestamp": null,
+    "channel": null,
+    "channel_follower_count": null,
+    "comment_count": null,
+    "upload_date": "2023080617:54:37Z",
+    "uploader": null,
+    "uploader_id": null,
+    "uploader_url": null,
+    "view_count": 201
+  },
+  "title": "QACheck Demo",
+  "description": "This is the demonstration video for the paper \"QACHECK: A Demonstration System for Question-Guided Multi-Hop Fact-Checking\".",
+  "quick_summary": {
+    "verdict": "Likely to be True",
+    "key_issue": "This video contains predominantly accurate claims. 100.0% of claims appear true or likely true, while 0.0% appear false or likely false.",
+    "main_concerns": [],
+    "analysis_date": "2025-11-13T07:07:03.043197"
+  },
+  "overall_assessment": [
+    "Likely to be True",
+    "This video contains predominantly accurate claims. 100.0% of claims appear true or likely true, while 0.0% appear false or likely false."
+  ],
+  "key_findings": [
+    {
+      "category": "Claim Accuracy",
+      "description": "The single claim evaluated is assessed as Highly Likely True, indicating strong factual accuracy for the specific statement about the Nobel Prize in Chemistry."
+    },
+    {
+      "category": "Scientific Evidence Discrepancy",
+      "description": "Despite the scientific nature of the claim (Nobel Prize in Chemistry), none of the three provided scientific sources were found to support it, which is a significant anomaly that raises questions about the relevance or application of the scientific evidence."
+    },
+    {
+      "category": "Reliance on Independent Validation",
+      "description": "The claim's validation appears to stem entirely from 15 independent sources, suggesting a heavy reliance on broader, unbiased perspectives rather than direct scientific or academic corroboration for this specific scientific fact."
+    }
+  ],
+  "claims_breakdown": [
+    {
+      "claim_id": 0,
+      "claim_text": "The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars Onsager for the discovery of the reciprocal relations bearing his name, which are fundamental for the",
+      "timestamp": "00:53-00:58",
+      "speaker": "Visual Text",
+      "initial_assessment": "HIGHLY_LIKELY_TRUE",
+      "verification_result": {
+        "result": "HIGHLY_LIKELY_TRUE",
+        "explanation": "The claim is strongly supported by the provided evidence, confirming the year, recipient, prize, and the specific scientific discovery for which it was awarded.\n\nSCIENTIFIC EVIDENCE: 3 scientific sources (power=3.0), 0 supporting claim. INDEPENDENT EVIDENCE: 15 independent sources (validation power=15.0) provide unbiased perspective.",
+        "evidence": "Multiple highly credible sources, including the National Academies Press, the US Air Force Research Lab, and university archives, explicitly confirm that Lars Onsager was awarded the Nobel Prize in Chemistry in 1968 for the discovery of the reciprocal relations bearing his name, which are fundamental.\n\nMain evidence sources used in verification:\nhttps://nap.nationalacademies.org/read/6061/chapter/13\nhttps://www.nobelprize.org/prizes/lists/all-nobel-prizes/all/\nhttps://aclanthology.org/2023.emnlp-demo.23.pdf\nhttps://www.afrl.af.mil/Portals/90/Documents/AFOSR/AFOSR%2060th%20Monograph.pdf?ver=2020-08-24-144422-047\nhttps://www.cambridge.org/core/services/aop-cambridge-core/content/view/EFEDCF3B5B5191BFF9BBF5B66626EF8D/S0022112024004154a.pdf/onsagers_ideal_turbulence_theory.pdf\nhttps://www.gangalib.org/laureate.php\nhttps://philsci-archive.pitt.edu/1717/1/Ludwig_Boltzmann.doc\nhttps://alphachisigma.org/Docs/Collegiate/FinalSourcebook.pdf\nhttps://www.weizmann.ac.il/chembiophys/bouchbinder/sites/chemphys.bouchbinder/files/uploads/Courses/2016/continuumphysics.pdf\nhttps://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/onsagers-ideal-turbulence-theory/EFEDCF3B5B5191BFF9BBF5B66626EF8D\nhttps://www.weizmann.ac.il/chembiophys/bouchbinder/sites/chemphys.bouchbinder/files/uploads/Courses/2021/Lectures/ContinuumPhysics_full.pdf\nhttps://ndl.ethernet.edu.et/bitstream/123456789/72463/1/537.pdf\nhttps://www.vliz.be/imisdocs/publications/10/368010.pdf\nhttps://scottaaronson.blog/?p=993\nhttps://www.purdue.edu/academics/faculty-affairs/documents/NRC-Highly-Prestigious-and-Prestigious-Awards.xlsx",
+        "probability_distribution": {
+          "TRUE": 0.9047619047619047,
+          "FALSE": 0.047619047619047616,
+          "UNCERTAIN": 0.047619047619047616
+        },
+        "sources": [
+          "https://alphachisigma.org/Docs/Collegiate/FinalSourcebook.pdf",
+          "https://philsci-archive.pitt.edu/1717/1/Ludwig_Boltzmann.doc",
+          "https://aclanthology.org/2023.emnlp-demo.23.pdf",
+          "https://www.vliz.be/imisdocs/publications/10/368010.pdf",
+          "https://ndl.ethernet.edu.et/bitstream/123456789/72463/1/537.pdf",
+          "https://www.nobelprize.org/prizes/lists/all-nobel-prizes/all/",
+          "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/EFEDCF3B5B5191BFF9BBF5B66626EF8D/S0022112024004154a.pdf/onsagers_ideal_turbulence_theory.pdf",
+          "https://nap.nationalacademies.org/read/6061/chapter/13",
+          "https://www.gangalib.org/laureate.php",
+          "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/onsagers-ideal-turbulence-theory/EFEDCF3B5B5191BFF9BBF5B66626EF8D",
+          "https://www.weizmann.ac.il/chembiophys/bouchbinder/sites/chemphys.bouchbinder/files/uploads/Courses/2021/Lectures/ContinuumPhysics_full.pdf",
+          "https://scottaaronson.blog/?p=993",
+          "https://www.purdue.edu/academics/faculty-affairs/documents/NRC-Highly-Prestigious-and-Prestigious-Awards.xlsx",
+          "https://www.weizmann.ac.il/chembiophys/bouchbinder/sites/chemphys.bouchbinder/files/uploads/Courses/2016/continuumphysics.pdf",
+          "https://www.afrl.af.mil/Portals/90/Documents/AFOSR/AFOSR%2060th%20Monograph.pdf?ver=2020-08-24-144422-047"
+        ],
+        "pr_sources": [],
+        "youtube_counter_sources": [],
+        "counter_intelligence_boosts": []
+      },
+      "explanation": "",
+      "evidence": null,
+      "probability_distribution": null,
+      "pr_sources": null,
+      "youtube_counter_sources": null
+    }
+  ],
+  "evidence_summary": [
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://alphachisigma.org/Docs/Collegiate/FinalSourcebook.pdf",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://philsci-archive.pitt.edu/1717/1/Ludwig_Boltzmann.doc",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://aclanthology.org/2023.emnlp-demo.23.pdf",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.vliz.be/imisdocs/publications/10/368010.pdf",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://ndl.ethernet.edu.et/bitstream/123456789/72463/1/537.pdf",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.nobelprize.org/prizes/lists/all-nobel-prizes/all/",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/EFEDCF3B5B5191BFF9BBF5B66626EF8D/S0022112024004154a.pdf/onsagers_ideal_turbulence_theory.pdf",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://nap.nationalacademies.org/read/6061/chapter/13",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.gangalib.org/laureate.php",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/onsagers-ideal-turbulence-theory/EFEDCF3B5B5191BFF9BBF5B66626EF8D",
+      "text": "Evidence for claim: The evidence for the first question states: 'The Nobel Prize in Chemistry 1968 was awarded to Lars O...",
+      "title": null
+    }
+  ],
+  "secondary_sources": [],
+  "craap_analysis": {
+    "currency": [
+      "High",
+      "The video is titled \"QACheck Demo,\" indicating it showcases a current software or feature. Demos are typically produced to highlight the most recent capabilities and relevance of a tool in its current state."
+    ],
+    "relevance": [
+      "High",
+      "The video is highly relevant to anyone interested in fact-checking, quality assurance, or automated information verification. It directly addresses the need for reliable assessment of claims, which is a critical concern in today's information landscape."
+    ],
+    "authority": [
+      "Medium",
+      "The video's authority stems from the creators of QACheck, who are demonstrating their own tool. While the tool itself appears to use a structured approach with \"scientific\" and \"independent\" evidence, the ultimate authority rests with the developers of QACheck, whose specific credentials are not provided in this context."
+    ],
+    "accuracy": [
+      "High",
+      "The provided example demonstrates a high level of accuracy, with a claim assessed as \"HIGHLY_LIKELY_TRUE\" and a clear explanation of how the evidence supports it. The mention of \"SCIENTIFIC EVIDENCE\" and \"INDEPENDENT EVIDENCE\" with \"validation power\" suggests a methodical and robust approach to verifying information."
+    ],
+    "purpose": [
+      "High",
+      "The explicit title \"QACheck Demo\" clearly indicates the video's purpose is to demonstrate the functionality and capabilities of the QACheck tool. It aims to inform and potentially persuade viewers about the effectiveness of the software in verifying claims."
+    ]
+  },
+  "recommendations": [],
+  "evidence_details": [],
+  "press_release_count": 0,
+  "youtube_response_count": 0,
+  "metadata": {},
+  "youtube_counter_intelligence": [],
+  "press_release_counter_intelligence": [],
+  "test_metadata": {
+    "test_id": 17,
+    "category": "Politics & News",
+    "subcategory": "Fact-Checking",
+    "expected_verdict": "Likely True",
+    "tags": [
+      "fact-checking",
+      "education",
+      "politifact",
+      "media-literacy"
+    ],
+    "imported_at": "2025-11-13T22:38:48.188519",
+    "imported_from": "test_videos.json",
+    "batch_id": null,
+    "processing_time_seconds": 74.04224,
+    "verdict_match": true,
+    "html_report_path": "ui/gallery/html_reports/ju8kxSldM64_QACheck_Demo.html"
+  },
+  "gallery_metadata": {
+    "added_date": "2025-11-13T22:38:48.188519",
+    "status": "approved",
+    "source_video_id": "ju8kxSldM64",
+    "curator_notes": "Imported from test suite - Category: Politics & News"
+  }
+}

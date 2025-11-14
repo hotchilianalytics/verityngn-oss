@@ -1,0 +1,368 @@
+{
+  "media_embed": {
+    "title": "Vaccines: Last Week Tonight with John Oliver (HBO)",
+    "video_id": "7VG_s2PCH_c",
+    "thumbnail_url": "https://img.youtube.com/vi/7VG_s2PCH_c/maxresdefault.jpg",
+    "video_url": "https://www.youtube.com/watch?v=7VG_s2PCH_c",
+    "description": "The benefits of vaccines far outweigh the minuscule risks, but some parents still question their safety. John Oliver discusses why some people may still feel uncertainty about childhood vaccinations.\n\nConnect with Last Week Tonight online...\n\nSubscribe to the Last Week Tonight YouTube channel for more almost news as it almost happens: www.youtube.com/user/LastWeekTonight\n\nFind Last Week Tonight on Facebook like your mom would: http://Facebook.com/LastWeekTonight\n\nFollow us on Twitter for news about jokes and jokes about news: http://Twitter.com/LastWeekTonight\n\nVisit our official site for all that other stuff at once: http://www.hbo.com/lastweektonight",
+    "timestamp": null,
+    "channel": null,
+    "channel_follower_count": null,
+    "comment_count": null,
+    "upload_date": "2017062606:30:01Z",
+    "uploader": null,
+    "uploader_id": null,
+    "uploader_url": null,
+    "view_count": 27332848
+  },
+  "title": "Vaccines: Last Week Tonight with John Oliver (HBO)",
+  "description": "The benefits of vaccines far outweigh the minuscule risks, but some parents still question their safety. John Oliver discusses why some people may still feel uncertainty about childhood vaccinations.\n\nConnect with Last Week Tonight online...\n\nSubscribe to the Last Week Tonight YouTube channel for more almost news as it almost happens: www.youtube.com/user/LastWeekTonight\n\nFind Last Week Tonight on Facebook like your mom would: http://Facebook.com/LastWeekTonight\n\nFollow us on Twitter for news about jokes and jokes about news: http://Twitter.com/LastWeekTonight\n\nVisit our official site for all that other stuff at once: http://www.hbo.com/lastweektonight",
+  "quick_summary": {
+    "verdict": "Likely to be False",
+    "key_issue": "This video contains a mix of claims with varying credibility levels. 33.3% of claims appear false or likely false, while 0.0% appear true or likely true.",
+    "main_concerns": [
+      "The claim that anxious parents were thrilled and grateful, responding to one of the greatest mass inoculations in medical annals, is likely false due to a lack of supporting evidence and the presence of contradictory information regarding parental responses to vaccinations.\n\nPRESS RELEASE COUNTER-IN..."
+    ],
+    "analysis_date": "2025-11-13T07:07:03.043197"
+  },
+  "overall_assessment": [
+    "Likely to be False",
+    "This video contains a mix of claims with varying credibility levels. 33.3% of claims appear false or likely false, while 0.0% appear true or likely true."
+  ],
+  "key_findings": [
+    {
+      "category": "Pervasive Factual Inaccuracy",
+      "description": "All claims assessed (3 out of 3) are determined to be either \"LEANING_FALSE\" or \"LIKELY_FALSE.\" This indicates a widespread lack of factual accuracy across the content, significantly undermining its overall credibility."
+    },
+    {
+      "category": "Absence of Credible Evidence",
+      "description": "For every claim, scientific and independent sources consistently provide no support or actively contradict the assertions. This pattern highlights a critical absence of verifiable, unbiased evidence to substantiate the content's claims."
+    },
+    {
+      "category": "Mix of Subjective, Humorous, and Unsubstantiated Claims",
+      "description": "The content includes subjective judgments, humorous statements presented as factual, and assertions that lack evidence or are factually incorrect. This blend suggests the content is not primarily focused on delivering accurate, verifiable information."
+    }
+  ],
+  "claims_breakdown": [
+    {
+      "claim_id": 0,
+      "claim_text": "It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who looks like he sneaks into senior proms in the middle of the night to fox the mozzarella sticks.",
+      "timestamp": "02:04",
+      "speaker": "John Oliver",
+      "initial_assessment": "LEANING_FALSE",
+      "verification_result": {
+        "result": "LEANING_FALSE",
+        "explanation": "The claim, which is a subjective judgment based on a highly specific and descriptive premise about a doctor's appearance and actions, cannot be verified as true or false due to the complete absence of any supporting or contradicting evidence.\n\nSCIENTIFIC EVIDENCE: 2 scientific sources (power=2.0), 0 supporting claim. INDEPENDENT EVIDENCE: 13 independent sources (validation power=13.0) provide unbiased perspective.",
+        "evidence": "The provided evidence consists of various unrelated texts, including poetry archives, grammar books, Facebook posts, academic documents, and AI model descriptions, none of which contain any information relevant to a doctor's appearance, their behavior, or the wisdom of taking healthcare advice.\n\nMain evidence sources used in verification:\nhttps://ledburypoetry.org.uk/lockdown-poems/\nhttps://www.misd.net/languageart/grammarinaction/501grammarandwriting3e.pdf\nhttps://www.facebook.com/groups/254414918544059/posts/1709189743066562/\nhttps://alundberg.wordpress.com/about/\nhttps://amycarney.com/walk-away-from-doing-these-8-things-for-your-teen-this-school-year/\nhttps://clarifai.com/clarifai/main/models/general-image-recognition\nhttps://www.southingtonschools.org/uploaded/faculty/bhosmer@southingtonschoolsorg/English/summer_reading_2020/Grade_12/Grade_12_-_AP_Language_Required_Text-Nickel_and_Dimed_by_Barbara_Ehrenreich.pdf\nhttps://salinecountyne.gov/wp-content/uploads/sites/14/2024/11/2019-aging-services-newsletter.pdf\nhttps://files.eric.ed.gov/fulltext/ED311453.pdf\nhttps://www.gocivilairpatrol.com/media/cms/Vol2LetterLowFinal_8BDFDB373E830.pdf\nhttps://www.congress.gov/congressional-record/volume-163/issue-20/senate-section/article/S873-2\nhttps://www.haverford.edu/sites/default/files/Office/Communications/HAVERFORD-Spring-2010.pdf\nhttps://mdadmissions.wustl.edu/app/uploads/2023/05/DIS-O-2023.pdf",
+        "probability_distribution": {
+          "TRUE": 0.3762838468720822,
+          "FALSE": 0.57703081232493,
+          "UNCERTAIN": 0.04668534080298787
+        },
+        "sources": [
+          "https://salinecountyne.gov/wp-content/uploads/sites/14/2024/11/2019-aging-services-newsletter.pdf",
+          "https://files.eric.ed.gov/fulltext/ED311453.pdf",
+          "https://ledburypoetry.org.uk/lockdown-poems/",
+          "https://alundberg.wordpress.com/about/",
+          "https://mdadmissions.wustl.edu/app/uploads/2023/05/DIS-O-2023.pdf",
+          "https://www.congress.gov/congressional-record/volume-163/issue-20/senate-section/article/S873-2",
+          "https://www.haverford.edu/sites/default/files/Office/Communications/HAVERFORD-Spring-2010.pdf",
+          "https://www.southingtonschools.org/uploaded/faculty/bhosmer@southingtonschoolsorg/English/summer_reading_2020/Grade_12/Grade_12_-_AP_Language_Required_Text-Nickel_and_Dimed_by_Barbara_Ehrenreich.pdf",
+          "https://www.gocivilairpatrol.com/media/cms/Vol2LetterLowFinal_8BDFDB373E830.pdf",
+          "https://amycarney.com/walk-away-from-doing-these-8-things-for-your-teen-this-school-year/",
+          "https://clarifai.com/clarifai/main/models/general-image-recognition",
+          "https://www.misd.net/languageart/grammarinaction/501grammarandwriting3e.pdf",
+          "https://www.facebook.com/groups/254414918544059/posts/1709189743066562/"
+        ],
+        "pr_sources": [],
+        "youtube_counter_sources": [],
+        "counter_intelligence_boosts": []
+      },
+      "explanation": "",
+      "evidence": null,
+      "probability_distribution": null,
+      "pr_sources": null,
+      "youtube_counter_sources": null
+    },
+    {
+      "claim_id": 1,
+      "claim_text": "Anxious parents were thrilled and grateful, responding to one of the greatest mass inoculations in medical annals.",
+      "timestamp": "00:30",
+      "speaker": "Visual Text",
+      "initial_assessment": "LIKELY_FALSE",
+      "verification_result": {
+        "result": "LIKELY_FALSE",
+        "explanation": "The claim that anxious parents were thrilled and grateful, responding to one of the greatest mass inoculations in medical annals, is likely false due to a lack of supporting evidence and the presence of contradictory information regarding parental responses to vaccinations.\n\nPRESS RELEASE COUNTER-INTELLIGENCE: Multiple press releases (2) found supporting this claim, but press releases are promotional content with inherent bias toward positive claims about products/services.    📋 ACMT News - ACMT: \"April 1, 2024. The Medical Toxicology Foundation and Society for Academic Emergency Medicine Foundation are pleased to announce Simon J. Ostrowski, MD...\" → Promotional press release content - inherent positive bias    📋 JAVMA News in: Journal of the American Veterinary Medical ...: \"The report “Prevalence, comorbidity, and breed differences in canine anxiety in 13,700 Finnish pet dogs” was published March 5 in Scientific Reports, ...\" → Promotional press release content - inherent positive bias SCIENTIFIC EVIDENCE: 6 scientific sources (power=6.0), 0 supporting claim. INDEPENDENT EVIDENCE: 15 independent sources (validation power=15.0) provide unbiased perspective.",
+        "evidence": "The provided evidence includes a fictional pandemic scenario that describes \"vitriolic\" responses to mass inoculations (Source 3) and a report detailing parental worries about vaccines leading to anti-vaccination activism (Source 8), both of which contradict the claim that \"anxious parents were thrilled and grateful.\" Most other sources are irrelevant to the claim.\n\nMain evidence sources used in verification:\nhttps://www.hhs.gov/sites/default/files/surgeon-general-social-connection-advisory.pdf\nhttps://www.healthaffairs.org/doi/10.1377/hlthaff.2021.01394\nhttps://centerforhealthsecurity.org/sites/default/files/2022-12/spars-pandemic-scenario.pdf\nhttps://www.worldbank.org/content/dam/Worldbank/Publications/WDR/WDR%202015/WDR-2015-Full-Report.pdf\nhttps://www.cdph.ca.gov/Programs/OPP/CDPH%20Document%20Library/California-State-of-Public-Health-Full-Report-2024.pdf\nhttps://aafa.org/wp-content/uploads/2022/08/more-than-skin-deep-voice-of-the-patient-report.pdf\nhttps://www.acponline.org/more-acp-news\nhttps://www.sabin.org/app/uploads/2022/04/Sabin-Aspen-report-2020_Meeting-the-Challenge-of-Vaccine-Hesitancy.pdf\nhttps://oversight.house.gov/wp-content/uploads/2024/12/12.04.2024-SSCP-FINAL-REPORT.pdf\nhttps://www.federalregister.gov/documents/2024/12/09/2024-25382/medicare-and-medicaid-programs-cy-2025-payment-policies-under-the-physician-fee-schedule-and-other\nhttps://www.pennmedicine.org/news\nhttps://www.aamc.org/news/never-the-same\nhttps://www.facingourrisk.org/blog/why-so-many-of-us-quit-taking-tamoxifen\nhttps://obgyn.onlinelibrary.wiley.com/doi/10.1002/pd.6537\nhttps://www.pewresearch.org/internet/2021/02/18/experts-say-the-new-normal-in-2025-will-be-far-more-tech-driven-presenting-more-big-challenges/\n\nPress release/newswire sources used in verification:\nhttps://www.acmt.net/home/acmt-news-feed/\nhttps://avmajournals.avma.org/view/journals/javma/256/9/javma.256.9.951.xml",
+        "probability_distribution": {
+          "TRUE": 0.19961240310077522,
+          "FALSE": 0.7519379844961239,
+          "UNCERTAIN": 0.04844961240310078
+        },
+        "sources": [
+          "https://www.pewresearch.org/internet/2021/02/18/experts-say-the-new-normal-in-2025-will-be-far-more-tech-driven-presenting-more-big-challenges/",
+          "https://centerforhealthsecurity.org/sites/default/files/2022-12/spars-pandemic-scenario.pdf",
+          "https://www.facingourrisk.org/blog/why-so-many-of-us-quit-taking-tamoxifen",
+          "https://www.sabin.org/app/uploads/2022/04/Sabin-Aspen-report-2020_Meeting-the-Challenge-of-Vaccine-Hesitancy.pdf",
+          "https://www.worldbank.org/content/dam/Worldbank/Publications/WDR/WDR%202015/WDR-2015-Full-Report.pdf",
+          "https://oversight.house.gov/wp-content/uploads/2024/12/12.04.2024-SSCP-FINAL-REPORT.pdf",
+          "https://www.aamc.org/news/never-the-same",
+          "https://obgyn.onlinelibrary.wiley.com/doi/10.1002/pd.6537",
+          "https://www.pennmedicine.org/news",
+          "https://aafa.org/wp-content/uploads/2022/08/more-than-skin-deep-voice-of-the-patient-report.pdf",
+          "https://www.federalregister.gov/documents/2024/12/09/2024-25382/medicare-and-medicaid-programs-cy-2025-payment-policies-under-the-physician-fee-schedule-and-other",
+          "https://www.healthaffairs.org/doi/10.1377/hlthaff.2021.01394",
+          "https://www.acponline.org/more-acp-news",
+          "https://www.hhs.gov/sites/default/files/surgeon-general-social-connection-advisory.pdf",
+          "https://www.cdph.ca.gov/Programs/OPP/CDPH%20Document%20Library/California-State-of-Public-Health-Full-Report-2024.pdf"
+        ],
+        "pr_sources": [
+          {
+            "source_name": "ACMT News - ACMT",
+            "source_type": "Press Release",
+            "url": "https://www.acmt.net/home/acmt-news-feed/",
+            "title": "ACMT News - ACMT",
+            "text": "April 1, 2024. The Medical Toxicology Foundation and Society for Academic Emergency Medicine Foundation are pleased to announce Simon J. Ostrowski, MD of ...",
+            "relevance": "high",
+            "claim": "Anxious parents were thrilled and grateful, responding to one of the greatest mass inoculations in medical annals.",
+            "self_referential": false,
+            "validation_power": 1.0,
+            "evidence_group": "press_releases",
+            "supports_claim": false
+          },
+          {
+            "source_name": "JAVMA News in: Journal of the American Veterinary Medical ...",
+            "source_type": "Press Release",
+            "url": "https://avmajournals.avma.org/view/journals/javma/256/9/javma.256.9.951.xml",
+            "title": "JAVMA News in: Journal of the American Veterinary Medical ...",
+            "text": "The report “Prevalence, comorbidity, and breed differences in canine anxiety in 13,700 Finnish pet dogs” was published March 5 in Scientific Reports, an online ...",
+            "relevance": "high",
+            "claim": "Anxious parents were thrilled and grateful, responding to one of the greatest mass inoculations in medical annals.",
+            "self_referential": false,
+            "validation_power": 1.0,
+            "evidence_group": "press_releases",
+            "supports_claim": false
+          }
+        ],
+        "youtube_counter_sources": [],
+        "counter_intelligence_boosts": [
+          {
+            "type": "press_release_counter",
+            "probability_adjustment": -0.15,
+            "confidence_factor": 0.8,
+            "explanation": "Multiple press releases (2) found supporting this claim, but press releases are promotional content with inherent bias toward positive claims about products/services.",
+            "quotes": [
+              {
+                "source": "ACMT News - ACMT",
+                "quote": "\"April 1, 2024. The Medical Toxicology Foundation and Society for Academic Emergency Medicine Foundation are pleased to announce Simon J. Ostrowski, MD...\"",
+                "analysis": "Promotional press release content - inherent positive bias"
+              },
+              {
+                "source": "JAVMA News in: Journal of the American Veterinary Medical ...",
+                "quote": "\"The report “Prevalence, comorbidity, and breed differences in canine anxiety in 13,700 Finnish pet dogs” was published March 5 in Scientific Reports, ...\"",
+                "analysis": "Promotional press release content - inherent positive bias"
+              }
+            ],
+            "analysis": "Counter-intelligence analysis: Press releases reduced claim credibility by 15% due to promotional bias and lack of independent validation."
+          }
+        ]
+      },
+      "explanation": "",
+      "evidence": null,
+      "probability_distribution": null,
+      "pr_sources": null,
+      "youtube_counter_sources": null
+    },
+    {
+      "claim_id": 2,
+      "claim_text": "Polio was never childhood's most crippling enemy because that was and will forever remain accidentally seeing your father's penis.",
+      "timestamp": "00:43",
+      "speaker": "John Oliver",
+      "initial_assessment": "LEANING_FALSE",
+      "verification_result": {
+        "result": "LEANING_FALSE",
+        "explanation": "The claim is a humorous statement from a comedy show, not a factual assertion; however, the literal premise that polio was never childhood's most crippling enemy is factually incorrect, as polio was a devastating and crippling disease.\n\nSCIENTIFIC EVIDENCE: 5 scientific sources (power=5.0), 0 supporting claim. INDEPENDENT EVIDENCE: 15 independent sources (validation power=15.0) provide unbiased perspective.",
+        "evidence": "Multiple sources confirm that the claim, 'Polio was never childhood's most crippling enemy because that was and will forever remain accidentally seeing your father's penis,' is a direct quote from a comedic segment by John Oliver on 'Last Week Tonight.'\n\nMain evidence sources used in verification:\nhttps://www.cedarfalls.com/DocumentCenter/View/978/The-Complete-Poetry-of-James-Hearst?bidId=\nhttps://scrapsfromtheloft.com/tv-series/vaccines-last-week-tonight-with-john-oliver-transcript/\nhttps://files.eric.ed.gov/fulltext/ED619049.pdf\nhttps://www.idealmedicalcare.org/patient-profiling-are-you-a-victim/\nhttps://www.yumpu.com/en/document/view/67979743/scythe\nhttps://en.namu.wiki/w/%EC%A1%B4%20%EC%98%AC%EB%A6%AC%EB%B2%84\nhttps://www.cbsnews.com/pictures/notable-deaths-in-2024/\nhttps://capitol.texas.gov/tlodocs/88R/publiccomments/Meetings/C4102023032708001/InputItems/7030302e-e9b1-4554-9404-d15f93f5a59e.pdf\nhttps://www.cshl.edu/wp-content/uploads/2021/01/Bits_and_Pieces_EPUB_V3.pdf\nhttps://www.churchofjesuschrist.org/bc/content/shared/content/english/pdf/language-materials/09691_eng.pdf\nhttps://www.afi.com/afis-100-years-100-movies-10th-anniversary-edition/\nhttps://rucore.libraries.rutgers.edu/rutgers-lib/44747/TXT/3/\nhttps://autre.love/prosemain/tag/super\nhttps://speakola.com/grad/tag/HARVARD\nhttps://www.congress.gov/119/crec/2025/04/29/171/71/CREC-2025-04-29.pdf",
+        "probability_distribution": {
+          "TRUE": 0.36542056074766355,
+          "FALSE": 0.5878504672897196,
+          "UNCERTAIN": 0.04672897196261682
+        },
+        "sources": [
+          "https://scrapsfromtheloft.com/tv-series/vaccines-last-week-tonight-with-john-oliver-transcript/",
+          "https://www.afi.com/afis-100-years-100-movies-10th-anniversary-edition/",
+          "https://files.eric.ed.gov/fulltext/ED619049.pdf",
+          "https://www.cbsnews.com/pictures/notable-deaths-in-2024/",
+          "https://www.cshl.edu/wp-content/uploads/2021/01/Bits_and_Pieces_EPUB_V3.pdf",
+          "https://speakola.com/grad/tag/HARVARD",
+          "https://www.cedarfalls.com/DocumentCenter/View/978/The-Complete-Poetry-of-James-Hearst?bidId=",
+          "https://www.idealmedicalcare.org/patient-profiling-are-you-a-victim/",
+          "https://capitol.texas.gov/tlodocs/88R/publiccomments/Meetings/C4102023032708001/InputItems/7030302e-e9b1-4554-9404-d15f93f5a59e.pdf",
+          "https://autre.love/prosemain/tag/super",
+          "https://www.congress.gov/119/crec/2025/04/29/171/71/CREC-2025-04-29.pdf",
+          "https://en.namu.wiki/w/%EC%A1%B4%20%EC%98%AC%EB%A6%AC%EB%B2%84",
+          "https://rucore.libraries.rutgers.edu/rutgers-lib/44747/TXT/3/",
+          "https://www.churchofjesuschrist.org/bc/content/shared/content/english/pdf/language-materials/09691_eng.pdf",
+          "https://www.yumpu.com/en/document/view/67979743/scythe"
+        ],
+        "pr_sources": [],
+        "youtube_counter_sources": [],
+        "counter_intelligence_boosts": []
+      },
+      "explanation": "",
+      "evidence": null,
+      "probability_distribution": null,
+      "pr_sources": null,
+      "youtube_counter_sources": null
+    }
+  ],
+  "evidence_summary": [
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://salinecountyne.gov/wp-content/uploads/sites/14/2024/11/2019-aging-services-newsletter.pdf",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://files.eric.ed.gov/fulltext/ED311453.pdf",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://ledburypoetry.org.uk/lockdown-poems/",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://alundberg.wordpress.com/about/",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://mdadmissions.wustl.edu/app/uploads/2023/05/DIS-O-2023.pdf",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.congress.gov/congressional-record/volume-163/issue-20/senate-section/article/S873-2",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.haverford.edu/sites/default/files/Office/Communications/HAVERFORD-Spring-2010.pdf",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.southingtonschools.org/uploaded/faculty/bhosmer@southingtonschoolsorg/English/summer_reading_2020/Grade_12/Grade_12_-_AP_Language_Required_Text-Nickel_and_Dimed_by_Barbara_Ehrenreich.pdf",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://www.gocivilairpatrol.com/media/cms/Vol2LetterLowFinal_8BDFDB373E830.pdf",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    },
+    {
+      "source_name": "Verification Source",
+      "source_type": "verification",
+      "url": "https://amycarney.com/walk-away-from-doing-these-8-things-for-your-teen-this-school-year/",
+      "text": "Evidence for claim: It is not wise to take healthcare advice from a man who has willingly sought care from a doctor who ...",
+      "title": null
+    }
+  ],
+  "secondary_sources": [],
+  "craap_analysis": {
+    "currency": [
+      "High",
+      "\"Last Week Tonight with John Oliver\" is a weekly satirical news program that addresses current events, ensuring the topics discussed, including vaccines, are highly relevant and up-to-date at the time of broadcast. The issues surrounding vaccines are also ongoing, making the discussion perpetually current."
+    ],
+    "relevance": [
+      "High",
+      "The video directly addresses the topic of vaccines, which is a significant public health issue. It aims to inform and engage viewers on various aspects of vaccine discourse, making it highly relevant for understanding public perception and arguments surrounding the subject."
+    ],
+    "authority": [
+      "Low",
+      "While HBO is a reputable network, \"Last Week Tonight\" is a satirical news show hosted by John Oliver, a comedian, not a medical expert or traditional journalist. Therefore, it should not be considered a primary authoritative source for scientific or medical information, despite its fact-checking efforts."
+    ],
+    "accuracy": [
+      "Medium",
+      "While \"Last Week Tonight\" is known for its research and fact-checking, its primary format is satire and entertainment, which can sometimes lead to simplification or comedic exaggeration. The provided claim assessments indicate that some factual assertions within the video may be \"LIKELY_FALSE\" or \"LEANING_FALSE,\" suggesting that while it aims for accuracy, it's not always perfectly achieved, especially when humor is involved."
+    ],
+    "purpose": [
+      "Medium",
+      "The primary purpose of \"Last Week Tonight\" is to entertain and satirize current events, often with a strong persuasive element towards a particular viewpoint (in this case, generally pro-vaccine). While it aims to inform through humor and critical analysis, it is not a neutral, purely informative source, and its comedic nature introduces inherent bias."
+    ]
+  },
+  "recommendations": [],
+  "evidence_details": [],
+  "press_release_count": 0,
+  "youtube_response_count": 0,
+  "metadata": {},
+  "youtube_counter_intelligence": [],
+  "press_release_counter_intelligence": [
+    {
+      "url": "https://www.acmt.net/home/acmt-news-feed/",
+      "title": "ACMT News - ACMT",
+      "description": "April 1, 2024. The Medical Toxicology Foundation and Society for Academic Emergency Medicine Foundation are pleased to announce Simon J. Ostrowski, MD of ...",
+      "source_name": "ACMT News - ACMT",
+      "source_type": "press_release_counter_intelligence",
+      "self_referential": false,
+      "self_referential_score": 0,
+      "supports_claim": false,
+      "claim_text": "Anxious parents were thrilled and grateful, responding to one of the greatest mass inoculations in m..."
+    },
+    {
+      "url": "https://avmajournals.avma.org/view/journals/javma/256/9/javma.256.9.951.xml",
+      "title": "JAVMA News in: Journal of the American Veterinary Medical ...",
+      "description": "The report “Prevalence, comorbidity, and breed differences in canine anxiety in 13,700 Finnish pet dogs” was published March 5 in Scientific Reports, an online ...",
+      "source_name": "JAVMA News in: Journal of the American Veterinary Medical ...",
+      "source_type": "press_release_counter_intelligence",
+      "self_referential": false,
+      "self_referential_score": 0,
+      "supports_claim": false,
+      "claim_text": "Anxious parents were thrilled and grateful, responding to one of the greatest mass inoculations in m..."
+    }
+  ],
+  "test_metadata": {
+    "test_id": 3,
+    "category": "Health & Medicine",
+    "subcategory": "Vaccines",
+    "expected_verdict": "Likely True",
+    "tags": [
+      "vaccines",
+      "education",
+      "public-health",
+      "legitimate-content"
+    ],
+    "imported_at": "2025-11-13T22:38:48.183103",
+    "imported_from": "test_videos.json",
+    "batch_id": null,
+    "processing_time_seconds": 249.769044,
+    "verdict_match": true,
+    "html_report_path": "ui/gallery/html_reports/7VG_s2PCH_c_Vaccines_Last_Week_Tonight_with_John_Oliver_HBO.html"
+  },
+  "gallery_metadata": {
+    "added_date": "2025-11-13T22:38:48.183103",
+    "status": "approved",
+    "source_video_id": "7VG_s2PCH_c",
+    "curator_notes": "Imported from test suite - Category: Health & Medicine"
+  }
+}
