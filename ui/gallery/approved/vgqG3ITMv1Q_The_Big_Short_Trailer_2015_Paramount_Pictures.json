@@ -271,7 +271,7 @@
       "2008",
       "economics"
     ],
-    "imported_at": "2025-11-13T22:38:48.185047",
+    "imported_at": "2025-11-14T23:29:09.156181",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 182.115042,
@@ -279,7 +279,7 @@
     "html_report_path": "ui/gallery/html_reports/vgqG3ITMv1Q_The_Big_Short_Trailer_2015_Paramount_Pictures.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.185047",
+    "added_date": "2025-11-14T23:29:09.156181",
     "status": "approved",
     "source_video_id": "vgqG3ITMv1Q",
     "curator_notes": "Imported from test suite - Category: Finance & Investment"

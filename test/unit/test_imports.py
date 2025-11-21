@@ -8,7 +8,7 @@ from pathlib import Path
 
 # Add repo root to path (same as streamlit_app.py does)
 repo_root = Path(__file__).parent
-sys.path.insert(0, str(repo_root))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 print("="*80)
 print("Testing VerityNgn Imports")

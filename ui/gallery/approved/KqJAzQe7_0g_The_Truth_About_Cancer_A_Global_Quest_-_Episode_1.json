@@ -2590,7 +2590,7 @@
       "documentary",
       "long-form"
     ],
-    "imported_at": "2025-11-13T22:38:48.181004",
+    "imported_at": "2025-11-14T23:29:09.149864",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 32485.79212,
@@ -2598,7 +2598,7 @@
     "html_report_path": "ui/gallery/html_reports/KqJAzQe7_0g_The_Truth_About_Cancer_A_Global_Quest_-_Episode_1.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.181004",
+    "added_date": "2025-11-14T23:29:09.149864",
     "status": "approved",
     "source_video_id": "KqJAzQe7_0g",
     "curator_notes": "Imported from test suite - Category: Health & Medicine"

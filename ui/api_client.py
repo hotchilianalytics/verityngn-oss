@@ -29,12 +29,13 @@ class VerityNgnAPIClient:
         Initialize API client.
         
         Args:
-            api_url: Base URL of the API (e.g., 'http://localhost:8080')
-                     If None, uses VERITYNGN_API_URL environment variable
+            api_url: Base URL of the API (e.g., 'http://localhost:8080' or Cloud Run URL)
+                     If None, uses CLOUDRUN_API_URL or VERITYNGN_API_URL environment variable
                      or defaults to http://localhost:8080
             timeout: Request timeout in seconds (default: 300)
         """
-        self.api_url = api_url or os.getenv('VERITYNGN_API_URL', 'http://localhost:8080')
+        # Check for Cloud Run URL first, then fallback to VERITYNGN_API_URL
+        self.api_url = api_url or os.getenv('CLOUDRUN_API_URL') or os.getenv('VERITYNGN_API_URL', 'http://localhost:8080')
         self.timeout = timeout
         
         # Ensure no trailing slash
@@ -85,13 +86,36 @@ class VerityNgnAPIClient:
         """
         Check if API is healthy and responsive.
         
+        For Cloud Run services, allows extra time for cold starts (up to 30 seconds).
+        Uses shorter timeout for local APIs (5 seconds).
+        
         Returns:
             Tuple of (is_healthy, message)
         """
+        import time
+        
+        # Determine timeout based on API URL
+        # Cloud Run URLs need longer timeout for cold starts
+        is_cloud_run = 'run.app' in self.api_url or 'a.run.app' in self.api_url
+        initial_timeout = 30 if is_cloud_run else 5
+        
+        # Try with initial timeout
         try:
-            response = self._make_request('GET', '/health', timeout=5)
+            response = self._make_request('GET', '/health', timeout=initial_timeout)
             data = response.json()
             return True, data.get('status', 'OK')
+        except (TimeoutError, requests.exceptions.Timeout) as e:
+            # If Cloud Run times out, it might be cold starting - try once more with longer timeout
+            if is_cloud_run:
+                logger.warning(f"⚠️ Initial health check timed out (cold start?), retrying with longer timeout...")
+                try:
+                    time.sleep(2)  # Brief pause before retry
+                    response = self._make_request('GET', '/health', timeout=60)
+                    data = response.json()
+                    return True, data.get('status', 'OK')
+                except Exception as retry_error:
+                    return False, f"Health check failed after retry: {retry_error}"
+            return False, f"Health check timeout: {e}"
         except Exception as e:
             return False, str(e)
     
@@ -242,6 +266,107 @@ class VerityNgnAPIClient:
         
         return response.json()
     
+    def submit_batch_job(
+        self,
+        video_urls: List[str],
+        parallelism: int = 1
+    ) -> str:
+        """
+        Submit a batch job for processing multiple videos.
+        
+        Args:
+            video_urls: List of YouTube video URLs
+            parallelism: Number of parallel tasks (default: 1)
+        
+        Returns:
+            job_id: Batch job identifier for tracking
+            
+        Raises:
+            ValueError: If video_urls is empty
+            requests.RequestException: On API errors
+        """
+        if not video_urls or len(video_urls) == 0:
+            raise ValueError("video_urls cannot be empty")
+        
+        payload = {
+            'video_urls': video_urls,
+            'parallelism': parallelism
+        }
+        
+        logger.info(f"📤 Submitting batch job for {len(video_urls)} videos")
+        
+        try:
+            response = self._make_request(
+                'POST',
+                '/api/v1/batch/submit',
+                json=payload
+            )
+            data = response.json()
+            job_id = data.get('job_id')
+            
+            if not job_id:
+                raise ValueError("API did not return a job_id")
+            
+            logger.info(f"✅ Batch job submitted successfully: {job_id}")
+            return job_id
+            
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"❌ Failed to submit batch job: {e}")
+            if e.response is not None:
+                try:
+                    error_detail = e.response.json().get('detail', str(e))
+                    raise ValueError(f"API Error: {error_detail}")
+                except:
+                    pass
+            raise
+    
+    def get_batch_status(self, job_id: str) -> Dict[str, Any]:
+        """
+        Get batch job status.
+        
+        Args:
+            job_id: Batch job identifier from submit_batch_job()
+        
+        Returns:
+            Status dictionary:
+            {
+                'job_id': str,
+                'status': 'running'|'completed'|'failed',
+                'total_count': int,
+                'completed_count': int,
+                'failed_count': int,
+                'completed_videos': List[str],
+                'failed_videos': List[str],
+                'gcs_path': str (if completed)
+            }
+        """
+        logger.debug(f"📊 Checking batch job status: {job_id}")
+        
+        response = self._make_request(
+            'GET',
+            f'/api/v1/batch/status/{job_id}'
+        )
+        return response.json()
+    
+    def get_batch_results(self, job_id: str) -> Dict[str, Any]:
+        """
+        Get batch job results.
+        
+        Args:
+            job_id: Batch job identifier
+        
+        Returns:
+            Results dictionary with report paths and metadata
+        """
+        logger.info(f"📄 Fetching batch results for job: {job_id}")
+        
+        response = self._make_request(
+            'GET',
+            f'/api/v1/batch/results/{job_id}'
+        )
+        
+        return response.json()
+    
     def poll_until_complete(
         self,
         task_id: str,
@@ -307,6 +432,52 @@ class VerityNgnAPIClient:
             else:
                 logger.warning(f"⚠️ Unknown task status: {task_status}")
                 time.sleep(poll_interval)
+
+
+           def get_gallery_list(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+               """
+               Get list of gallery videos from GCS.
+               
+               Args:
+                   limit: Maximum number of videos to return (default: 50)
+                   offset: Number of videos to skip (default: 0)
+               
+               Returns:
+                   Gallery data dictionary:
+                   {
+                       'videos': List[Dict],
+                       'total': int,
+                       'limit': int,
+                       'offset': int
+                   }
+               """
+               logger.info(f"📋 Fetching gallery list (limit={limit}, offset={offset})")
+               
+               response = self._make_request(
+                   'GET',
+                   f'/api/v1/batch/gallery/list?limit={limit}&offset={offset}'
+               )
+               
+               return response.json()
+           
+           def get_gallery_video(self, video_id: str) -> Dict[str, Any]:
+               """
+               Get specific gallery video details.
+               
+               Args:
+                   video_id: YouTube video ID
+               
+               Returns:
+                   Video metadata dictionary with signed URLs
+               """
+               logger.info(f"📄 Fetching gallery video: {video_id}")
+               
+               response = self._make_request(
+                   'GET',
+                   f'/api/v1/batch/gallery/{video_id}'
+               )
+               
+               return response.json()
 
 
 def get_default_client() -> VerityNgnAPIClient:

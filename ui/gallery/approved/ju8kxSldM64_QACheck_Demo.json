@@ -198,7 +198,7 @@
       "politifact",
       "media-literacy"
     ],
-    "imported_at": "2025-11-13T22:38:48.188519",
+    "imported_at": "2025-11-14T23:29:09.161944",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 74.04224,
@@ -206,7 +206,7 @@
     "html_report_path": "ui/gallery/html_reports/ju8kxSldM64_QACheck_Demo.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.188519",
+    "added_date": "2025-11-14T23:29:09.161944",
     "status": "approved",
     "source_video_id": "ju8kxSldM64",
     "curator_notes": "Imported from test suite - Category: Politics & News"

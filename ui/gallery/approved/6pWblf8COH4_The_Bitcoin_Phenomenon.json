@@ -3285,7 +3285,7 @@
       "documentary",
       "investment"
     ],
-    "imported_at": "2025-11-13T22:38:48.185776",
+    "imported_at": "2025-11-14T23:29:09.157926",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 764.434201,
@@ -3293,7 +3293,7 @@
     "html_report_path": "ui/gallery/html_reports/6pWblf8COH4_The_Bitcoin_Phenomenon.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.185776",
+    "added_date": "2025-11-14T23:29:09.157926",
     "status": "approved",
     "source_video_id": "6pWblf8COH4",
     "curator_notes": "Imported from test suite - Category: Cryptocurrency"

@@ -95,12 +95,27 @@ def run_verification_workflow(video_url: str, config: dict, log_queue: Queue):
         add_log('info', '   Stage 1/6: Downloading video...', log_queue)
         
         # Pass None to let pipeline handle directory creation
-        final_state, out_dir = run_verification(video_url, out_dir_path=None)
+        # Note: run_verification returns a dict (not tuple) for API compatibility
+        result = run_verification(video_url, out_dir_path=None)
+        
+        # Handle both dict return (new) and tuple return (legacy) for compatibility
+        if isinstance(result, dict):
+            # New format: dict with 'state' and 'output_dir' keys
+            final_state = result.get('state', {})
+            out_dir = result.get('output_dir', '')
+            video_id = result.get('video_id', '')
+            claims_count = result.get('claims_count', 0)
+        else:
+            # Legacy format: tuple (final_state, out_dir)
+            final_state, out_dir = result
+            video_id = final_state.get('video_id', '')
+            claims_count = len(final_state.get('claims', []))
         
         # Update status via queue
         log_queue.put({'type': 'status', 'status': 'complete', 'output_dir': out_dir})
         add_log('success', f'🎉 Verification complete!', log_queue)
         add_log('success', f'📊 Results saved to: {out_dir}', log_queue)
+        add_log('success', f'📈 Processed {claims_count} claims for video: {video_id}', log_queue)
         
     except Exception as e:
         # Update status via queue

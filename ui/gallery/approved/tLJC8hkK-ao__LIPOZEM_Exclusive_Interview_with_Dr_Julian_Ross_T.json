@@ -2544,7 +2544,7 @@
       "scam",
       "baseline-test"
     ],
-    "imported_at": "2025-11-13T22:38:48.178659",
+    "imported_at": "2025-11-14T23:29:09.146720",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 32103.658352,
@@ -2552,7 +2552,7 @@
     "html_report_path": "ui/gallery/html_reports/tLJC8hkK-ao__LIPOZEM_Exclusive_Interview_with_Dr_Julian_Ross_T.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.178659",
+    "added_date": "2025-11-14T23:29:09.146720",
     "status": "approved",
     "source_video_id": "tLJC8hkK-ao",
     "curator_notes": "Imported from test suite - Category: Health & Medicine"

@@ -914,6 +914,25 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
         except Exception as e:
             logger.error(f"Error generating CRAAP analysis: {e}")
 
+        # Generate LLM-based recommendations (not fallback)
+        recommendations: List[str] = []
+        try:
+            logger.info(f"🤖 Generating LLM-based recommendations for video: {video_info.get('title', video_id)}")
+            recommendations = get_recommendations_from_agent(
+                video_info.get("title", f"Video {video_id}"),
+                claims_typed
+            )
+            logger.info(f"✅ Generated {len(recommendations)} recommendations")
+        except Exception as e:
+            logger.error(f"Error generating recommendations: {e}")
+            # Fallback to generic recommendations only if LLM generation fails
+            recommendations = [
+                "Verify information from reputable sources before making decisions",
+                "Consult experts in the field for professional advice",
+                "Be cautious of claims that seem too good to be true",
+                "Cross-reference information with multiple independent sources"
+            ]
+
         report = VerityReport(
             media_embed=media_embed,
             title=video_info.get("title", f"Video {video_id}"),
@@ -928,6 +947,7 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
             press_release_count=pr_count,
             youtube_response_count=yt_count,
             craap_analysis=craap,
+            recommendations=recommendations,  # Add LLM-generated recommendations
         )
         logger.info(f"📊 [FINAL_REPORT] Created VerityReport object with {len(claims_typed)} claims")
         

@@ -206,7 +206,7 @@
       "documentary",
       "elections"
     ],
-    "imported_at": "2025-11-13T22:38:48.189042",
+    "imported_at": "2025-11-14T23:29:09.162556",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 103.359559,
@@ -214,7 +214,7 @@
     "html_report_path": "ui/gallery/html_reports/iX8GxLP1FHo_The_Great_Hack_Official_Trailer_Netflix.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.189042",
+    "added_date": "2025-11-14T23:29:09.162556",
     "status": "approved",
     "source_video_id": "iX8GxLP1FHo",
     "curator_notes": "Imported from test suite - Category: Politics & News"

@@ -8,6 +8,7 @@ Provides better scalability and cleaner separation of concerns.
 import streamlit as st
 import time
 import logging
+import os
 from typing import Optional
 import sys
 from pathlib import Path
@@ -27,8 +28,25 @@ def render_processing_tab():
     st.header("⚙️ Processing Status")
     
     # Initialize session state
-    if 'api_client' not in st.session_state:
-        st.session_state.api_client = get_default_client()
+    # Get backend mode and configure API client accordingly
+    backend_mode = st.session_state.get('backend_mode', 'local')
+    
+    if 'api_client' not in st.session_state or st.session_state.get('last_backend_mode') != backend_mode:
+        # Reinitialize client if backend mode changed
+        if backend_mode == 'cloudrun':
+            # Use Cloud Run API URL
+            cloudrun_url = os.getenv('CLOUDRUN_API_URL') or os.getenv('VERITYNGN_API_URL')
+            if cloudrun_url:
+                st.session_state.api_client = VerityNgnAPIClient(api_url=cloudrun_url)
+            else:
+                st.error("⚠️ Cloud Run mode selected but CLOUDRUN_API_URL not set!")
+                st.info("Please set CLOUDRUN_API_URL environment variable or in Streamlit secrets.")
+                st.stop()
+        else:
+            # Use default client (local API or fallback)
+            st.session_state.api_client = get_default_client()
+        
+        st.session_state.last_backend_mode = backend_mode
     
     if 'api_status' not in st.session_state:
         st.session_state.api_status = {}

@@ -569,7 +569,7 @@
       "documentary",
       "athletics"
     ],
-    "imported_at": "2025-11-13T22:38:48.183958",
+    "imported_at": "2025-11-14T23:29:09.152875",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 147.81148,
@@ -577,7 +577,7 @@
     "html_report_path": "ui/gallery/html_reports/iSpglxHTJVM_The_Game_Changers_Official_Trailer.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.183958",
+    "added_date": "2025-11-14T23:29:09.152875",
     "status": "approved",
     "source_video_id": "iSpglxHTJVM",
     "curator_notes": "Imported from test suite - Category: Health & Medicine"

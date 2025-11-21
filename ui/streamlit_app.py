@@ -196,16 +196,29 @@ st.markdown(
 # Import components
 from components.video_input import render_video_input_tab
 
-# Import API-based processing (preferred for production)
-# Use processing_api for API calls, or processing for local in-process execution
+# Import both processing components
 try:
-    from components.processing_api import render_processing_tab
-
-    USING_API_MODE = True
+    from components.processing_api import render_processing_tab as render_processing_tab_api
+    HAS_API_COMPONENT = True
 except ImportError:
-    from components.processing import render_processing_tab
+    HAS_API_COMPONENT = False
 
-    USING_API_MODE = False
+try:
+    from components.processing import render_processing_tab as render_processing_tab_local
+    HAS_LOCAL_COMPONENT = True
+except ImportError:
+    HAS_LOCAL_COMPONENT = False
+
+def render_processing_tab():
+    """Route to appropriate processing component based on backend mode."""
+    backend_mode = st.session_state.get('backend_mode', 'local')
+    
+    if backend_mode == 'cloudrun' and HAS_API_COMPONENT:
+        render_processing_tab_api()
+    elif backend_mode == 'local' and HAS_LOCAL_COMPONENT:
+        render_processing_tab_local()
+    else:
+        st.error(f"❌ Backend mode '{backend_mode}' not available. Available components: API={HAS_API_COMPONENT}, Local={HAS_LOCAL_COMPONENT}")
 
 try:
     # Use enhanced report viewer if available
@@ -243,12 +256,22 @@ def main():
     if "config" not in st.session_state:
         # Load default config
         try:
+            # Ensure parent directory is in path
+            import sys
+            from pathlib import Path
+            repo_root = Path(__file__).parent.parent
+            if str(repo_root) not in sys.path:
+                sys.path.insert(0, str(repo_root))
+            
             from verityngn.config.config_loader import get_config
-
             st.session_state.config = get_config()
+        except ImportError as e:
+            # If verityngn module not found, use empty config dict
+            st.warning(f"⚠️ Could not load verityngn config: {e}. Using default configuration.")
+            st.session_state.config = {}
         except Exception as e:
-            st.error(f"Failed to load configuration: {e}")
-            st.session_state.config = None
+            st.warning(f"⚠️ Failed to load configuration: {e}. Using default configuration.")
+            st.session_state.config = {}
 
     # Sidebar navigation
     with st.sidebar:
@@ -270,6 +293,35 @@ def main():
             label_visibility="collapsed",
         )
 
+        st.markdown("---")
+
+        # Backend mode selector
+        st.markdown("### 🔌 Backend Mode")
+        if "backend_mode" not in st.session_state:
+            # Default: use API mode if VERITYNGN_API_URL is set, otherwise local
+            default_mode = "cloudrun" if os.getenv("VERITYNGN_API_URL") else "local"
+            st.session_state.backend_mode = default_mode
+        
+        backend_mode = st.radio(
+            "Processing Backend",
+            ["local", "cloudrun"],
+            index=0 if st.session_state.backend_mode == "local" else 1,
+            format_func=lambda x: "🏠 Local (OSS)" if x == "local" else "☁️ Cloud Run + Batch",
+            help="Local: Direct workflow execution. Cloud Run: API-based processing with Google Cloud Batch.",
+            key="backend_mode_radio"
+        )
+        st.session_state.backend_mode = backend_mode
+        
+        # Show mode-specific info
+        if backend_mode == "local":
+            st.caption("✅ Direct workflow execution")
+        else:
+            cloudrun_url = os.getenv("CLOUDRUN_API_URL", os.getenv("VERITYNGN_API_URL", ""))
+            if cloudrun_url:
+                st.caption(f"🌐 API: {cloudrun_url[:50]}...")
+            else:
+                st.warning("⚠️ Set CLOUDRUN_API_URL env var")
+        
         st.markdown("---")
 
         # Quick stats

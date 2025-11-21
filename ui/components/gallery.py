@@ -6,6 +6,7 @@ Browse and submit example verifications to the community gallery.
 
 import streamlit as st
 import json
+import requests
 from pathlib import Path
 from datetime import datetime
 
@@ -14,6 +15,12 @@ def render_gallery_tab():
     """Render the example gallery tab."""
     
     st.header("🖼️ Example Gallery")
+    
+    # Check backend mode
+    backend_mode = st.session_state.get('backend_mode', 'local')
+    
+    if backend_mode == 'cloudrun':
+        st.info("☁️ **Cloud Run Mode**: Gallery will display reports from GCS bucket. Results from batch jobs automatically flow to the gallery.")
     
     st.markdown("""
     Browse example video verifications from the community. These examples demonstrate
@@ -68,15 +75,68 @@ def render_gallery_tab():
     
     st.markdown("---")
     
-    # Load actual gallery items from gallery/ directory
+    # Load actual gallery items from gallery/ directory or GCS
     st.subheader("📚 Examples")
     
-    # Try to load from gallery/approved/ directory
     import os
-    gallery_dir = Path('./ui/gallery/approved')
     examples = []
     
-    if gallery_dir.exists():
+    # Check backend mode and fetch accordingly
+    if backend_mode == 'cloudrun':
+        # Fetch from GCS via API
+        try:
+            from ui.api_client import get_default_client
+            
+            api_client = st.session_state.get('api_client')
+            if not api_client:
+                api_client = get_default_client()
+            
+            # Fetch gallery videos from API
+            with st.spinner("Loading gallery from GCS..."):
+                gallery_data = api_client.get_gallery_list(limit=100, offset=0)
+                
+                # Process API response into gallery format
+                for video_data in gallery_data.get('videos', []):
+                    # Calculate truthfulness score percentage
+                    truthfulness_score = video_data.get('truthfulness_score', 0.5)
+                    
+                    # Extract category
+                    category = video_data.get('category', '✨ All Categories')
+                    
+                    examples.append({
+                        'id': video_data['video_id'],
+                        'video_id': video_data['video_id'],
+                        'title': video_data.get('title', 'Untitled'),
+                        'youtube_url': video_data.get('youtube_url', ''),
+                        'truthfulness_score': truthfulness_score,
+                        'claims_count': video_data.get('claims_count', 0),
+                        'category': category,
+                        'tags': video_data.get('tags', []),
+                        'submitted_at': video_data.get('completed_at', ''),
+                        'submitted_by': 'cloud_batch',
+                        'html_url': video_data.get('html_url'),  # Signed URL for GCS
+                        'json_url': video_data.get('json_url'),
+                        'markdown_url': video_data.get('markdown_url'),
+                        'gcs_path': video_data.get('gcs_path', ''),
+                    })
+                
+                if examples:
+                    st.success(f"✅ Loaded {len(examples)} videos from GCS")
+                else:
+                    st.info("📭 No videos found in gallery yet. Submit videos via batch processing to add them.")
+                    
+        except Exception as e:
+            st.error(f"❌ Failed to load gallery from GCS: {e}")
+            import traceback
+            with st.expander("Error Details"):
+                st.code(traceback.format_exc())
+            # Fallback to empty list
+            examples = []
+    else:
+        # Local mode: Load from gallery/approved/ directory
+        gallery_dir = Path('./ui/gallery/approved')
+        
+        if gallery_dir.exists():
         for item in gallery_dir.iterdir():
             if item.is_file() and item.suffix == '.json':
                 try:
@@ -269,15 +329,65 @@ def render_gallery_tab():
                         example_title = example.get('title', 'Untitled')
                         video_id = example.get('video_id', '')
                         
-                        # Check if HTML report exists in test_metadata
-                        test_metadata = example.get('test_metadata', {})
-                        html_report_path = test_metadata.get('html_report_path')
-                        
                         # Use session state to track which report is open
                         report_state_key = f"show_report_{example_id}"
                         
-                        if html_report_path:
-                            # Try to read and display HTML report
+                        # Check for HTML report URL (GCS signed URL or local path)
+                        html_url = example.get('html_url')
+                        html_report_path = example.get('test_metadata', {}).get('html_report_path') if not html_url else None
+                        
+                        if html_url:
+                            # GCS signed URL - fetch and display
+                            if st.button("📄 View Report", key=f"view_{example_id}", use_container_width=True):
+                                st.session_state[report_state_key] = not st.session_state.get(report_state_key, False)
+                            
+                            # Show report if state is True - FULL PAGE DISPLAY
+                            if st.session_state.get(report_state_key, False):
+                                # Close button at top
+                                col_close, col_title = st.columns([1, 10])
+                                with col_close:
+                                    if st.button("❌ Close", key=f"close_{example_id}", use_container_width=True):
+                                        st.session_state[report_state_key] = False
+                                        st.rerun()
+                                with col_title:
+                                    st.markdown(f"### 📄 Full Report: {example_title}")
+                                
+                                st.markdown("---")
+                                
+                                # Fetch HTML from signed URL and display
+                                try:
+                                    import streamlit.components.v1 as components
+                                    
+                                    # Fetch HTML content from signed URL
+                                    response = requests.get(html_url, timeout=30)
+                                    response.raise_for_status()
+                                    html_content = response.text
+                                    
+                                    # Use full height and width - no clipping
+                                    components.html(html_content, height=1200, scrolling=True, width=None)
+                                    
+                                    st.markdown("---")
+                                    
+                                    # Download button
+                                    st.download_button(
+                                        label="📥 Download HTML Report",
+                                        data=html_content,
+                                        file_name=f"{video_id}_report.html",
+                                        mime="text/html",
+                                        use_container_width=True
+                                    )
+                                except Exception as e:
+                                    st.error(f"Error loading HTML report from GCS: {e}")
+                                    st.info(f"Report URL: {html_url[:100]}...")
+                                    import traceback
+                                    with st.expander("🔍 Error Details"):
+                                        st.code(traceback.format_exc())
+                                    
+                                    # Fallback: provide direct link
+                                    st.markdown(f"[📄 Open Report in New Tab]({html_url})")
+                                    
+                        elif html_report_path:
+                            # Local file path - existing behavior
                             html_path = Path(html_report_path)
                             if html_path.exists():
                                 # Toggle button

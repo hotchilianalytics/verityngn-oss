@@ -1,0 +1,117 @@
+# VerityNgn Batch Processing Dockerfile
+# Multi-stage build using conda for robust dependency management
+# Based on Dockerfile.api, configured for Google Cloud Batch processing
+#
+# Build: docker build -f Dockerfile.batch -t verityngn-batch .
+# This container includes the full verityngn-oss codebase for batch processing
+# Used by Google Cloud Batch to execute video verification workflows
+
+FROM condaforge/mambaforge:latest as builder
+
+# Set timezone
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy conda environment file (minimal version for dependency resolution)
+COPY environment-minimal.yml .
+
+# Create conda environment
+# Using environment-minimal.yml - lets conda/mamba resolve dependencies automatically
+RUN mamba env create -f environment-minimal.yml && \
+    mamba clean -afy
+
+FROM condaforge/mambaforge:latest as runtime
+
+# Copy conda environment from builder
+COPY --from=builder /opt/conda/envs/verityngn /opt/conda/envs/verityngn
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy ALL verityngn-oss code (like Dockerfile.api does)
+# This ensures the batch container has everything needed for all APIs
+COPY verityngn/ ./verityngn/
+COPY ui/ ./ui/
+COPY examples/ ./examples/
+COPY gallery/ ./gallery/
+COPY environment-minimal.yml ./
+
+# Create necessary directories (use /tmp for Batch VMs - ephemeral)
+RUN mkdir -p /tmp/downloads /tmp/outputs /tmp/logs
+
+# Set essential environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/opt/conda/envs/verityngn/bin:$PATH"
+
+# Batch Production Configuration
+ENV DEPLOYMENT_MODE=production
+ENV STORAGE_BACKEND=gcs
+
+# CRITICAL: Do NOT set GOOGLE_APPLICATION_CREDENTIALS
+# This allows the container to use the VM's service account via metadata service
+# Batch VMs automatically use their assigned service account
+
+# GCS Configuration (set by Batch job or VM service account)
+ENV GCS_BUCKET_NAME=""
+ENV PROJECT_ID=""
+ENV LOCATION=us-central1
+
+# AI Model Configuration
+ENV VERTEX_MODEL_NAME=gemini-2.5-flash
+ENV AGENT_MODEL_NAME=gemini-2.5-flash
+
+# Research Quality Settings (higher token limits for batch processing)
+ENV MAX_OUTPUT_TOKENS_2_5_FLASH=65536
+ENV GENAI_VIDEO_MAX_OUTPUT_TOKENS=65536
+
+# Video Processing Configuration
+ENV SEGMENT_DURATION_SECONDS=2000
+ENV SEGMENT_FPS=1.0
+ENV THINKING_BUDGET=0
+
+# Retry and Rate Limiting
+ENV VERTEX_RETRY_ENABLED=true
+ENV VERTEX_BASE_DELAY=3.0
+ENV VERTEX_MAX_RETRIES=3
+ENV SEGMENT_RATE_LIMIT_ENABLED=true
+ENV SEGMENT_PROCESSING_DELAY=2.0
+
+# Multimodal analysis defaults
+ENV USE_VERTEX_YOUTUBE_URL=true
+ENV USE_VERTEX_SEGMENTED_YOUTUBE=true
+ENV SEGMENTED_URL_ANALYSIS=true
+ENV USE_GENAI_YOUTUBE_URL=false
+
+# Debugging
+ENV DEBUG=true
+ENV LOG_LEVEL=DEBUG
+
+# Storage paths (use /tmp for Batch VMs - ephemeral)
+ENV KEEP_LOCAL_COPIES=false
+ENV DOWNLOADS_DIR=/tmp/downloads
+ENV OUTPUTS_DIR=/tmp/outputs
+ENV LOGS_DIR=/tmp/logs
+
+# No health check (batch jobs don't run as long-lived services)
+# No EXPOSE (batch jobs don't expose ports)
+
+# Run workflow from verityngn-oss package
+# The batch job submitter will call: python -m verityngn.workflows.pipeline <video_url>
+# This container runs bash and waits for commands from the batch job
+CMD ["/bin/bash"]
+

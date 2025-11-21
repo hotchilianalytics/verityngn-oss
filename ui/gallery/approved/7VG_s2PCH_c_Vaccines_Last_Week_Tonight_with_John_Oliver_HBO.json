@@ -352,7 +352,7 @@
       "public-health",
       "legitimate-content"
     ],
-    "imported_at": "2025-11-13T22:38:48.183103",
+    "imported_at": "2025-11-14T23:29:09.152036",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 249.769044,
@@ -360,7 +360,7 @@
     "html_report_path": "ui/gallery/html_reports/7VG_s2PCH_c_Vaccines_Last_Week_Tonight_with_John_Oliver_HBO.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.183103",
+    "added_date": "2025-11-14T23:29:09.152036",
     "status": "approved",
     "source_video_id": "7VG_s2PCH_c",
     "curator_notes": "Imported from test suite - Category: Health & Medicine"

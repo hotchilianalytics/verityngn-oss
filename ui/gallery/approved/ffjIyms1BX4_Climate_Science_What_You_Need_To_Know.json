@@ -367,7 +367,7 @@
       "environment",
       "education"
     ],
-    "imported_at": "2025-11-13T22:38:48.189575",
+    "imported_at": "2025-11-14T23:29:09.163916",
     "imported_from": "test_videos.json",
     "batch_id": null,
     "processing_time_seconds": 212.400354,
@@ -375,7 +375,7 @@
     "html_report_path": "ui/gallery/html_reports/ffjIyms1BX4_Climate_Science_What_You_Need_To_Know.html"
   },
   "gallery_metadata": {
-    "added_date": "2025-11-13T22:38:48.189575",
+    "added_date": "2025-11-14T23:29:09.163916",
     "status": "approved",
     "source_video_id": "ffjIyms1BX4",
     "curator_notes": "Imported from test suite - Category: Other"
