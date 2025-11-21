@@ -306,7 +306,11 @@ def render_enhanced_report_viewer_tab():
     if API_MODE:
         # Use API-based report retrieval for Streamlit Cloud
         try:
-            from ui.api_client import get_default_client
+            # Try relative import first, then absolute
+            try:
+                from ..api_client import get_default_client
+            except ImportError:
+                from api_client import get_default_client
             api_client = get_default_client()
             
             st.info("🌐 Using API mode - reports will be fetched from the API")
