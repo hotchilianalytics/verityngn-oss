@@ -143,74 +143,74 @@ def render_gallery_tab():
         gallery_dir = Path('./ui/gallery/approved')
         
         if gallery_dir.exists():
-        for item in gallery_dir.iterdir():
-            if item.is_file() and item.suffix == '.json':
-                try:
-                    with open(item, 'r') as f:
-                        example = json.load(f)
-                        
-                        # Extract fields from report structure
-                        # Handle media_embed structure (from imported reports)
-                        if 'media_embed' in example:
-                            media = example['media_embed']
-                            example['youtube_url'] = media.get('video_url', '')
-                            example['video_id'] = media.get('video_id', '')
-                            if not example.get('title'):
-                                example['title'] = media.get('title', 'Untitled')
-                        
-                        # Extract from test_metadata if present
-                        if 'test_metadata' in example:
-                            test_meta = example['test_metadata']
-                            if not example.get('category'):
-                                example['category'] = test_meta.get('category', '✨ All Categories')
-                            if not example.get('tags'):
-                                example['tags'] = test_meta.get('tags', [])
-                        
-                        # Calculate truthfulness_score from quick_summary or claims
-                        if 'truthfulness_score' not in example or example['truthfulness_score'] == 0.0:
-                            # Try to calculate from quick_summary verdict
-                            quick_summary = example.get('quick_summary', {})
-                            verdict = quick_summary.get('verdict', '').lower()
-                            if 'false' in verdict:
-                                example['truthfulness_score'] = 0.2
-                            elif 'true' in verdict and 'false' not in verdict:
-                                example['truthfulness_score'] = 0.8
-                            elif 'mixed' in verdict:
-                                example['truthfulness_score'] = 0.5
-                            else:
-                                # Calculate from claims if available
+            for item in gallery_dir.iterdir():
+                if item.is_file() and item.suffix == '.json':
+                    try:
+                        with open(item, 'r') as f:
+                            example = json.load(f)
+                            
+                            # Extract fields from report structure
+                            # Handle media_embed structure (from imported reports)
+                            if 'media_embed' in example:
+                                media = example['media_embed']
+                                example['youtube_url'] = media.get('video_url', '')
+                                example['video_id'] = media.get('video_id', '')
+                                if not example.get('title'):
+                                    example['title'] = media.get('title', 'Untitled')
+                            
+                            # Extract from test_metadata if present
+                            if 'test_metadata' in example:
+                                test_meta = example['test_metadata']
+                                if not example.get('category'):
+                                    example['category'] = test_meta.get('category', '✨ All Categories')
+                                if not example.get('tags'):
+                                    example['tags'] = test_meta.get('tags', [])
+                            
+                            # Calculate truthfulness_score from quick_summary or claims
+                            if 'truthfulness_score' not in example or example['truthfulness_score'] == 0.0:
+                                # Try to calculate from quick_summary verdict
+                                quick_summary = example.get('quick_summary', {})
+                                verdict = quick_summary.get('verdict', '').lower()
+                                if 'false' in verdict:
+                                    example['truthfulness_score'] = 0.2
+                                elif 'true' in verdict and 'false' not in verdict:
+                                    example['truthfulness_score'] = 0.8
+                                elif 'mixed' in verdict:
+                                    example['truthfulness_score'] = 0.5
+                                else:
+                                    # Calculate from claims if available
+                                    claims = example.get('claims', [])
+                                    if claims:
+                                        true_count = sum(1 for c in claims if 'true' in c.get('verdict', '').lower() and 'false' not in c.get('verdict', '').lower())
+                                        example['truthfulness_score'] = true_count / len(claims) if claims else 0.0
+                            
+                            # Get claims_count
+                            if 'claims_count' not in example or example['claims_count'] == 0:
                                 claims = example.get('claims', [])
-                                if claims:
-                                    true_count = sum(1 for c in claims if 'true' in c.get('verdict', '').lower() and 'false' not in c.get('verdict', '').lower())
-                                    example['truthfulness_score'] = true_count / len(claims) if claims else 0.0
-                        
-                        # Get claims_count
-                        if 'claims_count' not in example or example['claims_count'] == 0:
-                            claims = example.get('claims', [])
-                            example['claims_count'] = len(claims)
-                        
-                        # Ensure all required fields exist with defaults
-                        example.setdefault('submitted_at', datetime.now().strftime('%Y-%m-%d'))
-                        example.setdefault('submitted_by', 'anonymous')
-                        example.setdefault('tags', [])
-                        example.setdefault('truthfulness_score', 0.0)
-                        example.setdefault('claims_count', 0)
-                        example.setdefault('youtube_url', '')
-                        example.setdefault('video_id', '')
-                        example.setdefault('title', 'Untitled')
-                        example.setdefault('category', '✨ All Categories')
-                        example.setdefault('id', item.stem)
-                        
-                        # Skip if no youtube_url (can't display video)
-                        if not example.get('youtube_url'):
-                            continue
-                        
-                        examples.append(example)
-                except Exception as e:
-                    # Skip invalid files but log error for debugging
-                    import traceback
-                    st.warning(f"⚠️ Error loading gallery item {item.name}: {str(e)}")
-                    continue
+                                example['claims_count'] = len(claims)
+                            
+                            # Ensure all required fields exist with defaults
+                            example.setdefault('submitted_at', datetime.now().strftime('%Y-%m-%d'))
+                            example.setdefault('submitted_by', 'anonymous')
+                            example.setdefault('tags', [])
+                            example.setdefault('truthfulness_score', 0.0)
+                            example.setdefault('claims_count', 0)
+                            example.setdefault('youtube_url', '')
+                            example.setdefault('video_id', '')
+                            example.setdefault('title', 'Untitled')
+                            example.setdefault('category', '✨ All Categories')
+                            example.setdefault('id', item.stem)
+                            
+                            # Skip if no youtube_url (can't display video)
+                            if not example.get('youtube_url'):
+                                continue
+                            
+                            examples.append(example)
+                    except Exception as e:
+                        # Skip invalid files but log error for debugging
+                        import traceback
+                        st.warning(f"⚠️ Error loading gallery item {item.name}: {str(e)}")
+                        continue
     
     # Fallback to placeholder examples if no gallery items found
     if not examples:
