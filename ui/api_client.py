@@ -433,51 +433,50 @@ class VerityNgnAPIClient:
                 logger.warning(f"⚠️ Unknown task status: {task_status}")
                 time.sleep(poll_interval)
 
+    def get_gallery_list(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+        """
+        Get list of gallery videos from GCS.
+        
+        Args:
+            limit: Maximum number of videos to return (default: 50)
+            offset: Number of videos to skip (default: 0)
+        
+        Returns:
+            Gallery data dictionary:
+            {
+                'videos': List[Dict],
+                'total': int,
+                'limit': int,
+                'offset': int
+            }
+        """
+        logger.info(f"📋 Fetching gallery list (limit={limit}, offset={offset})")
+        
+        response = self._make_request(
+            'GET',
+            f'/api/v1/batch/gallery/list?limit={limit}&offset={offset}'
+        )
+        
+        return response.json()
 
-           def get_gallery_list(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
-               """
-               Get list of gallery videos from GCS.
-               
-               Args:
-                   limit: Maximum number of videos to return (default: 50)
-                   offset: Number of videos to skip (default: 0)
-               
-               Returns:
-                   Gallery data dictionary:
-                   {
-                       'videos': List[Dict],
-                       'total': int,
-                       'limit': int,
-                       'offset': int
-                   }
-               """
-               logger.info(f"📋 Fetching gallery list (limit={limit}, offset={offset})")
-               
-               response = self._make_request(
-                   'GET',
-                   f'/api/v1/batch/gallery/list?limit={limit}&offset={offset}'
-               )
-               
-               return response.json()
-           
-           def get_gallery_video(self, video_id: str) -> Dict[str, Any]:
-               """
-               Get specific gallery video details.
-               
-               Args:
-                   video_id: YouTube video ID
-               
-               Returns:
-                   Video metadata dictionary with signed URLs
-               """
-               logger.info(f"📄 Fetching gallery video: {video_id}")
-               
-               response = self._make_request(
-                   'GET',
-                   f'/api/v1/batch/gallery/{video_id}'
-               )
-               
-               return response.json()
+    def get_gallery_video(self, video_id: str) -> Dict[str, Any]:
+        """
+        Get specific gallery video details.
+        
+        Args:
+            video_id: YouTube video ID
+        
+        Returns:
+            Video metadata dictionary with signed URLs
+        """
+        logger.info(f"📄 Fetching gallery video: {video_id}")
+        
+        response = self._make_request(
+            'GET',
+            f'/api/v1/batch/gallery/{video_id}'
+        )
+        
+        return response.json()
 
 
 def get_default_client() -> VerityNgnAPIClient:

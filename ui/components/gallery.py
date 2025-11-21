@@ -85,11 +85,13 @@ def render_gallery_tab():
     if backend_mode == 'cloudrun':
         # Fetch from GCS via API
         try:
-            # Try relative import first, then absolute
-            try:
-                from ..api_client import get_default_client
-            except ImportError:
-                from api_client import get_default_client
+            import sys
+            from pathlib import Path
+            # Ensure ui directory is in path
+            ui_dir = Path(__file__).parent.parent
+            if str(ui_dir) not in sys.path:
+                sys.path.insert(0, str(ui_dir))
+            from api_client import get_default_client
             
             api_client = st.session_state.get('api_client')
             if not api_client:

@@ -13,23 +13,14 @@ from typing import Optional
 import sys
 from pathlib import Path
 
-# Add parent directory to path for imports
-# Handle both local and Streamlit Cloud environments
+# Add parent directory (ui/) to path for imports
+# This allows importing api_client which is in the ui/ directory
 ui_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(ui_dir))
+if str(ui_dir) not in sys.path:
+    sys.path.insert(0, str(ui_dir))
 
-# Try relative import first, then absolute
-try:
-    from ..api_client import VerityNgnAPIClient, get_default_client
-except ImportError:
-    # Fallback for Streamlit Cloud or different path structure
-    try:
-        from api_client import VerityNgnAPIClient, get_default_client
-    except ImportError:
-        # Last resort: add repo root and use absolute import
-        repo_root = Path(__file__).parent.parent.parent
-        sys.path.insert(0, str(repo_root))
-        from ui.api_client import VerityNgnAPIClient, get_default_client
+# Import api_client - it's in the ui/ directory which is now in sys.path
+from api_client import VerityNgnAPIClient, get_default_client
 
 logger = logging.getLogger(__name__)
 
