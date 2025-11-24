@@ -84,27 +84,61 @@ def _cached_get_report_data(api_url: str, video_id: str) -> Dict[str, Any]:
     return client.get_report_data(video_id)
 
 
+def _get_api_base_url() -> str:
+    """
+    Get the API base URL from session state or environment variables.
+    
+    Returns:
+        API base URL with scheme (https://...)
+    """
+    import os
+    
+    # Try to get from session state api_client first
+    api_client = st.session_state.get('api_client')
+    if api_client and hasattr(api_client, 'api_url') and api_client.api_url:
+        api_url = api_client.api_url.rstrip('/')
+        # Ensure it has a scheme
+        if api_url and not api_url.startswith(('http://', 'https://')):
+            api_url = f"https://{api_url}"
+        return api_url
+    
+    # Fall back to environment variables
+    api_url = os.getenv('CLOUDRUN_API_URL') or os.getenv('VERITYNGN_API_URL', '')
+    if api_url:
+        api_url = api_url.rstrip('/')
+        # Ensure it has a scheme
+        if api_url and not api_url.startswith(('http://', 'https://')):
+            api_url = f"https://{api_url}"
+        return api_url
+    
+    # Default fallback (shouldn't happen in Cloud Run mode)
+    return ""
+
+
 def render_gallery_tab():
     """Render the example gallery tab."""
-    
-    st.header("🖼️ Example Gallery")
     
     # Check backend mode
     backend_mode = st.session_state.get('backend_mode', 'local')
     
-    # Add refresh button for cache management
-    col_title, col_refresh = st.columns([4, 1])
-    with col_title:
-        if backend_mode == 'cloudrun':
-            st.info("☁️ **Cloud Run Mode**: Gallery will display reports from GCS bucket. Results from batch jobs automatically flow to the gallery.")
+    # Header with refresh button - always show refresh button
+    col_header, col_refresh = st.columns([4, 1])
+    with col_header:
+        st.header("🖼️ Example Gallery")
     with col_refresh:
-        if st.button("🔄 Refresh", help="Clear cache and reload gallery data", use_container_width=True):
+        st.write("")  # Spacer for alignment
+        if st.button("🔄 Refresh", help="Clear cache and reload gallery data", use_container_width=True, key="gallery_refresh_btn"):
             # Clear all gallery-related caches
             _cached_get_gallery_list.clear()
             _cached_get_gallery_video.clear()
             _cached_fetch_html_report.clear()
             _cached_get_report_data.clear()
+            st.success("✅ Cache cleared!")
             st.rerun()
+    
+    # Show backend mode info
+    if backend_mode == 'cloudrun':
+        st.info("☁️ **Cloud Run Mode**: Gallery will display reports from GCS bucket. Results from batch jobs automatically flow to the gallery.")
     
     st.markdown("""
     Browse example video verifications from the community. These examples demonstrate
@@ -177,12 +211,13 @@ def render_gallery_tab():
                 sys.path.insert(0, str(ui_dir))
             from api_client import get_default_client
             
-            api_client = st.session_state.get('api_client')
-            if not api_client:
-                api_client = get_default_client()
+            # Get API URL - ensure it's valid
+            api_url = _get_api_base_url()
+            if not api_url:
+                st.error("❌ Cloud Run API URL not configured. Please set CLOUDRUN_API_URL environment variable.")
+                st.stop()
             
             # Fetch gallery videos from API (cached)
-            api_url = api_client.api_url
             with st.spinner("Loading gallery from GCS..."):
                 gallery_data = _cached_get_gallery_list(api_url, limit=100, offset=0)
                 
@@ -452,15 +487,17 @@ def render_gallery_tab():
                                     # Construct full URL if html_url is relative
                                     if html_url.startswith('/'):
                                         # Relative URL - prepend API base URL
-                                        api_client = st.session_state.get('api_client')
-                                        if not api_client:
-                                            from api_client import get_default_client
-                                            api_client = get_default_client()
-                                        api_base_url = api_client.api_url.rstrip('/')
+                                        api_base_url = _get_api_base_url()
+                                        if not api_base_url:
+                                            raise ValueError("API base URL not configured. Cannot fetch report.")
                                         full_url = f"{api_base_url}{html_url}"
                                     else:
                                         # Already a full URL
                                         full_url = html_url
+                                    
+                                    # Validate URL has scheme before caching/fetching
+                                    if not full_url.startswith(('http://', 'https://')):
+                                        raise ValueError(f"Invalid URL format: {full_url}. URL must start with http:// or https://")
                                     
                                     # Fetch HTML content from API proxy URL (cached)
                                     html_content = _cached_fetch_html_report(full_url)
