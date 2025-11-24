@@ -9,6 +9,79 @@ import json
 import requests
 from pathlib import Path
 from datetime import datetime
+from typing import Dict, Any, List, Optional
+
+
+# Cache configuration
+CACHE_TTL = 300  # 5 minutes default cache TTL
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _cached_get_gallery_list(api_url: str, limit: int = 100, offset: int = 0) -> Dict[str, Any]:
+    """
+    Cached wrapper for fetching gallery list from API.
+    
+    Args:
+        api_url: Base API URL
+        limit: Maximum number of videos to return
+        offset: Number of videos to skip
+        
+    Returns:
+        Gallery data dictionary
+    """
+    from api_client import APIClient
+    client = APIClient(api_url=api_url)
+    return client.get_gallery_list(limit=limit, offset=offset)
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _cached_get_gallery_video(api_url: str, video_id: str) -> Dict[str, Any]:
+    """
+    Cached wrapper for fetching gallery video details.
+    
+    Args:
+        api_url: Base API URL
+        video_id: YouTube video ID
+        
+    Returns:
+        Video metadata dictionary
+    """
+    from api_client import APIClient
+    client = APIClient(api_url=api_url)
+    return client.get_gallery_video(video_id)
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _cached_fetch_html_report(full_url: str) -> str:
+    """
+    Cached wrapper for fetching HTML report content.
+    
+    Args:
+        full_url: Full URL to the HTML report
+        
+    Returns:
+        HTML content as string
+    """
+    response = requests.get(full_url, timeout=30)
+    response.raise_for_status()
+    return response.text
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _cached_get_report_data(api_url: str, video_id: str) -> Dict[str, Any]:
+    """
+    Cached wrapper for fetching report data.
+    
+    Args:
+        api_url: Base API URL
+        video_id: YouTube video ID
+        
+    Returns:
+        Report data dictionary
+    """
+    from api_client import APIClient
+    client = APIClient(api_url=api_url)
+    return client.get_report_data(video_id)
 
 
 def render_gallery_tab():
@@ -19,8 +92,19 @@ def render_gallery_tab():
     # Check backend mode
     backend_mode = st.session_state.get('backend_mode', 'local')
     
-    if backend_mode == 'cloudrun':
-        st.info("☁️ **Cloud Run Mode**: Gallery will display reports from GCS bucket. Results from batch jobs automatically flow to the gallery.")
+    # Add refresh button for cache management
+    col_title, col_refresh = st.columns([4, 1])
+    with col_title:
+        if backend_mode == 'cloudrun':
+            st.info("☁️ **Cloud Run Mode**: Gallery will display reports from GCS bucket. Results from batch jobs automatically flow to the gallery.")
+    with col_refresh:
+        if st.button("🔄 Refresh", help="Clear cache and reload gallery data", use_container_width=True):
+            # Clear all gallery-related caches
+            _cached_get_gallery_list.clear()
+            _cached_get_gallery_video.clear()
+            _cached_fetch_html_report.clear()
+            _cached_get_report_data.clear()
+            st.rerun()
     
     st.markdown("""
     Browse example video verifications from the community. These examples demonstrate
@@ -97,9 +181,10 @@ def render_gallery_tab():
             if not api_client:
                 api_client = get_default_client()
             
-            # Fetch gallery videos from API
+            # Fetch gallery videos from API (cached)
+            api_url = api_client.api_url
             with st.spinner("Loading gallery from GCS..."):
-                gallery_data = api_client.get_gallery_list(limit=100, offset=0)
+                gallery_data = _cached_get_gallery_list(api_url, limit=100, offset=0)
                 
                 # Process API response into gallery format
                 for video_data in gallery_data.get('videos', []):
@@ -377,10 +462,8 @@ def render_gallery_tab():
                                         # Already a full URL
                                         full_url = html_url
                                     
-                                    # Fetch HTML content from API proxy URL
-                                    response = requests.get(full_url, timeout=30)
-                                    response.raise_for_status()
-                                    html_content = response.text
+                                    # Fetch HTML content from API proxy URL (cached)
+                                    html_content = _cached_fetch_html_report(full_url)
                                     
                                     # Use full height and width - no clipping
                                     components.html(html_content, height=1200, scrolling=True, width=None)

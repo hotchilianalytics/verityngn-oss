@@ -25,10 +25,53 @@ from api_client import VerityNgnAPIClient, get_default_client
 logger = logging.getLogger(__name__)
 
 
+# Cache configuration for reports
+CACHE_TTL = 300  # 5 minutes
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _cached_get_html_report(api_url: str, video_id: str) -> str:
+    """Cached wrapper for fetching HTML report."""
+    from api_client import APIClient
+    client = APIClient(api_url=api_url)
+    return client.get_report(video_id, format='html')
+
+
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+def _cached_get_report_data(api_url: str, video_id: str) -> dict:
+    """Cached wrapper for fetching report data."""
+    from api_client import APIClient
+    client = APIClient(api_url=api_url)
+    return client.get_report_data(video_id)
+
+
 def render_processing_tab():
     """Render the processing tab with API-based workflow execution."""
     
-    st.header("⚙️ Processing Status")
+    # Header with cache refresh button
+    col_title, col_refresh = st.columns([4, 1])
+    with col_title:
+        st.header("⚙️ Processing Status")
+    with col_refresh:
+        if st.button("🔄 Clear Cache", help="Clear cached reports and reload fresh data", use_container_width=True):
+            _cached_get_html_report.clear()
+            _cached_get_report_data.clear()
+            # Also clear gallery caches if available
+            try:
+                from components.gallery import (
+                    _cached_get_gallery_list,
+                    _cached_get_gallery_video,
+                    _cached_fetch_html_report,
+                    _cached_get_report_data as _cached_gallery_report_data
+                )
+                _cached_get_gallery_list.clear()
+                _cached_get_gallery_video.clear()
+                _cached_fetch_html_report.clear()
+                _cached_gallery_report_data.clear()
+            except ImportError:
+                pass
+            st.success("✅ Cache cleared! Data will reload on next request.")
+            st.rerun()
     
     # Initialize session state
     # Get backend mode and configure API client accordingly
@@ -212,7 +255,9 @@ def render_processing_tab():
             with col1:
                 if st.button("📄 View HTML Report"):
                     try:
-                        report_html = st.session_state.api_client.get_report(video_id, format='html')
+                        # Use cached report fetching
+                        api_url = st.session_state.api_client.api_url
+                        report_html = _cached_get_html_report(api_url, video_id)
                         st.components.v1.html(report_html, height=800, scrolling=True)
                     except Exception as e:
                         st.error(f"Error loading report: {e}")
@@ -220,7 +265,9 @@ def render_processing_tab():
             with col2:
                 if st.button("📊 View JSON Data"):
                     try:
-                        report_data = st.session_state.api_client.get_report_data(video_id)
+                        # Use cached report data fetching
+                        api_url = st.session_state.api_client.api_url
+                        report_data = _cached_get_report_data(api_url, video_id)
                         st.json(report_data)
                     except Exception as e:
                         st.error(f"Error loading data: {e}")
