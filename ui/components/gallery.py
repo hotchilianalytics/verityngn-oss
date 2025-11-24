@@ -360,12 +360,25 @@ def render_gallery_tab():
                                 
                                 st.markdown("---")
                                 
-                                # Fetch HTML from signed URL and display
+                                # Fetch HTML from API proxy URL and display
                                 try:
                                     import streamlit.components.v1 as components
                                     
-                                    # Fetch HTML content from signed URL
-                                    response = requests.get(html_url, timeout=30)
+                                    # Construct full URL if html_url is relative
+                                    if html_url.startswith('/'):
+                                        # Relative URL - prepend API base URL
+                                        api_client = st.session_state.get('api_client')
+                                        if not api_client:
+                                            from api_client import get_default_client
+                                            api_client = get_default_client()
+                                        api_base_url = api_client.api_url.rstrip('/')
+                                        full_url = f"{api_base_url}{html_url}"
+                                    else:
+                                        # Already a full URL
+                                        full_url = html_url
+                                    
+                                    # Fetch HTML content from API proxy URL
+                                    response = requests.get(full_url, timeout=30)
                                     response.raise_for_status()
                                     html_content = response.text
                                     
@@ -383,14 +396,15 @@ def render_gallery_tab():
                                         use_container_width=True
                                     )
                                 except Exception as e:
-                                    st.error(f"Error loading HTML report from GCS: {e}")
-                                    st.info(f"Report URL: {html_url[:100]}...")
+                                    st.error(f"Error loading HTML report from API: {e}")
+                                    st.info(f"Report URL: {full_url[:100] if 'full_url' in locals() else html_url[:100]}...")
                                     import traceback
                                     with st.expander("🔍 Error Details"):
                                         st.code(traceback.format_exc())
                                     
                                     # Fallback: provide direct link
-                                    st.markdown(f"[📄 Open Report in New Tab]({html_url})")
+                                    fallback_url = full_url if 'full_url' in locals() else html_url
+                                    st.markdown(f"[📄 Open Report in New Tab]({fallback_url})")
                                     
                         elif html_report_path:
                             # Local file path - existing behavior
