@@ -29,8 +29,8 @@ def _cached_get_gallery_list(api_url: str, limit: int = 100, offset: int = 0) ->
     Returns:
         Gallery data dictionary
     """
-    from api_client import APIClient
-    client = APIClient(api_url=api_url)
+    from api_client import VerityNgnAPIClient
+    client = VerityNgnAPIClient(api_url=api_url)
     return client.get_gallery_list(limit=limit, offset=offset)
 
 
@@ -46,8 +46,8 @@ def _cached_get_gallery_video(api_url: str, video_id: str) -> Dict[str, Any]:
     Returns:
         Video metadata dictionary
     """
-    from api_client import APIClient
-    client = APIClient(api_url=api_url)
+    from api_client import VerityNgnAPIClient
+    client = VerityNgnAPIClient(api_url=api_url)
     return client.get_gallery_video(video_id)
 
 
@@ -79,8 +79,8 @@ def _cached_get_report_data(api_url: str, video_id: str) -> Dict[str, Any]:
     Returns:
         Report data dictionary
     """
-    from api_client import APIClient
-    client = APIClient(api_url=api_url)
+    from api_client import VerityNgnAPIClient
+    client = VerityNgnAPIClient(api_url=api_url)
     return client.get_report_data(video_id)
 
 

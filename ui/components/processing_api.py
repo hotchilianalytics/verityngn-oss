@@ -32,16 +32,16 @@ CACHE_TTL = 300  # 5 minutes
 @st.cache_data(ttl=CACHE_TTL, show_spinner=False)
 def _cached_get_html_report(api_url: str, video_id: str) -> str:
     """Cached wrapper for fetching HTML report."""
-    from api_client import APIClient
-    client = APIClient(api_url=api_url)
+    from api_client import VerityNgnAPIClient
+    client = VerityNgnAPIClient(api_url=api_url)
     return client.get_report(video_id, format='html')
 
 
 @st.cache_data(ttl=CACHE_TTL, show_spinner=False)
 def _cached_get_report_data(api_url: str, video_id: str) -> dict:
     """Cached wrapper for fetching report data."""
-    from api_client import APIClient
-    client = APIClient(api_url=api_url)
+    from api_client import VerityNgnAPIClient
+    client = VerityNgnAPIClient(api_url=api_url)
     return client.get_report_data(video_id)
 
 
