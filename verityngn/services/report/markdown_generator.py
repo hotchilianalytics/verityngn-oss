@@ -702,64 +702,17 @@ def create_rolled_up_source_file(claim: Claim, evidence: List[Union[str, Dict]],
 
 def generate_markdown_report(report: VerityReport) -> Tuple[str, Dict[str, str], Dict[str, str]]:
     """
-    Generate the complete markdown report with claim source files and counter-intelligence files.
-    Returns main content, claim source content, and counter-intelligence content separately.
+    Generate the complete markdown report with embedded claim sources and counter-intelligence.
+    Returns main content. Separate file dictionaries are returned empty as content is now embedded.
     """
     logger = logging.getLogger(__name__)
     try:
-        # Generate the main report content
+        # Generate the main report content with embedded sources
         main_content = generate_main_report_content(report)
 
-        # Generate claim source files content
-        claim_source_content = {}
-        # 🚀 SHERLOCK: Generate counter-intelligence claim files content
-        counter_intel_content = {}
-        
-        # Prepare counter-intelligence data from report
-        youtube_counter_intel = getattr(report, 'youtube_counter_intelligence', [])
-        press_release_counter = getattr(report, 'press_release_counter_intelligence', [])
-        
-        counter_intel_data = {
-            'youtube_videos': youtube_counter_intel,
-            'press_releases': press_release_counter
-        }
-        
-        for i, claim in enumerate(report.claims_breakdown):
-            claim_id_str = f"claim_{i}" # Use index as part of the key
-            # Pass the actual claim object and its evidence
-            source_file_path = Path(f"{report.media_embed.video_id}_{claim_id_str}_sources.md") # Define path for reference if needed
-            # Get evidence from verification_result.sources (the actual location)
-            claim_evidence = []
-            if claim.verification_result and isinstance(claim.verification_result, dict):
-                claim_evidence = claim.verification_result.get("sources", [])
-            # Fallback to claim.evidence if it exists
-            if not claim_evidence and isinstance(claim.evidence, list):
-                claim_evidence = claim.evidence
-                
-            # Generate regular claim source file
-            source_content = create_rolled_up_source_file(
-                claim=claim, # Pass the Pydantic Claim object
-                evidence=claim_evidence, # Pass the evidence list from verification_result.sources
-                file_path=source_file_path # Pass the path (though not used for saving here)
-            )
-            claim_source_content[claim_id_str] = source_content
-            
-            # 🚀 SHERLOCK: Generate counter-intelligence claim file if CI exists for this claim
-            claim_explanation = str(claim.explanation or "").lower()
-            has_counter_intel = ('youtube counter' in claim_explanation or 
-                               'press release counter' in claim_explanation or
-                               'counter-intelligence' in claim_explanation)
-            
-            if has_counter_intel:
-                ci_file_path = Path(f"{report.media_embed.video_id}_{claim_id_str}_counter_intel.md")
-                ci_content = create_counter_intelligence_claim_file(
-                    claim=claim,
-                    counter_intel_data=counter_intel_data,
-                    file_path=ci_file_path
-                )
-                counter_intel_content[f"{claim_id_str}_counter_intel"] = ci_content
-
-        return main_content, claim_source_content, counter_intel_content
+        # Return empty dicts for separate files as they are now embedded
+        # We keep the signature for compatibility
+        return main_content, {}, {}
 
     except Exception as e:
         logger.error(f"Error generating markdown report: {e}", exc_info=True)
@@ -1152,8 +1105,8 @@ def generate_main_report_content(report: VerityReport) -> str:
             quality_indicators = generate_source_quality_indicators(verification_sources)
             
             claim_id_str_for_link = f"claim_{i}"
-            # Use relative path for standalone viewing compatibility
-            source_link = f"[{num_sources} sources](claim/{claim_id_str_for_link}/sources.html)"
+            # Use anchor link to embedded sources
+            source_link = f"[{num_sources} sources](#sources-for-claim-{i+1})"
             
             # Enhanced display with quality indicators
             odds_sources_raw = f"**True:** {prob_true_pct:.0f}%<br>**False:** {prob_false_pct:.0f}%<br>**Uncertain:** {prob_uncertain_pct:.0f}%<br><br>{quality_indicators}<br>{source_link}"
@@ -1165,24 +1118,66 @@ def generate_main_report_content(report: VerityReport) -> str:
 
     report_content.append("")
 
-    # --- 7. Sources --- (Link to individual source files) (Renumbered)
+    # --- 7. Sources --- (Embedded details)
     report_content.append("## 7. Sources")
     if not report.claims_breakdown:
          report_content.append("No claims were analyzed, so no specific sources are listed.")
     else:
-        report_content.append("| Claim # | Timestamp | Source Details |")
-        report_content.append("|:-------:|:----------|:---------------|")
         for i, claim in enumerate(report.claims_breakdown):
-            claim_id_str_for_link = f"claim_{i}"
-            time_cell = str(claim.timestamp or "-").replace("|", "\\|").replace("\n", " ")
-            source_file_name = f"{video_id}_{claim_id_str_for_link}_sources.html"
-            # Use relative path for standalone viewing compatibility
-            link_cell = f"[View Sources for Claim {i+1}](claim/{claim_id_str_for_link}/sources.html)"
-            report_content.append(f"| {i+1:<7} | {time_cell:<9} | {link_cell} |")
+            # Get evidence
+            claim_evidence = []
+            if claim.verification_result and isinstance(claim.verification_result, dict):
+                claim_evidence = claim.verification_result.get("sources", [])
+            if not claim_evidence and isinstance(claim.evidence, list):
+                claim_evidence = claim.evidence
+
+            # Generate source content
+            source_html = "<ul>"
+            if not claim_evidence:
+                source_html += "<li>No evidence sources were provided for this claim.</li>"
+            else:
+                for src_idx, source in enumerate(claim_evidence):
+                    url = ''
+                    title = ''
+                    text = ''
+                    
+                    if isinstance(source, str):
+                        url = source
+                        title = source
+                    elif isinstance(source, dict):
+                        url = source.get('url', '')
+                        title = source.get('title', source.get('source_name', url or 'Source Detail'))
+                        text = source.get('text', source.get('snippet', ''))
+                    else:
+                        url = getattr(source, 'url', '') or ''
+                        title = getattr(source, 'title', '') or getattr(source, 'source_name', '') or url or 'Source Detail'
+                        text = getattr(source, 'text', '') or getattr(source, 'snippet', '') or ''
+
+                    if url:
+                        item = f'<a href="{url}" target="_blank">{title}</a>'
+                    else:
+                        item = f'{title}'
+                    
+                    if text:
+                        item += f'<br><em>{text}</em>'
+                    
+                    source_html += f"<li>{item}</li>"
+            source_html += "</ul>"
+
+            report_content.append(f"""
+<details id="sources-for-claim-{i+1}">
+<summary><strong>Claim {i+1} Sources</strong> ({claim.timestamp})</summary>
+<br>
+<strong>Claim:</strong> {claim.claim_text}
+<br><br>
+{source_html}
+</details>
+<br>
+""")
 
     report_content.append("")
 
-    # --- 8. Counter-Intelligence Analysis --- (SHERLOCK ENHANCED)
+    # --- 8. Counter-Intelligence Analysis --- (SHERLOCK ENHANCED - Embedded)
     report_content.append("## 8. Counter-Intelligence Analysis")
     
     # 🎯 SHERLOCK: Enhanced counter-intelligence data extraction
@@ -1213,29 +1208,6 @@ def generate_main_report_content(report: VerityReport) -> str:
                 high_credibility_youtube += 1
     
     if youtube_counter_intel or press_release_counter or youtube_evidence_count > 0 or press_release_evidence_count > 0:
-        # 🎯 DEMO: Enhanced table format
-        report_content.append("| Type | Count | Reference Files |")
-        report_content.append("|:-----|:-----:|:----------------|")
-        
-        # YouTube Counter-Intelligence
-        total_yt = len(youtube_counter_intel) if youtube_counter_intel else youtube_evidence_count
-        if total_yt > 0:
-            # Use relative path for standalone viewing compatibility
-            yt_link = f"[{total_yt} YouTube Videos](youtube-counter-intel.html)"
-            report_content.append(f"| YouTube Counter-Intelligence | {total_yt} | {yt_link} |")
-        
-        # Press Release Counter-Intelligence  
-        total_pr = len(press_release_counter) if press_release_counter else press_release_evidence_count
-        if total_pr > 0:
-            # Use relative path for standalone viewing compatibility
-            pr_link = f"[{total_pr} Press Releases](press-release-counter.html)"
-            report_content.append(f"| Press Release Analysis | {total_pr} | {pr_link} |")
-        
-        if total_yt == 0 and total_pr == 0:
-            report_content.append("| No Counter-Intelligence | 0 | No reference files available |")
-        
-        report_content.append("")
-        
         # 🎯 DEMO: Analysis Summary section
         report_content.append("### Analysis Summary")
         report_content.append("")
@@ -1270,22 +1242,59 @@ def generate_main_report_content(report: VerityReport) -> str:
             report_content.append(pr_summary)
             report_content.append("")
         
-        # 🎯 DEMO: Key Counter-Intelligence Findings table (if we have enough data)
-        if total_yt >= 2:  # Only show if we have meaningful data
-            report_content.append("### Key Counter-Intelligence Findings")
-            report_content.append("")
-            report_content.append("| Finding | Evidence Source | Impact |")
-            report_content.append("|:--------|:----------------|:-------|")
+        # Embed the details tables directly
+        
+        # YouTube Details
+        if total_yt > 0:
+            yt_rows = ""
+            for i, video in enumerate(youtube_counter_intel):
+                if isinstance(video, dict):
+                    title = video.get('title', 'Unknown')
+                    url = video.get('url', '#')
+                    views = video.get('view_count', 0) or video.get('detailed_stats', {}).get('view_count', 0)
+                    channel = video.get('channel_title', video.get('channel', 'Unknown'))
+                    yt_rows += f"<tr><td><a href='{url}' target='_blank'>{title}</a></td><td>{channel}</td><td>{views:,}</td></tr>"
             
-            # Generate findings based on counter-intelligence data
-            if high_credibility_youtube > 0:
-                report_content.append("| Independent YouTube Reviews | Multiple YouTube investigations | High - Provides external validation |")
-            if total_pr > 0:
-                report_content.append("| Self-Referential Press Releases | Press release analysis | Medium - Circular validation detected |")
-            if youtube_total_views > 50000:
-                report_content.append("| High-Visibility Counter-Evidence | Popular YouTube reviews | High - Wide audience exposure to contradictory evidence |")
+            if yt_rows:
+                report_content.append(f"""
+<details>
+<summary><strong>YouTube Counter-Intelligence Details ({total_yt} Videos)</strong></summary>
+<br>
+<table>
+<thead><tr><th>Video</th><th>Channel</th><th>Views</th></tr></thead>
+<tbody>
+{yt_rows}
+</tbody>
+</table>
+</details>
+<br>
+""")
+
+        # Press Release Details
+        if total_pr > 0:
+            pr_rows = ""
+            for i, pr in enumerate(press_release_counter):
+                if isinstance(pr, dict):
+                    title = pr.get('title', 'Unknown')
+                    url = pr.get('url', '#')
+                    source = pr.get('source', 'Unknown')
+                    pr_rows += f"<tr><td><a href='{url}' target='_blank'>{title}</a></td><td>{source}</td></tr>"
             
-            report_content.append("")
+            if pr_rows:
+                report_content.append(f"""
+<details>
+<summary><strong>Press Release Counter-Intelligence Details ({total_pr} Releases)</strong></summary>
+<br>
+<table>
+<thead><tr><th>Title</th><th>Source</th></tr></thead>
+<tbody>
+{pr_rows}
+</tbody>
+</table>
+</details>
+<br>
+""")
+
     else:
         report_content.append("No counter-intelligence analysis data was available for this report.")
         report_content.append("")

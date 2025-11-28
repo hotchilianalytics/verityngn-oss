@@ -23,10 +23,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 from pydantic import BaseModel
+from langchain_google_vertexai import ChatVertexAI
+from langchain_core.prompts import ChatPromptTemplate
 
+from verityngn.config.settings import AGENT_MODEL_NAME, MAX_OUTPUT_TOKENS_2_0_FLASH
 from verityngn.models.report import VerityReport
 from verityngn.services.report.markdown_generator import generate_markdown_report
 from verityngn.services.report.html_generator import generate_html_report
+from verityngn.services.report.fast_html_generator import generate_fast_html_report
 from verityngn.services.storage.timestamped_storage import timestamped_storage
 from verityngn.services.report.evidence_utils import (
     enhance_source_credibility,
@@ -79,6 +83,33 @@ class UnifiedReportGenerator:
         log_report_system_usage("unified_generator", video_id, "__init__")
         self.logger.info(f"🕐 [TIMESTAMPED] Using timestamped directory: {self.timestamped_dir}")
     
+    async def generate_description_review(self, description: str) -> str:
+        """
+        Generate a ~200 word review of the video description using VertexAI.
+        """
+        if not description:
+            return "No description available to review."
+            
+        try:
+            llm = ChatVertexAI(model_name=AGENT_MODEL_NAME, temperature=0.3, max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH)
+            prompt = ChatPromptTemplate.from_template("""
+            You are VerityNgn, a video verification AI. 
+            Review the following YouTube video description. 
+            Write a concise (~200 words) assessment of the description's claims, tone, and potential flags.
+            Focus on whether it makes sensational claims, provides sources, or uses manipulative language.
+            
+            Description:
+            {description}
+            
+            Verity Review:
+            """)
+            
+            response = await llm.ainvoke(prompt.format(description=description[:5000])) # Limit context
+            return response.content.strip()
+        except Exception as e:
+            self.logger.error(f"Error generating description review: {e}")
+            return "Review generation failed."
+
     async def generate_all_reports(self, report: VerityReport) -> Dict[str, str]:
         """
         Generate all report formats using the unified system with timestamped storage.
@@ -212,10 +243,23 @@ class UnifiedReportGenerator:
                 }
             
             # Generate markdown report, claim sources, and counter-intelligence files
-            markdown_content, claim_source_content, counter_intel_content = generate_markdown_report(report)
+            # Note: claim_source_content and counter_intel_content will be empty as they are now embedded
+            markdown_content, _, _ = generate_markdown_report(report)
             
-            # Generate HTML report
+            # Generate HTML report (Full)
             html_content = generate_html_report(report)
+            
+            # Generate Description Review
+            description = report.media_embed.description if report.media_embed else ""
+            review_text = await self.generate_description_review(description)
+            
+            # Store review in metadata
+            if not report.metadata:
+                report.metadata = {}
+            report.metadata['description_review'] = review_text
+            
+            # Generate Fast HTML Report
+            fast_html_content = generate_fast_html_report(report, review_text)
             
             # Set up file paths in timestamped directory
             if timestamped_storage.storage_backend.value == "local":
@@ -223,11 +267,13 @@ class UnifiedReportGenerator:
                 json_path = os.path.join(self.timestamped_dir, f"{self.video_id}_report.json")
                 markdown_path = os.path.join(self.timestamped_dir, f"{self.video_id}_report.md")
                 html_path = os.path.join(self.timestamped_dir, f"{self.video_id}_report.html")
+                fast_html_path = os.path.join(self.timestamped_dir, f"{self.video_id}_fast_report.html")
             else:
                 # For GCS, we'll upload to the timestamped directory
                 json_path = f"{self.timestamped_dir}/{self.video_id}_report.json"
                 markdown_path = f"{self.timestamped_dir}/{self.video_id}_report.md"
                 html_path = f"{self.timestamped_dir}/{self.video_id}_report.html"
+                fast_html_path = f"{self.timestamped_dir}/{self.video_id}_fast_report.html"
             
             # Write JSON report
             self._write_file(json_path, json.dumps(report.model_dump(), indent=2, cls=CustomJsonEncoder))
@@ -241,38 +287,28 @@ class UnifiedReportGenerator:
             self._write_file(html_path, html_content)
             self.logger.info(f"✅ [UNIFIED] Wrote HTML report: {html_path}")
             
-            # Write individual claim source files (both markdown and HTML)
-            claim_files = []
-            for claim_id, source_content in claim_source_content.items():
-                # Write markdown version
-                if timestamped_storage.storage_backend.value == "local":
-                    source_file_path = os.path.join(self.timestamped_dir, f"{self.video_id}_{claim_id}_sources.md")
-                else:
-                    source_file_path = f"{self.timestamped_dir}/{self.video_id}_{claim_id}_sources.md"
-                
-                self._write_file(source_file_path, source_content)
-                claim_files.append(source_file_path)
-                
-                # Generate and write HTML version
-                self._generate_claim_source_html(claim_id, source_content)
+            # Write Fast HTML report
+            self._write_file(fast_html_path, fast_html_content)
+            self.logger.info(f"✅ [UNIFIED] Wrote Fast HTML report: {fast_html_path}")
             
-            # 🚀 SHERLOCK: Generate counter-intelligence claim files
+            # No separate claim files to write now (embedded)
+            claim_files = [] 
+            
+            # No separate CI files to write now (embedded)
             ci_files = []
-            for ci_id, ci_content in counter_intel_content.items():
-                # Write markdown version
-                if timestamped_storage.storage_backend.value == "local":
-                    ci_file_path = os.path.join(self.timestamped_dir, f"{self.video_id}_{ci_id}.md")
-                else:
-                    ci_file_path = f"{self.timestamped_dir}/{self.video_id}_{ci_id}.md"
-                
-                self._write_file(ci_file_path, ci_content)
-                ci_files.append(ci_file_path)
-                
-                # Generate and write HTML version
-                self._generate_counter_intel_html(ci_id, ci_content)
             
-            # 🎯 SHERLOCK ENHANCED: Generate DEMO-style counter-intelligence reference files
+            # 🎯 SHERLOCK ENHANCED: Generate DEMO-style counter-intelligence reference files (Keep these for now or remove?)
+            # The plan says "This ensures the "Full Report" (final_report.html) works as a single file."
+            # I will keep generating them as separate files just in case, but they are not linked in the main report anymore.
+            # Actually, the plan says "embed... instead of links to external files".
+            # So I should probably skip generating separate claim/CI files if they are not used.
+            # The code above already skips generating them because `generate_markdown_report` returns empty dicts.
+            
             demo_ci_files = []
+            
+            # ... (Skipping generation of demo CI files logic if it relies on returning them, but let's check)
+            # The previous code generated them based on `youtube_counter_intel` directly from report, so it might still run.
+            # I'll keep the demo files generation as they are useful standalone artifacts, even if not linked.
             
             # Generate YouTube counter-intelligence file (DEMO style)
             youtube_counter_intel = getattr(report, 'youtube_counter_intelligence', [])
@@ -300,11 +336,7 @@ class UnifiedReportGenerator:
                 except Exception as e:
                     self.logger.error(f"❌ Error generating Press Release counter-intelligence files: {e}")
             
-            self.logger.info(f"✅ [UNIFIED] Generated {len(claim_files)} claim source files")
-            if ci_files:
-                self.logger.info(f"✅ [SHERLOCK] Generated {len(ci_files)} counter-intelligence files")
-            if demo_ci_files:
-                self.logger.info(f"✅ [SHERLOCK DEMO] Generated {len(demo_ci_files)} DEMO-style counter-intelligence files")
+            self.logger.info(f"✅ [UNIFIED] Generated {len(claim_files)} claim source files (0 expected)")
             
             # Mark generation as complete (including DEMO CI files)
             all_ci_files = ci_files + demo_ci_files if demo_ci_files else ci_files
@@ -314,9 +346,10 @@ class UnifiedReportGenerator:
                 "report_files": [
                     f"{self.video_id}_report.json",
                     f"{self.video_id}_report.md", 
-                    f"{self.video_id}_report.html"
+                    f"{self.video_id}_report.html",
+                    f"{self.video_id}_fast_report.html"
                 ],
-                "claim_source_files": [os.path.basename(f) for f in claim_files],
+                "claim_source_files": [],
                 "counter_intelligence_files": [os.path.basename(f) for f in all_ci_files],
                 "youtube_counter_intel_files": [os.path.basename(f) for f in demo_ci_files if "youtube_counter_intel" in f],
                 "press_release_counter_intel_files": [os.path.basename(f) for f in demo_ci_files if "press_release_counter_intel" in f]
@@ -340,6 +373,7 @@ class UnifiedReportGenerator:
                 "json_path": json_path,
                 "markdown_path": markdown_path,
                 "html_path": html_path,
+                "fast_html_path": fast_html_path,
                 "claim_files": claim_files,
                 "timestamped_dir": self.timestamped_dir
             }

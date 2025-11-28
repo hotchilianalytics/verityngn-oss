@@ -240,7 +240,8 @@ def render_gallery_tab():
                         'tags': video_data.get('tags', []),
                         'submitted_at': video_data.get('completed_at', ''),
                         'submitted_by': 'cloud_batch',
-                        'html_url': video_data.get('html_url'),  # Signed URL for GCS
+                        'html_url': video_data.get('html_url'),  # Proxy URL for full report
+                        'fast_html_url': video_data.get('fast_html_url'), # Proxy URL for fast report
                         'json_url': video_data.get('json_url'),
                         'markdown_url': video_data.get('markdown_url'),
                         'gcs_path': video_data.get('gcs_path', ''),
@@ -460,10 +461,19 @@ def render_gallery_tab():
                         
                         # Check for HTML report URL (GCS signed URL or local path)
                         html_url = example.get('html_url')
+                        fast_html_url = example.get('fast_html_url')
+                        
+                        # Fallback: if fast_html_url is missing but html_url follows proxy pattern, derive it
+                        if html_url and not fast_html_url and '/gallery/content/' in html_url and '/html' in html_url:
+                            fast_html_url = html_url.replace('/html', '/fast_report')
+                        
+                        # If still no fast report, fall back to full report for view
+                        view_url = fast_html_url if fast_html_url else html_url
+                        
                         html_report_path = example.get('test_metadata', {}).get('html_report_path') if not html_url else None
                         
-                        if html_url:
-                            # GCS signed URL - fetch and display
+                        if view_url:
+                            # GCS proxy URL - fetch and display
                             if st.button("📄 View Report", key=f"view_{example_id}", use_container_width=True):
                                 st.session_state[report_state_key] = not st.session_state.get(report_state_key, False)
                             
@@ -476,7 +486,7 @@ def render_gallery_tab():
                                         st.session_state[report_state_key] = False
                                         st.rerun()
                                 with col_title:
-                                    st.markdown(f"### 📄 Full Report: {example_title}")
+                                    st.markdown(f"### 📄 Verity Report: {example_title}")
                                 
                                 st.markdown("---")
                                 
@@ -484,46 +494,59 @@ def render_gallery_tab():
                                 try:
                                     import streamlit.components.v1 as components
                                     
-                                    # Construct full URL if html_url is relative
-                                    if html_url.startswith('/'):
+                                    # Construct full URL if view_url is relative
+                                    if view_url.startswith('/'):
                                         # Relative URL - prepend API base URL
                                         api_base_url = _get_api_base_url()
                                         if not api_base_url:
                                             raise ValueError("API base URL not configured. Cannot fetch report.")
-                                        full_url = f"{api_base_url}{html_url}"
+                                        full_view_url = f"{api_base_url}{view_url}"
                                     else:
                                         # Already a full URL
-                                        full_url = html_url
+                                        full_view_url = view_url
                                     
                                     # Validate URL has scheme before caching/fetching
-                                    if not full_url.startswith(('http://', 'https://')):
-                                        raise ValueError(f"Invalid URL format: {full_url}. URL must start with http:// or https://")
+                                    if not full_view_url.startswith(('http://', 'https://')):
+                                        raise ValueError(f"Invalid URL format: {full_view_url}. URL must start with http:// or https://")
                                     
                                     # Fetch HTML content from API proxy URL (cached)
-                                    html_content = _cached_fetch_html_report(full_url)
+                                    # This will fetch the FAST report if available
+                                    html_content = _cached_fetch_html_report(full_view_url)
                                     
                                     # Use full height and width - no clipping
                                     components.html(html_content, height=1200, scrolling=True, width=None)
                                     
                                     st.markdown("---")
                                     
-                                    # Download button
-                                    st.download_button(
-                                        label="📥 Download HTML Report",
-                                        data=html_content,
-                                        file_name=f"{video_id}_report.html",
-                                        mime="text/html",
-                                        use_container_width=True
-                                    )
+                                    # Download button - Always try to download the FULL report (html_url)
+                                    if html_url:
+                                        # Construct full download URL
+                                        if html_url.startswith('/'):
+                                            api_base_url = _get_api_base_url()
+                                            full_download_url = f"{api_base_url}{html_url}" if api_base_url else ""
+                                        else:
+                                            full_download_url = html_url
+                                            
+                                        if full_download_url:
+                                            # Fetch full report content for download
+                                            full_report_content = _cached_fetch_html_report(full_download_url)
+                                            
+                                            st.download_button(
+                                                label="📥 Download Full Detailed Report",
+                                                data=full_report_content,
+                                                file_name=f"{video_id}_report.html",
+                                                mime="text/html",
+                                                use_container_width=True
+                                            )
                                 except Exception as e:
                                     st.error(f"Error loading HTML report from API: {e}")
-                                    st.info(f"Report URL: {full_url[:100] if 'full_url' in locals() else html_url[:100]}...")
+                                    st.info(f"Report URL: {full_view_url[:100] if 'full_view_url' in locals() else view_url[:100]}...")
                                     import traceback
                                     with st.expander("🔍 Error Details"):
                                         st.code(traceback.format_exc())
                                     
                                     # Fallback: provide direct link
-                                    fallback_url = full_url if 'full_url' in locals() else html_url
+                                    fallback_url = full_view_url if 'full_view_url' in locals() else view_url
                                     st.markdown(f"[📄 Open Report in New Tab]({fallback_url})")
                                     
                         elif html_report_path:
