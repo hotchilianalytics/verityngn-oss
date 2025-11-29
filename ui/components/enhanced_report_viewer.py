@@ -307,7 +307,6 @@ def render_enhanced_report_viewer_tab():
         # Use API-based report retrieval for Streamlit Cloud
         try:
             import sys
-            from pathlib import Path
             # Ensure ui directory is in path
             ui_dir = Path(__file__).parent.parent
             if str(ui_dir) not in sys.path:
@@ -368,53 +367,76 @@ def render_enhanced_report_viewer_tab():
     if not output_dir or not dir_exists:
         st.warning("⚠️ No reports directory found. Run a verification first!")
         with st.expander("🔍 Debug Info"):
-            st.info(f"Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
+            st.info("Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
         return
 
     # 🎯 FIXED: List available reports from timestamped _complete directories
     report_files = []
     
-    try:
-        for video_dir in output_dir.iterdir():
-            try:
-                if not video_dir.is_dir():
-                    continue
-            except (PermissionError, OSError):
-                continue
-            
-            video_id = video_dir.name
-            
-            # Look for reports in timestamped _complete directories
-            try:
-                complete_dirs = sorted(
-                    [d for d in video_dir.glob('*_complete') if d.is_dir()],
-                    key=lambda x: x.stat().st_mtime,
-                    reverse=True  # Most recent first
-                )
-            except (PermissionError, OSError):
-                continue
-            
-            for complete_dir in complete_dirs:
-                # Try both naming conventions
-                report_paths = [
-                    complete_dir / f'{video_id}_report.json',
-                    complete_dir / 'report.json',
-                ]
-                
-                for report_path in report_paths:
-                    try:
-                        if report_path.exists():
-                            report_files.append(report_path)
-                            break
-                    except (PermissionError, OSError):
+    # 1. Scan standard output directory
+    if output_dir and output_dir.exists():
+        try:
+            for video_dir in output_dir.iterdir():
+                try:
+                    if not video_dir.is_dir():
                         continue
+                except (PermissionError, OSError):
+                    continue
                 
-                if report_files and report_files[-1].parent == complete_dir:
-                    break  # Found report in this video_dir, move to next
-    except (PermissionError, OSError) as e:
-        st.error(f"❌ Permission error accessing reports directory: {e}")
-        st.info("💡 In Streamlit Cloud, use API mode to view reports via the API.")
-        return
+                video_id = video_dir.name
+                
+                # Look for reports in timestamped _complete directories
+                try:
+                    complete_dirs = sorted(
+                        [d for d in video_dir.glob('*_complete') if d.is_dir()],
+                        key=lambda x: x.stat().st_mtime,
+                        reverse=True  # Most recent first
+                    )
+                except (PermissionError, OSError):
+                    continue
+                
+                for complete_dir in complete_dirs:
+                    # Try both naming conventions
+                    report_paths = [
+                        complete_dir / f'{video_id}_report.json',
+                        complete_dir / 'report.json',
+                    ]
+                    
+                    for report_path in report_paths:
+                        try:
+                            if report_path.exists():
+                                report_files.append(report_path)
+                                break
+                        except (PermissionError, OSError):
+                            continue
+                    
+                    if report_files and report_files[-1].parent == complete_dir:
+                        break  # Found report in this video_dir, move to next
+        except (PermissionError, OSError) as e:
+            st.error(f"❌ Permission error accessing reports directory: {e}")
+            st.info("💡 In Streamlit Cloud, use API mode to view reports via the API.")
+
+    # 2. Scan for local Sherlock analysis folders (development/debug artifacts)
+    try:
+        for sherlock_dir in Path.cwd().glob('sherlock_analysis_*'):
+            if not sherlock_dir.is_dir():
+                continue
+            
+            video_id = sherlock_dir.name.replace('sherlock_analysis_', '')
+            
+            # Priority: report.json > final_claims.json
+            candidates = [
+                sherlock_dir / f"{video_id}_report.json",
+                sherlock_dir / "report.json",
+                sherlock_dir / f"{video_id}_final_claims.json"
+            ]
+            
+            for cand in candidates:
+                if cand.exists():
+                    report_files.append(cand)
+                    break
+    except Exception as e:
+        print(f"Warning scanning sherlock dirs: {e}")
 
     if not report_files:
         st.info("📭 No reports found yet. Complete a verification to generate reports.")
@@ -431,13 +453,41 @@ def render_enhanced_report_viewer_tab():
     # Report selector
     st.subheader("📋 Select Report")
 
+    if not report_files:
+        st.info("📭 No reports found yet. Complete a verification to generate reports.")
+        st.info(f"📂 Looking in: {output_dir.absolute()}")
+        return
+
     report_options = {}
     for report_file in report_files:
-        with open(report_file, "r") as f:
-            report = json.load(f)
-        video_id = report.get("video_id", report_file.parent.name)
-        title = report.get("title", video_id)
-        report_options[f"{title} ({video_id})"] = report_file
+        try:
+            with open(report_file, "r") as f:
+                report = json.load(f)
+            video_id = report.get("video_id", report_file.parent.name)
+            title = report.get("title", video_id)
+            # Include timestamp in label for clarity
+            timestamp = report.get("timestamp", "")
+            if not timestamp:
+                # Try to get from directory name
+                try:
+                    dir_name = report_file.parent.name
+                    if "_complete" in dir_name:
+                        timestamp = dir_name.split("_complete")[0]
+                except Exception:
+                    pass
+            
+            label = f"{title} ({video_id})"
+            if timestamp:
+                label += f" - {timestamp}"
+                
+            report_options[label] = report_file
+        except Exception as e:
+            print(f"Error loading report {report_file}: {e}")
+            continue
+
+    if not report_options:
+        st.warning("Found report files but failed to load them. Check console logs.")
+        return
 
     selected_option = st.selectbox(
         "Choose a report:", options=list(report_options.keys()), index=0
@@ -575,37 +625,84 @@ def render_enhanced_report_viewer_tab():
         unsafe_allow_html=True,
     )
     
-    # 🎯 USER REQUESTED: Display HTML Report
+    # 🎯 USER REQUESTED: Display HTML Report (Fast Report by Default)
     st.markdown("---")
-    st.markdown("## 📄 Full HTML Report")
+    st.markdown("## 📄 Report View")
     
-    # Find the HTML report in the same directory as the JSON
-    html_path = selected_report_file.parent / f"{selected_report_file.parent.parent.name}_report.html"
+    # Check for fast report first
+    fast_html_path = selected_report_file.parent / f"{selected_report_file.parent.parent.name}_fast_report.html"
+    full_html_path = selected_report_file.parent / f"{selected_report_file.parent.parent.name}_report.html"
     
-    if html_path.exists():
+    # Determine which report to show
+    display_html_path = None
+    display_type = "Full"
+    
+    if fast_html_path.exists():
+        display_html_path = fast_html_path
+        display_type = "Fast"
+    elif full_html_path.exists():
+        display_html_path = full_html_path
+        display_type = "Full"
+        
+    # Allow toggling if both exist
+    if fast_html_path.exists() and full_html_path.exists():
+        col_view_opts, _ = st.columns([1, 3])
+        with col_view_opts:
+            view_mode = st.radio("View Mode", ["Fast Summary", "Full Detailed Report"], horizontal=True)
+            if view_mode == "Full Detailed Report":
+                display_html_path = full_html_path
+                display_type = "Full"
+            else:
+                display_html_path = fast_html_path
+                display_type = "Fast"
+
+    if display_html_path and display_html_path.exists():
         try:
             import streamlit.components.v1 as components
             
-            with open(html_path, 'r', encoding='utf-8') as f:
+            with open(display_html_path, 'r', encoding='utf-8') as f:
                 html_content = f.read()
             
             # Display HTML in iframe
-            components.html(html_content, height=1000, scrolling=True)
+            height = 800 if display_type == "Fast" else 1200
+            components.html(html_content, height=height, scrolling=True)
             
             st.markdown("---")
             
-            # Download button
-            st.download_button(
-                label="📥 Download Full HTML Report",
-                data=html_content,
-                file_name=html_path.name,
-                mime="text/html",
-                use_container_width=True
-            )
+            # Download buttons
+            col_dl1, col_dl2 = st.columns(2)
+            
+            with col_dl1:
+                if full_html_path.exists():
+                    with open(full_html_path, 'r', encoding='utf-8') as f:
+                        full_content = f.read()
+                    st.download_button(
+                        label="📥 Download Full Detailed Report",
+                        data=full_content,
+                        file_name=full_html_path.name,
+                        mime="text/html",
+                        use_container_width=True
+                    )
+            
+            with col_dl2:
+                if fast_html_path.exists():
+                    with open(fast_html_path, 'r', encoding='utf-8') as f:
+                        fast_content = f.read()
+                    st.download_button(
+                        label="📥 Download Fast Summary",
+                        data=fast_content,
+                        file_name=fast_html_path.name,
+                        mime="text/html",
+                        use_container_width=True
+                    )
             
         except Exception as e:
             st.error(f"❌ Error loading HTML report: {e}")
-            st.info(f"Expected HTML at: {html_path}")
+            st.info(f"Expected HTML at: {display_html_path}")
     else:
-        st.warning(f"📄 HTML report not found at: {html_path}")
+        st.warning("📄 HTML report not found.")
+        if full_html_path.exists():
+             st.info(f"Found Full Report at: {full_html_path}")
+        if fast_html_path.exists():
+             st.info(f"Found Fast Report at: {fast_html_path}")
         st.info("The enhanced JSON view above shows all available data.")

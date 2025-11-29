@@ -40,6 +40,7 @@ class VerityNgnAPIClient:
         
         # Ensure no trailing slash
         self.api_url = self.api_url.rstrip('/')
+        print(f"🔍 DEBUG: API Client initialized with URL: {self.api_url}")
         
         logger.info(f"🌐 API Client initialized with URL: {self.api_url}")
     

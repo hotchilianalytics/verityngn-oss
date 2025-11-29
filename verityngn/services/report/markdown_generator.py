@@ -1200,6 +1200,11 @@ def generate_main_report_content(report: VerityReport) -> str:
                 press_release_evidence_count += 1
     
     # Extract YouTube statistics for analysis summary
+    youtube_total_views = 0
+    high_credibility_youtube = 0
+    total_yt = len(youtube_counter_intel)
+    total_pr = len(press_release_counter)
+    
     for video in youtube_counter_intel:
         if isinstance(video, dict):
             view_count = video.get('view_count', 0) or video.get('detailed_stats', {}).get('view_count', 0)

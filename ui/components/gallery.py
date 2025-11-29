@@ -204,7 +204,6 @@ def render_gallery_tab():
         # Fetch from GCS via API
         try:
             import sys
-            from pathlib import Path
             # Ensure ui directory is in path
             ui_dir = Path(__file__).parent.parent
             if str(ui_dir) not in sys.path:
