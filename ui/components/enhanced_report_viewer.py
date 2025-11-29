@@ -326,8 +326,7 @@ def render_enhanced_report_viewer_tab():
             st.error(f"❌ Error initializing API client: {e}")
             return
 
-    # 🎯 FIXED: Use same logic as simplified report_viewer.py
-    # Find outputs directory (where reports actually are)
+    # 🎯 FIXED: Scan ALL possible output directories, not just the first one found
     # Priority: /app/outputs (Docker mount) > outputs (local) > outputs_debug (legacy)
     possible_dirs = [
         Path('/app/outputs'),  # Docker mount point (highest priority)
@@ -338,43 +337,38 @@ def render_enhanced_report_viewer_tab():
         Path(__file__).parent.parent / 'outputs',  # From UI directory
     ]
     
-    output_dir = None
+    valid_output_dirs = []
     for dir_path in possible_dirs:
         try:
             if dir_path.exists():
-                output_dir = dir_path
-                print(f"✅ Found output directory: {output_dir.absolute()}")
-                break
+                valid_output_dirs.append(dir_path)
+                print(f"✅ Found output directory: {dir_path.absolute()}")
         except (PermissionError, OSError) as e:
             # Skip directories we don't have permission to access (e.g., Streamlit Cloud)
             continue
     
     # Fallback to config if not found
-    if not output_dir:
+    if not valid_output_dirs:
         try:
-            output_dir = Path(
+            config_dir = Path(
                 st.session_state.config.get("output.local_dir", "./outputs")
             )
+            if config_dir.exists():
+                valid_output_dirs.append(config_dir)
         except (AttributeError, KeyError):
-            output_dir = Path("./outputs")
+            pass
 
-    # Check if output_dir exists (with error handling)
-    try:
-        dir_exists = output_dir.exists()
-    except (PermissionError, OSError):
-        dir_exists = False
-
-    if not output_dir or not dir_exists:
+    if not valid_output_dirs:
         st.warning("⚠️ No reports directory found. Run a verification first!")
         with st.expander("🔍 Debug Info"):
-            st.info("Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
+            st.info(f"Searched in:\n" + "\n".join([f"- {d}" for d in possible_dirs]))
         return
 
     # 🎯 FIXED: List available reports from timestamped _complete directories
     report_files = []
     
-    # 1. Scan standard output directory
-    if output_dir and output_dir.exists():
+    # 1. Scan all valid output directories
+    for output_dir in valid_output_dirs:
         try:
             for video_dir in output_dir.iterdir():
                 try:
@@ -410,13 +404,14 @@ def render_enhanced_report_viewer_tab():
                         except (PermissionError, OSError):
                             continue
                     
-                    if report_files and report_files[-1].parent == complete_dir:
-                        break  # Found report in this video_dir, move to next
+                    # If we found a report in this complete_dir, we don't strictly need to stop, 
+                    # but let's collect all versions for history if needed. 
+                    # For now, let's just collect them all and let the user choose.
         except (PermissionError, OSError) as e:
-            st.error(f"❌ Permission error accessing reports directory: {e}")
-            st.info("💡 In Streamlit Cloud, use API mode to view reports via the API.")
+            st.error(f"❌ Permission error accessing reports directory {output_dir}: {e}")
 
     # 2. Scan for local Sherlock analysis folders (development/debug artifacts)
+    # Only if no reports found in standard directories, or to supplement
     try:
         for sherlock_dir in Path.cwd().glob('sherlock_analysis_*'):
             if not sherlock_dir.is_dir():
@@ -424,11 +419,11 @@ def render_enhanced_report_viewer_tab():
             
             video_id = sherlock_dir.name.replace('sherlock_analysis_', '')
             
-            # Priority: report.json > final_claims.json
+            # Priority: report.json (full report)
+            # Skipped: final_claims.json (just a list of claims, causes AttributeError)
             candidates = [
                 sherlock_dir / f"{video_id}_report.json",
-                sherlock_dir / "report.json",
-                sherlock_dir / f"{video_id}_final_claims.json"
+                sherlock_dir / "report.json"
             ]
             
             for cand in candidates:
@@ -455,7 +450,7 @@ def render_enhanced_report_viewer_tab():
 
     if not report_files:
         st.info("📭 No reports found yet. Complete a verification to generate reports.")
-        st.info(f"📂 Looking in: {output_dir.absolute()}")
+        st.info(f"📂 Searched in: {', '.join([str(d.name) for d in valid_output_dirs])}")
         return
 
     report_options = {}
@@ -463,6 +458,11 @@ def render_enhanced_report_viewer_tab():
         try:
             with open(report_file, "r") as f:
                 report = json.load(f)
+            
+            # 🛡️ FIX: Skip if report is a list (e.g. claims list from Sherlock)
+            if isinstance(report, list):
+                continue
+                
             video_id = report.get("video_id", report_file.parent.name)
             title = report.get("title", video_id)
             # Include timestamp in label for clarity
