@@ -1164,15 +1164,19 @@ def generate_main_report_content(report: VerityReport) -> str:
                     source_html += f"<li>{item}</li>"
             source_html += "</ul>"
 
+            # Inline styles for better accordion appearance
+            details_style = "border: 1px solid #e1e4e8; border-radius: 6px; padding: 0; margin-bottom: 16px; background-color: #fff;"
+            summary_style = "cursor: pointer; padding: 12px 16px; background-color: #f6f8fa; border-radius: 6px; font-weight: 600; outline: none; list-style: none;"
+            content_style = "padding: 16px; border-top: 1px solid #e1e4e8;"
+            
             report_content.append(f"""
-<details id="sources-for-claim-{i+1}">
-<summary><strong>Claim {i+1} Sources</strong> ({claim.timestamp})</summary>
-<br>
-<strong>Claim:</strong> {claim.claim_text}
-<br><br>
+<details id="sources-for-claim-{i+1}" style="{details_style}">
+<summary style="{summary_style}">▶ Claim {i+1} Sources <span style="font-weight: normal; color: #586069;">({claim.timestamp})</span></summary>
+<div style="{content_style}">
+<p><strong>Claim:</strong> {claim.claim_text}</p>
 {source_html}
+</div>
 </details>
-<br>
 """)
 
     report_content.append("")
@@ -1261,18 +1265,23 @@ def generate_main_report_content(report: VerityReport) -> str:
                     yt_rows += f"<tr><td><a href='{url}' target='_blank'>{title}</a></td><td>{channel}</td><td>{views:,}</td></tr>"
             
             if yt_rows:
+                # Inline styles for better accordion appearance
+                details_style = "border: 1px solid #e1e4e8; border-radius: 6px; padding: 0; margin-bottom: 16px; background-color: #fff;"
+                summary_style = "cursor: pointer; padding: 12px 16px; background-color: #f6f8fa; border-radius: 6px; font-weight: 600; outline: none; list-style: none;"
+                content_style = "padding: 16px; border-top: 1px solid #e1e4e8;"
+
                 report_content.append(f"""
-<details>
-<summary><strong>YouTube Counter-Intelligence Details ({total_yt} Videos)</strong></summary>
-<br>
+<details style="{details_style}">
+<summary style="{summary_style}">▶ YouTube Counter-Intelligence Details ({total_yt} Videos)</summary>
+<div style="{content_style}">
 <table>
 <thead><tr><th>Video</th><th>Channel</th><th>Views</th></tr></thead>
 <tbody>
 {yt_rows}
 </tbody>
 </table>
+</div>
 </details>
-<br>
 """)
 
         # Press Release Details
@@ -1286,18 +1295,23 @@ def generate_main_report_content(report: VerityReport) -> str:
                     pr_rows += f"<tr><td><a href='{url}' target='_blank'>{title}</a></td><td>{source}</td></tr>"
             
             if pr_rows:
+                # Reuse styles
+                details_style = "border: 1px solid #e1e4e8; border-radius: 6px; padding: 0; margin-bottom: 16px; background-color: #fff;"
+                summary_style = "cursor: pointer; padding: 12px 16px; background-color: #f6f8fa; border-radius: 6px; font-weight: 600; outline: none; list-style: none;"
+                content_style = "padding: 16px; border-top: 1px solid #e1e4e8;"
+
                 report_content.append(f"""
-<details>
-<summary><strong>Press Release Counter-Intelligence Details ({total_pr} Releases)</strong></summary>
-<br>
+<details style="{details_style}">
+<summary style="{summary_style}">▶ Press Release Counter-Intelligence Details ({total_pr} Releases)</summary>
+<div style="{content_style}">
 <table>
 <thead><tr><th>Title</th><th>Source</th></tr></thead>
 <tbody>
 {pr_rows}
 </tbody>
 </table>
+</div>
 </details>
-<br>
 """)
 
     else:
