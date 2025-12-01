@@ -387,8 +387,10 @@ def main():
 
     # Main content area - render selected tab
     # If workflow just started, auto-switch to processing tab logic (even if UI hasn't caught up)
-    # But with key-based radio, the UI should catch up automatically on rerun
-    if "🎬 Verify Video" in tab_selection:
+    # Check if we should override the tab selection based on workflow state
+    if st.session_state.get('workflow_started', False) and st.session_state.processing_status == 'processing':
+         render_processing_tab()
+    elif "🎬 Verify Video" in tab_selection:
         render_video_input_tab()
     elif "⚙️ Processing" in tab_selection:
         render_processing_tab()

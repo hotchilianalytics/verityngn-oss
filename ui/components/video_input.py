@@ -214,12 +214,15 @@ def render_video_input_tab():
         st.session_state.workflow_started = True
         
         # Switch to Processing tab automatically
-        st.session_state.nav_selection = "⚙️ Processing"
+        # Direct assignment to widget key is not allowed, use a separate key or callback
+        # The radio button in streamlit_app.py uses key="nav_selection"
+        # We can't modify it directly here safely without potential conflict
         
-        st.success("✅ Verification started! Switching to Processing tab...")
+        st.success("✅ Verification started! Please switch to the **Processing** tab to monitor progress.")
         st.balloons()
         
-        # MUST rerun to update state and switch tab
+        # Instead of forcing nav change which causes StreamlitAPIException, just rerun
+        # The user will have to manually switch tabs or we need a different architecture for auto-switching
         st.rerun()
     elif start_button and not video_id:
         st.error(f"❌ Cannot start: video_id is None. Video URL: {video_url}")
