@@ -213,10 +213,13 @@ def render_video_input_tab():
         # Trigger workflow execution (will be handled in processing tab)
         st.session_state.workflow_started = True
         
-        st.success("✅ Verification started! Switch to Processing tab to monitor progress.")
+        # Switch to Processing tab automatically
+        st.session_state.nav_selection = "⚙️ Processing"
+        
+        st.success("✅ Verification started! Switching to Processing tab...")
         st.balloons()
         
-        # MUST rerun to update state
+        # MUST rerun to update state and switch tab
         st.rerun()
     elif start_button and not video_id:
         st.error(f"❌ Cannot start: video_id is None. Video URL: {video_url}")

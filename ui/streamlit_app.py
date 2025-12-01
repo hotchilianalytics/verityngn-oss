@@ -281,6 +281,10 @@ def main():
         st.markdown("---")
 
         # Navigation tabs
+        # Initialize nav selection in session state if not present
+        if "nav_selection" not in st.session_state:
+            st.session_state.nav_selection = "🎬 Verify Video"
+
         tab_selection = st.radio(
             "Navigation",
             [
@@ -291,6 +295,7 @@ def main():
                 "⚙️ Settings",
             ],
             label_visibility="collapsed",
+            key="nav_selection"
         )
 
         st.markdown("---")
@@ -381,6 +386,8 @@ def main():
         st.caption("MIT License • Open Source")
 
     # Main content area - render selected tab
+    # If workflow just started, auto-switch to processing tab logic (even if UI hasn't caught up)
+    # But with key-based radio, the UI should catch up automatically on rerun
     if "🎬 Verify Video" in tab_selection:
         render_video_input_tab()
     elif "⚙️ Processing" in tab_selection:
