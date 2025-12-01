@@ -71,6 +71,18 @@ def render_video_input_tab():
     
     st.markdown("---")
     
+    def start_verification_callback():
+        """Callback to handle verification start and tab switching."""
+        # Get current input values
+        # NOTE: We must use st.session_state to get values inside a callback
+        # But simple variables are not available unless we use keys for widgets
+        
+        # For now, we set the flags to trigger processing in the next run
+        st.session_state.processing_status = 'processing'
+        # We need to ensure video_id is correct, but args are passed at render time
+        # which is fine for the button click
+        pass
+
     # Main input section
     col1, col2 = st.columns([3, 1])
     
@@ -160,14 +172,50 @@ def render_video_input_tab():
     # Action buttons
     col_btn1, col_btn2, col_btn3, col_btn4 = st.columns([2, 2, 2, 4])
     
+    def on_start_click(vid_id, vid_url, config):
+        """Callback to handle verification start."""
+        st.session_state.processing_status = 'processing'
+        st.session_state.current_video_id = vid_id
+        
+        # Ensure full URL
+        if vid_id and not vid_url.startswith('http'):
+            vid_url = f"https://www.youtube.com/watch?v={vid_id}"
+        
+        st.session_state.current_video_url = vid_url
+        st.session_state.workflow_logs = []
+        st.session_state.verification_config = config
+        st.session_state.workflow_started = True
+        
+        # Switch tab - this works because callback runs before script re-run
+        st.session_state.nav_selection = "⚙️ Processing"
+
     with col_btn1:
+        # Prepare config dictionary for callback
+        current_config = {
+            'model_name': model_name,
+            'max_claims': max_claims,
+            'temperature': temperature,
+            'enable_llm_logging': enable_llm_logging,
+            'output_formats': output_formats
+        }
+        
         start_button = st.button(
             "🚀 Start Verification",
             type="primary",
             disabled=(not video_id or st.session_state.processing_status == 'processing'),
-            use_container_width=True
+            use_container_width=True,
+            on_click=on_start_click,
+            args=(video_id, video_url, current_config)
         )
     
+    # Handle post-click UI feedback (optional, but nav switch happens immediately)
+    if 'debug_mode' not in st.session_state:
+        st.session_state.debug_mode = True
+    
+    if st.session_state.debug_mode and start_button:
+         # This might not show if tab switches fast, but good for debug
+        st.info(f"🔍 DEBUG: Start triggered for {video_id}")
+
     with col_btn2:
         if st.session_state.processing_status == 'processing':
             cancel_button = st.button(
@@ -183,50 +231,9 @@ def render_video_input_tab():
             use_container_width=True
         )
     
-    # Handle button actions
-    # Debug output
-    if 'debug_mode' not in st.session_state:
-        st.session_state.debug_mode = True  # Enable by default
+    # Handle button actions (logic moved to callback for start_button)
+    # Cancel and Clear still handled here
     
-    if st.session_state.debug_mode and start_button:
-        st.info(f"🔍 DEBUG: Button clicked! video_id={video_id}, video_url={video_url}")
-    
-    if start_button and video_id:
-        # Start verification
-        st.session_state.processing_status = 'processing'
-        st.session_state.current_video_id = video_id
-        # Ensure we have a full YouTube URL for video embedding
-        if video_id and not video_url.startswith('http'):
-            video_url = f"https://www.youtube.com/watch?v={video_id}"
-        st.session_state.current_video_url = video_url
-        st.session_state.workflow_logs = []
-        
-        # Store advanced options
-        st.session_state.verification_config = {
-            'model_name': model_name,
-            'max_claims': max_claims,
-            'temperature': temperature,
-            'enable_llm_logging': enable_llm_logging,
-            'output_formats': output_formats
-        }
-        
-        # Trigger workflow execution (will be handled in processing tab)
-        st.session_state.workflow_started = True
-        
-        # Switch to Processing tab automatically
-        # Direct assignment to widget key is not allowed, use a separate key or callback
-        # The radio button in streamlit_app.py uses key="nav_selection"
-        # We can't modify it directly here safely without potential conflict
-        
-        st.success("✅ Verification started! Please switch to the **Processing** tab to monitor progress.")
-        st.balloons()
-        
-        # Instead of forcing nav change which causes StreamlitAPIException, just rerun
-        # The user will have to manually switch tabs or we need a different architecture for auto-switching
-        st.rerun()
-    elif start_button and not video_id:
-        st.error(f"❌ Cannot start: video_id is None. Video URL: {video_url}")
-        
     if cancel_button:
         st.session_state.processing_status = 'idle'
         st.session_state.workflow_started = False
