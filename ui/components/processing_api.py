@@ -218,9 +218,14 @@ def render_processing_tab():
                 st.balloons()
                 st.rerun()
             
-            elif task_status == 'error':
-                error_msg = api_status.get('error_message', 'Unknown error')
+            elif task_status == 'error' or task_status == 'failed':
+                error_msg = api_status.get('error_message', api_status.get('message', 'Unknown error'))
                 st.error(f"❌ Verification failed: {error_msg}")
+                
+                # Show detailed error information
+                with st.expander("🔍 Error Details", expanded=True):
+                    st.json(api_status)
+                
                 st.session_state.processing_status = 'error'
                 # Reset polling interval
                 st.session_state.poll_interval = 5

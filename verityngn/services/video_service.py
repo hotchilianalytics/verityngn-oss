@@ -147,7 +147,8 @@ def download_video(video_url: str, output_dir: str = "downloads") -> Tuple[str, 
             # Network and retry options
             'verbose': True,
             'logger': logger,
-            'cookiefile': 'cookies.txt',
+            # Use absolute path for cookies.txt (in container it's at /app/cookies.txt)
+            'cookiefile': os.path.join(os.getcwd(), 'cookies.txt') if os.path.exists(os.path.join(os.getcwd(), 'cookies.txt')) else (os.path.join('/app', 'cookies.txt') if os.path.exists('/app/cookies.txt') else None),
             'retries': 20,
             'fragment_retries': 20,
             'socket_timeout': 90,
@@ -323,10 +324,17 @@ def get_video_info(video_url: str) -> Optional[dict]:
         Optional[dict]: Video information
     """
     try:
+        # Find cookies.txt in common locations
+        cookies_path = None
+        for path in [os.path.join(os.getcwd(), 'cookies.txt'), '/app/cookies.txt', 'cookies.txt']:
+            if os.path.exists(path):
+                cookies_path = path
+                break
+        
         ydl_opts = {
             'quiet': False,  # Enable verbose for debugging
             'no_warnings': False,
-            'cookiefile': 'cookies.txt',
+            'cookiefile': cookies_path if cookies_path else None,
             
             # ULTRA-ADVANCED anti-bot detection measures
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
