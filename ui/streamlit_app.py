@@ -232,6 +232,7 @@ except ImportError:
     report_viewer_func = render_report_viewer_tab
 from components.gallery import render_gallery_tab
 from components.settings import render_settings_tab
+from components.debug import render_debug_tab
 
 
 def main():
@@ -293,6 +294,7 @@ def main():
                 "📊 View Reports",
                 "🖼️ Gallery",
                 "⚙️ Settings",
+                "🏥 System Health",
             ],
             label_visibility="collapsed",
             key="nav_selection"
@@ -400,6 +402,8 @@ def main():
         render_gallery_tab()
     elif "⚙️ Settings" in tab_selection:
         render_settings_tab()
+    elif "🏥 System Health" in tab_selection:
+        render_debug_tab()
 
     # Show welcome message at bottom when idle
     if (
