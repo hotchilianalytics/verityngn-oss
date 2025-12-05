@@ -5,6 +5,32 @@ from pathlib import Path
 import glob
 import datetime
 
+def get_secret_value(key: str) -> tuple:
+    """
+    Get secret value and source. Returns (value, source).
+    
+    Checks Streamlit secrets first (for Community Cloud), then falls back to environment variables.
+    
+    Args:
+        key: Secret key name
+        
+    Returns:
+        Tuple of (value, source) where source is "Streamlit Secrets", "Environment Variable", or "Not Set"
+    """
+    # Try Streamlit secrets first (for Community Cloud)
+    try:
+        if hasattr(st, 'secrets') and key in st.secrets:
+            return st.secrets[key], "Streamlit Secrets"
+    except Exception:
+        pass
+    
+    # Fall back to environment variables
+    value = os.getenv(key)
+    if value:
+        return value, "Environment Variable"
+    
+    return None, "Not Set"
+
 def render_debug_tab():
     """Render the System Health & Debug dashboard."""
     st.markdown("## 🏥 System Health & Debug")
@@ -26,7 +52,7 @@ def render_debug_tab():
     
     cols = st.columns(3)
     for i, key in enumerate(critical_keys):
-        val = os.getenv(key)
+        val, source = get_secret_value(key)
         status = "✅ Set" if val else "❌ Missing"
         if val:
             # Mask value: show first 4 and last 4 chars
@@ -36,9 +62,12 @@ def render_debug_tab():
                 masked = "***"
         else:
             masked = "Not Set"
+        
+        # Show source in help text
+        help_text = f"Source: {source}"
             
         with cols[i % 3]:
-            st.metric(label=key, value=status, delta=masked if val else None, delta_color="normal")
+            st.metric(label=key, value=status, delta=masked if val else None, delta_color="normal", help=help_text)
 
     # 2. Configuration & Context
     st.markdown("### ⚙️ Configuration & Context")

@@ -152,6 +152,30 @@ def render_processing_tab():
             
             st.session_state.current_task_id = task_id
             st.session_state.workflow_started = False  # Mark as handled
+            
+            # Extract video_id from URL
+            video_id = None
+            if 'watch?v=' in video_url:
+                video_id = video_url.split('watch?v=')[1].split('&')[0]
+            elif '/v/' in video_url:
+                video_id = video_url.split('/v/')[1].split('?')[0]
+            elif len(video_url) == 11:  # Just the video ID
+                video_id = video_url
+            
+            # Record submission in history
+            try:
+                from components.processing_history import add_to_history
+                add_to_history(
+                    video_id=video_id or 'unknown',
+                    video_url=video_url,
+                    task_id=task_id,
+                    status='processing'
+                )
+            except Exception as e:
+                # Don't fail if history recording fails
+                import logging
+                logging.warning(f"Failed to record submission in history: {e}")
+            
             st.success(f"✅ Task submitted: `{task_id}`")
             st.rerun()
             
@@ -215,6 +239,26 @@ def render_processing_tab():
                     st.markdown(f"**Video ID:** `{video_id}`")
                     st.markdown("View results in the **Reports** tab")
                 
+                # Update history entry
+                try:
+                    from components.processing_history import update_history_entry
+                    # Construct report URL if available
+                    report_url = None
+                    if video_id:
+                        api_url = st.session_state.api_client.api_url
+                        report_url = f"{api_url}/api/v1/reports/{video_id}/report.html"
+                    
+                    update_history_entry(
+                        task_id=task_id,
+                        status='completed',
+                        video_id=video_id,
+                        report_url=report_url
+                    )
+                except Exception as e:
+                    # Don't fail if history update fails
+                    import logging
+                    logging.warning(f"Failed to update history entry: {e}")
+                
                 st.balloons()
                 st.rerun()
             
@@ -229,6 +273,22 @@ def render_processing_tab():
                 st.session_state.processing_status = 'error'
                 # Reset polling interval
                 st.session_state.poll_interval = 5
+                
+                # Update history entry
+                try:
+                    from components.processing_history import update_history_entry
+                    video_id = api_status.get('video_id')
+                    update_history_entry(
+                        task_id=task_id,
+                        status='failed',
+                        video_id=video_id,
+                        error_message=error_msg
+                    )
+                except Exception as e:
+                    # Don't fail if history update fails
+                    import logging
+                    logging.warning(f"Failed to update history entry: {e}")
+                
                 st.rerun()
             
             else:
@@ -300,6 +360,17 @@ def render_processing_tab():
     if st.session_state.api_status:
         with st.expander("🔍 Detailed Status"):
             st.json(st.session_state.api_status)
+    
+    # My Submissions History
+    st.markdown("---")
+    try:
+        from components.processing_history import render_processing_history
+        render_processing_history()
+    except ImportError:
+        # Component not available, skip
+        pass
+    except Exception as e:
+        st.warning(f"Could not load submission history: {e}")
     
     # Help section
     with st.expander("ℹ️ Help & Troubleshooting"):

@@ -254,6 +254,8 @@ def main():
         st.session_state.current_video_url = None
     if "workflow_logs" not in st.session_state:
         st.session_state.workflow_logs = []
+    if "processing_history" not in st.session_state:
+        st.session_state.processing_history = []  # List of processing history entries
     if "config" not in st.session_state:
         # Load default config
         try:

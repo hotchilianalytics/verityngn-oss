@@ -220,31 +220,44 @@ def render_gallery_tab():
             with st.spinner("Loading gallery from GCS..."):
                 gallery_data = _cached_get_gallery_list(api_url, limit=100, offset=0)
                 
+                # Deduplicate by video_id - keep only latest version per video_id
+                video_dict = {}  # video_id -> latest video data
+                
                 # Process API response into gallery format
                 for video_data in gallery_data.get('videos', []):
-                    # Calculate truthfulness score percentage
-                    truthfulness_score = video_data.get('truthfulness_score', 0.5)
+                    video_id = video_data['video_id']
+                    completed_at = video_data.get('completed_at', '')
                     
-                    # Extract category
-                    category = video_data.get('category', '✨ All Categories')
-                    
-                    examples.append({
-                        'id': video_data['video_id'],
-                        'video_id': video_data['video_id'],
-                        'title': video_data.get('title', 'Untitled'),
-                        'youtube_url': video_data.get('youtube_url', ''),
-                        'truthfulness_score': truthfulness_score,
-                        'claims_count': video_data.get('claims_count', 0),
-                        'category': category,
-                        'tags': video_data.get('tags', []),
-                        'submitted_at': video_data.get('completed_at', ''),
-                        'submitted_by': 'cloud_batch',
-                        'html_url': video_data.get('html_url'),  # Proxy URL for full report
-                        'fast_html_url': video_data.get('fast_html_url'), # Proxy URL for fast report
-                        'json_url': video_data.get('json_url'),
-                        'markdown_url': video_data.get('markdown_url'),
-                        'gcs_path': video_data.get('gcs_path', ''),
-                    })
+                    # Check if we already have this video_id or if this is a newer version
+                    existing = video_dict.get(video_id)
+                    if not existing or completed_at > existing.get('submitted_at', ''):
+                        # Calculate truthfulness score percentage
+                        truthfulness_score = video_data.get('truthfulness_score', 0.5)
+                        
+                        # Extract category
+                        category = video_data.get('category', '✨ All Categories')
+                        
+                        video_entry = {
+                            'id': video_id,
+                            'video_id': video_id,
+                            'title': video_data.get('title', 'Untitled'),
+                            'youtube_url': video_data.get('youtube_url', ''),
+                            'truthfulness_score': truthfulness_score,
+                            'claims_count': video_data.get('claims_count', 0),
+                            'category': category,
+                            'tags': video_data.get('tags', []),
+                            'submitted_at': completed_at,
+                            'submitted_by': 'cloud_batch',
+                            'html_url': video_data.get('html_url'),  # Proxy URL for full report
+                            'fast_html_url': video_data.get('fast_html_url'), # Proxy URL for fast report
+                            'json_url': video_data.get('json_url'),
+                            'markdown_url': video_data.get('markdown_url'),
+                            'gcs_path': video_data.get('gcs_path', ''),
+                        }
+                        video_dict[video_id] = video_entry
+                
+                # Convert dict values to list
+                examples = list(video_dict.values())
                 
                 if examples:
                     st.success(f"✅ Loaded {len(examples)} videos from GCS")
