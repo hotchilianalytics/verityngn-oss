@@ -7,6 +7,8 @@ Allows users to submit YouTube URLs for verification.
 import streamlit as st
 import re
 from pathlib import Path
+from typing import Optional, List, Dict, Any, Tuple
+from datetime import datetime
 
 
 def extract_video_id(url: str) -> str:
@@ -33,16 +35,76 @@ def extract_video_id(url: str) -> str:
     return None
 
 
-def validate_youtube_url(url: str) -> tuple[bool, str]:
+def parse_channel_url(url: str) -> Optional[Dict[str, str]]:
     """
-    Validate YouTube URL.
+    Parse YouTube channel URL to extract channel identifier.
+    
+    Supports formats:
+    - https://www.youtube.com/@NextMedHealth
+    - https://www.youtube.com/@NextMedHealth/videos
+    - https://www.youtube.com/channel/UC...
+    - https://www.youtube.com/user/username
     
     Returns:
-        (is_valid, message)
+        Dict with 'type' ('handle', 'channel_id', 'username') and 'identifier', or None
+    """
+    if not url:
+        return None
+    
+    url = url.strip()
+    
+    # Handle format: @username or /@username
+    handle_match = re.search(r'youtube\.com/@([^/\s?#]+)', url)
+    if handle_match:
+        return {
+            'type': 'handle',
+            'identifier': handle_match.group(1),
+            'url': url
+        }
+    
+    # Channel ID format: /channel/UC...
+    channel_id_match = re.search(r'youtube\.com/channel/([^/\s?#]+)', url)
+    if channel_id_match:
+        return {
+            'type': 'channel_id',
+            'identifier': channel_id_match.group(1),
+            'url': url
+        }
+    
+    # Legacy username format: /user/username
+    username_match = re.search(r'youtube\.com/user/([^/\s?#]+)', url)
+    if username_match:
+        return {
+            'type': 'username',
+            'identifier': username_match.group(1),
+            'url': url
+        }
+    
+    return None
+
+
+def is_channel_url(url: str) -> bool:
+    """Check if URL is a channel URL (not a video URL)."""
+    if not url:
+        return False
+    return parse_channel_url(url) is not None
+
+
+def validate_youtube_url(url: str) -> tuple[bool, str]:
+    """
+    Validate YouTube URL (video or channel).
+    
+    Returns:
+        (is_valid, message_or_id)
     """
     if not url:
         return False, "Please enter a URL"
     
+    # Check if it's a channel URL
+    if is_channel_url(url):
+        return True, "channel"
+    
+    # Otherwise, validate as video URL
     video_id = extract_video_id(url)
     if not video_id:
         return False, "Invalid YouTube URL format"
@@ -83,6 +145,239 @@ def render_video_input_tab():
         # which is fine for the button click
         pass
 
+    # Channel video fetching function
+    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    def fetch_channel_videos(channel_url: str, max_results: int = 20) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+        """
+        Fetch latest videos from a YouTube channel.
+        
+        Returns:
+            (list of video dicts, error_message)
+        """
+        try:
+            channel_info = parse_channel_url(channel_url)
+            if not channel_info:
+                return [], "Invalid channel URL format"
+            
+            # Try YouTube Data API first
+            try:
+                from googleapiclient.discovery import build
+                from verityngn.config.settings import YOUTUBE_API_KEY
+                
+                if not YOUTUBE_API_KEY:
+                    raise ValueError("YouTube API key not configured")
+                
+                youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+                
+                # Resolve channel identifier to channel ID
+                channel_id = None
+                if channel_info['type'] == 'channel_id':
+                    channel_id = channel_info['identifier']
+                elif channel_info['type'] == 'handle':
+                    # For handle (@username), try multiple approaches
+                    # Approach 1: Try direct channel lookup by custom URL (may not work for all)
+                    try:
+                        # Note: YouTube API v3 doesn't directly support @handle lookup
+                        # We'll use search as fallback
+                        channels_response = youtube.channels().list(
+                            forUsername=channel_info['identifier'],
+                            part='id'
+                        ).execute()
+                        if channels_response.get('items'):
+                            channel_id = channels_response['items'][0]['id']
+                    except:
+                        pass
+                    
+                    # Approach 2: Search for channel by handle name
+                    if not channel_id:
+                        try:
+                            search_response = youtube.search().list(
+                                q=channel_info['identifier'],
+                                type='channel',
+                                part='id,snippet',
+                                maxResults=5
+                            ).execute()
+                            
+                            # Try to find exact match by checking customUrl in snippet
+                            if search_response.get('items'):
+                                for item in search_response['items']:
+                                    snippet = item.get('snippet', {})
+                                    custom_url = snippet.get('customUrl', '')
+                                    # Check if customUrl matches our handle (with or without @)
+                                    if custom_url and (
+                                        custom_url.lower() == f"@{channel_info['identifier'].lower()}" or
+                                        custom_url.lower() == channel_info['identifier'].lower()
+                                    ):
+                                        channel_id = item['id']['channelId']
+                                        break
+                                
+                                # If no exact match, use first result
+                                if not channel_id:
+                                    channel_id = search_response['items'][0]['id']['channelId']
+                        except:
+                            pass
+                elif channel_info['type'] == 'username':
+                    # Legacy username format
+                    try:
+                        channels_response = youtube.channels().list(
+                            forUsername=channel_info['identifier'],
+                            part='id'
+                        ).execute()
+                        if channels_response.get('items'):
+                            channel_id = channels_response['items'][0]['id']
+                    except:
+                        pass
+                
+                if not channel_id:
+                    raise ValueError("Could not resolve channel ID")
+                
+                # Get uploads playlist ID
+                channels_response = youtube.channels().list(
+                    id=channel_id,
+                    part='contentDetails'
+                ).execute()
+                
+                if not channels_response.get('items'):
+                    raise ValueError("Channel not found")
+                
+                uploads_playlist_id = channels_response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+                
+                # Get videos from uploads playlist
+                playlist_items = []
+                next_page_token = None
+                
+                while len(playlist_items) < max_results:
+                    request = youtube.playlistItems().list(
+                        playlistId=uploads_playlist_id,
+                        part='snippet,contentDetails',
+                        maxResults=min(50, max_results - len(playlist_items)),
+                        pageToken=next_page_token
+                    )
+                    response = request.execute()
+                    
+                    playlist_items.extend(response.get('items', []))
+                    next_page_token = response.get('nextPageToken')
+                    
+                    if not next_page_token:
+                        break
+                
+                # Get video details
+                video_ids = [item['contentDetails']['videoId'] for item in playlist_items[:max_results]]
+                
+                if not video_ids:
+                    return [], "Channel has no videos"
+                
+                videos_response = youtube.videos().list(
+                    id=','.join(video_ids),
+                    part='snippet,statistics,contentDetails'
+                ).execute()
+                
+                videos = []
+                for item in videos_response.get('items', []):
+                    snippet = item['snippet']
+                    stats = item['statistics']
+                    
+                    # Parse publish date
+                    publish_date = snippet.get('publishedAt', '')
+                    try:
+                        pub_dt = datetime.fromisoformat(publish_date.replace('Z', '+00:00'))
+                        date_str = pub_dt.strftime('%Y-%m-%d')
+                    except:
+                        date_str = publish_date[:10] if len(publish_date) >= 10 else ''
+                    
+                    videos.append({
+                        'id': item['id'],
+                        'title': snippet['title'],
+                        'url': f"https://www.youtube.com/watch?v={item['id']}",
+                        'publish_date': date_str,
+                        'view_count': int(stats.get('viewCount', 0)),
+                        'description': snippet.get('description', '')[:200] + '...' if len(snippet.get('description', '')) > 200 else snippet.get('description', '')
+                    })
+                
+                return videos, None
+                
+            except Exception as api_error:
+                error_msg = str(api_error)
+                # Check for specific API errors
+                if 'quota' in error_msg.lower() or '429' in error_msg:
+                    # Quota exceeded - fallback to yt-dlp
+                    pass
+                elif '403' in error_msg or 'forbidden' in error_msg.lower():
+                    return [], "API access forbidden. Check your YouTube API key permissions."
+                elif '404' in error_msg or 'not found' in error_msg.lower():
+                    return [], "Channel not found. Please check the channel URL."
+                elif 'invalid' in error_msg.lower():
+                    return [], f"Invalid channel: {error_msg}"
+                
+                # Fallback to yt-dlp
+                try:
+                    import yt_dlp
+                    
+                    # Ensure we hit the videos tab
+                    url = channel_url
+                    if "/videos" not in url:
+                        if url.endswith('/'):
+                            url = url + "videos"
+                        else:
+                            url = url + "/videos"
+                    
+                    ydl_opts = {
+                        'quiet': True,
+                        'no_warnings': True,
+                        'extract_flat': True,
+                        'skip_download': True,
+                        'playlistend': max_results,
+                    }
+                    
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(url, download=False)
+                    
+                    entries = info.get('entries', []) if isinstance(info, dict) else []
+                    videos = []
+                    
+                    for entry in entries[:max_results]:
+                        vid = entry.get('id') or ''
+                        if not vid:
+                            continue
+                        
+                        vurl = f"https://www.youtube.com/watch?v={vid}"
+                        title = entry.get('title', 'Untitled')
+                        upload_date = entry.get('upload_date', '')
+                        
+                        # Format date if available (YYYYMMDD -> YYYY-MM-DD)
+                        date_str = ''
+                        if upload_date and len(upload_date) == 8:
+                            try:
+                                date_str = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:8]}"
+                            except:
+                                date_str = upload_date
+                        
+                        videos.append({
+                            'id': vid,
+                            'title': title,
+                            'url': vurl,
+                            'publish_date': date_str,
+                            'view_count': int(entry.get('view_count') or 0),
+                            'description': entry.get('description', '')[:200] + '...' if len(entry.get('description', '')) > 200 else entry.get('description', '')
+                        })
+                    
+                    if videos:
+                        return videos, None
+                    else:
+                        return [], "No videos found. Channel may be empty or private."
+                    
+                except Exception as ytdlp_error:
+                    ytdlp_msg = str(ytdlp_error)
+                    if 'private' in ytdlp_msg.lower() or 'unavailable' in ytdlp_msg.lower():
+                        return [], "Channel is private or unavailable."
+                    elif 'not found' in ytdlp_msg.lower() or 'does not exist' in ytdlp_msg.lower():
+                        return [], "Channel not found. Please check the channel URL."
+                    else:
+                        return [], f"Failed to fetch videos. Error: {ytdlp_msg}"
+        
+        except Exception as e:
+            return [], f"Error fetching channel videos: {str(e)}"
+    
     # Main input section
     col1, col2 = st.columns([3, 1])
     
@@ -96,12 +391,80 @@ def render_video_input_tab():
             # Clear it so it doesn't persist
             st.session_state.pop('example_url', None)
         
+        # Channel URL input section
+        st.subheader("📺 Select from Channel")
+        channel_url = st.text_input(
+            "YouTube Channel URL",
+            value=st.session_state.get('channel_url_input', ''),
+            placeholder="https://www.youtube.com/@NextMedHealth",
+            help="Enter a YouTube channel URL to browse its latest videos",
+            key="channel_url_input"
+        )
+        
+        # Reset video selection if channel URL changed
+        if 'last_channel_url' not in st.session_state:
+            st.session_state.last_channel_url = ''
+        
+        if channel_url != st.session_state.last_channel_url:
+            st.session_state.last_channel_url = channel_url
+            st.session_state.channel_video_select = 0  # Reset selection
+            if not channel_url:
+                st.session_state.pop('video_url_input', None)  # Clear video URL if channel cleared
+        
+        # Channel video selection
+        selected_video_url = None
+        if channel_url:
+            channel_info = parse_channel_url(channel_url)
+            if channel_info:
+                with st.spinner("Fetching channel videos..."):
+                    videos, error = fetch_channel_videos(channel_url, max_results=20)
+                
+                if error:
+                    st.error(f"❌ {error}")
+                elif videos:
+                    st.success(f"✅ Found {len(videos)} videos")
+                    
+                    # Create dropdown options
+                    video_options = ["-- Select a video --"] + [
+                        f"{vid['title'][:60]}{'...' if len(vid['title']) > 60 else ''} - {vid['publish_date']} - {vid['view_count']:,} views"
+                        for vid in videos
+                    ]
+                    
+                    selected_index = st.selectbox(
+                        "Select Video",
+                        range(len(video_options)),
+                        format_func=lambda x: video_options[x],
+                        key="channel_video_select"
+                    )
+                    
+                    if selected_index > 0:  # Not the placeholder
+                        selected_video = videos[selected_index - 1]
+                        selected_video_url = selected_video['url']
+                        # Update session state so video_url_input gets the value
+                        st.session_state['video_url_input'] = selected_video_url
+                        st.info(f"Selected: **{selected_video['title']}**")
+                else:
+                    st.warning("No videos found for this channel")
+            elif channel_url.strip():
+                st.error("❌ Invalid channel URL format. Use format: https://www.youtube.com/@ChannelName")
+        
+        st.markdown("---")
+        st.subheader("🎬 Or Enter Video URL Directly")
+        
         # Video URL input
+        # Initialize video_url_input in session state if not present
+        if 'video_url_input' not in st.session_state:
+            st.session_state['video_url_input'] = default_url
+        
+        # Update from selected video if available
+        if selected_video_url:
+            st.session_state['video_url_input'] = selected_video_url
+        
         video_url = st.text_input(
-            "YouTube URL",
-            value=default_url,
+            "YouTube Video URL",
+            value=st.session_state.get('video_url_input', ''),
             placeholder="https://www.youtube.com/watch?v=...",
-            help="Enter the full YouTube video URL",
+            help="Enter the full YouTube video URL or select from channel above",
             key="video_url_input"
         )
         
@@ -109,20 +472,28 @@ def render_video_input_tab():
         if video_url:
             is_valid, result = validate_youtube_url(video_url)
             if is_valid:
-                st.success(f"✅ Valid video ID: `{result}`")
-                video_id = result
+                if result == "channel":
+                    st.info("ℹ️ Channel URL detected. Use the channel selector above to browse videos.")
+                    video_id = None
+                else:
+                    st.success(f"✅ Valid video ID: `{result}`")
+                    video_id = result
             else:
                 st.error(f"❌ {result}")
                 video_id = None
     
     with col2:
-        st.markdown("### Example Videos")
-        if st.button("Load Example 1", help="Health supplement claim"):
-            st.session_state.example_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-            st.rerun()
-        if st.button("Load Example 2", help="Product review"):
-            st.session_state.example_url = "https://www.youtube.com/watch?v=example123"
-            st.rerun()
+        st.markdown("### 💡 Tips")
+        st.info("""
+        **Channel Selection:**
+        - Enter a channel URL like `@NextMedHealth`
+        - Browse latest 20 videos
+        - Select from dropdown
+        
+        **Direct Video:**
+        - Paste any YouTube video URL
+        - Or enter just the video ID
+        """)
     
     # Advanced options
     with st.expander("⚙️ Advanced Options"):
