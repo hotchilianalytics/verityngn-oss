@@ -153,8 +153,15 @@ def render_video_input_tab():
         Returns:
             (list of video dicts, error_message)
         """
+        # 🔍 SHERLOCK: Log entry point
+        import os
+        st.write("🔍 DEBUG: fetch_channel_videos called")
+        st.write(f"🔍 DEBUG: Channel URL: {channel_url}")
+        st.write(f"🔍 DEBUG: YOUTUBE_API_KEY from os.environ: {'SET' if os.getenv('YOUTUBE_API_KEY') else 'NOT SET'}")
+        
         try:
             channel_info = parse_channel_url(channel_url)
+            st.write(f"🔍 DEBUG: Parsed channel info: {channel_info}")
             if not channel_info:
                 return [], "Invalid channel URL format"
             
@@ -162,8 +169,10 @@ def render_video_input_tab():
             # For channel IDs, try YouTube Data API first
             if channel_info['type'] == 'handle':
                 # Use yt-dlp for handles - it's more reliable than API search
+                st.write("🔍 DEBUG: Using yt-dlp for @handle")
                 try:
                     import yt_dlp
+                    st.write("🔍 DEBUG: yt-dlp imported successfully")
                     
                     # Ensure we hit the videos tab
                     url = channel_url
@@ -182,9 +191,12 @@ def render_video_input_tab():
                     }
                     
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        st.write(f"🔍 DEBUG: Extracting info from: {url}")
                         info = ydl.extract_info(url, download=False)
                     
+                    st.write(f"🔍 DEBUG: Info extracted, type: {type(info)}")
                     entries = info.get('entries', []) if isinstance(info, dict) else []
+                    st.write(f"🔍 DEBUG: Found {len(entries)} entries")
                     videos = []
                     
                     for entry in entries[:max_results]:
@@ -213,6 +225,7 @@ def render_video_input_tab():
                             'description': entry.get('description', '')[:200] + '...' if len(entry.get('description', '')) > 200 else entry.get('description', '')
                         })
                     
+                    st.write(f"🔍 DEBUG: Processed {len(videos)} videos")
                     if videos:
                         return videos, None
                     else:
@@ -220,6 +233,9 @@ def render_video_input_tab():
                     
                 except Exception as ytdlp_error:
                     ytdlp_msg = str(ytdlp_error)
+                    st.error(f"🔍 DEBUG: yt-dlp exception caught: {ytdlp_msg}")
+                    import traceback
+                    st.code(traceback.format_exc())
                     if 'private' in ytdlp_msg.lower() or 'unavailable' in ytdlp_msg.lower():
                         return [], "Channel is private or unavailable."
                     elif 'not found' in ytdlp_msg.lower() or 'does not exist' in ytdlp_msg.lower():
@@ -448,6 +464,10 @@ def render_video_input_tab():
                         return [], f"Failed to fetch videos. Error: {ytdlp_msg}"
         
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            st.error(f"🔍 DEBUG: Outer exception caught: {str(e)}")
+            st.code(error_details)
             return [], f"Error fetching channel videos: {str(e)}"
     
     # Main input section
