@@ -11,6 +11,10 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 pyyaml>=6.0.1
 
+# YouTube Channel Selector Feature (v1.0.0-beta)
+google-api-python-client>=2.157.0  # For YouTube Data API v3
+yt-dlp>=2024.12.13  # Fallback for channel video fetching
+
 
 
 
