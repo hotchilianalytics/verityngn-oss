@@ -8,7 +8,6 @@ import streamlit as st
 import re
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
-from datetime import datetime
 
 
 def extract_video_id(url: str) -> str:
@@ -159,7 +158,76 @@ def render_video_input_tab():
             if not channel_info:
                 return [], "Invalid channel URL format"
             
-            # Try YouTube Data API first
+            # For handles (@username), use yt-dlp directly (more reliable)
+            # For channel IDs, try YouTube Data API first
+            if channel_info['type'] == 'handle':
+                # Use yt-dlp for handles - it's more reliable than API search
+                try:
+                    import yt_dlp
+                    
+                    # Ensure we hit the videos tab
+                    url = channel_url
+                    if "/videos" not in url:
+                        if url.endswith('/'):
+                            url = url + "videos"
+                        else:
+                            url = url + "/videos"
+                    
+                    ydl_opts = {
+                        'quiet': True,
+                        'no_warnings': True,
+                        'extract_flat': True,
+                        'skip_download': True,
+                        'playlistend': max_results,
+                    }
+                    
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(url, download=False)
+                    
+                    entries = info.get('entries', []) if isinstance(info, dict) else []
+                    videos = []
+                    
+                    for entry in entries[:max_results]:
+                        vid = entry.get('id') or ''
+                        if not vid:
+                            continue
+                        
+                        vurl = f"https://www.youtube.com/watch?v={vid}"
+                        title = entry.get('title', 'Untitled')
+                        upload_date = entry.get('upload_date', '')
+                        
+                        # Format date if available (YYYYMMDD -> YYYY-MM-DD)
+                        date_str = ''
+                        if upload_date and len(upload_date) == 8:
+                            try:
+                                date_str = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:8]}"
+                            except:
+                                date_str = upload_date
+                        
+                        videos.append({
+                            'id': vid,
+                            'title': title,
+                            'url': vurl,
+                            'publish_date': date_str,
+                            'view_count': int(entry.get('view_count') or 0),
+                            'description': entry.get('description', '')[:200] + '...' if len(entry.get('description', '')) > 200 else entry.get('description', '')
+                        })
+                    
+                    if videos:
+                        return videos, None
+                    else:
+                        return [], "No videos found. Channel may be empty or private."
+                    
+                except Exception as ytdlp_error:
+                    ytdlp_msg = str(ytdlp_error)
+                    if 'private' in ytdlp_msg.lower() or 'unavailable' in ytdlp_msg.lower():
+                        return [], "Channel is private or unavailable."
+                    elif 'not found' in ytdlp_msg.lower() or 'does not exist' in ytdlp_msg.lower():
+                        return [], "Channel not found. Please check the channel URL."
+                    else:
+                        return [], f"Failed to fetch videos: {ytdlp_msg}"
+            
+            # Try YouTube Data API for channel IDs and legacy usernames
             try:
                 from googleapiclient.discovery import build
                 from verityngn.config.settings import YOUTUBE_API_KEY
@@ -173,7 +241,7 @@ def render_video_input_tab():
                 channel_id = None
                 if channel_info['type'] == 'channel_id':
                     channel_id = channel_info['identifier']
-                elif channel_info['type'] == 'handle':
+                elif channel_info['type'] == 'username':
                     # For handle (@username), try multiple approaches
                     # Approach 1: Try direct channel lookup by custom URL (may not work for all)
                     try:
@@ -227,6 +295,10 @@ def render_video_input_tab():
                             channel_id = channels_response['items'][0]['id']
                     except:
                         pass
+                
+                # If handle type somehow got here (shouldn't happen), skip API
+                if channel_info['type'] == 'handle':
+                    raise ValueError("Handle should use yt-dlp, not API")
                 
                 if not channel_id:
                     raise ValueError("Could not resolve channel ID")
