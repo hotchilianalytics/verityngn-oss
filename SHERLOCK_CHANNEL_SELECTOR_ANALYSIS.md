@@ -230,3 +230,50 @@ The root cause is likely:
 
 The debug logs will definitively identify which one.
 
+---
+
+## UPDATE: Root Cause Confirmed ✅
+
+**From user's debug output:**
+```
+🔍 DEBUG: Found 0 entries
+🔍 DEBUG: Processed 0 videos
+```
+
+### Diagnosis
+yt-dlp **successfully connected** to YouTube and extracted the channel page, but returned **zero entries**. This is NOT a network error or blocking - it's an extraction parsing issue.
+
+### Why This Happens
+- YouTube frequently changes their page HTML structure
+- `extract_flat: True` is faster but more fragile
+- The `/videos` tab might have a different structure than expected
+
+### Fix Applied (Commit: 7d86984)
+
+**1. Changed extraction mode:**
+```python
+'extract_flat': 'in_playlist',  # Instead of True - better for channels
+```
+
+**2. Added fallback method:**
+If flat extraction returns 0 entries, automatically retry with:
+```python
+'extract_flat': False,  # Full extraction - slower but more reliable
+```
+
+**3. Enhanced diagnostics:**
+- Show info dict keys to see what yt-dlp actually returns
+- Log yt-dlp version
+- Enable verbose output
+
+### Expected Result
+With the fallback extraction, one of two things will happen:
+1. **Flat extraction works** with 'in_playlist' mode
+2. **Full extraction works** as fallback (slower but gets the videos)
+
+### Next Test
+1. Wait for Streamlit Community Cloud to redeploy
+2. Try `https://www.youtube.com/@NextMedHealth` again
+3. Should now see additional debug output about full extraction
+4. Should get videos successfully
+
