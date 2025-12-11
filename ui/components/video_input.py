@@ -173,6 +173,7 @@ def render_video_input_tab():
                 try:
                     import yt_dlp
                     st.write("🔍 DEBUG: yt-dlp imported successfully")
+                    st.write(f"🔍 DEBUG: yt-dlp version: {yt_dlp.version.__version__}")
                     
                     # Ensure we hit the videos tab
                     url = channel_url
@@ -182,12 +183,15 @@ def render_video_input_tab():
                         else:
                             url = url + "/videos"
                     
+                    # Updated options for better channel extraction
                     ydl_opts = {
-                        'quiet': True,
-                        'no_warnings': True,
-                        'extract_flat': True,
+                        'quiet': False,  # Enable logging to see what's happening
+                        'no_warnings': False,
+                        'extract_flat': 'in_playlist',  # Better for playlists/channels
                         'skip_download': True,
                         'playlistend': max_results,
+                        'ignoreerrors': False,
+                        'no_color': True,  # For cleaner Streamlit output
                     }
                     
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -195,6 +199,14 @@ def render_video_input_tab():
                         info = ydl.extract_info(url, download=False)
                     
                     st.write(f"🔍 DEBUG: Info extracted, type: {type(info)}")
+                    
+                    # Debug: Show what keys are in the info dict
+                    if isinstance(info, dict):
+                        st.write(f"🔍 DEBUG: Info dict keys: {list(info.keys())}")
+                        st.write(f"🔍 DEBUG: Info has 'entries': {'entries' in info}")
+                        if 'entries' in info and info['entries']:
+                            st.write(f"🔍 DEBUG: First entry keys: {list(info['entries'][0].keys())}")
+                    
                     entries = info.get('entries', []) if isinstance(info, dict) else []
                     st.write(f"🔍 DEBUG: Found {len(entries)} entries")
                     videos = []
@@ -226,6 +238,62 @@ def render_video_input_tab():
                         })
                     
                     st.write(f"🔍 DEBUG: Processed {len(videos)} videos")
+                    
+                    # If no videos found, try alternative extraction method
+                    if not videos:
+                        st.write("🔍 DEBUG: No videos with flat extraction, trying full extraction...")
+                        try:
+                            # Try without extract_flat (downloads more metadata but more reliable)
+                            ydl_opts_full = {
+                                'quiet': False,
+                                'no_warnings': False,
+                                'extract_flat': False,  # Full extraction
+                                'skip_download': True,
+                                'playlistend': max_results,
+                                'ignoreerrors': True,  # Skip unavailable videos
+                                'no_color': True,
+                            }
+                            
+                            with yt_dlp.YoutubeDL(ydl_opts_full) as ydl:
+                                st.write(f"🔍 DEBUG: Full extraction from: {url}")
+                                info_full = ydl.extract_info(url, download=False)
+                            
+                            if isinstance(info_full, dict):
+                                st.write(f"🔍 DEBUG: Full info keys: {list(info_full.keys())}")
+                                entries_full = info_full.get('entries', [])
+                                st.write(f"🔍 DEBUG: Full extraction found {len(entries_full)} entries")
+                                
+                                for entry in entries_full[:max_results]:
+                                    if not entry:  # Skip None entries
+                                        continue
+                                    vid = entry.get('id') or ''
+                                    if not vid:
+                                        continue
+                                    
+                                    vurl = f"https://www.youtube.com/watch?v={vid}"
+                                    title = entry.get('title', 'Untitled')
+                                    upload_date = entry.get('upload_date', '')
+                                    
+                                    date_str = ''
+                                    if upload_date and len(upload_date) == 8:
+                                        try:
+                                            date_str = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:8]}"
+                                        except:
+                                            date_str = upload_date
+                                    
+                                    videos.append({
+                                        'id': vid,
+                                        'title': title,
+                                        'url': vurl,
+                                        'publish_date': date_str,
+                                        'view_count': int(entry.get('view_count') or 0),
+                                        'description': entry.get('description', '')[:200] + '...' if len(entry.get('description', '')) > 200 else entry.get('description', '')
+                                    })
+                                
+                                st.write(f"🔍 DEBUG: Full extraction processed {len(videos)} videos")
+                        except Exception as full_extract_error:
+                            st.warning(f"🔍 DEBUG: Full extraction also failed: {full_extract_error}")
+                    
                     if videos:
                         return videos, None
                     else:
