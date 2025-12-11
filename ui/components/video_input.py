@@ -146,7 +146,7 @@ def render_video_input_tab():
 
     # Channel video fetching function
     @st.cache_data(ttl=300)  # Cache for 5 minutes
-    def fetch_channel_videos(channel_url: str, max_results: int = 20) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    def fetch_channel_videos(channel_url: str, max_results: int = 50) -> Tuple[List[Dict[str, Any]], Optional[str]]:
         """
         Fetch latest videos from a YouTube channel.
         
@@ -157,7 +157,23 @@ def render_video_input_tab():
         import os
         st.write("🔍 DEBUG: fetch_channel_videos called")
         st.write(f"🔍 DEBUG: Channel URL: {channel_url}")
-        st.write(f"🔍 DEBUG: YOUTUBE_API_KEY from os.environ: {'SET' if os.getenv('YOUTUBE_API_KEY') else 'NOT SET'}")
+        st.write(f"🔍 DEBUG: max_results: {max_results}")
+        
+        # Helper function to get API key from Streamlit secrets or environment
+        def get_youtube_api_key() -> Optional[str]:
+            """Get YouTube API key from st.secrets (priority) or os.environ."""
+            # Try Streamlit secrets first (for Streamlit Community Cloud)
+            try:
+                if hasattr(st, 'secrets') and 'YOUTUBE_API_KEY' in st.secrets:
+                    return st.secrets['YOUTUBE_API_KEY']
+            except Exception:
+                pass
+            
+            # Fall back to environment variable
+            return os.getenv('YOUTUBE_API_KEY')
+        
+        youtube_api_key = get_youtube_api_key()
+        st.write(f"🔍 DEBUG: YOUTUBE_API_KEY: {'SET' if youtube_api_key else 'NOT SET'}")
         
         try:
             channel_info = parse_channel_url(channel_url)
@@ -314,12 +330,13 @@ def render_video_input_tab():
             # Try YouTube Data API for channel IDs and legacy usernames
             try:
                 from googleapiclient.discovery import build
-                from verityngn.config.settings import YOUTUBE_API_KEY
                 
-                if not YOUTUBE_API_KEY:
+                # Use the helper function to get API key
+                api_key = get_youtube_api_key()
+                if not api_key:
                     raise ValueError("YouTube API key not configured")
                 
-                youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+                youtube = build("youtube", "v3", developerKey=api_key)
                 
                 # Resolve channel identifier to channel ID
                 channel_id = None
@@ -577,7 +594,7 @@ def render_video_input_tab():
             channel_info = parse_channel_url(channel_url)
             if channel_info:
                 with st.spinner("Fetching channel videos..."):
-                    videos, error = fetch_channel_videos(channel_url, max_results=20)
+                    videos, error = fetch_channel_videos(channel_url, max_results=50)
                 
                 if error:
                     st.error(f"❌ {error}")

@@ -17,7 +17,7 @@ CACHE_TTL = 300  # 5 minutes default cache TTL
 
 
 @st.cache_data(ttl=CACHE_TTL, show_spinner=False)
-def _cached_get_gallery_list(api_url: str, limit: int = 100, offset: int = 0) -> Dict[str, Any]:
+def _cached_get_gallery_list(api_url: str, limit: int = 200, offset: int = 0) -> Dict[str, Any]:
     """
     Cached wrapper for fetching gallery list from API.
     
@@ -218,7 +218,7 @@ def render_gallery_tab():
             
             # Fetch gallery videos from API (cached)
             with st.spinner("Loading gallery from GCS..."):
-                gallery_data = _cached_get_gallery_list(api_url, limit=100, offset=0)
+                gallery_data = _cached_get_gallery_list(api_url, limit=200, offset=0)
                 
                 # Deduplicate by video_id - keep only latest version per video_id
                 video_dict = {}  # video_id -> latest video data
