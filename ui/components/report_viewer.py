@@ -8,6 +8,7 @@ Much simpler and more reliable!
 import streamlit as st
 import streamlit.components.v1 as components
 from pathlib import Path
+from components.ui_debug import ui_debug_enabled
 
 
 def render_report_viewer_tab():
@@ -15,9 +16,9 @@ def render_report_viewer_tab():
     
     st.header("📊 View Enhanced Reports")
     
-    # 🎯 STREAMLIT CLOUD FIX: Check if API mode is enabled (Streamlit Cloud)
+    # API-first mode: UI talks to backend API (Cloud Run / local API), so UI doesn't need GCP auth
     import os
-    API_MODE = os.getenv("VERITYNGN_API_URL") is not None
+    API_MODE = (os.getenv("CLOUDRUN_API_URL") is not None) or (os.getenv("VERITYNGN_API_URL") is not None)
     
     if API_MODE:
         # Use API-based report retrieval for Streamlit Cloud
@@ -220,7 +221,8 @@ def render_report_viewer_tab():
         st.error(f"❌ Error loading report: {e}")
         st.info(f"Report path: {html_path}")
         import traceback
-        with st.expander("🔍 Error Details"):
-            st.code(traceback.format_exc())
+        if ui_debug_enabled():
+            with st.expander("Error Details (debug)"):
+                st.code(traceback.format_exc())
 
 

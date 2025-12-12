@@ -40,8 +40,10 @@ class VerityNgnAPIClient:
         
         # Ensure no trailing slash
         self.api_url = self.api_url.rstrip('/')
-        print(f"🔍 DEBUG: API Client initialized with URL: {self.api_url}")
-        
+        # Avoid noisy stdout in public Streamlit; use logger debug when enabled
+        if os.getenv("VERITYNGN_UI_DEBUG", "").strip().lower() in ("1", "true", "yes", "y", "on"):
+            logger.debug(f"API Client initialized with URL: {self.api_url}")
+
         logger.info(f"🌐 API Client initialized with URL: {self.api_url}")
     
     def _make_request(self, method: str, endpoint: str, **kwargs) -> requests.Response:

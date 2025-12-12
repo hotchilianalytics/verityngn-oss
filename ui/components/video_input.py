@@ -8,6 +8,7 @@ import streamlit as st
 import re
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
+from components.ui_debug import ui_debug_enabled, debug_write, debug_exception
 
 
 def extract_video_id(url: str) -> str:
@@ -153,11 +154,10 @@ def render_video_input_tab():
         Returns:
             (list of video dicts, error_message)
         """
-        # 🔍 SHERLOCK: Log entry point
         import os
-        st.write("🔍 DEBUG: fetch_channel_videos called")
-        st.write(f"🔍 DEBUG: Channel URL: {channel_url}")
-        st.write(f"🔍 DEBUG: max_results: {max_results}")
+        debug_write("DEBUG: fetch_channel_videos called")
+        debug_write(f"DEBUG: Channel URL: {channel_url}")
+        debug_write(f"DEBUG: max_results: {max_results}")
         
         # Helper function to get API key from Streamlit secrets or environment
         def get_youtube_api_key() -> Optional[str]:
@@ -173,11 +173,11 @@ def render_video_input_tab():
             return os.getenv('YOUTUBE_API_KEY')
         
         youtube_api_key = get_youtube_api_key()
-        st.write(f"🔍 DEBUG: YOUTUBE_API_KEY: {'SET' if youtube_api_key else 'NOT SET'}")
+        debug_write(f"DEBUG: YOUTUBE_API_KEY: {'SET' if youtube_api_key else 'NOT SET'}")
         
         try:
             channel_info = parse_channel_url(channel_url)
-            st.write(f"🔍 DEBUG: Parsed channel info: {channel_info}")
+            debug_write(f"DEBUG: Parsed channel info: {channel_info}")
             if not channel_info:
                 return [], "Invalid channel URL format"
             
@@ -185,11 +185,14 @@ def render_video_input_tab():
             # For channel IDs, try YouTube Data API first
             if channel_info['type'] == 'handle':
                 # Use yt-dlp for handles - it's more reliable than API search
-                st.write("🔍 DEBUG: Using yt-dlp for @handle")
+                debug_write("DEBUG: Using yt-dlp for @handle")
                 try:
                     import yt_dlp
-                    st.write("🔍 DEBUG: yt-dlp imported successfully")
-                    st.write(f"🔍 DEBUG: yt-dlp version: {yt_dlp.version.__version__}")
+                    debug_write("DEBUG: yt-dlp imported successfully")
+                    try:
+                        debug_write(f"DEBUG: yt-dlp version: {yt_dlp.version.__version__}")
+                    except Exception:
+                        pass
                     
                     # Ensure we hit the videos tab
                     url = channel_url
@@ -200,9 +203,10 @@ def render_video_input_tab():
                             url = url + "/videos"
                     
                     # Updated options for better channel extraction
+                    debug = ui_debug_enabled()
                     ydl_opts = {
-                        'quiet': False,  # Enable logging to see what's happening
-                        'no_warnings': False,
+                        'quiet': not debug,
+                        'no_warnings': not debug,
                         'extract_flat': 'in_playlist',  # Better for playlists/channels
                         'skip_download': True,
                         'playlistend': max_results,
@@ -211,20 +215,20 @@ def render_video_input_tab():
                     }
                     
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        st.write(f"🔍 DEBUG: Extracting info from: {url}")
+                        debug_write(f"DEBUG: Extracting info from: {url}")
                         info = ydl.extract_info(url, download=False)
                     
-                    st.write(f"🔍 DEBUG: Info extracted, type: {type(info)}")
+                    debug_write(f"DEBUG: Info extracted, type: {type(info)}")
                     
                     # Debug: Show what keys are in the info dict
                     if isinstance(info, dict):
-                        st.write(f"🔍 DEBUG: Info dict keys: {list(info.keys())}")
-                        st.write(f"🔍 DEBUG: Info has 'entries': {'entries' in info}")
+                        debug_write(f"DEBUG: Info dict keys: {list(info.keys())}")
+                        debug_write(f"DEBUG: Info has 'entries': {'entries' in info}")
                         if 'entries' in info and info['entries']:
-                            st.write(f"🔍 DEBUG: First entry keys: {list(info['entries'][0].keys())}")
+                            debug_write(f"DEBUG: First entry keys: {list(info['entries'][0].keys())}")
                     
                     entries = info.get('entries', []) if isinstance(info, dict) else []
-                    st.write(f"🔍 DEBUG: Found {len(entries)} entries")
+                    debug_write(f"DEBUG: Found {len(entries)} entries")
                     videos = []
                     
                     for entry in entries[:max_results]:
@@ -253,16 +257,16 @@ def render_video_input_tab():
                             'description': entry.get('description', '')[:200] + '...' if len(entry.get('description', '')) > 200 else entry.get('description', '')
                         })
                     
-                    st.write(f"🔍 DEBUG: Processed {len(videos)} videos")
+                    debug_write(f"DEBUG: Processed {len(videos)} videos")
                     
                     # If no videos found, try alternative extraction method
                     if not videos:
-                        st.write("🔍 DEBUG: No videos with flat extraction, trying full extraction...")
+                        debug_write("DEBUG: No videos with flat extraction, trying full extraction...")
                         try:
                             # Try without extract_flat (downloads more metadata but more reliable)
                             ydl_opts_full = {
-                                'quiet': False,
-                                'no_warnings': False,
+                                'quiet': not debug,
+                                'no_warnings': not debug,
                                 'extract_flat': False,  # Full extraction
                                 'skip_download': True,
                                 'playlistend': max_results,
@@ -271,13 +275,13 @@ def render_video_input_tab():
                             }
                             
                             with yt_dlp.YoutubeDL(ydl_opts_full) as ydl:
-                                st.write(f"🔍 DEBUG: Full extraction from: {url}")
+                                debug_write(f"DEBUG: Full extraction from: {url}")
                                 info_full = ydl.extract_info(url, download=False)
                             
                             if isinstance(info_full, dict):
-                                st.write(f"🔍 DEBUG: Full info keys: {list(info_full.keys())}")
+                                debug_write(f"DEBUG: Full info keys: {list(info_full.keys())}")
                                 entries_full = info_full.get('entries', [])
-                                st.write(f"🔍 DEBUG: Full extraction found {len(entries_full)} entries")
+                                debug_write(f"DEBUG: Full extraction found {len(entries_full)} entries")
                                 
                                 for entry in entries_full[:max_results]:
                                     if not entry:  # Skip None entries
@@ -306,20 +310,18 @@ def render_video_input_tab():
                                         'description': entry.get('description', '')[:200] + '...' if len(entry.get('description', '')) > 200 else entry.get('description', '')
                                     })
                                 
-                                st.write(f"🔍 DEBUG: Full extraction processed {len(videos)} videos")
+                                debug_write(f"DEBUG: Full extraction processed {len(videos)} videos")
                         except Exception as full_extract_error:
-                            st.warning(f"🔍 DEBUG: Full extraction also failed: {full_extract_error}")
+                            if ui_debug_enabled():
+                                st.warning(f"Full extraction also failed: {full_extract_error}")
                     
                     if videos:
                         return videos, None
-                    else:
-                        return [], "No videos found. Channel may be empty or private."
+                    return [], "No videos found. Channel may be empty or private."
                     
                 except Exception as ytdlp_error:
                     ytdlp_msg = str(ytdlp_error)
-                    st.error(f"🔍 DEBUG: yt-dlp exception caught: {ytdlp_msg}")
-                    import traceback
-                    st.code(traceback.format_exc())
+                    debug_exception(f"yt-dlp exception: {ytdlp_msg}", ytdlp_error)
                     if 'private' in ytdlp_msg.lower() or 'unavailable' in ytdlp_msg.lower():
                         return [], "Channel is private or unavailable."
                     elif 'not found' in ytdlp_msg.lower() or 'does not exist' in ytdlp_msg.lower():
@@ -549,10 +551,7 @@ def render_video_input_tab():
                         return [], f"Failed to fetch videos. Error: {ytdlp_msg}"
         
         except Exception as e:
-            import traceback
-            error_details = traceback.format_exc()
-            st.error(f"🔍 DEBUG: Outer exception caught: {str(e)}")
-            st.code(error_details)
+            debug_exception(f"Channel fetch failed: {str(e)}", e)
             return [], f"Error fetching channel videos: {str(e)}"
     
     # Main input section
@@ -762,7 +761,7 @@ def render_video_input_tab():
     
     if st.session_state.debug_mode and start_button:
          # This might not show if tab switches fast, but good for debug
-        st.info(f"🔍 DEBUG: Start triggered for {video_id}")
+        debug_write(f"DEBUG: Start triggered for {video_id}")
 
     with col_btn2:
         if st.session_state.processing_status == 'processing':

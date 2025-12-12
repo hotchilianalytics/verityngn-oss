@@ -299,9 +299,9 @@ def render_enhanced_report_viewer_tab():
 
     st.header("📊 View Enhanced Reports")
 
-    # 🎯 STREAMLIT CLOUD FIX: Check if API mode is enabled (Streamlit Cloud)
+    # API-first mode: UI talks to backend API (Cloud Run / local API), so UI doesn't need GCP auth
     import os
-    API_MODE = os.getenv("VERITYNGN_API_URL") is not None
+    API_MODE = (os.getenv("CLOUDRUN_API_URL") is not None) or (os.getenv("VERITYNGN_API_URL") is not None)
     
     if API_MODE:
         # Use API-based report retrieval for Streamlit Cloud

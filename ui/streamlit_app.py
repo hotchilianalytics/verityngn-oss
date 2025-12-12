@@ -96,7 +96,7 @@ def show_auth_error():
     
     **Then add to `.env`:**
     ```bash
-    GOOGLE_APPLICATION_CREDENTIALS=/Users/ajjc/proj/verityngn-oss/service-account.json
+    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account.json
     ```
     
     ---
@@ -104,8 +104,8 @@ def show_auth_error():
     #### Option 2: Place JSON File Directly
     
     Save your service account JSON as:
-    - `/Users/ajjc/proj/verityngn-oss/service-account.json`
-    - `/Users/ajjc/proj/verityngn-oss/credentials.json`
+    - `/path/to/verityngn-oss/service-account.json`
+    - `/path/to/verityngn-oss/credentials.json`
     
     ---
     
@@ -136,10 +136,18 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Sidebar: debug toggle (safe; does not print secrets)
+with st.sidebar:
+    st.checkbox(
+        "Enable debug output",
+        key="ui_debug",
+        help="Show diagnostic output and stack traces. Disable for normal use.",
+    )
+
 # Check authentication before continuing (skip in API mode - API handles auth)
-# In API-first architecture, only the backend needs Google Cloud credentials
-# The UI just makes HTTP calls to the API
-API_MODE = os.getenv("VERITYNGN_API_URL") is not None
+# In API-first architecture, only the backend needs Google Cloud credentials.
+# The UI just makes HTTP calls to the API.
+API_MODE = (os.getenv("CLOUDRUN_API_URL") is not None) or (os.getenv("VERITYNGN_API_URL") is not None)
 
 if not API_MODE and not check_google_cloud_auth():
     show_auth_error()

@@ -9,6 +9,16 @@ import tempfile
 from pathlib import Path
 
 
+def _secrets_debug_enabled() -> bool:
+    return os.getenv("VERITYNGN_DEBUG_SECRETS", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "y",
+        "on",
+    )
+
+
 def _override_placeholder_env_vars():
     """
     🔍 SHERLOCK MODE: Override placeholder values in environment.
@@ -22,7 +32,8 @@ def _override_placeholder_env_vars():
     """
     from dotenv import dotenv_values
 
-    print("\n🔍 SHERLOCK MODE: Checking for placeholder env vars")
+    if _secrets_debug_enabled():
+        print("\n🔍 SHERLOCK MODE: Checking for placeholder env vars")
 
     placeholder_patterns = [
         "your-",
@@ -57,7 +68,8 @@ def _override_placeholder_env_vars():
             break
 
     if not env_values:
-        print("⚠️  No .env file found to check against")
+        if _secrets_debug_enabled():
+            print("⚠️  No .env file found to check against")
         return
 
     override_count = 0
@@ -73,16 +85,18 @@ def _override_placeholder_env_vars():
 
             if is_placeholder and env_file_value:
                 # Override with .env file value
-                print(f"🔄 Overriding placeholder {key} with .env value")
-                print(f"   Old: {current_value[:20]}...")
-                print(f"   New: {env_file_value[:15]}...{env_file_value[-5:]}")
+                if _secrets_debug_enabled():
+                    print(f"🔄 Overriding placeholder {key} with .env value")
+                    print(f"   Old: {current_value[:20]}...")
+                    print(f"   New: {env_file_value[:15]}...{env_file_value[-5:]}")
                 os.environ[key] = env_file_value
                 override_count += 1
 
-    if override_count > 0:
-        print(f"✅ Overrode {override_count} placeholder values with .env\n")
-    else:
-        print("✅ No placeholder overrides needed\n")
+    if _secrets_debug_enabled():
+        if override_count > 0:
+            print(f"✅ Overrode {override_count} placeholder values with .env\n")
+        else:
+            print("✅ No placeholder overrides needed\n")
 
 
 def _validate_loaded_secrets_sherlock():
@@ -92,6 +106,9 @@ def _validate_loaded_secrets_sherlock():
     This diagnostic function checks if .env values are actually
     placeholders and provides clear warnings to the user.
     """
+    if not _secrets_debug_enabled():
+        return
+
     print("\n" + "=" * 80)
     print("🔍 SHERLOCK MODE: Validating loaded API keys")
     print("=" * 80)
@@ -154,7 +171,7 @@ def _validate_loaded_secrets_sherlock():
         print("Your .env file contains PLACEHOLDER or MISSING values!")
         print('This is why you\'re seeing "API key not valid" errors.\n')
         print("📋 ACTION REQUIRED:")
-        print("   1. Open: /Users/ajjc/proj/verityngn-oss/.env")
+        print("   1. Open: /path/to/verityngn-oss/.env")
         print("   2. Replace placeholder values with your REAL API keys")
         api_url = "https://console.cloud.google.com/apis/credentials"
         print(f"   3. Get API keys from: {api_url}")
@@ -199,21 +216,25 @@ def load_secrets():
 
         for env_file in possible_locations:
             if env_file.exists():
-                print(f"🔐 Loading secrets from .env file: {env_file}")
+                if _secrets_debug_enabled():
+                    print(f"🔐 Loading secrets from .env file: {env_file}")
                 # Don't override existing vars
                 load_dotenv(env_file, override=False)
-                print(f"✅ Loaded secrets from {env_file}")
+                if _secrets_debug_enabled():
+                    print(f"✅ Loaded secrets from {env_file}")
                 loaded_from = f".env ({env_file})"
                 env_loaded = True
                 break
 
-        if not env_loaded:
+        if not env_loaded and _secrets_debug_enabled():
             print("⚠️  No .env file found")
 
     except ImportError:
-        print("⚠️  python-dotenv not installed, cannot load .env files")
+        if _secrets_debug_enabled():
+            print("⚠️  python-dotenv not installed, cannot load .env files")
     except Exception as e:
-        print(f"⚠️  Could not load .env file: {e}")
+        if _secrets_debug_enabled():
+            print(f"⚠️  Could not load .env file: {e}")
 
     # STEP 1.5: CRITICAL FIX - Override placeholder values in environment
     # Streamlit loads .streamlit/secrets.toml into os.environ BEFORE
@@ -231,7 +252,8 @@ def load_secrets():
         import streamlit as st
 
         if hasattr(st, "secrets") and len(st.secrets) > 0:
-            print("🔐 Checking Streamlit Cloud secrets...")
+            if _secrets_debug_enabled():
+                print("🔐 Checking Streamlit Cloud secrets...")
 
             # Load GCP service account JSON (only if not already set)
             if "gcp_service_account" in st.secrets and not os.getenv(
@@ -249,9 +271,11 @@ def load_secrets():
                         temp_path = f.name
 
                     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path
-                    print(f"✅ Service account loaded to: {temp_path}")
+                    if _secrets_debug_enabled():
+                        print(f"✅ Service account loaded to: {temp_path}")
                 except Exception as e:
-                    print(f"⚠️  Warning: Could not load service account: {e}")
+                    if _secrets_debug_enabled():
+                        print(f"⚠️  Warning: Could not load service account: {e}")
 
             # Load other environment variables from Streamlit secrets
             # CRITICAL: Only set if not already in environment (from .env)
@@ -267,7 +291,8 @@ def load_secrets():
                                 f"ℹ️  Skipping {key} from Streamlit "
                                 "secrets (already set from .env)"
                             )
-                            print(msg)
+                            if _secrets_debug_enabled():
+                                print(msg)
                             continue
 
                         # CRITICAL FIX: Skip placeholder values
@@ -290,13 +315,14 @@ def load_secrets():
                             os.environ[key] = value
                             secret_count += 1
                         else:
-                            msg = (
-                                f"⚠️  Skipping placeholder value for {key} "
-                                "in Streamlit secrets"
-                            )
-                            print(msg)
+                            if _secrets_debug_enabled():
+                                msg = (
+                                    f"⚠️  Skipping placeholder value for {key} "
+                                    "in Streamlit secrets"
+                                )
+                                print(msg)
 
-            if secret_count > 0:
+            if secret_count > 0 and _secrets_debug_enabled():
                 msg = (
                     f"✅ Loaded {secret_count} additional secrets "
                     "from Streamlit Cloud"
@@ -309,19 +335,20 @@ def load_secrets():
         # Streamlit not installed - expected for non-Streamlit runs
         pass
     except Exception as e:
-        print(f"⚠️  Could not load Streamlit secrets: {e}")
+        if _secrets_debug_enabled():
+            print(f"⚠️  Could not load Streamlit secrets: {e}")
 
     # Check if we have credentials
     if os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv(
         "GOOGLE_SEARCH_API_KEY"
     ):
         if not loaded_from:
-            print("✅ Using existing environment variables")
             loaded_from = "Environment variables"
         return True
 
     if not loaded_from:
-        print("❌ No secrets loaded - check your configuration")
+        # In public Streamlit, it's OK to run without local credentials when using Cloud Run mode.
+        # Callers should handle missing secrets gracefully.
         return False
 
     return True

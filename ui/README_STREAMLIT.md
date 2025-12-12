@@ -3,27 +3,23 @@
 
 ## Quick Start for Streamlit Community Cloud
 
-### 1. Local Testing
+### 1. Deploy to Streamlit
 
-```bash
-# UI is already running at:
-open http://localhost:8501
-```
-
-### 2. Deploy to Streamlit
-
-1. **Go to:** https://share.streamlit.io
-2. **New app:**
-   - Repository: `your-username/verityngn-oss`
+1. Go to: `https://share.streamlit.io`
+2. New app:
+   - Repository: `hotchilianalytics/verityngn-oss` (or your fork)
    - Branch: `main`
    - Main file: `ui/streamlit_app.py`
-3. **Add secrets:**
-   ```toml
-   VERITYNGN_API_URL = "https://oriented-flea-large.ngrok-free.app"
-   ```
-4. **Deploy!**
+3. Add Streamlit Secrets (required):
 
-### 3. That's it!
+```toml
+# Cloud Run API URL (REQUIRED for public Streamlit)
+CLOUDRUN_API_URL = "https://your-cloudrun-service.run.app"
+```
+
+4. Deploy
+
+### 2. That's it!
 
 Your app will be live at: `https://your-app.streamlit.app`
 
@@ -42,12 +38,11 @@ Your app will be live at: `https://your-app.streamlit.app`
 ## API Connection
 
 The UI connects to VerityNgn API via:
-- **Local development:** ngrok tunnel
 - **Production:** Cloud Run deployment
 
-Set `VERITYNGN_API_URL` in Streamlit secrets.
+Set `CLOUDRUN_API_URL` in Streamlit secrets.
 
 ---
 
-**Full docs:** See `DEPLOY_TO_STREAMLIT.md` in project root
+**Full docs:** See `STREAMLIT_CLOUD_DEPLOYMENT.md` in project root
 

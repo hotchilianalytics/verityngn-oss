@@ -10,6 +10,7 @@ import requests
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List, Optional
+from components.ui_debug import ui_debug_enabled
 
 
 # Cache configuration
@@ -266,9 +267,10 @@ def render_gallery_tab():
                     
         except Exception as e:
             st.error(f"❌ Failed to load gallery from GCS: {e}")
-            import traceback
-            with st.expander("Error Details"):
-                st.code(traceback.format_exc())
+            if ui_debug_enabled():
+                import traceback
+                with st.expander("Error Details (debug)"):
+                    st.code(traceback.format_exc())
             # Fallback to empty list
             examples = []
     else:
@@ -553,9 +555,10 @@ def render_gallery_tab():
                                 except Exception as e:
                                     st.error(f"Error loading HTML report from API: {e}")
                                     st.info(f"Report URL: {full_view_url[:100] if 'full_view_url' in locals() else view_url[:100]}...")
-                                    import traceback
-                                    with st.expander("🔍 Error Details"):
-                                        st.code(traceback.format_exc())
+                                    if ui_debug_enabled():
+                                        import traceback
+                                        with st.expander("Error Details (debug)"):
+                                            st.code(traceback.format_exc())
                                     
                                     # Fallback: provide direct link
                                     fallback_url = full_view_url if 'full_view_url' in locals() else view_url
@@ -604,9 +607,10 @@ def render_gallery_tab():
                                     except Exception as e:
                                         st.error(f"Error loading HTML report: {e}")
                                         st.info(f"Report path: {html_path}")
-                                        import traceback
-                                        with st.expander("🔍 Error Details"):
-                                            st.code(traceback.format_exc())
+                                        if ui_debug_enabled():
+                                            import traceback
+                                            with st.expander("Error Details (debug)"):
+                                                st.code(traceback.format_exc())
                             else:
                                 st.button("View Report", key=f"view_{example_id}", use_container_width=True, disabled=True)
                                 st.caption("Report file not found")
