@@ -10,11 +10,15 @@
 .env
 .env.local
 .env.*.local
+cookies.txt
+cookies*.txt
 config/credentials/
 config/keys/
 secrets/
 **/*secret*.json
 **/*key*.json
+ui/.streamlit/secrets.toml
+.streamlit/secrets.toml
 
 # === Python ===
 __pycache__/

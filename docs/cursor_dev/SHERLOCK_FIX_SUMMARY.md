@@ -70,7 +70,7 @@ Added diagnostic logging that:
 🚨 CRITICAL: API KEY ISSUES DETECTED
 
 📋 ACTION REQUIRED:
-   1. Open: /Users/ajjc/proj/verityngn-oss/.env
+   1. Open: /path/to/verityngn-oss/.env
    2. Replace placeholder values with your REAL API keys
    3. Get API keys from: https://console.cloud.google.com/apis/credentials
    4. Restart Streamlit app
@@ -145,12 +145,12 @@ cat .env | grep -E "(GOOGLE_SEARCH_API_KEY|YOUTUBE_API_KEY|CSE_ID)"
 
 ```bash
 # Edit .env
-vim /Users/ajjc/proj/verityngn-oss/.env
+vim /path/to/verityngn-oss/.env
 
 # Replace placeholders with real keys:
-GOOGLE_SEARCH_API_KEY="AIzaSyBiC_tsCAmwmPA6zcqOFJgAHGRM4Th6IJA"  # Your real key
-CSE_ID="800c584b1ca5f460a"  # Your real CSE ID
-YOUTUBE_API_KEY="AIzaSyBiC_tsCAmwmPA6zcqOFJgAHGRM4Th6IJA"  # Same or different
+GOOGLE_SEARCH_API_KEY="your-google-search-api-key"
+CSE_ID="your-custom-search-engine-id"
+YOUTUBE_API_KEY="your-youtube-api-key"
 
 # Optional: Enable debug outputs
 DEBUG_OUTPUTS=true

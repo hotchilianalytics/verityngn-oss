@@ -8,8 +8,8 @@
 ## What Was Configured
 
 ### 1. Service Account Key ✅
-- **Copied from**: `/Users/ajjc/proj/verityngn/config/verityindex-0-0-1-6a21e94ca0a3.json`
-- **Copied to**: `/Users/ajjc/proj/verityngn-oss/verityngn/config/verityindex-0-0-1-6a21e94ca0a3.json`
+- **Copied from**: local secure location (redacted)
+- **Copied to**: local secure location (redacted)
 - **Permissions**: `600` (read/write for owner only)
 - **Status**: ✅ Secured and git-ignored
 
@@ -18,14 +18,14 @@ Created `.env` file with real credentials:
 
 ```bash
 # Google Cloud
-GOOGLE_APPLICATION_CREDENTIALS=/Users/ajjc/proj/verityngn-oss/verityngn/config/verityindex-0-0-1-6a21e94ca0a3.json
-PROJECT_ID=verityindex-0-0-1
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account.json
+PROJECT_ID=your-project-id
 LOCATION=us-central1
 
 # API Keys
-YOUTUBE_API_KEY=AIzaSyBiC_tsCAmwmPA6zcqOFJgAHGRM4Th6IJA
-GOOGLE_SEARCH_API_KEY=AIzaSyBiC_tsCAmwmPA6zcqOFJgAHGRM4Th6IJA
-CSE_ID=800c584b1ca5f460a
+YOUTUBE_API_KEY=your-youtube-api-key
+GOOGLE_SEARCH_API_KEY=your-google-search-api-key
+CSE_ID=your-custom-search-engine-id
 
 # Deployment
 DEPLOYMENT_MODE=research
@@ -142,7 +142,7 @@ Expected output:
 📋 Loading environment variables from .env...
 ✅ Credentials loaded
 🚀 Starting VerityNgn Streamlit UI
-📁 Credentials: /Users/ajjc/proj/verityngn-oss/verityngn/config/verityindex-0-0-1-6a21e94ca0a3.json
+📁 Credentials: /path/to/your-service-account.json
 🌐 URL: http://localhost:8501
 ```
 
