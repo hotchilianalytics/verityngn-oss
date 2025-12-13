@@ -181,7 +181,11 @@ def render_gallery_tab():
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        search_query = st.text_input("🔍 Search examples:", placeholder="Enter keywords...")
+        search_query = st.text_input(
+            "🔍 Search examples:",
+            placeholder="Enter keywords...",
+            key="gallery_search_query",
+        )
     
     with col2:
         sort_by = st.selectbox("Sort by:", ["Most Recent", "Highest Score", "Lowest Score", "Most Claims"])

@@ -383,7 +383,7 @@ def main():
             **Quick Start:**
             1. Enter a YouTube URL
             2. Click "Start Verification"
-            3. View results in Reports tab
+            3. View results in the Gallery tab
             
             **Need Help?**
             - [Documentation](https://github.com/...)

@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 import asyncio
 from queue import Queue
+from components.nav_utils import render_gallery_cta, go_to_gallery
 
 
 def add_log(level: str, message: str, log_queue=None):
@@ -137,6 +138,9 @@ def render_processing_tab():
     """Render the processing tab with real-time progress."""
     
     st.header("⚙️ Processing Status")
+
+    # Reports CTA
+    render_gallery_cta(key="open_gallery_from_processing_local", video_id=st.session_state.get("current_video_id"))
     
     # Initialize workflow logs if needed
     if 'workflow_logs' not in st.session_state:
@@ -272,8 +276,8 @@ def render_processing_tab():
             
             with col_a:
                 if st.button("📊 View Report", type="primary", use_container_width=True):
-                    st.session_state.selected_report_id = st.session_state.current_video_id
-                    st.info("Switch to 'View Reports' tab to see the full report")
+                    go_to_gallery(video_id=st.session_state.current_video_id)
+                    st.stop()
             
             with col_b:
                 if st.button("🎬 Verify Another", use_container_width=True):

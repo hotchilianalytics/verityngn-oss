@@ -21,6 +21,7 @@ if str(ui_dir) not in sys.path:
 
 # Import api_client - it's in the ui/ directory which is now in sys.path
 from api_client import VerityNgnAPIClient, get_default_client
+from components.nav_utils import render_gallery_cta, go_to_gallery
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,12 @@ def render_processing_tab():
                 pass
             st.success("✅ Cache cleared! Data will reload on next request.")
             st.rerun()
+
+    # Reports CTA
+    render_gallery_cta(
+        key="open_gallery_from_processing_api",
+        video_id=st.session_state.get("current_video_id"),
+    )
     
     # Initialize session state
     # Get backend mode and configure API client accordingly
@@ -237,7 +244,7 @@ def render_processing_tab():
                 if video_id:
                     st.session_state.current_video_id = video_id
                     st.markdown(f"**Video ID:** `{video_id}`")
-                    st.markdown("View results in the **Reports** tab")
+                    st.markdown("View results in the **🖼️ Gallery** tab (reports are stored there).")
                 
                 # Update history entry
                 try:
@@ -315,7 +322,7 @@ def render_processing_tab():
             st.markdown(f"**Task ID:** `{task_id}`")
             
             # Offer to view report
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             
             with col1:
                 if st.button("📄 View HTML Report"):
@@ -326,8 +333,13 @@ def render_processing_tab():
                         st.components.v1.html(report_html, height=800, scrolling=True)
                     except Exception as e:
                         st.error(f"Error loading report: {e}")
-            
+
             with col2:
+                if st.button("🖼️ Open in Gallery"):
+                    go_to_gallery(video_id=video_id)
+                    st.stop()
+            
+            with col3:
                 if st.button("📊 View JSON Data"):
                     try:
                         # Use cached report data fetching
@@ -337,8 +349,8 @@ def render_processing_tab():
                     except Exception as e:
                         st.error(f"Error loading data: {e}")
             
-            with col3:
-                if st.button("🔄 New Verification"):
+            with col4:
+                if st.button("🔄 New Verification", key="processing_api_new_verification_btn"):
                     # Reset state
                     st.session_state.processing_status = 'idle'
                     st.session_state.current_task_id = None

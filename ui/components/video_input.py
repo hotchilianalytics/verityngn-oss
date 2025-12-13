@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 from components.ui_debug import ui_debug_enabled, debug_write, debug_exception
+from components.nav_utils import render_gallery_cta, go_to_gallery
 
 
 def extract_video_id(url: str) -> str:
@@ -119,6 +120,9 @@ def render_video_input_tab():
     """Render the video input tab."""
     
     st.header("🎬 Verify YouTube Video")
+
+    # Reports CTA
+    render_gallery_cta(key="open_gallery_from_verify")
     
     # Introduction
     st.markdown("""
@@ -804,7 +808,7 @@ def render_video_input_tab():
         if st.session_state.processing_status == 'processing':
             st.info("⚙️ Processing in progress. Check the Processing tab for details.")
         elif st.session_state.processing_status == 'complete':
-            st.success("✅ Verification complete! View results in the Reports tab.")
+            st.success("✅ Verification complete! View the report in the 🖼️ Gallery tab.")
         elif st.session_state.processing_status == 'error':
             st.error("❌ Verification failed. Check Processing tab for error details.")
         
@@ -848,9 +852,8 @@ def render_video_input_tab():
                                 st.markdown(f"🔴 {truth_score:.1%} Questionable")
                         
                         with col_rec3:
-                            if st.button("View", key=f"view_{video_id}"):
-                                st.session_state.selected_report_id = video_id
-                                st.switch_page("pages/reports.py")
+                            if st.button("🖼️ View in Gallery", key=f"view_in_gallery_{video_id}"):
+                                go_to_gallery(video_id=video_id)
             else:
                 st.info("No recent verifications found. Start your first verification above!")
         else:

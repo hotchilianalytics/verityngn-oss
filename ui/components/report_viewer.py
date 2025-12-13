@@ -9,12 +9,16 @@ import streamlit as st
 import streamlit.components.v1 as components
 from pathlib import Path
 from components.ui_debug import ui_debug_enabled
+from components.nav_utils import render_gallery_cta
 
 
 def render_report_viewer_tab():
     """Render the report viewer tab - displays HTML reports directly."""
     
     st.header("📊 View Enhanced Reports")
+
+    # Reports CTA
+    render_gallery_cta(key="open_gallery_from_reports_tab")
     
     # API-first mode: UI talks to backend API (Cloud Run / local API), so UI doesn't need GCP auth
     import os
@@ -33,8 +37,8 @@ def render_report_viewer_tab():
             api_client = get_default_client()
             
             st.info("🌐 Using API mode - reports will be fetched from the API")
-            st.warning("⚠️ Report viewer in API mode: View reports from the 'Process Video' tab after verification completes.")
-            st.info("💡 Tip: After submitting a verification, use the 'View Report' buttons in the processing tab.")
+            st.warning("⚠️ In API mode, reports are best viewed from the **🖼️ Gallery** tab after verification completes.")
+            st.info("💡 Tip: After submitting a verification, open the Gallery and search by video ID.")
             return
             
         except Exception as e:

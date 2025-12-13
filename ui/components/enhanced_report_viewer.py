@@ -299,6 +299,10 @@ def render_enhanced_report_viewer_tab():
 
     st.header("📊 View Enhanced Reports")
 
+    # Reports CTA
+    from components.nav_utils import render_gallery_cta
+    render_gallery_cta(key="open_gallery_from_enhanced_reports_tab")
+
     # API-first mode: UI talks to backend API (Cloud Run / local API), so UI doesn't need GCP auth
     import os
     API_MODE = (os.getenv("CLOUDRUN_API_URL") is not None) or (os.getenv("VERITYNGN_API_URL") is not None)
@@ -318,8 +322,8 @@ def render_enhanced_report_viewer_tab():
             
             # For now, show a message that API-based report listing is coming soon
             # Users can view reports via the processing tab after completion
-            st.warning("⚠️ Report viewer in API mode: View reports from the 'Process Video' tab after verification completes.")
-            st.info("💡 Tip: After submitting a verification, use the 'View Report' buttons in the processing tab.")
+            st.warning("⚠️ In API mode, reports are best viewed from the **🖼️ Gallery** tab after verification completes.")
+            st.info("💡 Tip: After submitting a verification, open the Gallery and search by video ID.")
             return
             
         except Exception as e:
