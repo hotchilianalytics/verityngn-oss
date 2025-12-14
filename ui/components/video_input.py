@@ -723,6 +723,13 @@ def render_video_input_tab():
     # Action buttons
     col_btn1, col_btn2, col_btn3, col_btn4 = st.columns([2, 2, 2, 4])
     
+    # Public-safe guard: in Cloud Run mode we must have an API URL configured
+    import os
+    backend_mode = st.session_state.get("backend_mode", "local")
+    api_url_configured = bool(os.getenv("CLOUDRUN_API_URL") or os.getenv("VERITYNGN_API_URL"))
+    if backend_mode == "cloudrun" and not api_url_configured:
+        st.warning("⚠️ Cloud Run mode requires `CLOUDRUN_API_URL` (set it in Streamlit secrets).")
+    
     def on_start_click(vid_id, vid_url, config):
         """Callback to handle verification start."""
         st.session_state.processing_status = 'processing'
@@ -753,7 +760,11 @@ def render_video_input_tab():
         start_button = st.button(
             "🚀 Start Verification",
             type="primary",
-            disabled=(not video_id or st.session_state.processing_status == 'processing'),
+            disabled=(
+                (not video_id)
+                or (st.session_state.processing_status == "processing")
+                or (backend_mode == "cloudrun" and not api_url_configured)
+            ),
             use_container_width=True,
             on_click=on_start_click,
             args=(video_id, video_url, current_config)

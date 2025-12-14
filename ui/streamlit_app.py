@@ -315,8 +315,12 @@ def main():
         # Backend mode selector
         st.markdown("### 🔌 Backend Mode")
         if "backend_mode" not in st.session_state:
-            # Default: use API mode if VERITYNGN_API_URL is set, otherwise local
-            default_mode = "cloudrun" if os.getenv("VERITYNGN_API_URL") else "local"
+            # Default: use API mode if a backend URL is set, otherwise local
+            default_mode = (
+                "cloudrun"
+                if (os.getenv("CLOUDRUN_API_URL") or os.getenv("VERITYNGN_API_URL"))
+                else "local"
+            )
             st.session_state.backend_mode = default_mode
         
         backend_mode = st.radio(
