@@ -723,6 +723,16 @@ def render_video_input_tab():
     with st.expander("⚙️ Advanced Options"):
         col_a, col_b = st.columns(2)
         
+        import os
+        backend_mode = st.session_state.get("backend_mode", "local")
+        is_public_streamlit = os.getenv("STREAMLIT_SERVER_PORT") is not None
+
+        # Public-safe defaults and caps (override via env vars if needed)
+        ui_max_claims_max = int(os.getenv("VERITYNGN_UI_MAX_CLAIMS_MAX", "25"))
+        ui_max_claims_default = int(os.getenv("VERITYNGN_UI_MAX_CLAIMS_DEFAULT", "15"))
+        ui_max_video_seconds = int(os.getenv("VERITYNGN_UI_MAX_VIDEO_SECONDS", "1800"))
+        ui_rate_limit_per_hour = int(os.getenv("VERITYNGN_UI_RATE_LIMIT_PER_HOUR", "3"))
+
         with col_a:
             model_name = st.selectbox(
                 "Model",
@@ -733,8 +743,8 @@ def render_video_input_tab():
             max_claims = st.slider(
                 "Max Claims",
                 min_value=5,
-                max_value=50,
-                value=25,
+                max_value=ui_max_claims_max,
+                value=min(ui_max_claims_default, ui_max_claims_max),
                 help="Maximum number of claims to extract"
             )
         
@@ -750,7 +760,7 @@ def render_video_input_tab():
             
             enable_llm_logging = st.checkbox(
                 "Enable LLM Logging",
-                value=True,
+                value=False if is_public_streamlit else True,
                 help="Log all LLM interactions for transparency"
             )
         
@@ -768,20 +778,83 @@ def render_video_input_tab():
     col_btn1, col_btn2, col_btn3, col_btn4 = st.columns([2, 2, 2, 4])
     
     # Public-safe guard: in Cloud Run mode we must have an API URL configured
-    import os
-    backend_mode = st.session_state.get("backend_mode", "local")
     api_url_configured = bool(os.getenv("CLOUDRUN_API_URL") or os.getenv("VERITYNGN_API_URL"))
     if backend_mode == "cloudrun" and not api_url_configured:
         st.warning("⚠️ Cloud Run mode requires `CLOUDRUN_API_URL` (set it in Streamlit secrets).")
+
+    # Public-safe guard: session rate limit (best-effort)
+    if "submission_timestamps" not in st.session_state:
+        st.session_state.submission_timestamps = []
+    if st.session_state.get("rate_limit_error"):
+        st.error(st.session_state.rate_limit_error)
+        st.session_state.rate_limit_error = None
+
+    def _check_rate_limit_or_set_error() -> bool:
+        import time as _time
+
+        now = _time.time()
+        window = 60 * 60
+        st.session_state.submission_timestamps = [
+            t for t in st.session_state.submission_timestamps if (now - t) < window
+        ]
+        if len(st.session_state.submission_timestamps) >= ui_rate_limit_per_hour:
+            st.session_state.rate_limit_error = (
+                f"Rate limit: max {ui_rate_limit_per_hour} verifications per hour in this session. "
+                "Try again later."
+            )
+            return False
+        st.session_state.submission_timestamps.append(now)
+        return True
+
+    def _check_video_duration_or_set_error(vid_url: str) -> bool:
+        if ui_max_video_seconds <= 0:
+            return True
+        try:
+            import yt_dlp
+
+            debug = ui_debug_enabled()
+            ydl_opts = {
+                "quiet": not debug,
+                "no_warnings": not debug,
+                "skip_download": True,
+                "extract_flat": True,
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(vid_url, download=False)
+            duration = None
+            if isinstance(info, dict):
+                duration = info.get("duration")
+            if duration and int(duration) > ui_max_video_seconds:
+                mins = int(duration) // 60
+                cap_mins = ui_max_video_seconds // 60
+                st.session_state.rate_limit_error = (
+                    f"Video too long ({mins} min). Public limit is {cap_mins} min. "
+                    "Try a shorter video."
+                )
+                return False
+            return True
+        except Exception:
+            # If we cannot determine duration, don't block; backend may still reject.
+            return True
     
     def on_start_click(vid_id, vid_url, config):
         """Callback to handle verification start."""
+        # Public-safe checks
+        if not _check_rate_limit_or_set_error():
+            return
+
         st.session_state.processing_status = 'processing'
         st.session_state.current_video_id = vid_id
         
         # Ensure full URL
         if vid_id and not vid_url.startswith('http'):
             vid_url = f"https://www.youtube.com/watch?v={vid_id}"
+
+        if not _check_video_duration_or_set_error(vid_url):
+            # Don't start workflow if duration exceeds cap
+            st.session_state.processing_status = "idle"
+            st.session_state.workflow_started = False
+            return
         
         st.session_state.current_video_url = vid_url
         st.session_state.workflow_logs = []

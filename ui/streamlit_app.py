@@ -378,6 +378,16 @@ def main():
         if debug_mode:
             st.caption("Debug logging enabled")
 
+        # Privacy / safety defaults (public-safe)
+        if "remember_submissions" not in st.session_state:
+            st.session_state.remember_submissions = False
+        remember_submissions = st.checkbox(
+            "Remember my submissions (this session)",
+            value=st.session_state.remember_submissions,
+            help="Store a local submission history in your browser session state.",
+        )
+        st.session_state.remember_submissions = remember_submissions
+
         st.markdown("---")
 
         # Help section
