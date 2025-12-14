@@ -54,7 +54,7 @@ This guide covers deploying the VerityNgn Streamlit UI across different platform
    type = "service_account"
    project_id = "verityindex-0-0-1"
    private_key_id = "your-private-key-id"
-   private_key = "-----BEGIN PRIVATE KEY-----\nYour-Private-Key-Here\n-----END PRIVATE KEY-----\n"
+  private_key = "<PASTE_PRIVATE_KEY_PEM_HERE>"
    client_email = "your-service-account@project.iam.gserviceaccount.com"
    client_id = "your-client-id"
    auth_uri = "https://accounts.google.com/o/oauth2/auth"

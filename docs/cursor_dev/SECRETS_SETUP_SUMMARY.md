@@ -99,7 +99,7 @@ cat verityngn/config/verityindex-0-0-1-6a21e94ca0a3.json
    type = "service_account"
    project_id = "verityindex-0-0-1"
    private_key_id = "..."
-   private_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+   private_key = "<PASTE_PRIVATE_KEY_PEM_HERE>"
    client_email = "..."
    # ... all other fields from JSON
    ```
@@ -197,7 +197,7 @@ DEBUG_OUTPUTS = "true"
 type = "service_account"
 project_id = "verityindex-0-0-1"
 private_key_id = "abc123..."
-private_key = "-----BEGIN PRIVATE KEY-----\nYour-Key\n-----END PRIVATE KEY-----\n"
+private_key = "<PASTE_PRIVATE_KEY_PEM_HERE>"
 client_email = "your-sa@verityindex-0-0-1.iam.gserviceaccount.com"
 client_id = "123456789"
 auth_uri = "https://accounts.google.com/o/oauth2/auth"

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ui-smoke:
+    name: UI smoke (compile)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install UI deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r ui/requirements.txt
+      - name: Compile UI
+        run: |
+          python -m compileall -q ui
+
+  core-smoke:
+    name: Core smoke (compile + imports)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install core deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Compile core
+        run: |
+          python -m compileall -q verityngn
+      - name: Import smoke
+        run: |
+          python test/unit/test_imports.py
+
+  secret-scan:
+    name: Secret scan (regex)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Scan for secrets
+        run: |
+          python scripts/ci/secret_scan.py
+
+
