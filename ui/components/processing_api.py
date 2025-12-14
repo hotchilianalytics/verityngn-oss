@@ -335,9 +335,11 @@ def render_processing_tab():
                         st.error(f"Error loading report: {e}")
 
             with col2:
-                if st.button("🖼️ Open in Gallery"):
-                    go_to_gallery(video_id=video_id)
-                    st.stop()
+                st.button(
+                    "🖼️ Open in Gallery",
+                    on_click=go_to_gallery,
+                    kwargs={"video_id": video_id},
+                )
             
             with col3:
                 if st.button("📊 View JSON Data"):

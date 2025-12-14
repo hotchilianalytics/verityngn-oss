@@ -13,16 +13,17 @@ GALLERY_TAB_LABEL = "🖼️ Gallery"
 
 
 def go_to_gallery(video_id: Optional[str] = None) -> None:
-    """Navigate to Gallery and optionally prefill search with a video_id."""
-    try:
-        import streamlit as st
+    """
+    Navigate to Gallery and optionally prefill search with a video_id.
 
-        st.session_state.nav_selection = GALLERY_TAB_LABEL
-        if video_id:
-            st.session_state.gallery_search_query = video_id
-        st.rerun()
-    except Exception:
-        return
+    IMPORTANT: This should typically be used as an `on_click` callback so it
+    runs before the sidebar nav radio (key='nav_selection') is instantiated.
+    """
+    import streamlit as st
+
+    st.session_state["nav_selection"] = GALLERY_TAB_LABEL
+    if video_id:
+        st.session_state["gallery_search_query"] = video_id
 
 
 def render_gallery_cta(*, key: str, video_id: Optional[str] = None) -> None:
@@ -35,7 +36,13 @@ def render_gallery_cta(*, key: str, video_id: Optional[str] = None) -> None:
     with col_msg:
         st.info("Reports are saved to the **🖼️ Gallery**. Open Gallery to view them.")
     with col_btn:
-        if st.button("🖼️ Open Gallery", key=key, use_container_width=True):
-            go_to_gallery(video_id=video_id)
+        st.button(
+            "🖼️ Open Gallery",
+            key=key,
+            use_container_width=True,
+            on_click=go_to_gallery,
+            kwargs={"video_id": video_id},
+        )
+
 
 

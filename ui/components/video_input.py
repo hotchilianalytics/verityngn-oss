@@ -852,8 +852,12 @@ def render_video_input_tab():
                                 st.markdown(f"🔴 {truth_score:.1%} Questionable")
                         
                         with col_rec3:
-                            if st.button("🖼️ View in Gallery", key=f"view_in_gallery_{video_id}"):
-                                go_to_gallery(video_id=video_id)
+                            st.button(
+                                "🖼️ View in Gallery",
+                                key=f"view_in_gallery_{video_id}",
+                                on_click=go_to_gallery,
+                                kwargs={"video_id": video_id},
+                            )
             else:
                 st.info("No recent verifications found. Start your first verification above!")
         else:

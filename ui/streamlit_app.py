@@ -360,9 +360,9 @@ def main():
 
         st.markdown("---")
 
-        # Debug mode toggle
+        # Debug mode toggle (public-safe default: off)
         if "debug_mode" not in st.session_state:
-            st.session_state.debug_mode = True
+            st.session_state.debug_mode = False
 
         debug_mode = st.checkbox(
             "🔍 Debug Mode",

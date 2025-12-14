@@ -275,9 +275,13 @@ def render_processing_tab():
             col_a, col_b, col_c = st.columns([1, 1, 2])
             
             with col_a:
-                if st.button("📊 View Report", type="primary", use_container_width=True):
-                    go_to_gallery(video_id=st.session_state.current_video_id)
-                    st.stop()
+                st.button(
+                    "📊 View Report (Gallery)",
+                    type="primary",
+                    use_container_width=True,
+                    on_click=go_to_gallery,
+                    kwargs={"video_id": st.session_state.current_video_id},
+                )
             
             with col_b:
                 if st.button("🎬 Verify Another", use_container_width=True):

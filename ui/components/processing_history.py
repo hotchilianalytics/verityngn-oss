@@ -204,9 +204,12 @@ def render_processing_history():
             with col2:
                 # Action buttons
                 if status == 'completed' and report_url:
-                    if st.button("🖼️ View in Gallery", key=f"view_in_gallery_{idx}"):
-                        go_to_gallery(video_id=video_id)
-                        st.stop()
+                    st.button(
+                        "🖼️ View in Gallery",
+                        key=f"view_in_gallery_{idx}",
+                        on_click=go_to_gallery,
+                        kwargs={"video_id": video_id},
+                    )
                     if st.button("📄 View Inline", key=f"view_report_{idx}"):
                         st.session_state[f"show_report_{task_id}"] = True
                         st.rerun()
