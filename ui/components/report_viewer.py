@@ -62,7 +62,7 @@ def render_report_viewer_tab():
         try:
             if dir_path.exists():
                 output_dir = dir_path
-                print(f"✅ Found output directory: {output_dir.absolute()}")
+                # Avoid noisy stdout in public Streamlit
                 break
         except (PermissionError, OSError):
             # Skip directories we don't have permission to access (e.g., Streamlit Cloud)

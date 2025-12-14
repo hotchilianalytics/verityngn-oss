@@ -333,15 +333,59 @@ def render_video_input_tab():
                     else:
                         return [], f"Failed to fetch videos: {ytdlp_msg}"
             
-            # Try YouTube Data API for channel IDs and legacy usernames
+            # For channel_id / username: prefer YouTube API if available, else fall back to yt-dlp
+            api_key = get_youtube_api_key()
+            if not api_key:
+                debug_write("DEBUG: No YOUTUBE_API_KEY; falling back to yt-dlp for channel listing")
+                try:
+                    import yt_dlp
+
+                    url = channel_url
+                    if "/videos" not in url:
+                        url = (url + "videos") if url.endswith("/") else (url + "/videos")
+
+                    debug = ui_debug_enabled()
+                    ydl_opts = {
+                        "quiet": not debug,
+                        "no_warnings": not debug,
+                        "extract_flat": "in_playlist",
+                        "skip_download": True,
+                        "playlistend": max_results,
+                        "ignoreerrors": True,
+                        "no_color": True,
+                    }
+
+                    videos = []
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(url, download=False)
+                    entries = info.get("entries", []) if isinstance(info, dict) else []
+                    for entry in entries[:max_results]:
+                        if not entry:
+                            continue
+                        vid = entry.get("id") or ""
+                        if not vid:
+                            continue
+                        videos.append(
+                            {
+                                "id": vid,
+                                "title": entry.get("title", "Untitled"),
+                                "url": f"https://www.youtube.com/watch?v={vid}",
+                                "publish_date": "",
+                                "view_count": int(entry.get("view_count") or 0),
+                                "description": "",
+                            }
+                        )
+
+                    if videos:
+                        return videos, None
+                    return [], "No videos found. Channel may be empty or private."
+                except Exception as e:
+                    debug_exception("Channel fetch fallback failed", e)
+                    return [], "YouTube API key not configured, and fallback extraction failed."
+
             try:
                 from googleapiclient.discovery import build
-                
-                # Use the helper function to get API key
-                api_key = get_youtube_api_key()
-                if not api_key:
-                    raise ValueError("YouTube API key not configured")
-                
+
                 youtube = build("youtube", "v3", developerKey=api_key)
                 
                 # Resolve channel identifier to channel ID
@@ -770,12 +814,9 @@ def render_video_input_tab():
             args=(video_id, video_url, current_config)
         )
     
-    # Handle post-click UI feedback (optional, but nav switch happens immediately)
-    if 'debug_mode' not in st.session_state:
-        st.session_state.debug_mode = True
-    
-    if st.session_state.debug_mode and start_button:
-         # This might not show if tab switches fast, but good for debug
+    # Optional debug feedback
+    if ui_debug_enabled() and start_button:
+        # This might not show if tab switches fast, but good for debug
         debug_write(f"DEBUG: Start triggered for {video_id}")
 
     with col_btn2:

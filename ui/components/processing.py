@@ -11,6 +11,7 @@ from pathlib import Path
 import asyncio
 from queue import Queue
 from components.nav_utils import render_gallery_cta, go_to_gallery
+import os
 
 
 def add_log(level: str, message: str, log_queue=None):
@@ -30,13 +31,14 @@ def add_log(level: str, message: str, log_queue=None):
             st.session_state.workflow_logs = []
         st.session_state.workflow_logs.append(log_entry)
     
-    # Always print to console for debugging (visible output)
+    # Avoid noisy console output unless explicitly enabled
     import logging
     logger = logging.getLogger(__name__)
     
     timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
     console_msg = f"[{timestamp}] [{level.upper()}] {message}"
-    print(console_msg, flush=True)  # Force immediate output
+    if os.getenv("VERITYNGN_UI_DEBUG", "").strip().lower() in ("1", "true", "yes", "y", "on"):
+        print(console_msg, flush=True)  # Force immediate output
     
     if level == 'error':
         logger.error(message)
@@ -56,9 +58,10 @@ def run_verification_workflow(video_url: str, config: dict, log_queue: Queue):
         log_queue: Queue for thread-safe logging
     """
     try:
-        print("\n" + "="*80, flush=True)
-        print("🚀 VERITYNGN WORKFLOW STARTED", flush=True)
-        print("="*80 + "\n", flush=True)
+        if os.getenv("VERITYNGN_UI_DEBUG", "").strip().lower() in ("1", "true", "yes", "y", "on"):
+            print("\n" + "="*80, flush=True)
+            print("🚀 VERITYNGN WORKFLOW STARTED", flush=True)
+            print("="*80 + "\n", flush=True)
         
         add_log('info', f'🚀 Starting verification for {video_url}', log_queue)
         add_log('info', f'📋 Config: model={config.get("model_name")}, max_claims={config.get("max_claims")}', log_queue)
