@@ -107,6 +107,11 @@ CLOUDRUN_API_URL = "https://verityngn-api-ze7rxua3dq-uc.a.run.app"
 - [ ] All navigation tabs visible
 - [ ] Backend mode selector works
 
+### ✅ Quick Release Checklist
+
+For a tighter, copy/paste checklist, see:
+- `docs/deployment/STREAMLIT_COMMUNITY_CLOUD_CHECKLIST.md`
+
 ### Cloud Run Mode
 - [ ] API health check passes
 - [ ] Gallery loads videos from GCS
