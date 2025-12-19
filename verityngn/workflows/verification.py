@@ -311,9 +311,20 @@ def collect_and_group_evidence(
         text = evidence.get("text", "")
         title = evidence.get("title", "")
 
+        # FIX: Check for government sources FIRST - they should NEVER be classified as press releases
+        government_domains = [
+            '.gov', 'fdic.gov', 'sec.gov', 'nih.gov', 'cdc.gov', 'fda.gov', 'epa.gov',
+            'justice.gov', 'treasury.gov', 'state.gov', 'cms.gov', 'leg.state'
+        ]
+        is_government = any(domain in url for domain in government_domains)
+        
         # Detect evidence type
-        is_press_release = source_type == "press release" or any(
-            domain in url for domain in press_release_domains
+        # Government sources cannot be press releases (FDIC reports, etc.)
+        is_press_release = (
+            not is_government and 
+            (source_type == "press release" or any(
+                domain in url for domain in press_release_domains
+            ))
         )
 
         is_youtube_counter = source_type == "youtube_counter_intelligence"

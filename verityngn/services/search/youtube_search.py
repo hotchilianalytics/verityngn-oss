@@ -27,6 +27,51 @@ from verityngn.utils.llm_utils import build_langchain_vertex_kwargs
 
 logger = logging.getLogger(__name__)
 
+
+def _get_ytdlp_cookie_options() -> Dict[str, Any]:
+    """Get yt-dlp options for cookie-based authentication.
+    
+    FIX: YouTube blocks yt-dlp with "Sign in to confirm you're not a bot".
+    Adding cookie support helps avoid this.
+    
+    Returns:
+        Dict of yt-dlp options for cookie handling
+    """
+    import os
+    
+    cookie_options = {}
+    
+    # Check for cookies.txt in various locations
+    cookie_paths = [
+        os.environ.get('YOUTUBE_COOKIES_PATH', ''),
+        '/tmp/cookies.txt',
+        'cookies.txt',
+        os.path.expanduser('~/.config/yt-dlp/cookies.txt'),
+        os.path.expanduser('~/cookies.txt'),
+    ]
+    
+    for cookie_path in cookie_paths:
+        if cookie_path and os.path.exists(cookie_path):
+            logger.info(f"[YTDLP] Using cookies from: {cookie_path}")
+            cookie_options['cookiefile'] = cookie_path
+            break
+    
+    # Add bot-detection mitigations
+    cookie_options.update({
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+        },
+        'nocheckcertificate': True,
+        'source_address': '0.0.0.0',
+        # Graceful degradation on auth failures
+        'ignoreerrors': True,
+    })
+    
+    return cookie_options
+
+
 class YouTubeSearchService:
     """Service for searching YouTube videos."""
     
@@ -76,19 +121,14 @@ class YouTubeSearchService:
                 else:
                     url = url + "/videos"
 
+            # FIX: Add cookie options to avoid "Sign in to confirm you're not a bot"
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
                 'extract_flat': True,
                 'skip_download': True,
                 'playlistend': 40,  # inspect first N videos
-                # Bot-detection mitigations
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                },
-                'nocheckcertificate': True,
+                **_get_ytdlp_cookie_options(),
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -124,6 +164,8 @@ class YouTubeSearchService:
         try:
             import yt_dlp
             logger.info(f"[YTDLP FALLBACK] Searching YouTube via yt-dlp: '{query}' (max_results: {max_results})")
+            
+            # FIX: Use cookie options to avoid "Sign in to confirm you're not a bot" errors
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
@@ -132,14 +174,7 @@ class YouTubeSearchService:
                 'default_search': 'ytsearch',
                 'noplaylist': True,
                 'max_downloads': max_results,
-                # Bot-detection mitigations
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                },
-                'nocheckcertificate': True,
-                'source_address': '0.0.0.0',
+                **_get_ytdlp_cookie_options(),  # Add cookie and bot-mitigation options
             }
             videos: List[Dict[str, Any]] = []
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -212,10 +247,12 @@ class YouTubeSearchService:
         try:
             import yt_dlp
             url = f"https://www.youtube.com/watch?v={video_id}"
+            # FIX: Add cookie options to avoid "Sign in to confirm you're not a bot"
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
                 'skip_download': True,
+                **_get_ytdlp_cookie_options(),
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)

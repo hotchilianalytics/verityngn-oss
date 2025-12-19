@@ -1639,11 +1639,35 @@ def validate_and_normalize_json_result(
                     or "No assessment"
                 )
 
+                # FIX: Strip field name prefixes that leaked into values (JSON parsing bug)
+                field_prefixes = ["claim_text ", "initial_assessment ", "timestamp ", "speaker ", "source_type "]
+                claim_text_str = str(claim_text)
+                for prefix in field_prefixes:
+                    if claim_text_str.lower().startswith(prefix.lower()):
+                        claim_text_str = claim_text_str[len(prefix):].strip()
+                        logger.warning(f"⚠️ Stripped leaked field name prefix '{prefix}' from claim text")
+                        break
+                
+                # Also strip from initial_assessment if it leaked
+                initial_assessment_str = str(initial_assessment)
+                for prefix in field_prefixes:
+                    if initial_assessment_str.lower().startswith(prefix.lower()):
+                        initial_assessment_str = initial_assessment_str[len(prefix):].strip()
+                        logger.warning(f"⚠️ Stripped leaked field name prefix '{prefix}' from initial_assessment")
+                        break
+                
+                # Skip claims that are just metadata labels (not real claims)
+                meta_labels = ["verifiable speaker credibility claim", "speaker credibility claim", 
+                               "no assessment", "pending verification", "claim"]
+                if claim_text_str.lower().strip() in meta_labels or len(claim_text_str.strip()) < 15:
+                    logger.warning(f"⚠️ Skipping meta-label or too-short claim: '{claim_text_str[:50]}...'")
+                    continue
+
                 cleaned_claim = {
-                    "claim_text": str(claim_text)[:200],  # Enforce 200 char limit
+                    "claim_text": claim_text_str[:200],  # Enforce 200 char limit
                     "timestamp": str(timestamp),
                     "speaker": str(speaker),
-                    "initial_assessment": str(initial_assessment),
+                    "initial_assessment": initial_assessment_str,
                 }
                 cleaned_claims.append(cleaned_claim)
 
@@ -1853,6 +1877,8 @@ def fuse_segmented_json_responses(
     fused_reports = []
     fused_summaries = []
 
+    MAX_CLAIMS_PER_SEGMENT = 50  # FIX: Prevent LLM repetition bug from creating 215+ claims
+    
     for i, text in enumerate(texts):
         if not text.strip():
             continue
@@ -1865,6 +1891,39 @@ def fuse_segmented_json_responses(
                 # Extract claims
                 claims = segment_result.get("claims", [])
                 if isinstance(claims, list):
+                    # FIX: Detect LLM repetition bug - if segment has too many claims, likely a loop
+                    if len(claims) > MAX_CLAIMS_PER_SEGMENT:
+                        logger.warning(
+                            f"⚠️ Segment {i} has {len(claims)} claims (max={MAX_CLAIMS_PER_SEGMENT}), "
+                            f"likely LLM repetition bug. Truncating and deduplicating."
+                        )
+                        # Deduplicate within segment first
+                        segment_seen = set()
+                        segment_unique = []
+                        for c in claims:
+                            if isinstance(c, dict):
+                                ct = c.get("claim_text", "").strip().lower()
+                                if ct and ct not in segment_seen:
+                                    segment_seen.add(ct)
+                                    segment_unique.append(c)
+                        claims = segment_unique[:MAX_CLAIMS_PER_SEGMENT]
+                        logger.info(f"📋 Segment {i}: reduced to {len(claims)} unique claims after dedup")
+                    
+                    # FIX: Detect consecutive identical claims (LLM loop pattern)
+                    if len(claims) >= 3:
+                        first_claim_text = claims[0].get("claim_text", "") if isinstance(claims[0], dict) else ""
+                        consecutive_same = sum(
+                            1 for c in claims[:10] 
+                            if isinstance(c, dict) and c.get("claim_text", "") == first_claim_text
+                        )
+                        if consecutive_same >= 3:
+                            logger.warning(
+                                f"⚠️ Segment {i}: Detected {consecutive_same} consecutive identical claims, "
+                                f"LLM repetition bug. Keeping only first occurrence."
+                            )
+                            # Keep only first instance
+                            claims = [claims[0]]
+                    
                     fused_claims.extend(claims)
                     logger.info(f"📋 Segment {i}: extracted {len(claims)} claims")
 
@@ -1878,11 +1937,30 @@ def fuse_segmented_json_responses(
             logger.warning(f"⚠️ Failed to parse segment {i}: {e}")
             continue
 
-    # Remove duplicate claims based on claim_text similarity
+    # FIX: Two-phase deduplication - exact match first (O(1)), then similarity
+    # Phase 1: Exact match deduplication (fast, catches most duplicates)
+    exact_seen = set()
+    phase1_claims = []
+    exact_duplicates = 0
+    
+    for claim in fused_claims:
+        if isinstance(claim, dict):
+            claim_text = claim.get("claim_text", "").strip().lower()
+            if claim_text and claim_text not in exact_seen:
+                exact_seen.add(claim_text)
+                phase1_claims.append(claim)
+            else:
+                exact_duplicates += 1
+    
+    if exact_duplicates > 0:
+        logger.info(f"🔄 Phase 1 dedup: Removed {exact_duplicates} exact duplicate claims")
+    
+    # Phase 2: Similarity-based deduplication (catches near-duplicates)
     unique_claims = []
     seen_texts = set()
+    similarity_duplicates = 0
 
-    for claim in fused_claims:
+    for claim in phase1_claims:
         if isinstance(claim, dict):
             claim_text = claim.get("claim_text", "").strip().lower()
             # Simple deduplication - claims with >80% similarity are considered duplicates
@@ -1898,14 +1976,20 @@ def fuse_segmented_json_responses(
                         > len(shorter.split()) * 0.8
                     ):
                         is_duplicate = True
+                        similarity_duplicates += 1
                         break
 
             if not is_duplicate:
                 unique_claims.append(claim)
                 seen_texts.add(claim_text)
+    
+    if similarity_duplicates > 0:
+        logger.info(f"🔄 Phase 2 dedup: Removed {similarity_duplicates} similar duplicate claims")
 
+    total_removed = exact_duplicates + similarity_duplicates
     logger.info(
-        f"✅ Fused result: {len(fused_claims)} total → {len(unique_claims)} unique claims"
+        f"✅ Fused result: {len(fused_claims)} total → {len(unique_claims)} unique claims "
+        f"(removed {total_removed} duplicates)"
     )
 
     # Create fused result

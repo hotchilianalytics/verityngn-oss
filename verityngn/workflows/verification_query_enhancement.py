@@ -364,6 +364,214 @@ def log_query_effectiveness(
         logger.warning("⚠️  Query returned poor results. Consider refinement.")
 
 
+# ============================================================================
+# FIX: Podcast/Interview Content Detection and Speaker Verification
+# ============================================================================
+
+# Known AI/Tech podcast channels that should be trusted for speaker intros
+KNOWN_PODCAST_CHANNELS = [
+    "twimlai", "twiml", "lex fridman", "lexfridman", "lex clips", 
+    "huberman lab", "hubermanlab", "andrew huberman",
+    "eye on a.i.", "eye on ai",
+    "data skeptic", "dataskeptic",
+    "machine learning street talk", "mlst",
+    "practical ai", "changelog",
+    "gradient dissent", "weights & biases",
+    "the ai podcast", "nvidia ai",
+    "talking machines", "this week in machine learning",
+    "ai alignment", "80000 hours", "80,000 hours",
+    "dwarkesh podcast", "dwarkesh patel",
+    "no priors", "a16z",
+]
+
+PODCAST_TITLE_PATTERNS = [
+    r"^\[?[A-Za-z\s]+\]?\s*[-–|]\s*\d+",  # "Podcast Name - Episode 123"
+    r"episode\s+\d+",  # "Episode 123"
+    r"ep\.?\s*\d+",  # "Ep 123" or "Ep. 123"
+    r"#\d+\s*[-–|:]",  # "#123 - Title"
+    r"\[\w+\s+\w+\]\s*[-–]",  # "[Guest Name] - Topic"
+    r"interview\s+with",  # "Interview with..."
+    r"in\s+conversation\s+with",  # "In conversation with..."
+    r"talking\s+to",  # "Talking to..."
+]
+
+
+def is_podcast_content(video_title: str, channel_name: str = "", description: str = "") -> bool:
+    """
+    Detect if a video is a podcast/interview format.
+    
+    FIX: Podcasts should have different verification treatment:
+    - Host introductions of guests are ground truth, not claims to verify
+    - Guest credentials from description are trusted
+    - Less aggressive skepticism for speaker affiliations
+    
+    Args:
+        video_title: Video title
+        channel_name: YouTube channel name
+        description: Video description
+        
+    Returns:
+        True if the content appears to be a podcast/interview
+    """
+    title_lower = video_title.lower()
+    channel_lower = channel_name.lower() if channel_name else ""
+    desc_lower = description.lower() if description else ""
+    
+    # Check for known podcast channels
+    for podcast in KNOWN_PODCAST_CHANNELS:
+        if podcast in channel_lower or podcast in title_lower:
+            logger.info(f"🎙️ Detected known podcast channel: {podcast}")
+            return True
+    
+    # Check for podcast title patterns
+    for pattern in PODCAST_TITLE_PATTERNS:
+        if re.search(pattern, video_title, re.IGNORECASE):
+            logger.info(f"🎙️ Detected podcast title pattern in: {video_title[:50]}")
+            return True
+    
+    # Check description for podcast indicators
+    podcast_indicators = [
+        "podcast", "subscribe to our channel", "show notes",
+        "today's guest", "we're joined by", "our guest today",
+        "episode notes", "timestamps", "chapters"
+    ]
+    indicator_count = sum(1 for ind in podcast_indicators if ind in desc_lower)
+    if indicator_count >= 3:
+        logger.info(f"🎙️ Detected podcast via description indicators ({indicator_count} matches)")
+        return True
+    
+    return False
+
+
+def extract_speaker_from_description(description: str) -> Dict[str, str]:
+    """
+    Extract speaker name and affiliation from video description.
+    
+    FIX: For podcasts, the host introduction is GROUND TRUTH, not a claim to verify.
+    
+    Args:
+        description: Video description text
+        
+    Returns:
+        Dict with 'name', 'affiliation', 'role' if found
+    """
+    result = {}
+    
+    # Pattern for "joined by X, Y at Z" or "X, Y at Z"
+    intro_patterns = [
+        r"(?:joined by|we're joined by|today's guest is|our guest is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([^,.]+?)\s+(?:at|from)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
+        r"([A-Z][a-z]+\s+[A-Z][a-z]+),\s*(?:a\s+)?([^,.]+?)\s+(?:at|from)\s+([A-Z][a-z]+(?:[^,.]*)?(?:AI|Inc|Labs|Research)?)",
+        r"([A-Z][a-z]+\s+[A-Z][a-z]+)\s+(?:is\s+a\s+|works\s+as\s+a?\s*)([^,.]+?)\s+(?:at|from|with)\s+([A-Z][^,.]+)",
+    ]
+    
+    for pattern in intro_patterns:
+        match = re.search(pattern, description)
+        if match:
+            result = {
+                'name': match.group(1).strip(),
+                'role': match.group(2).strip(),
+                'affiliation': match.group(3).strip(),
+            }
+            logger.info(f"🎙️ Extracted speaker from description: {result}")
+            return result
+    
+    return result
+
+
+def generate_speaker_verification_queries(
+    speaker_name: str, 
+    affiliation: str = "", 
+    role: str = "",
+    is_podcast: bool = False
+) -> List[str]:
+    """
+    Generate queries to verify a podcast/interview speaker.
+    
+    FIX: Uses LinkedIn and Google Scholar for AI/tech speakers.
+    
+    Args:
+        speaker_name: Speaker's name
+        affiliation: Company/institution
+        role: Job title
+        is_podcast: Whether this is from a known podcast
+        
+    Returns:
+        List of search queries for speaker verification
+    """
+    queries = []
+    
+    if not speaker_name:
+        return []
+    
+    # LinkedIn search (most reliable for professional verification)
+    queries.append(f'site:linkedin.com/in/ "{speaker_name}"')
+    
+    # Google Scholar (for researchers)
+    queries.append(f'site:scholar.google.com/citations "{speaker_name}"')
+    
+    # Company profile pages
+    if affiliation:
+        affiliation_clean = affiliation.lower().replace(" ", "").replace(".", "")
+        queries.append(f'site:{affiliation_clean}.com "{speaker_name}"')
+        queries.append(f'"{speaker_name}" "{affiliation}" {role or ""}')
+    
+    # ArXiv for researchers
+    queries.append(f'site:arxiv.org "{speaker_name}"')
+    
+    # News mentions (but not press releases)
+    queries.append(f'"{speaker_name}" interview OR profile OR "joined" -press-release -prnewswire')
+    
+    logger.info(f"🔍 Generated {len(queries)} speaker verification queries for: {speaker_name}")
+    
+    return queries
+
+
+def adjust_verification_for_podcast(
+    claim_text: str,
+    speaker_info: Dict[str, str],
+    is_podcast: bool
+) -> Dict[str, Any]:
+    """
+    Adjust verification strategy for podcast content.
+    
+    FIX: For podcasts:
+    - If claim matches speaker intro from description, treat as ground truth
+    - Reduce skepticism weight for speaker affiliations
+    - Don't treat host introduction as unverified claim
+    
+    Args:
+        claim_text: The claim to verify
+        speaker_info: Extracted speaker info from description
+        is_podcast: Whether this is podcast content
+        
+    Returns:
+        Dict with 'skip_verification', 'confidence_boost', 'reason'
+    """
+    result = {
+        'skip_verification': False,
+        'confidence_boost': 0.0,
+        'reason': None
+    }
+    
+    if not is_podcast or not speaker_info:
+        return result
+    
+    claim_lower = claim_text.lower()
+    speaker_name = speaker_info.get('name', '').lower()
+    affiliation = speaker_info.get('affiliation', '').lower()
+    
+    # If claim mentions the speaker's affiliation that's in the description,
+    # this is ground truth from the host, not a claim to verify
+    if speaker_name and speaker_name in claim_lower:
+        if affiliation and affiliation in claim_lower:
+            result['skip_verification'] = True
+            result['confidence_boost'] = 0.8  # High confidence from description
+            result['reason'] = f"Speaker affiliation confirmed in video description (host introduction)"
+            logger.info(f"🎙️ Skipping verification for ground truth claim: {claim_text[:50]}...")
+    
+    return result
+
+
 
 
 

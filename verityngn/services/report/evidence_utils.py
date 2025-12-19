@@ -102,6 +102,21 @@ def enhance_source_credibility(sources: List[EvidenceSource]) -> List[EvidenceSo
                 title = "Commercial Product Information"
                 credibility = CredibilityLevel.LOW
                 text = "Commercial information related to products mentioned in the video"
+            # FIX: Check for government sources BEFORE press release detection
+            # Government sites should NEVER be classified as press releases
+            elif '.gov' in source_url or any(gov_domain in source_url for gov_domain in [
+                'fdic.gov', 'sec.gov', 'nih.gov', 'cdc.gov', 'fda.gov', 'epa.gov', 
+                'justice.gov', 'treasury.gov', 'state.gov', 'defense.gov', 'dol.gov',
+                'ed.gov', 'hhs.gov', 'dhs.gov', 'energy.gov', 'usda.gov', 'doi.gov',
+                'dot.gov', 'commerce.gov', 'hud.gov', 'va.gov', 'opm.gov', 'gsa.gov',
+                'sba.gov', 'ssa.gov', 'federalreserve.gov', 'ftc.gov', 'fcc.gov',
+                'cms.gov', 'leg.state', 'nj.gov', 'ca.gov', 'ny.gov', 'tx.gov'
+            ]):
+                source_type = "Government"
+                source_name = "Government Source"
+                title = "Government Publication"
+                credibility = CredibilityLevel.HIGH
+                text = "Official government document or publication"
             elif any(domain in source_url for domain in [
                 'prnewswire.com', 'businesswire.com', 'globenewswire.com', 'prweb.com', 'marketwatch.com', 'newswire.com', 'einnews.com', 'pressrelease.com', 'prlog.org', 'openpr.com', 'pressat.co.uk', 'pressreleases.com', 'pr.com', 'pr-inside.com', 'prurgent.com', 'prfire.co.uk', 'prbuzz.com', 'prnews.biz', 'pressbox.co.uk', 'pressreleasepoint.com', '24-7pressrelease.com', 'abnewswire.com', 'webwire.com', 'sbwire.com', 'releasewire.com', 'prsync.com', 'przoom.com', 'prfree.org', 'prdistribution.com', 'prwire.com.au', 'prwire.co', 'prwirepro.com', 'prwirecenter.com', 'prwireindia.com', 'prwireasia.com', 'prwire360.com', 'prwire.co.nz', 'prwire.com.br', 'prwire.com.mx', 'prwire.com.tr', 'prwire.com.ua', 'prwire.com.vn', 'prwire.com.sg', 'prwire.com.ph', 'prwire.com.my', 'prwire.com.hk', 'prwire.com.cn', 'prwire.com.tw', 'prwire.com.jp', 'prwire.com.kr', 'prwire.com.id', 'prwire.com.th', 'prwire.com.sa', 'prwire.com.eg', 'prwire.com.ng', 'prwire.com.gh', 'prwire.com.ke', 'prwire.com.za', 'prwire.com.au', 'prwire.com.nz', 'prwire.com.sg', 'prwire.com.hk', 'prwire.com.cn', 'prwire.com.tw', 'prwire.com.jp', 'prwire.com.kr', 'prwire.com.id', 'prwire.com.th', 'prwire.com.sa', 'prwire.com.eg', 'prwire.com.ng', 'prwire.com.gh', 'prwire.com.ke', 'prwire.com.za']):
                 source_type = "Press Release"
