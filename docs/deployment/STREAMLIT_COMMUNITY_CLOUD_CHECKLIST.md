@@ -34,7 +34,7 @@ CLOUDRUN_API_URL = "https://your-cloudrun-service.run.app"
 
 - **Rate limit**: best-effort per-session limit (default: 3 verifications/hour)
   - Override with `VERITYNGN_UI_RATE_LIMIT_PER_HOUR`
-- **Video duration cap**: best-effort client-side check (default: 30 minutes)
+- **Video duration cap**: best-effort client-side check (default: 60 minutes)
   - Override with `VERITYNGN_UI_MAX_VIDEO_SECONDS`
 - **Max claims cap**: public default/cap (default cap: 25)
   - Override with `VERITYNGN_UI_MAX_CLAIMS_MAX` / `VERITYNGN_UI_MAX_CLAIMS_DEFAULT`

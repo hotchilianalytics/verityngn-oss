@@ -730,7 +730,7 @@ def render_video_input_tab():
         # Public-safe defaults and caps (override via env vars if needed)
         ui_max_claims_max = int(os.getenv("VERITYNGN_UI_MAX_CLAIMS_MAX", "25"))
         ui_max_claims_default = int(os.getenv("VERITYNGN_UI_MAX_CLAIMS_DEFAULT", "15"))
-        ui_max_video_seconds = int(os.getenv("VERITYNGN_UI_MAX_VIDEO_SECONDS", "1800"))
+        ui_max_video_seconds = int(os.getenv("VERITYNGN_UI_MAX_VIDEO_SECONDS", "3600"))
         ui_rate_limit_per_hour = int(os.getenv("VERITYNGN_UI_RATE_LIMIT_PER_HOUR", "3"))
 
         with col_a:

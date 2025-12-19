@@ -8,7 +8,7 @@
 - **Gallery-first report UX**: “Open Gallery / View in Gallery” buttons across Verify/Processing/Reports, with working navigation.
 - **Public-safe defaults**:
   - Best-effort **session rate limiting** (default: 3 verifications/hour)
-  - Best-effort **video duration cap** (default: 30 minutes)
+  - Best-effort **video duration cap** (default: 60 minutes)
   - Lower **max-claims** defaults/caps for cost control
   - **Submission history is opt-in** (privacy)
 - **Debug hardening**: stack traces + Sherlock diagnostics are behind an explicit debug toggle.
