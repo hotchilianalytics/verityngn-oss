@@ -29,6 +29,7 @@ from verityngn.services.report.evidence_utils import (
     generate_press_release_sources_file,
     generate_youtube_sources_file,
 )
+from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
 
 # Dict-based verification result schema (replaces Pydantic model)
 VERIFICATION_RESULT_SCHEMA = {
@@ -51,16 +52,22 @@ def get_agent(state):
         max_retries=1,  # Limit retries to 1 (was: default unlimited)
     )
 
+    # SHERLOCK FIX: Inject current date context to prevent LLM from treating 2025 sources as "future-dated"
+    current_date = get_current_date_context()
+    date_context = get_date_context_prompt_section()
+
     prompt = ChatPromptTemplate.from_template(
-        """You are an expert fact-checker with a focus on debunking misinformation. Your task is to verify claims by analyzing provided evidence and determining their veracity.
+        f"""You are an expert fact-checker with a focus on debunking misinformation. Your task is to verify claims by analyzing provided evidence and determining their veracity.
+
+{date_context}
 
 Context:
-Video Title: {video_title}
-Video URL: {video_url}
-Claim to Verify: {claim}
+Video Title: {{video_title}}
+Video URL: {{video_url}}
+Claim to Verify: {{claim}}
 
 Evidence Found:
-{evidence}
+{{evidence}}
 
 Guidelines for verification:
 1. Review the provided evidence carefully
@@ -82,34 +89,34 @@ Focus on:
 - Specific source citations in evidence summary
 
 Provide a JSON response with the following structure:
-{{
+{{{{
     "evidence_summary": "A single sentence summarizing the key evidence found",
     "conclusion_summary": "A single sentence summarizing the conclusion about the claim's veracity",
-    "probability_distribution": {{"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}},
+    "probability_distribution": {{{{"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}}}},
     "sources": ["list of source URLs or references that support the verification"]
-}}
+}}}}
 
 Example probability distributions:
 For a claim with no supporting evidence:
-{{
+{{{{
     "TRUE": 0.05,
     "FALSE": 0.85,
     "UNCERTAIN": 0.10
-}}
+}}}}
 
 For a claim with mixed evidence:
-{{
+{{{{
     "TRUE": 0.30,
     "FALSE": 0.30,
     "UNCERTAIN": 0.40
-}}
+}}}}
 
 For a claim with strong supporting evidence:
-{{
+{{{{
     "TRUE": 0.85,
     "FALSE": 0.05,
     "UNCERTAIN": 0.10
-}}
+}}}}
 
 Analyze the claim and provide your verification result."""
     )
@@ -2082,6 +2089,10 @@ async def verify_claim_with_evidence(
             request_timeout=120.0,  # 120 second timeout
         )
 
+        # SHERLOCK FIX: Inject current date context to prevent LLM from treating 2025 sources as "future-dated"
+        current_date = get_current_date_context()
+        date_context = get_date_context_prompt_section()
+
         # Format evidence for prompt
         evidence_text = "\n".join(
             [
@@ -2091,13 +2102,15 @@ async def verify_claim_with_evidence(
         )
 
         prompt = ChatPromptTemplate.from_template(
-            """
+            f"""
+        {date_context}
+        
         Verify this claim using the provided evidence:
         
-        Claim: {claim_text}
+        Claim: {{claim_text}}
         
         Evidence:
-        {evidence_text}
+        {{evidence_text}}
         
         Analyze the evidence and determine:
         1. Is the claim TRUE, FALSE, or UNCERTAIN?
@@ -2105,12 +2118,12 @@ async def verify_claim_with_evidence(
         3. What probability distribution would you assign?
         
         Respond in JSON format:
-        {{
+        {{{{
             "result": "TRUE|FALSE|UNCERTAIN",
             "explanation": "Clear explanation based on evidence",
-            "probability_distribution": {{"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}},
+            "probability_distribution": {{{{"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}}}},
             "sources": ["url1", "url2"]
-        }}
+        }}}}
         """
         )
 

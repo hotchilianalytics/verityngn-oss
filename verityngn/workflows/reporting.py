@@ -48,6 +48,7 @@ from verityngn.services.report.html_generator import generate_html_report
 from verityngn.services.report.markdown_generator import generate_markdown_report
 from verityngn.services.report.evidence_utils import enhance_source_credibility
 from verityngn.services.report.unified_generator import log_report_system_usage
+from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
 from verityngn.services.storage.gcs_storage import upload_to_gcs
 
 # Configure logging
@@ -142,14 +143,24 @@ def generate_craap_analysis(video_title: str, claims: List[Claim]) -> Dict[str, 
     try:
         llm = ChatVertexAI(model_name=AGENT_MODEL_NAME, temperature=0.2, max_output_tokens=MAX_OUTPUT_TOKENS_2_5_FLASH)
         
-        prompt = ChatPromptTemplate.from_template("""
+        # SHERLOCK FIX: Inject current date context to prevent LLM from treating 2025 sources as "future-dated"
+        current_date = get_current_date_context()
+        
+        prompt = ChatPromptTemplate.from_template(f"""
+        IMPORTANT DATE CONTEXT:
+        Today's date is {current_date}. When evaluating Currency:
+        - Sources from 2025 are current, NOT future-dated
+        - The year 2025 is the current year
+        - Evaluate recency relative to today ({current_date})
+        - Do not penalize sources simply because they have 2025 dates
+        
         Perform a CRAAP (Currency, Relevance, Authority, Accuracy, Purpose) analysis on the following video 
         and its claims. Provide a detailed assessment for each criterion.
         
-        Video Title: {title}
+        Video Title: {{title}}
         
         Claims and Their Verification:
-        {claims_summary}
+        {{claims_summary}}
         
         For each CRAAP criterion, provide:
         1. A rating level (LOW, MEDIUM, or HIGH)
