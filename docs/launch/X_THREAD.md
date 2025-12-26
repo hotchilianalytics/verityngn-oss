@@ -87,8 +87,8 @@ Because real claims are rarely simply true or false.
 
 The results:
 
-✓ 78% accuracy vs. expert ground truth
-✓ +18% improvement from counter-intel alone
+✓ 75% accuracy vs. ground truth
+✓ +18% improvement from counter-intel on misleading content
 ✓ Well-calibrated (Brier = 0.12)
 ✓ $0.50-2.00 per video
 

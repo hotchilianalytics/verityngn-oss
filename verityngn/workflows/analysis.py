@@ -17,6 +17,7 @@ try:
 except ImportError:
     psutil = None  # Make psutil optional
 import gc  # Add for garbage collection monitoring
+import random  # Add for exponential backoff
 
 from verityngn.models.workflow import InitialAnalysisState
 from verityngn.config.prompts import INITIAL_ANALYSIS_PROMPT
@@ -35,9 +36,7 @@ from verityngn.config.settings import (
     LOCATION,
 )
 from verityngn.services.video.transcription import get_video_transcript
-from verityngn.services.storage.workflow_logger import get_workflow_logger
-from verityngn.services.video_service import download_video, get_video_info
-from verityngn.services.video.transcription import get_video_transcript
+from verityngn.llm_logging.logger import log_llm_call, log_llm_response
 
 # Initialize logger for this module
 logger = logging.getLogger(__name__)
@@ -995,9 +994,19 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
 
                 start_time = time.time()
 
+                call_id = log_llm_call(
+                    operation="analyze_video_content_multimodal",
+                    prompt=prompt_text,
+                    model=AGENT_MODEL_NAME,
+                    video_id=video_id,
+                    metadata={"video_file_uri": video_file_uri}
+                )
+
                 try:
                     # Give more time for aggressive analysis
                     response = llm.invoke([message], timeout=1800)  # 15 minute timeout
+                    duration = time.time() - start_time
+                    log_llm_response(call_id, response, duration=duration)
                     end_time = time.time()
 
                     # STEP 10: Memory check after LLM completion
@@ -1084,6 +1093,15 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                 log_memory_usage("BEFORE_VERTEX_YT_DIRECT_LLM", logger)
                 logger.info("🚀 Invoking Vertex AI with direct YouTube URL...")
 
+                start_time = time.time()
+                call_id = log_llm_call(
+                    operation="analyze_video_content_vertex_yt_direct",
+                    prompt=analysis_prompt,
+                    model="gemini-2.5-flash",
+                    video_id=video_id,
+                    metadata={"video_url": video_url}
+                )
+
                 # Generate content with streaming to handle large outputs
                 response = model.generate_content(
                     contents=[analysis_prompt, video_part],
@@ -1096,6 +1114,9 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                 for chunk in response:
                     if chunk.text:
                         full_response += chunk.text
+                
+                duration = time.time() - start_time
+                log_llm_response(call_id, full_response, duration=duration)
 
                 log_memory_usage("AFTER_VERTEX_YT_DIRECT_LLM", logger)
 
@@ -1176,6 +1197,13 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                 print("🚀 Invoking genai client with YouTube URL...")
 
                 start_time = time.time()
+                call_id = log_llm_call(
+                    operation="analyze_video_content_genai_yt_direct",
+                    prompt=prompt_text,
+                    model="gemini-2.0-flash",
+                    video_id=video_id,
+                    metadata={"video_url": video_url}
+                )
 
                 try:
                     # Use proper genai format for YouTube URL
@@ -1194,6 +1222,8 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                             "max_output_tokens": GENAI_VIDEO_MAX_OUTPUT_TOKENS,
                         },
                     )
+                    duration = time.time() - start_time
+                    log_llm_response(call_id, response, duration=duration)
 
                     end_time = time.time()
 
@@ -1329,8 +1359,17 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
 
                     logger.info("🎬 STARTING LOCAL VIDEO FILE ANALYSIS")
                     start_time = time.time()
+                    call_id = log_llm_call(
+                        operation="analyze_video_content_local_file",
+                        prompt=prompt_text,
+                        model=AGENT_MODEL_NAME,
+                        video_id=video_id,
+                        metadata={"video_path": video_path}
+                    )
 
                     response = llm.invoke([file_message], timeout=900)
+                    duration = time.time() - start_time
+                    log_llm_response(call_id, response, duration=duration)
                     end_time = time.time()
 
                     log_memory_usage("AFTER_FILE_ANALYSIS", logger)
@@ -1515,7 +1554,7 @@ def preprocess_json_string(json_str: str, logger: logging.Logger) -> str:
     json_str = json_str.replace(""", "'").replace(""", "'")  # Replace curly apostrophes
 
     # Fix common escape issues
-    json_str = json_str.replace('\\"', '"')  # Fix double-escaped quotes
+    # json_str = json_str.replace('\\"', '"')  # REMOVED: Breaks valid JSON escapes
     json_str = json_str.replace("\\n", " ")  # Replace newlines with spaces
     json_str = json_str.replace("\\t", " ")  # Replace tabs with spaces
 
@@ -1542,7 +1581,7 @@ def fix_common_json_issues(json_str: str) -> str:
     json_str = re.sub(r"'([^']*)'", r'"\1"', json_str)
 
     # Fix common escape sequence issues
-    json_str = json_str.replace('\\"', '"')  # Remove double escaping
+    # json_str = json_str.replace('\\"', '"')  # REMOVED: Breaks valid JSON escapes
     json_str = json_str.replace("\\\\", "\\")  # Fix double backslashes
 
     # Fix newlines and tabs in strings
@@ -1831,7 +1870,7 @@ def extract_json_fallback(json_str: str, logger: logging.Logger) -> Dict[str, An
                             }
                         )
 
-                        if len(potential_claims) >= 5:  # Limit aggressive extraction
+                        if len(potential_claims) >= 30:  # Increased from 5 to 30 for better coverage
                             break
 
             result["claims"] = potential_claims
@@ -3073,7 +3112,16 @@ OUTPUT FORMAT: Provide detailed JSON with:
                     logger.info(
                         f"🚀 Attempting analysis with {primary_tokens} max tokens (attempt 1/2)..."
                     )
+                    start_time = time.time()
+                    call_id = log_llm_call(
+                        operation="run_initial_analysis_attempt1",
+                        prompt=str(file_message.content[0]["text"]),
+                        model=AGENT_MODEL_NAME,
+                        video_id=video_id
+                    )
                     response = await llm.ainvoke([file_message])
+                    duration = time.time() - start_time
+                    log_llm_response(call_id, response, duration=duration)
                     if not (
                         response and hasattr(response, "content") and response.content
                     ):
@@ -3102,7 +3150,16 @@ OUTPUT FORMAT: Provide detailed JSON with:
                     except Exception:
                         pass
                     try:
+                        start_time = time.time()
+                        call_id = log_llm_call(
+                            operation="run_initial_analysis_attempt2",
+                            prompt=str(file_message.content[0]["text"]),
+                            model=AGENT_MODEL_NAME,
+                            video_id=video_id
+                        )
                         response = await llm.ainvoke([file_message])
+                        duration = time.time() - start_time
+                        log_llm_response(call_id, response, duration=duration)
                         if not (
                             response
                             and hasattr(response, "content")
@@ -3487,12 +3544,25 @@ async def extract_claims_with_llm(
         """
         )
 
+        start_time = time.time()
+        call_id = log_llm_call(
+            operation="extract_claims_with_llm",
+            prompt=prompt.format(
+                title=video_info.get("title", "Unknown"),
+                transcription=transcription[:10000],
+            ),
+            model=AGENT_MODEL_NAME,
+            video_id=video_info.get("id")
+        )
+
         response = await llm.ainvoke(
-            prompt.format(
+            prompt.format_messages(
                 title=video_info.get("title", "Unknown"),
                 transcription=transcription[:10000],  # Limit length
             )
         )
+        duration = time.time() - start_time
+        log_llm_response(call_id, response, duration=duration)
 
         # Save LLM response for debugging if DEBUG_OUTPUTS is enabled
         if os.getenv("DEBUG_OUTPUTS", "False").lower() == "true":
@@ -3669,7 +3739,17 @@ OUTPUT FORMAT: Provide detailed JSON with:
 
         # Get response from Gemini
         logger.info("🚀 Invoking Gemini YouTube URL analysis...")
+        start_time = time.time()
+        call_id = log_llm_call(
+            operation="extract_claims_with_gemini_multimodal_youtube_url",
+            prompt=prompt_text,
+            model=AGENT_MODEL_NAME,
+            video_id=video_id
+        )
+
         response = await llm.ainvoke([message])
+        duration = time.time() - start_time
+        log_llm_response(call_id, response, duration=duration)
 
         # Save LLM response for debugging if DEBUG_OUTPUTS is enabled
         if os.getenv("DEBUG_OUTPUTS", "False").lower() == "true":
@@ -4035,6 +4115,15 @@ OUTPUT FORMAT: Provide detailed JSON with:
         )
         # Place video content first, followed by the instruction text to improve response stability
         contents = [video_part, f"{segment_hint}{base_prompt}\n{thinking_hint}"]
+        start_time = time.time()
+        call_id = log_llm_call(
+            operation="extract_claims_segmented_vertex",
+            prompt=f"{segment_hint}{base_prompt}\n{thinking_hint}",
+            model=VERTEX_MODEL_NAME,
+            video_id=video_id,
+            metadata={"start_s": start_s, "end_s": end_s}
+        )
+
         # Primary attempt
         try:
             resp = model.generate_content(
@@ -4042,11 +4131,10 @@ OUTPUT FORMAT: Provide detailed JSON with:
                 generation_config=gen_cfg,
                 stream=False,
             )
+            duration = time.time() - start_time
+            log_llm_response(call_id, resp, duration=duration)
         except Exception as e:
             # Implement exponential backoff for 503 and other transient errors
-            import time
-            import random
-
             error_msg = str(e).lower()
             is_503_or_transient = any(
                 x in error_msg

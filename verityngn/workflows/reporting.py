@@ -43,13 +43,17 @@ from verityngn.models.report import (
     EvidenceSource
 )
 from verityngn.config.prompts import FINAL_REPORT_PROMPT
-from verityngn.config.settings import AGENT_MODEL_NAME, OUTPUTS_DIR, MAX_OUTPUT_TOKENS_2_0_FLASH, MAX_OUTPUT_TOKENS_2_5_FLASH
-from verityngn.services.report.html_generator import generate_html_report
-from verityngn.services.report.markdown_generator import generate_markdown_report
-from verityngn.services.report.evidence_utils import enhance_source_credibility
+from verityngn.services.storage.unified_storage import unified_storage
+from verityngn.config.settings import (
+    AGENT_MODEL_NAME, 
+    OUTPUTS_DIR, 
+    MAX_OUTPUT_TOKENS_2_0_FLASH, 
+    MAX_OUTPUT_TOKENS_2_5_FLASH,
+    STORAGE_BACKEND,
+    StorageBackend
+)
+
 from verityngn.services.report.unified_generator import log_report_system_usage
-from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
-from verityngn.services.storage.gcs_storage import upload_to_gcs
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -192,13 +196,17 @@ def generate_craap_analysis(video_title: str, claims: List[Claim]) -> Dict[str, 
         
         # Parse the CRAAP analysis response
         analysis_text = response.content
+        logger.info(f"📊 CRAAP LLM response received for '{video_title}' ({len(analysis_text)} chars)")
+        if not analysis_text.strip():
+            logger.warning("⚠️ Received empty CRAAP analysis text")
+            
         craap_analysis = {}
         
         # Extract ratings and explanations using regex
         criteria = ["Currency", "Relevance", "Authority", "Accuracy", "Purpose"]
         for criterion in criteria:
             rating_match = re.search(rf"{criterion}: (LOW|MEDIUM|HIGH)", analysis_text, re.IGNORECASE)
-            explanation_match = re.search(rf"{criterion} explanation: (.*?)(?=\n\n|\Z)", analysis_text, re.DOTALL | re.IGNORECASE)
+            explanation_match = re.search(rf"{criterion} explanation: (.*?)(?=\n\n|\n[a-zA-Z]+:|\Z)", analysis_text, re.DOTALL | re.IGNORECASE)
             
             rating = CredibilityLevel.MEDIUM  # Default
             if rating_match:
@@ -207,17 +215,23 @@ def generate_craap_analysis(video_title: str, claims: List[Claim]) -> Dict[str, 
                     rating = CredibilityLevel.LOW
                 elif rating_text == "HIGH":
                     rating = CredibilityLevel.HIGH
+                logger.info(f"✅ CRAAP {criterion} rating: {rating_text}")
+            else:
+                logger.warning(f"⚠️ CRAAP {criterion} rating not found in response, using default MEDIUM")
             
             explanation = "Assessment in progress"
             if explanation_match:
                 explanation = explanation_match.group(1).strip()
+            else:
+                logger.warning(f"⚠️ CRAAP {criterion} explanation not found in response")
             
             craap_analysis[criterion.lower()] = (rating, explanation)
         
+        logger.info(f"✅ CRAAP analysis generation successful for '{video_title}'")
         return craap_analysis
         
     except Exception as e:
-        logger.error(f"Error generating CRAAP analysis: {e}")
+        logger.error(f"❌ Error generating CRAAP analysis: {e}", exc_info=True)
         default_analysis = {
             "currency": (CredibilityLevel.MEDIUM, "Assessment in progress"),
             "relevance": (CredibilityLevel.MEDIUM, "Assessment in progress"),
@@ -1168,7 +1182,12 @@ async def notify_job_completion(job_id: str, video_id: str, status: str, gcs_pat
         gcs_path: GCS path to the completed reports
     """
     try:
-        from google.cloud import pubsub_v1
+        try:
+            from google.cloud import pubsub_v1
+        except ImportError:
+            logger.info("ℹ️ Pub/Sub library not installed, skipping notification.")
+            return
+
         from verityngn.config.settings import PROJECT_ID
         import json
         from datetime import datetime
@@ -1212,7 +1231,20 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
         video_id = state.get("video_id", "")
         uploaded_files = []
         
-        # Check for local GCS backup option
+        # Determine if we should actually upload to cloud
+        should_upload = STORAGE_BACKEND == StorageBackend.GCS
+        
+        if not should_upload:
+            logger.info("ℹ️ Local-first mode: skipping cloud upload (saving only to local outputs)")
+            return {
+                **state,
+                "gcs_uri": None,
+                "gcs_base_uri": None,
+                "uploaded_files": []
+            }
+
+        # Use unified storage to save files if they aren't already there
+        # but for now we keep the existing glob logic but use unified_storage.storage.save_file
         if ENABLE_LOCAL_GCS_BACKUP and out_dir_path:
             logger.info(f"🗂️ Local GCS backup enabled - uploading from {out_dir_path}")
             

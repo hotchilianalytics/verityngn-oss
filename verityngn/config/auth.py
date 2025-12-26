@@ -78,6 +78,10 @@ class AuthProvider:
             return self._credentials
         
         try:
+            if self.method == 'none':
+                logger.info("Authentication method set to 'none' - skipping GCP authentication")
+                return None
+
             if self.method == 'service_account':
                 self._credentials = self._load_service_account()
             elif self.method == 'adc':

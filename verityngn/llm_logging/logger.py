@@ -444,8 +444,13 @@ def log_llm_response(
     # Extract response text
     if hasattr(response, 'content'):
         response_text = response.content
+    elif hasattr(response, 'text'):
+        try:
+            response_text = response.text
+        except Exception:
+            response_text = str(response)
     elif isinstance(response, dict):
-        response_text = response.get('content', str(response))
+        response_text = response.get('content', response.get('text', str(response)))
     else:
         response_text = str(response)
     
@@ -454,10 +459,25 @@ def log_llm_response(
     if hasattr(response, 'usage'):
         usage = response.usage
         token_counts = {
-            'input': getattr(usage, 'prompt_tokens', 0),
-            'output': getattr(usage, 'completion_tokens', 0),
+            'input': getattr(usage, 'prompt_tokens', getattr(usage, 'input_tokens', 0)),
+            'output': getattr(usage, 'completion_tokens', getattr(usage, 'output_tokens', 0)),
             'total': getattr(usage, 'total_tokens', 0)
         }
+    elif hasattr(response, 'usage_metadata'):
+        usage = response.usage_metadata
+        # UsageMetadata is often an object, not a dict
+        if hasattr(usage, 'input_tokens') or hasattr(usage, 'prompt_tokens'):
+            token_counts = {
+                'input': getattr(usage, 'input_tokens', getattr(usage, 'prompt_tokens', 0)),
+                'output': getattr(usage, 'output_tokens', getattr(usage, 'completion_tokens', 0)),
+                'total': getattr(usage, 'total_tokens', 0)
+            }
+        elif isinstance(usage, dict):
+            token_counts = {
+                'input': usage.get('input_tokens', usage.get('prompt_tokens', 0)),
+                'output': usage.get('output_tokens', usage.get('completion_tokens', 0)),
+                'total': usage.get('total_tokens', 0)
+            }
     elif isinstance(response, dict) and 'usage' in response:
         usage = response['usage']
         token_counts = {

@@ -40,7 +40,7 @@ class ClaimProcessor:
     and selects representative claims for verification.
     """
     
-    def __init__(self, video_id: str, video_duration_minutes: float = 30.0, target_claims_per_minute: float = 1.0):
+    def __init__(self, video_id: str, video_duration_minutes: float = 30.0, target_claims_per_minute: float = 1.0, max_claims: int = None):
         """
         Initialize the claim processor.
         
@@ -48,20 +48,32 @@ class ClaimProcessor:
             video_id: Video identifier
             video_duration_minutes: Duration of the video in minutes
             target_claims_per_minute: Target number of claims per minute for final selection
+            max_claims: Explicit limit on the number of claims to process (overrides duration-based heuristics)
         """
         self.video_id = video_id
         self.video_duration_minutes = video_duration_minutes
         self.target_claims_per_minute = target_claims_per_minute
-        # Calculate target claims with reasonable min/max bounds
-        # Adjusted for quality: Allow 15-25 claims for longer videos
-        calculated_claims = int(video_duration_minutes * target_claims_per_minute)
-        # For videos >30 min: target 15-20 claims; shorter videos: 10-15 claims; very short: 5-10 claims
-        if video_duration_minutes > 30:
-            self.max_claims = max(15, min(25, calculated_claims))
-        elif video_duration_minutes > 15:
-            self.max_claims = max(10, min(15, calculated_claims))
+        
+        if max_claims is not None:
+            self.max_claims = max_claims
+            logger.info(f"🎯 Using explicit max_claims limit: {self.max_claims}")
         else:
-            self.max_claims = max(5, min(10, calculated_claims))
+            # Calculate target claims with reasonable min/max bounds
+            # Adjusted for quality: Allow more claims as requested by user
+            calculated_claims = int(video_duration_minutes * target_claims_per_minute)
+            
+            # Get min_claims from config if available
+            from verityngn.config.settings import get_config
+            config = get_config()
+            config_min_claims = config.get("processing.min_claims", 20)
+            
+            # Heuristics for max_claims
+            if video_duration_minutes > 30:
+                self.max_claims = max(config_min_claims, min(40, calculated_claims))
+            elif video_duration_minutes > 15:
+                self.max_claims = max(max(15, config_min_claims), min(30, calculated_claims))
+            else:
+                self.max_claims = max(config_min_claims, min(20, calculated_claims))
         
         # Claim sources
         self.video_analysis_claims = []

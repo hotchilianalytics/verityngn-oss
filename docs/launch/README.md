@@ -51,7 +51,7 @@ Secondary CTA for technical audience and contributors.
 | Differentiator 1 | Analyzes full video (audio, OCR, visuals) - not just text |
 | Differentiator 2 | Actively seeks contradictory evidence |
 | Differentiator 3 | Probabilistic truthfulness (TRUE/FALSE/UNCERTAIN) |
-| Proof | 78% accuracy, +18% from counter-intel, Brier=0.12 |
+| Proof | 75% accuracy (95% CI: 61-85%), +18% from counter-intel on misleading content, Brier=0.12 |
 | CTA | Try now: verityngn.streamlit.app |
 
 ---
@@ -73,7 +73,7 @@ Secondary CTA for technical audience and contributors.
 - [ ] Screenshots of Streamlit app
 - [ ] Screenshot of a sample report
 - [ ] 15-second demo GIF (paste URL → results)
-- [ ] Stats graphic (78% accuracy, +18% counter-intel)
+- [ ] Stats graphic (75% accuracy, +18% counter-intel)
 - [ ] Demo video (3-5 minutes)
 
 ---

@@ -120,6 +120,24 @@ class ConfigLoader:
             # Set nested value
             self._set_nested(self.config, config_key, value)
             logger.debug(f"Override from env: {config_key} = {value}")
+
+        # Also merge specific standard env vars without prefix if not already set
+        # This helps with local .env files using standard names
+        standard_map = {
+            "GOOGLE_CLOUD_PROJECT": "gcp.project_id",
+            "PROJECT_ID": "gcp.project_id",
+            "GCP_PROJECT_ID": "gcp.project_id",
+            "GCS_BUCKET_NAME": "gcp.bucket_name",
+            "GOOGLE_SEARCH_API_KEY": "search.google_search_api_key",
+            "YOUTUBE_API_KEY": "search.youtube_api_key",
+            "CSE_ID": "search.cse_id",
+            "GOOGLE_AI_STUDIO_KEY": "models.vertex.google_ai_studio_key"
+        }
+        for env_name, config_path in standard_map.items():
+            env_val = os.getenv(env_name)
+            if env_val and (not self.get(config_path) or self.get(config_path) in ("your-project-id", "your-bucket-name")):
+                self._set_nested(self.config, config_path, env_val)
+                logger.debug(f"Standard env override: {config_path} = {env_val}")
     
     def _set_nested(self, config: dict, key_path: str, value: Any):
         """
@@ -201,7 +219,7 @@ class ConfigLoader:
                 'service_account_path': None
             },
             'gcp': {
-                'project_id': os.getenv('GCP_PROJECT_ID', 'your-project-id'),
+                'project_id': os.getenv('GOOGLE_CLOUD_PROJECT') or os.getenv('PROJECT_ID') or os.getenv('GCP_PROJECT_ID', 'your-project-id'),
                 'location': 'us-central1',
                 'bucket_name': os.getenv('GCS_BUCKET_NAME', 'your-bucket-name')
             },
@@ -289,7 +307,7 @@ class ConfigLoader:
                 'log_file': './logs/verityngn.log'
             },
             'advanced': {
-                'deployment_mode': 'local',
+                'deployment_mode': 'research',
                 'storage_backend': 'local',
                 'debug': False,
                 'verbose': False,

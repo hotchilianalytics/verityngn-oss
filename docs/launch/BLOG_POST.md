@@ -94,16 +94,16 @@ The output is an interactive HTML report showing:
 
 ## The Results
 
-We evaluated VerityNgn on a 200-claim test set spanning health supplements, financial advice, and technology claims:
+We evaluated VerityNgn on claims spanning health supplements, financial advice, cryptocurrency, and misinformation videos:
 
 | Metric | Result |
 |--------|--------|
-| **Accuracy vs. expert ground truth** | 78% |
-| **Improvement from counter-intel** | +18% |
+| **Accuracy vs. ground truth** | 75% (95% CI: 61-85%) |
+| **Improvement from counter-intel** | +18% on misleading content |
 | **Calibration (Brier score)** | 0.12 |
-| **Expected Calibration Error** | 0.04 |
+| **Precision (FALSE claims)** | 85% |
 
-The counter-intelligence system alone adds 18 percentage points of accuracy. That's the difference between a usable system and a toy.
+The counter-intelligence system adds 18 percentage points of accuracy on misleading content (scam videos, conspiracy theories). That's the difference between a usable system and a toy.
 
 **Cost per video**: $0.50–$2.00 (Gemini + Search APIs)
 
@@ -153,7 +153,7 @@ VerityNgn is a research project, not a production fact-checking service. Here's 
 - **No human in the loop** (automated system with all the limitations that implies)
 - **Requires API costs** (~$0.50-2.00 per video)
 
-The 78% accuracy means 22% of claims are incorrectly assessed. This is a tool to augment human judgment, not replace it.
+The 75% accuracy means 25% of claims are incorrectly assessed. This is a tool to augment human judgment, not replace it.
 
 ---
 

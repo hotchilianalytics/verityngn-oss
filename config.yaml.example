@@ -8,9 +8,10 @@
 #   - service_account: Use JSON key file (recommended for local development)
 #   - adc: Application Default Credentials (recommended for Cloud environments)
 #   - workload_identity: For Kubernetes deployments
+#   - none: No GCP authentication (for limited local-only features or custom providers)
 
 authentication:
-  method: adc  # Options: service_account, adc, workload_identity
+  method: none  # Options: service_account, adc, workload_identity, none
   
   # Only required if method: service_account
   service_account_path: null
@@ -203,7 +204,7 @@ logging:
 
 advanced:
   # Deployment Mode
-  deployment_mode: local          # Options: local, research, container, production
+  deployment_mode: research          # Options: local, research, container, production
   storage_backend: local          # Options: local, gcs
   
   # Debug Settings

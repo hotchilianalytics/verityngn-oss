@@ -15,12 +15,21 @@ from pathlib import Path
 repo_root = Path(__file__).parent.parent
 sys.path.insert(0, str(repo_root))
 
+# Page configuration
+st.set_page_config(
+    page_title="VerityNgn - Video Verification",
+    page_icon="🔍",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 # Load secrets FIRST (handles both .env and Streamlit Cloud secrets)
 try:
     from ui import secrets_loader
 
     # secrets_loader auto-loads on import
 except ImportError as e:
+    # We'll show this warning AFTER set_page_config
     st.warning(f"Could not import secrets_loader: {e}")
     # Fallback: try loading .env directly
     try:
@@ -128,13 +137,6 @@ def show_auth_error():
     st.stop()
 
 
-# Page configuration
-st.set_page_config(
-    page_title="VerityNgn - Video Verification",
-    page_icon="🔍",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
 # Sidebar: debug toggle (safe; does not print secrets)
 with st.sidebar:
@@ -147,10 +149,17 @@ with st.sidebar:
 # Check authentication before continuing (skip in API mode - API handles auth)
 # In API-first architecture, only the backend needs Google Cloud credentials.
 # The UI just makes HTTP calls to the API.
+# Check authentication (non-blocking for local-first)
 API_MODE = (os.getenv("CLOUDRUN_API_URL") is not None) or (os.getenv("VERITYNGN_API_URL") is not None)
+HAS_AUTH = API_MODE or check_google_cloud_auth()
 
-if not API_MODE and not check_google_cloud_auth():
-    show_auth_error()
+if not HAS_AUTH:
+    st.sidebar.warning("🔐 **Cloud Authentication Missing**")
+    if st.sidebar.button("Show Auth Instructions"):
+        st.session_state.show_auth_help = True
+    
+    if st.session_state.get('show_auth_help'):
+        show_auth_error()
 
 # Custom CSS for better styling
 st.markdown(
@@ -265,23 +274,16 @@ def main():
     if "processing_history" not in st.session_state:
         st.session_state.processing_history = []  # List of processing history entries
     if "config" not in st.session_state:
-        # Load default config
+        # Load default config using our new ConfigLoader
         try:
-            # Ensure parent directory is in path
-            import sys
-            from pathlib import Path
-            repo_root = Path(__file__).parent.parent
-            if str(repo_root) not in sys.path:
-                sys.path.insert(0, str(repo_root))
-            
-            from verityngn.config.config_loader import get_config
-            st.session_state.config = get_config()
+            from verityngn.config.config_loader import ConfigLoader
+            st.session_state.config_wrapper = ConfigLoader()
+            st.session_state.config = st.session_state.config_wrapper.config
         except ImportError as e:
-            # If verityngn module not found, use empty config dict
-            st.warning(f"⚠️ Could not load verityngn config: {e}. Using default configuration.")
+            st.warning(f"⚠️ Could not load verityngn config: {e}. Using empty configuration.")
             st.session_state.config = {}
         except Exception as e:
-            st.warning(f"⚠️ Failed to load configuration: {e}. Using default configuration.")
+            st.warning(f"⚠️ Failed to load configuration: {e}. Using empty configuration.")
             st.session_state.config = {}
 
     # Sidebar navigation

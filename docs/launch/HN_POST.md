@@ -28,8 +28,8 @@ Existing fact-checking tools only analyze text transcripts. They miss on-screen 
 
 ### Results (200-claim test set)
 
-- 78% accuracy vs. expert ground truth
-- +18% improvement from counter-intel alone
+- 75% accuracy vs. ground truth (95% CI: 61-85%)
+- +18% improvement from counter-intel on misleading content
 - Well-calibrated (Brier score = 0.12, ECE = 0.04)
 - Cost: $0.50–$2.00 per video
 
@@ -45,7 +45,7 @@ Existing fact-checking tools only analyze text transcripts. They miss on-screen 
 
 - English only
 - YouTube only (no TikTok/Instagram yet)
-- 22% error rate (78% accuracy means 22% wrong)
+- ~25% error rate (75% accuracy means 25% wrong)
 - Susceptible to coordinated fake review campaigns
 - No human-in-the-loop
 

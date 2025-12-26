@@ -25,8 +25,8 @@ But here's what makes it different from existing fact-checking tools:
 ---
 
 **The results:**
-- 78% accuracy vs. expert ground truth
-- +18% improvement from counter-intelligence alone
+- 75% accuracy vs. ground truth (95% CI: 61-85%)
+- +18% improvement from counter-intel on misleading content
 - Well-calibrated (Brier score = 0.12)
 - $0.50-2.00 per video
 

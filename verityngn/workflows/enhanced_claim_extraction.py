@@ -83,11 +83,10 @@ async def extract_claims_multi_pass(
         quality_dist[level] = quality_dist.get(level, 0) + 1
     logger.info(f"📊 Quality distribution: {quality_dist}")
 
-    # Filter out conspiracy theories and very low quality claims
     filtered_claims = [
         c
         for c in scored_claims
-        if c.get("claim_type") != "conspiracy" and c.get("specificity_score", 0) >= 20
+        if c.get("claim_type") != "conspiracy" and c.get("specificity_score", 0) >= 15
     ]
     logger.info(
         f"🔥 Filtered to {len(filtered_claims)} claims (removed conspiracy theories and very weak claims)"
@@ -107,7 +106,13 @@ async def extract_claims_multi_pass(
 
     # PASS 5: Final ranking and selection
     logger.info("🎯 PASS 5: Final ranking and selection")
-    final_claims = _rank_and_select_claims(all_claims, target_count=15)
+    
+    # Use config for target count if available, otherwise default to 20
+    from verityngn.config.settings import get_config
+    config = get_config()
+    target_count = config.get("processing.min_claims", 20)
+    
+    final_claims = _rank_and_select_claims(all_claims, target_count=target_count)
 
     logger.info(f"✨ Final output: {len(final_claims)} high-quality claims")
 

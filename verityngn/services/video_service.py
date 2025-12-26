@@ -11,9 +11,12 @@ from typing import Dict, Any, Optional, Tuple
 from verityngn.utils.file_utils import extract_video_id, ensure_directory_exists
 import yt_dlp
 from yt_dlp.utils import DownloadError
-from verityngn.config.settings import DOWNLOADS_DIR, USER_AGENTS, GCS_BUCKET_NAME
+from verityngn.config.settings import DOWNLOADS_DIR, USER_AGENTS, GCS_BUCKET_NAME, STORAGE_BACKEND, StorageBackend
 from verityngn.services.video.downloader import VideoDownloader
-from google.cloud import storage
+try:
+    from google.cloud import storage
+except ImportError:
+    storage = None
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
@@ -287,6 +290,14 @@ def upload_to_gcs(local_path: str, gcs_path: str) -> str:
         str: Signed URL for accessing the uploaded file
     """
     try:
+        if STORAGE_BACKEND != StorageBackend.GCS:
+            logger.info("ℹ️ Local-first mode: skipping video upload to GCS")
+            return f"file://{local_path}"
+
+        if storage is None:
+            logger.warning("⚠️ google-cloud-storage not installed, cannot upload to GCS")
+            return f"file://{local_path}"
+
         # Initialize GCS client
         client = storage.Client()
         

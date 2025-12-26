@@ -23,7 +23,7 @@ VerityNgn (Verity Engine) is an open-source system that analyzes YouTube videos 
 ### How It Works
 
 ```
-YouTube URL → Intelligent Segmentation → Multimodal LLM Analysis → Enhanced Claims Extraction → Evidence Verification → Counter-Intel → Truthfulness Report
+YouTube URL → Local/Cloud LLM Analysis → Enhanced Claims Extraction → Evidence Verification → Counter-Intel → Local-First Report
 ```
 
 1. **Intelligent Segmentation**: Optimizes video segments based on 1M token context window (86% fewer API calls)
@@ -40,9 +40,9 @@ YouTube URL → Intelligent Segmentation → Multimodal LLM Analysis → Enhance
 
 VerityNgn supports three deployment options:
 
-### Option 1: Local Deployment (Recommended for Testing)
+### Option 1: Local-First Deployment (Recommended)
 
-**Requirements**: Docker, Docker Compose
+**VerityNgn is now local-first by default.** Run everything on your machine with optional cloud enhancements.
 
 ```bash
 # Clone repository
@@ -50,11 +50,11 @@ git clone https://github.com/hotchilianalytics/verityngn-oss.git
 cd verityngn-oss
 
 # Configure environment
-cp env.example .env
-# Edit .env with your API keys
+cp config.yaml.example config.yaml
+# Edit config.yaml with your API keys (Search, Vertex AI)
 
-# Start services
-docker-compose up
+# Run with Streamlit
+streamlit run ui/streamlit_app.py
 ```
 
 **Access**:
@@ -168,27 +168,27 @@ See [docs/DEPLOYMENT_COLAB.md](docs/DEPLOYMENT_COLAB.md) for details.
 git clone https://github.com/hotchilianalytics/verityngn-oss.git
 cd verityngn-oss
 
-# Create and activate conda environment
+# Create and activate environment
 conda env create -f environment.yml
 conda activate verityngn
 
-# Or use pip
-pip install -r requirements.txt
+# The 'verityngn' package is automatically available in the project root
+pip install -e .
 ```
 
 ### Configuration
 
 ```bash
-# Copy environment template
-cp .env.example .env
+# Copy configuration template
+cp config.yaml.example config.yaml
 
-# Edit .env and add your credentials:
-# - GOOGLE_APPLICATION_CREDENTIALS (path to service account JSON)
-# - YOUTUBE_API_KEY (YouTube Data API v3)
-# - GOOGLE_SEARCH_API_KEY (Custom Search API)
-# - PROJECT_ID (your Google Cloud project)
+# Edit config.yaml and add your credentials:
+# - search.google_search_api_key
+# - search.cse_id
+# - gcp.project_id (if using Vertex AI)
 
-# See SETUP_CREDENTIALS.md for detailed instructions
+# VerityNgn supports 'none' authentication for local-only browsing
+# See docs/LOCAL_SETUP.md for detailed instructions
 ```
 
 ### Run Verification

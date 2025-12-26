@@ -129,7 +129,7 @@ And here — it detected this source as a press release. 94% precision on that d
 
 **VOICEOVER:**
 
-"The results: 78% accuracy on a 200-claim test set compared to expert ground truth. The counter-intelligence component alone adds 18 percentage points.
+"The results: 75% accuracy compared to ground truth. The counter-intelligence component alone adds 18 percentage points on misleading content.
 
 And it's completely open source. Apache 2.0 license.
 
@@ -164,7 +164,7 @@ Thanks for watching. Let's build something that matters."
 ### Suggested Edits
 
 1. **Speed up waiting sections** (2-4x) with a progress indicator overlay
-2. **Add lower-third text** for key stats (78% accuracy, +18% counter-intel)
+2. **Add lower-third text** for key stats (75% accuracy, +18% counter-intel)
 3. **Add subtle background music** (lo-fi, non-distracting)
 4. **Add captions** (accessibility + silent autoplay on social)
 
@@ -172,7 +172,7 @@ Thanks for watching. Let's build something that matters."
 
 - "AI Fact-Checks YouTube" with a screenshot of the report
 - Split screen: misleading video vs. truthfulness report
-- Stats graphic: "78% Accurate"
+- Stats graphic: "75% Accurate"
 
 ### Video Settings for Upload
 

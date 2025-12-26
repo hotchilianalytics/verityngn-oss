@@ -1,5 +1,7 @@
 import logging
 from typing import Dict, Any, List, Optional, Tuple
+import time
+from verityngn.llm_logging.logger import log_llm_call, log_llm_response
 
 # Removed Pydantic dependency - using dict-based models instead
 from langchain_core.prompts import ChatPromptTemplate
@@ -30,6 +32,7 @@ from verityngn.services.report.evidence_utils import (
     generate_youtube_sources_file,
 )
 from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
+from verityngn.config.config_loader import get_config
 
 # Dict-based verification result schema (replaces Pydantic model)
 VERIFICATION_RESULT_SCHEMA = {
@@ -936,13 +939,25 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
             TimeoutError as FuturesTimeoutError,
         )
         import time
-
+        
+        # LLM interaction logging - already imported at top
         start_time = time.time()
+        # Extract video_id for logging, assuming it might be in state
+        video_id = get_value(state, "video_id", "")
+
+        call_id = log_llm_call(
+            operation="verify_claim_agent",
+            prompt=str(agent_input),
+            model=AGENT_MODEL_NAME,
+            video_id=video_id
+        )
+
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(agent.invoke, agent_input)
             try:
                 result = future.result(timeout=90.0)  # Reduced from 150s to 90s
                 elapsed = time.time() - start_time
+                log_llm_response(call_id, result, duration=elapsed)
                 logger.info(
                     f"🔍 [SHERLOCK] Agent verification completed successfully in {elapsed:.1f}s"
                 )
@@ -2127,12 +2142,25 @@ async def verify_claim_with_evidence(
         """
         )
 
+        start_time = time.time()
+        call_id = log_llm_call(
+            operation="verify_claim_with_llm",
+            prompt=str(prompt.format(
+                claim_text=claim.get("claim_text", ""),
+                evidence_text=evidence_text or "No evidence found",
+            )),
+            model=AGENT_MODEL_NAME,
+            video_id=claim.get("video_id") or "unknown"
+        )
+
         response = await llm.ainvoke(
             prompt.format(
                 claim_text=claim.get("claim_text", ""),
                 evidence_text=evidence_text or "No evidence found",
             )
         )
+        duration = time.time() - start_time
+        log_llm_response(call_id, response, duration=duration)
 
         # Parse response - handle different formats
         import json
@@ -2254,11 +2282,16 @@ def process_claims_with_advanced_ranking(
 
     logger.info(f"🚀 Starting advanced claim processing for video {video_id}")
 
+    # Load configuration
+    config = get_config()
+    max_claims = config.get('processing.max_claims', 20)
+    
     # Initialize the ClaimProcessor
     processor = ClaimProcessor(
         video_id=video_id,
         video_duration_minutes=video_duration_minutes,
         target_claims_per_minute=3.0,  # Target 3 claims per minute (reasonable for dense content analysis)
+        max_claims=max_claims,
     )
 
     # Add video analysis claims

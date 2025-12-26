@@ -3,14 +3,9 @@ from typing import List
 from pathlib import Path
 from enum import Enum
 
-# Load environment variables from .env at project root if present
-try:
-    from dotenv import load_dotenv
-    _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-    load_dotenv(_PROJECT_ROOT / ".env")
-except Exception:
-    # If python-dotenv is not installed or .env is missing, proceed with OS env only
-    pass
+# Load configuration using ConfigLoader
+from verityngn.config.config_loader import get_config
+_config = get_config()
 
 # Project information
 PROJECT_NAME = "VerityNgn"
@@ -28,17 +23,11 @@ class StorageBackend(Enum):
     LOCAL = "local"       # Local filesystem storage
     GCS = "gcs"          # Google Cloud Storage
 
-# Detect deployment mode from environment
-DEPLOYMENT_MODE = DeploymentMode(os.getenv("DEPLOYMENT_MODE", "research"))
+# Detect deployment mode from configuration
+DEPLOYMENT_MODE = DeploymentMode(_config.get("advanced.deployment_mode", "research"))
 
-# Determine storage backend based on deployment mode
-if DEPLOYMENT_MODE == DeploymentMode.PRODUCTION:
-    STORAGE_BACKEND = StorageBackend.GCS
-else:
-    # For research and container modes, use local storage by default
-    # but allow override via environment variable
-    backend_env = os.getenv("STORAGE_BACKEND", "local")
-    STORAGE_BACKEND = StorageBackend(backend_env)
+# Determine storage backend from configuration
+STORAGE_BACKEND = StorageBackend(_config.get("advanced.storage_backend", "local"))
 
 # API settings
 API_V1_PREFIX = "/api/v1"
@@ -47,25 +36,20 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
 # Google Cloud settings
-PROJECT_ID = os.getenv("PROJECT_ID", "verityindex-0-0-1")
-LOCATION = os.getenv("LOCATION", "us-central1")
-GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "verityindex_bucket")
+PROJECT_ID = _config.get("gcp.project_id", "your-project-id")
+LOCATION = _config.get("gcp.location", "us-central1")
+GCS_BUCKET_NAME = _config.get("gcp.bucket_name", "your-bucket-name")
 # Optional GCS bucket for local container outputs (for development/testing)
 GCS_LOCAL_OUTPUTS_BUCKET = os.getenv("GCS_LOCAL_OUTPUTS_BUCKET", "vngn_local_outputs")
 ENABLE_LOCAL_GCS_BACKUP = os.getenv("ENABLE_LOCAL_GCS_BACKUP", "false").lower() in ("true", "1", "t")
 
 # AI Model settings  
-#VERTEX_MODEL_NAME = os.getenv("VERTEX_MODEL_NAME", "gemini-1.5-pro")
-#VERTEX_MODEL_NAME = os.getenv("VERTEX_MODEL_NAME", "gemini-2.5-flash")
-VERTEX_MODEL_NAME = "gemini-2.5-flash"
-#AGENT_MODEL_NAME = os.getenv("AGENT_MODEL_NAME", "gemini-1.5-pro")
-AGENT_MODEL_NAME = "gemini-2.5-flash"
+VERTEX_MODEL_NAME = _config.get("models.vertex.model_name", "gemini-2.5-flash")
+AGENT_MODEL_NAME = _config.get("models.agent.model_name", "gemini-2.5-flash")
 # AI Parameter settings
-# Read from ENV or default to 32K tokens for Gemini 2.5 Flash
-MAX_OUTPUT_TOKENS_2_5_FLASH = int(os.getenv("MAX_OUTPUT_TOKENS_2_5_FLASH", "32768"))
-MAX_OUTPUT_TOKENS_2_0_FLASH = int(os.getenv("MAX_OUTPUT_TOKENS_2_0_FLASH", "8192"))
-# For genai multimodal calls that input a YouTube video (read from ENV or default to 8K)
-GENAI_VIDEO_MAX_OUTPUT_TOKENS = int(os.getenv("GENAI_VIDEO_MAX_OUTPUT_TOKENS", "8192"))
+MAX_OUTPUT_TOKENS_2_5_FLASH = int(_config.get("models.vertex.max_output_tokens", 32768))
+MAX_OUTPUT_TOKENS_2_0_FLASH = int(_config.get("models.agent.max_output_tokens", 8192))
+GENAI_VIDEO_MAX_OUTPUT_TOKENS = int(_config.get("models.vertex.max_output_tokens", 8192))
 # UNIFIED PRODUCTION PATH: Always use Vertex AI YouTube URL analysis
 USE_GENAI_YOUTUBE_URL = False
 USE_VERTEX_YOUTUBE_URL = True
@@ -133,12 +117,9 @@ try:
 except Exception:
     YT_CI_TOTAL_RESULTS = 30
 
-# Semantic filter (MiniLM) feature flags (disabled by default per request)
-SEMANTIC_FILTER_ENABLED = os.getenv("SEMANTIC_FILTER_ENABLED", "False").lower() in ("true", "1", "t")
-try:
-    SEMANTIC_FILTER_THRESHOLD = float(os.getenv("SEMANTIC_FILTER_THRESHOLD", "0.25"))
-except Exception:
-    SEMANTIC_FILTER_THRESHOLD = 0.25
+# Semantic filter (MiniLM) feature flags
+SEMANTIC_FILTER_ENABLED = _config.get("features.enable_semantic_filtering", False)
+SEMANTIC_FILTER_THRESHOLD = float(_config.get("performance.semantic_filter_threshold", 0.25))
 
 # Caching settings
 CACHE_ENABLED = os.getenv("CACHE_ENABLED", "True").lower() in ("true", "1", "t")
@@ -176,8 +157,8 @@ USER_AGENTS: List[str] = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 ]
 
-# Environment-aware directory configuration
-BASE_DIR = Path(__file__).parent.parent
+# Environment-aware directory configuration - move up to project root
+BASE_DIR = Path(__file__).parent.parent.parent
 
 def get_storage_directories():
     """Get storage directories based on deployment mode."""

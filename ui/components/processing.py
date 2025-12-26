@@ -73,8 +73,8 @@ def run_verification_workflow(video_url: str, config: dict, log_queue: Queue):
         
         # Update config with user settings
         add_log('info', '⚙️ Loading configuration...', log_queue)
-        from verityngn.config.config_loader import get_config
-        config_loader = get_config()
+        from verityngn.config.config_loader import ConfigLoader
+        config_loader = ConfigLoader()
         
         # Override with UI settings
         if 'model_name' in config:

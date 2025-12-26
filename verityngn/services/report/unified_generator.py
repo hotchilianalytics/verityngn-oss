@@ -261,6 +261,15 @@ class UnifiedReportGenerator:
             # Generate Fast HTML Report
             fast_html_content = generate_fast_html_report(report, review_text)
             
+            self.logger.info(f"📊 [UNIFIED] Generated content: MD={len(markdown_content)} chars, HTML={len(html_content)} chars, FastHTML={len(fast_html_content)} chars")
+            
+            if not markdown_content.strip():
+                self.logger.warning("⚠️ [UNIFIED] Generated Markdown content is empty")
+            if not html_content.strip():
+                self.logger.warning("⚠️ [UNIFIED] Generated HTML content is empty")
+            if not fast_html_content.strip():
+                self.logger.warning("⚠️ [UNIFIED] Generated Fast HTML content is empty")
+            
             # Set up file paths in timestamped directory
             if timestamped_storage.storage_backend.value == "local":
                 # For local storage, use the timestamped directory directly

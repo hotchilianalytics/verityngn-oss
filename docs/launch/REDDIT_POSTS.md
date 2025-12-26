@@ -7,14 +7,14 @@
 ### Title
 
 ```
-[P] VerityNgn: Open-source multimodal video verification with counter-intelligence (Gemini 2.5 Flash, 78% accuracy on 200-claim test set)
+[P] VerityNgn: Open-source multimodal video verification with counter-intelligence (Gemini 2.5 Flash, 75% accuracy)
 ```
 
 ### Body
 
 ---
 
-**TL;DR:** Open-source system that generates truthfulness reports for YouTube videos using multimodal LLM analysis + a counter-intelligence pipeline. Achieves 78% accuracy vs expert ground truth, with +18% improvement from the counter-intel component alone.
+**TL;DR:** Open-source system that generates truthfulness reports for YouTube videos using multimodal LLM analysis + a counter-intelligence pipeline. Achieves 75% accuracy vs ground truth (95% CI: 61-85%), with +18% improvement from counter-intel on misleading content.
 
 **Demo:** https://verityngn.streamlit.app  
 **Repo:** https://github.com/hotchilianalytics/verityngn-oss  
@@ -57,7 +57,7 @@
 
 | Metric | Result |
 |--------|--------|
-| Accuracy (200 claims) | 78% |
+| Accuracy | 75% (95% CI: 61-85%) |
 | Counter-intel improvement | +18% |
 | Brier score | 0.12 |
 | ECE | 0.04 |
@@ -156,7 +156,7 @@ With calibrated confidence scores (Brier = 0.12, ECE = 0.04).
 
 ### Results
 
-78% accuracy vs expert ground truth on a 200-claim test set. The counter-intelligence component alone adds +18% accuracy.
+75% accuracy vs ground truth (95% CI: 61-85%). The counter-intelligence component alone adds +18% accuracy on misleading content.
 
 ### Limitations
 
@@ -194,7 +194,7 @@ Built this over the past year and just open-sourced it.
 
 3. **Probabilistic** — Gives you calibrated probabilities, not binary verdicts.
 
-**Results:** 78% accuracy on a 200-claim test set. The counter-intel component alone adds +18%.
+**Results:** 75% accuracy. The counter-intel component alone adds +18% on misleading content.
 
 **Try it:** https://verityngn.streamlit.app (no signup, just paste a URL)
 
