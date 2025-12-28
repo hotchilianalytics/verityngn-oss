@@ -149,18 +149,9 @@ def render_processing_tab():
         else:
             st.success(f"✅ API is healthy: {health_msg}")
         
-        # Submit verification
+        # Submit verification - use batch API for cloudrun mode, direct API for local
         try:
-            with st.spinner("Submitting to API..."):
-                task_id = st.session_state.api_client.submit_verification(
-                    video_url=video_url,
-                    config=config
-                )
-            
-            st.session_state.current_task_id = task_id
-            st.session_state.workflow_started = False  # Mark as handled
-            
-            # Extract video_id from URL
+            # Extract video_id from URL (needed for both paths)
             video_id = None
             if 'watch?v=' in video_url:
                 video_id = video_url.split('watch?v=')[1].split('&')[0]
@@ -168,6 +159,28 @@ def render_processing_tab():
                 video_id = video_url.split('/v/')[1].split('?')[0]
             elif len(video_url) == 11:  # Just the video ID
                 video_id = video_url
+            
+            if backend_mode == 'cloudrun':
+                # Use Cloud Batch for long-running jobs (proper architecture)
+                with st.spinner("Submitting to Cloud Batch..."):
+                    task_id = st.session_state.api_client.submit_batch_job(
+                        video_urls=[video_url],
+                        parallelism=1
+                    )
+                st.session_state.is_batch_mode = True
+                logger.info(f"✅ Submitted to Cloud Batch: job_id={task_id}")
+            else:
+                # Use direct verification for local mode
+                with st.spinner("Submitting to API..."):
+                    task_id = st.session_state.api_client.submit_verification(
+                        video_url=video_url,
+                        config=config
+                    )
+                st.session_state.is_batch_mode = False
+            
+            st.session_state.current_task_id = task_id
+            st.session_state.workflow_started = False  # Mark as handled
+            st.session_state.current_video_id = video_id  # Store for later use
             
             # Record submission in history (optional)
             if st.session_state.get("remember_submissions", False):
@@ -220,10 +233,42 @@ def render_processing_tab():
         progress_placeholder = st.empty()
         stage_placeholder = st.empty()
         
-        # Poll for status updates
+        # Poll for status updates - use appropriate method based on mode
         try:
+            is_batch_mode = st.session_state.get('is_batch_mode', False)
+            
             with st.spinner("Fetching status..."):
-                api_status = st.session_state.api_client.get_status(task_id)
+                if is_batch_mode:
+                    # Use batch status endpoint for Cloud Batch jobs
+                    api_status = st.session_state.api_client.get_batch_status(task_id)
+                    # Map batch status to common format
+                    video_count = api_status.get('video_count', 1)
+                    completed_count = api_status.get('completed_count', 0)
+                    failed_count = api_status.get('failed_count', 0)
+                    batch_status = api_status.get('status', 'running')
+                    
+                    # Map batch status to task status
+                    if batch_status == 'completed':
+                        task_status = 'completed'
+                        progress = 100
+                    elif batch_status == 'failed' or failed_count > 0:
+                        task_status = 'failed'
+                        progress = 0
+                    else:
+                        task_status = 'processing'
+                        progress = int((completed_count / video_count) * 100) if video_count > 0 else 0
+                    
+                    # Get video_id from completed videos if available
+                    completed_videos = api_status.get('completed_videos', [])
+                    if completed_videos and len(completed_videos) > 0:
+                        api_status['video_id'] = completed_videos[0].get('video_id')
+                    
+                    api_status['status'] = task_status
+                    api_status['progress'] = progress
+                    api_status['current_stage'] = f"Batch: {batch_status} ({completed_count}/{video_count})"
+                else:
+                    # Use direct verification status for local mode
+                    api_status = st.session_state.api_client.get_status(task_id)
             
             st.session_state.api_status = api_status
             
