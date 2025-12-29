@@ -131,7 +131,10 @@ class ConfigLoader:
             "GOOGLE_SEARCH_API_KEY": "search.google_search_api_key",
             "YOUTUBE_API_KEY": "search.youtube_api_key",
             "CSE_ID": "search.cse_id",
-            "GOOGLE_AI_STUDIO_KEY": "models.vertex.google_ai_studio_key"
+            "GOOGLE_AI_STUDIO_KEY": "models.vertex.google_ai_studio_key",
+            "STORAGE_BACKEND": "advanced.storage_backend",
+            "DEPLOYMENT_MODE": "advanced.deployment_mode",
+            "LOCATION": "gcp.location"
         }
         for env_name, config_path in standard_map.items():
             env_val = os.getenv(env_name)

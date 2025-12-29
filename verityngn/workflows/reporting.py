@@ -54,6 +54,7 @@ from verityngn.config.settings import (
 )
 
 from verityngn.services.report.unified_generator import log_report_system_usage
+from verityngn.utils.date_utils import get_current_date_context
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -1234,8 +1235,10 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
         # Determine if we should actually upload to cloud
         should_upload = STORAGE_BACKEND == StorageBackend.GCS
         
+        logger.info(f"💾 Storage backend detected: {STORAGE_BACKEND} (should_upload={should_upload})")
+        
         if not should_upload:
-            logger.info("ℹ️ Local-first mode: skipping cloud upload (saving only to local outputs)")
+            logger.info(f"ℹ️ {STORAGE_BACKEND.value}-first mode: skipping cloud upload (saving only to local outputs)")
             return {
                 **state,
                 "gcs_uri": None,
