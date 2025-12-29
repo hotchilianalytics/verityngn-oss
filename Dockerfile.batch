@@ -50,6 +50,9 @@ COPY examples/ ./examples/
 COPY gallery/ ./gallery/
 COPY environment-minimal.yml ./
 
+# Copy template file to root (TEMPLATE_PATH expects /app/template.html)
+COPY verityngn/template.html ./template.html
+
 # Create necessary directories (use /tmp for Batch VMs - ephemeral)
 RUN mkdir -p /tmp/downloads /tmp/outputs /tmp/logs
 
