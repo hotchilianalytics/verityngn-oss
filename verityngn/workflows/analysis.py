@@ -3894,9 +3894,20 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_genai(
             start = end
 
     # Parse each segment response as JSON and fuse claims together
+    # Check for video unavailability markers first
+    for t in texts:
+        if t and t.startswith("__VIDEO_UNAVAILABLE__:"):
+            error_detail = t.replace("__VIDEO_UNAVAILABLE__:", "")
+            logger.error(f"❌ Video is unavailable or inaccessible: {error_detail}")
+            return {
+                "error": f"YouTube video is unavailable, private, deleted, or not accessible. The video cannot be analyzed. Details: {error_detail}",
+                "initial_report": "",
+                "claims": [],
+            }
+    
     if not texts or not any(t.strip() for t in texts):
         return {
-            "error": "Empty response from segmented GenAI YouTube analysis",
+            "error": "Empty response from segmented GenAI YouTube analysis - the video may be unavailable or too short",
             "initial_report": "",
             "claims": [],
         }
@@ -4136,6 +4147,27 @@ OUTPUT FORMAT: Provide detailed JSON with:
         except Exception as e:
             # Implement exponential backoff for 503 and other transient errors
             error_msg = str(e).lower()
+            original_error = str(e)
+            
+            # Detect video unavailability errors (non-retryable)
+            is_video_unavailable = any(
+                x in error_msg
+                for x in [
+                    "not owned by the user",
+                    "video unavailable",
+                    "video not found",
+                    "private video",
+                    "deleted video",
+                    "age-restricted",
+                    "403",
+                ]
+            )
+            
+            if is_video_unavailable:
+                logger.error(f"❌ [VERTEX] Video unavailable error (non-retryable): {original_error}")
+                # Return special marker that will be caught later
+                return f"__VIDEO_UNAVAILABLE__:{original_error}"
+            
             is_503_or_transient = any(
                 x in error_msg
                 for x in [
@@ -4175,6 +4207,24 @@ OUTPUT FORMAT: Provide detailed JSON with:
                     stream=False,
                 )
             except Exception as e2:
+                error2_msg = str(e2).lower()
+                # Check again for video unavailability in retry
+                is_video_unavailable_retry = any(
+                    x in error2_msg
+                    for x in [
+                        "not owned by the user",
+                        "video unavailable",
+                        "video not found",
+                        "private video",
+                        "deleted video",
+                        "age-restricted",
+                        "403",
+                    ]
+                )
+                if is_video_unavailable_retry:
+                    logger.error(f"❌ [VERTEX] Video unavailable error (non-retryable): {e2}")
+                    return f"__VIDEO_UNAVAILABLE__:{e2}"
+                    
                 logger.error(
                     f"[VERTEX] Relaxed config failed: {e2}. No further model fallback will be attempted."
                 )
@@ -4412,9 +4462,20 @@ OUTPUT FORMAT: Provide detailed JSON with:
             segment_count += 1
 
     # Parse each segment response as JSON and fuse claims together
+    # Check for video unavailability markers first
+    for t in texts:
+        if t and t.startswith("__VIDEO_UNAVAILABLE__:"):
+            error_detail = t.replace("__VIDEO_UNAVAILABLE__:", "")
+            logger.error(f"❌ Video is unavailable or inaccessible: {error_detail}")
+            return {
+                "error": f"YouTube video is unavailable, private, deleted, or not accessible. The video cannot be analyzed. Details: {error_detail}",
+                "initial_report": "",
+                "claims": [],
+            }
+    
     if not texts or not any(t.strip() for t in texts):
         return {
-            "error": "Empty response from segmented Vertex YouTube analysis",
+            "error": "Empty response from segmented Vertex YouTube analysis - the video may be unavailable or too short",
             "initial_report": "",
             "claims": [],
         }
