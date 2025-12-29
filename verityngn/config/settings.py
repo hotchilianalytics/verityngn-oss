@@ -23,11 +23,13 @@ class StorageBackend(Enum):
     LOCAL = "local"       # Local filesystem storage
     GCS = "gcs"          # Google Cloud Storage
 
-# Detect deployment mode from configuration
-DEPLOYMENT_MODE = DeploymentMode(_config.get("advanced.deployment_mode", "research"))
+# Detect deployment mode from configuration (env var takes priority for cloud deployments)
+_deployment_mode_str = os.getenv("DEPLOYMENT_MODE") or _config.get("advanced.deployment_mode", "research")
+DEPLOYMENT_MODE = DeploymentMode(_deployment_mode_str)
 
-# Determine storage backend from configuration
-STORAGE_BACKEND = StorageBackend(_config.get("advanced.storage_backend", "local"))
+# Determine storage backend from configuration (env var takes priority for cloud deployments)
+_storage_backend_str = os.getenv("STORAGE_BACKEND") or _config.get("advanced.storage_backend", "local")
+STORAGE_BACKEND = StorageBackend(_storage_backend_str)
 
 # API settings
 API_V1_PREFIX = "/api/v1"
