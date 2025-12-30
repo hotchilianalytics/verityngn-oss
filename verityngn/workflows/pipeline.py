@@ -226,6 +226,9 @@ def run_verification(
         os.makedirs(out_dir_path, exist_ok=True)
         log_file_path = os.path.join(out_dir_path, f"{video_id}_workflow.log")
         
+        # Add log path to state for GCS upload
+        initial_state["log_path"] = log_file_path
+        
         # Create file handler for workflow logs
         file_handler = logging.FileHandler(log_file_path, mode='w', encoding='utf-8')
         file_handler.setLevel(logging.DEBUG)

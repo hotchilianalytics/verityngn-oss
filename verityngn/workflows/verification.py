@@ -1112,18 +1112,54 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                 )
 
             # Factor 5: Self-referential press release penalty
+            # Note: This penalty is reduced or skipped for trusted investigators
+            is_investigator = getattr(state, "is_trusted_investigator", False)
             self_ref_count = sum(
                 1
                 for e in evidence_groups["press_releases"]
                 if e.get("self_referential", False)
             )
-            if self_ref_count > 0:
+            if self_ref_count > 0 and not is_investigator:
                 penalty = min(0.4, self_ref_count * 0.15)
                 enhanced_dist["FALSE"] = min(
                     0.9, enhanced_dist.get("FALSE", 0.3) + penalty
                 )
                 modifications.append(
                     f"Self-referential press releases ({self_ref_count}) penalty increases FALSE by {penalty:.2f}"
+                )
+            elif self_ref_count > 0 and is_investigator:
+                modifications.append(
+                    f"Self-referential penalty SKIPPED: trusted investigator channel"
+                )
+            
+            # Factor 6: Source Reputation Boost
+            # Boost credibility for content from trusted investigative channels
+            channel_reputation = getattr(state, "channel_reputation", 0.5)
+            credibility_boost = getattr(state, "credibility_boost", 1.0)
+            
+            if credibility_boost > 1.0:
+                # Trusted source - boost TRUE probability
+                reputation_boost = (credibility_boost - 1.0) * 0.5  # 50% of the boost factor
+                enhanced_dist["TRUE"] = min(
+                    0.9, enhanced_dist.get("TRUE", 0.3) + reputation_boost
+                )
+                enhanced_dist["FALSE"] = max(
+                    0.05, enhanced_dist.get("FALSE", 0.3) - reputation_boost * 0.5
+                )
+                modifications.append(
+                    f"🏆 Source reputation boost (channel={channel_reputation:.2f}, boost={credibility_boost:.2f}x): TRUE +{reputation_boost:.2f}"
+                )
+            elif credibility_boost < 1.0:
+                # Low-credibility source - reduce TRUE probability
+                reputation_penalty = (1.0 - credibility_boost) * 0.3
+                enhanced_dist["TRUE"] = max(
+                    0.05, enhanced_dist.get("TRUE", 0.3) - reputation_penalty
+                )
+                enhanced_dist["FALSE"] = min(
+                    0.9, enhanced_dist.get("FALSE", 0.3) + reputation_penalty * 0.5
+                )
+                modifications.append(
+                    f"⚠️ Low-credibility source (channel={channel_reputation:.2f}): TRUE -{reputation_penalty:.2f}"
                 )
 
             # Normalize to ensure probabilities sum to 1.0
@@ -1661,6 +1697,44 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
     video_url = state.get("video_url", "")
     video_title = state.get("title", "")
     video_id = state.get("video_id", "")
+    
+    # Get channel info for source reputation scoring
+    video_info = state.get("video_info", {})
+    channel_name = video_info.get("channel", "") or video_info.get("uploader", "")
+    video_description = video_info.get("description", "")
+    
+    # Calculate source reputation for the video's channel
+    try:
+        from verityngn.services.reputation import (
+            get_channel_reputation,
+            is_trusted_investigator,
+            calculate_content_credibility_boost,
+        )
+        
+        channel_reputation = get_channel_reputation(channel_name)
+        is_investigator = is_trusted_investigator(channel_name)
+        credibility_boost, boost_reason = calculate_content_credibility_boost(
+            channel_name, video_title, video_description
+        )
+        
+        # Store in state for use in claim verification
+        state["channel_reputation"] = channel_reputation
+        state["is_trusted_investigator"] = is_investigator
+        state["credibility_boost"] = credibility_boost
+        state["credibility_boost_reason"] = boost_reason
+        
+        if is_investigator:
+            logger.info(f"🏆 TRUSTED INVESTIGATOR DETECTED: {channel_name}")
+            logger.info(f"   Reputation score: {channel_reputation}")
+            logger.info(f"   Credibility boost: {credibility_boost}x ({boost_reason})")
+        elif channel_reputation != 0.5:
+            logger.info(f"📊 Channel reputation for '{channel_name}': {channel_reputation}")
+    except ImportError:
+        logger.warning("⚠️ Source reputation module not available, using defaults")
+        channel_reputation = 0.5
+        credibility_boost = 1.0
+        state["channel_reputation"] = channel_reputation
+        state["credibility_boost"] = credibility_boost
 
     logger.info(f"🔍 Starting ENHANCED verification for {len(claims)} claims")
     logger.info(f"🎬 Video: {video_title}")
@@ -1758,7 +1832,9 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                 # Create object wrapper for enhanced system compatibility
                 class StateWrapper:
                     def __init__(
-                        self, claim, video_url, video_title, video_id, media_embed
+                        self, claim, video_url, video_title, video_id, media_embed,
+                        channel_reputation=0.5, credibility_boost=1.0,
+                        is_trusted_investigator=False
                     ):
                         self.claim = claim
                         self.video_url = video_url
@@ -1766,6 +1842,10 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                         self.video_id = video_id
                         self.evidence = []
                         self.media_embed = media_embed
+                        # Source reputation fields
+                        self.channel_reputation = channel_reputation
+                        self.credibility_boost = credibility_boost
+                        self.is_trusted_investigator = is_trusted_investigator
 
                 # Extract media_embed info for enhanced system
                 media_embed = state.get("media_embed", {})
@@ -1778,6 +1858,9 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                     video_title=video_title,
                     video_id=video_id,
                     media_embed=media_embed,
+                    channel_reputation=state.get("channel_reputation", 0.5),
+                    credibility_boost=state.get("credibility_boost", 1.0),
+                    is_trusted_investigator=state.get("is_trusted_investigator", False),
                 )
 
                 # Add YouTube counter-intelligence to the verification state

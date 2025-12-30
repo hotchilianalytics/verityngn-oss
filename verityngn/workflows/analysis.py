@@ -2030,6 +2030,53 @@ def fuse_segmented_json_responses(
         f"✅ Fused result: {len(fused_claims)} total → {len(unique_claims)} unique claims "
         f"(removed {total_removed} duplicates)"
     )
+    
+    # Temporal distribution validation
+    def parse_timestamp_to_seconds(ts: str) -> int:
+        """Parse timestamp like '00:23' or '00:05-00:06' to seconds."""
+        try:
+            # Handle range timestamps
+            if '-' in ts:
+                ts = ts.split('-')[0].strip()
+            parts = ts.replace(' ', '').split(':')
+            if len(parts) == 2:
+                return int(parts[0]) * 60 + int(parts[1])
+            elif len(parts) == 3:
+                return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+            return 0
+        except Exception:
+            return 0
+    
+    # Check temporal distribution of claims
+    timestamps_seconds = []
+    for claim in unique_claims:
+        if isinstance(claim, dict):
+            ts = claim.get("timestamp", "")
+            if ts and ts.lower() != "unknown":
+                ts_sec = parse_timestamp_to_seconds(ts)
+                if ts_sec > 0:
+                    timestamps_seconds.append(ts_sec)
+    
+    if timestamps_seconds:
+        max_ts = max(timestamps_seconds)
+        min_ts = min(timestamps_seconds)
+        # Warning if all claims are in first 60 seconds
+        if max_ts <= 60 and len(unique_claims) >= 5:
+            logger.warning(
+                f"⚠️ TEMPORAL CLUSTERING DETECTED: All {len(unique_claims)} claims "
+                f"are from first {max_ts}s of video. Claims should span full duration."
+            )
+        # Warning if claims span less than 2 minutes
+        elif max_ts < 120:
+            logger.warning(
+                f"⚠️ LIMITED TEMPORAL COVERAGE: Claims span only {min_ts}s to {max_ts}s. "
+                f"Consider re-analyzing for better coverage across video timeline."
+            )
+        else:
+            logger.info(
+                f"✅ Temporal distribution: Claims span {min_ts}s to {max_ts}s "
+                f"({len(timestamps_seconds)} with valid timestamps)"
+            )
 
     # Create fused result
     return {
@@ -4021,6 +4068,13 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
 - AVOID micro-claims and overly fine-grained statements
 - Prioritize VERIFIABLE facts over vague assertions
 - Focus on claims that substantially impact truthfulness assessment
+
+⚠️ CRITICAL: TEMPORAL DISTRIBUTION REQUIREMENT ⚠️
+- You MUST extract claims from across the ENTIRE video timeline, not just the beginning
+- Divide the video into 5-minute segments and extract at least 2-3 claims from EACH segment
+- Claims should be distributed proportionally: early (0-33%), middle (33-66%), late (66-100%) portions
+- If all your claims are from the first 1-2 minutes, you are doing this WRONG - re-analyze the full video
+- Timestamps MUST span the full video duration, not cluster at the start
  
 CRITICAL INSTRUCTIONS FOR MULTIMODAL VIDEO ANALYSIS:
 - Analyze this video with MAXIMUM detail at 1 FRAME PER SECOND sampling rate
@@ -4028,6 +4082,7 @@ CRITICAL INSTRUCTIONS FOR MULTIMODAL VIDEO ANALYSIS:
 - Focus on SPOKEN WORDS, VISUAL TEXT, ON-SCREEN GRAPHICS, and DEMONSTRATIONS
 - Ignore background music, decorative elements, or irrelevant visuals
 - Extract APPROXIMATELY {target_claims} specific, MEANINGFUL claims from the actual video frames and audio
+- ENSURE claims come from throughout the video, not just the introduction
 
 Video ID: {video_id}
 Video URL: {video_url}
@@ -4089,13 +4144,14 @@ OUTPUT FORMAT: Provide detailed JSON with:
     "claims": [
         {{
             "claim_text": "Specific, SUBSTANTIAL factual claim extracted from video (avoid micro-claims)",
-            "timestamp": "MM:SS or time range where claim appears",
+            "timestamp": "MM:SS or time range where claim appears (MUST span full video, not cluster at start)",
             "speaker": "Identified speaker name or 'Visual Text' or 'On-Screen Graphics'",
             "source_type": "spoken|visual_text|demonstration|graphic|chart",
             "initial_assessment": "CRAAP-based assessment of claim verifiability, importance, and factual nature"
         }}
     ],
-    "video_analysis_summary": "Summary of video content, themes, and claim extraction process from multimodal analysis"
+    "video_analysis_summary": "Summary of video content, themes, and claim extraction process from multimodal analysis",
+    "temporal_coverage": "Confirmation that claims were extracted from beginning, middle, AND end of video"
 }}
 
 🚨 EXTRACT HIGH-QUALITY CLAIMS FROM ACTUAL VIDEO FRAMES & AUDIO - NOT METADATA OR DESCRIPTIONS! 🚨

@@ -1320,6 +1320,17 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
                     uploaded_files.append(f"Press Release CI: {os.path.basename(ci_file)}")
                     logger.info(f"✅ [SHERLOCK] Uploaded Press Release CI file: {os.path.basename(ci_file)} -> {ci_gcs_uri}")
         
+        # Upload workflow log file to GCS for debugging
+        log_path = state.get("log_path", "")
+        if not log_path and out_dir_path:
+            # Fallback: try to find log file in output directory
+            log_path = os.path.join(out_dir_path, f"{video_id}_workflow.log")
+        if log_path and os.path.exists(log_path):
+            gcs_path = f"reports/{video_id}/{os.path.basename(log_path)}"
+            log_gcs_uri = upload_to_gcs(log_path, gcs_path)
+            uploaded_files.append(f"LOG: {log_gcs_uri}")
+            logger.info(f"📝 Uploaded workflow log: {os.path.basename(log_path)} -> {log_gcs_uri}")
+        
         logger.info(f"✅ Uploaded {len(uploaded_files)} files to GCS:")
         for uploaded_file in uploaded_files:
             logger.info(f"  📄 {uploaded_file}")
