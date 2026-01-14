@@ -1,3 +1,8 @@
+---
+title: "Technical Architecture"
+description: "How VerityNgn optimizes the 1M token context window"
+---
+
 # VerityNgn Technical Architecture
 
 > **Version 2.0** - Updated with Intelligent Segmentation and Enhanced Claims Extraction
@@ -169,26 +174,26 @@ def get_segmentation_for_video(
 **Model Specifications:**
 
 ```python
-MODEL_SPECS = {
-    "gemini-2.5-flash": {
+MODEL_SPECS = &#123;
+    "gemini-2.5-flash": &#123;
         "context_window": 1_000_000,
         "max_output_tokens": 65_536,
         "tokens_per_frame": 258,
         "audio_tokens_per_sec": 32,
-    },
-    "gemini-1.5-pro": {
+    &#125;,
+    "gemini-1.5-pro": &#123;
         "context_window": 2_000_000,
         "max_output_tokens": 8_192,
         "tokens_per_frame": 258,
         "audio_tokens_per_sec": 32,
-    },
-    "gemini-1.5-flash": {
+    &#125;,
+    "gemini-1.5-flash": &#123;
         "context_window": 1_000_000,
         "max_output_tokens": 8_192,
         "tokens_per_frame": 258,
         "audio_tokens_per_sec": 32,
-    }
-}
+    &#125;
+&#125;
 ```
 
 **Environment Variable Override:**
@@ -306,19 +311,19 @@ def generate_absence_claims(video_content: str, extracted_claims: list) -> list:
     
     # Check for missing scientific evidence
     if not contains_study_reference(video_content):
-        absence_claims.append({
+        absence_claims.append(&#123;
             "claim": "No peer-reviewed studies cited",
             "type": "absence",
             "importance": "high"
-        })
+        &#125;)
     
     # Check for missing FDA disclaimer
     if contains_health_claims(video_content) and not contains_fda_disclaimer(video_content):
-        absence_claims.append({
+        absence_claims.append(&#123;
             "claim": "No FDA disclaimer present",
             "type": "absence",
             "importance": "medium"
-        })
+        &#125;)
     
     return absence_claims
 ```
@@ -367,12 +372,12 @@ Claims are classified into types for appropriate verification strategies:
 ### Selection Criteria
 
 **Use Gemini 2.5 Flash when:**
-- Video < 48 minutes (single segment)
+- Video \&lt; 48 minutes (single segment)
 - Need detailed claim extraction (large output)
 - Default choice for most cases ✅
 
 **Use Gemini 1.5 Pro when:**
-- Video > 100 minutes (requires larger context)
+- Video \> 100 minutes (requires larger context)
 - Budget not a primary concern
 - Need maximum context window
 
@@ -491,7 +496,7 @@ segment_duration, num_segments = get_segmentation_for_video(
     fps=1.0
 )
 
-print(f"Optimal: {num_segments} segment(s) of {segment_duration}s each")
+print(f"Optimal: &#123;num_segments&#125; segment(s) of &#123;segment_duration&#125;s each")
 # Output: Optimal: 1 segment(s) of 2860s each
 ```
 

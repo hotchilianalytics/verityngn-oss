@@ -97,14 +97,14 @@ except ImportError:
         )
         
         api_results = search_youtube_counter_intelligence_with_context(
-            video_title=title or f"Video {video_id}",
+            video_title=title or f"Video &#123;video_id&#125;",
             initial_review_text=initial_text or None,
             video_id=video_id,
             max_results=4,
         )
-        logger.info(f"✅ OSS YouTube search found {len(api_results)} counter-intel results")
+        logger.info(f"✅ OSS YouTube search found &#123;len(api_results)&#125; counter-intel results")
     except Exception as oss_error:
-        logger.error(f"❌ OSS YouTube search also failed: {oss_error}")
+        logger.error(f"❌ OSS YouTube search also failed: &#123;oss_error&#125;")
         api_results = []
 ```
 
@@ -113,7 +113,7 @@ except ImportError:
 ```python
 if len(merged_results) == 0:
     logger.warning(
-        f"⚠️  Counter-intelligence found ZERO results for video {video_id}. "
+        f"⚠️  Counter-intelligence found ZERO results for video &#123;video_id&#125;. "
         "This may indicate:\n"
         "   1. Private repo modules not available (expected for OSS)\n"
         "   2. YouTube API key not configured (check .env)\n"

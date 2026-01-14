@@ -1,0 +1,39 @@
+---
+title: "Introduction"
+description: "VerityNgn: The AI-Powered YouTube Video Verification Engine"
+---
+
+# The Mathematics of Misinformation
+
+Every minute, 500 hours of video are uploaded to YouTube. That’s **720,000 hours per day**. Meanwhile, professional fact-checkers can review maybe 10-20 claims per day. The math simply doesn’t work.
+
+Traditional automated tools only analyze text, missing on-screen graphics, visual demonstrations, and "white coat" authority signals. **VerityNgn** (Verity Engine) is an open-source system that doesn't just read transcripts—it watches, listens, and verifies the truth.
+
+## What is VerityNgn?
+
+VerityNgn is a multimodal analysis engine designed to fact-check video content at scale. It moves beyond simple RAG pipelines to provide a comprehensive verification suite:
+
+- 🎥 **Multimodal Analysis**: Sampling at 1 FPS to capture OCR, visual context, and audio nuances.
+- 🔍 **Evidence Verification**: Cross-referencing claims with scientific databases and credible web sources.
+- 🕵️ **Counter-Intelligence**: Actively hunting for contradictory reviews and promotional press releases.
+- 📊 **Probabilistic Assessment**: Delivering nuanced verdicts based on Bayesian aggregation of evidence.
+
+## Why Open Source?
+
+Misinformation is too big a problem to solve behind closed doors. We’ve released VerityNgn under the **Apache 2.0 license** to ensure the methodology is transparent, the code is auditable, and the community can contribute to a more truthful internet.
+
+[Star us on GitHub](https://github.com/hotchilianalytics/verityngn-oss) | [Read the release announcement on Substack](https://ajjcop.substack.com/p/i-built-an-ai-that-fact-checks-youtube)
+
+## Quick Links
+
+<CardGroup cols={2}>
+  <Card title="Public Demo" icon="desktop" href="https://verityngn.streamlit.app">
+    Try VerityNgn right now in your browser.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/docs/guides/QUICK_START">
+    Get VerityNgn running locally in under 5 minutes.
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/docs/ARCHITECTURE">
+    Deep dive into the 1M token context window and intelligent segmentation.
+  </Card>
+</CardGroup>

@@ -28,7 +28,7 @@ Complete guide to enabling optional YouTube and search features.
 
 1. **Google Cloud Project** (you already have this)
 2. **Billing enabled** (required for YouTube Data API)
-   - Go to: <https://console.cloud.google.com/billing>
+   - Go to: https://console.cloud.google.com/billing
    - YouTube API has free quota: 10,000 units/day
    - Custom Search: 100 queries/day free
 
@@ -51,8 +51,8 @@ gcloud services enable youtube.googleapis.com
 
 Or enable via Console:
 
-- Custom Search: <https://console.cloud.google.com/apis/library/customsearch.googleapis.com>
-- YouTube Data API: <https://console.cloud.google.com/apis/library/youtube.googleapis.com>
+- Custom Search: https://console.cloud.google.com/apis/library/customsearch.googleapis.com
+- YouTube Data API: https://console.cloud.google.com/apis/library/youtube.googleapis.com
 
 ### Step 2: Create API Keys
 
@@ -71,7 +71,7 @@ gcloud alpha services api-keys list
 
 **Option B: Using Console (Recommended)**
 
-1. Go to: <https://console.cloud.google.com/apis/credentials>
+1. Go to: https://console.cloud.google.com/apis/credentials
 2. Click **"Create Credentials"** → **"API Key"**
 3. Copy the key (e.g., `AIzaSyC-1234567890abcdefghijk`)
 4. (Optional) Click "Edit API key" to restrict:
@@ -82,7 +82,7 @@ gcloud alpha services api-keys list
 
 ### Step 3: Create Custom Search Engine
 
-1. Go to: <https://programmablesearchengine.google.com/>
+1. Go to: https://programmablesearchengine.google.com/
 2. Click **"Add"** or **"Create"**
 3. **Settings:**
    - Name: `VerityNgn Search`
@@ -235,14 +235,14 @@ Analyze the `tLJC8hkK-ao` video and check the logs for:
 
 ### "Quota exceeded"
 
-- Check your quota: <https://console.cloud.google.com/apis/dashboard>
+- Check your quota: https://console.cloud.google.com/apis/dashboard
 - YouTube API: 10,000 units/day is usually enough
 - Custom Search: 100 queries/day might need increase
 
 ### "Billing not enabled"
 
 - YouTube Data API requires billing enabled
-- Go to: <https://console.cloud.google.com/billing>
+- Go to: https://console.cloud.google.com/billing
 - You won't be charged within free tier limits
 
 ### Environment variables not persisting

@@ -224,7 +224,7 @@ To test a different video, edit the script:
 ```python
 # Change these lines in run_tl_video_test():
 video_id = "your_video_id"
-video_url = f"https://www.youtube.com/watch?v={video_id}"
+video_url = f"https://www.youtube.com/watch?v=&#123;video_id&#125;"
 ```
 
 Or create a more flexible version:
@@ -238,8 +238,8 @@ def run_video_test(video_url):
     return final_state, output_dir
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python test_video.py <youtube_url>")
+    if len(sys.argv) &lt; 2:
+        print("Usage: python test_video.py [youtube_url]")
         sys.exit(1)
     
     video_url = sys.argv[1]

@@ -163,7 +163,7 @@ Change these lines:
 
 ```python
 video_id = "your_video_id"
-video_url = f"https://www.youtube.com/watch?v={video_id}"
+video_url = f"https://www.youtube.com/watch?v=&#123;video_id&#125;"
 ```
 
 ### Or Create a Generic Test Script
@@ -173,13 +173,13 @@ video_url = f"https://www.youtube.com/watch?v={video_id}"
 import sys
 from verityngn.workflows.pipeline import run_verification
 
-if len(sys.argv) < 2:
-    print("Usage: python test_video.py <youtube_url>")
+if len(sys.argv) &lt; 2:
+    print("Usage: python test_video.py [youtube_url]")
     sys.exit(1)
 
 video_url = sys.argv[1]
 final_state, output_dir = run_verification(video_url)
-print(f"✅ Report saved to: {output_dir}")
+print(f"✅ Report saved to: &#123;output_dir&#125;")
 ```
 
 Usage:

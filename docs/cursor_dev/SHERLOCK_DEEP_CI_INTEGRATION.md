@@ -50,7 +50,7 @@ try:
     from verityngn.services.search.deep_ci import deep_counter_intel_search  # ❌ WRONG PATH
 
     deep_links = deep_counter_intel_search(search_context, max_links=4)
-    logger.info(f"✅ Deep CI found {len(deep_links)} links")
+    logger.info(f"✅ Deep CI found &#123;len(deep_links)&#125; links")
 except ImportError:
     # OSS version: skip deep CI (requires private module)
     logger.info("Deep CI module not available (private repo feature)")  # ❌ FALSE MESSAGE
@@ -136,7 +136,7 @@ try:
     from verityngn.services.search.deep_ci import deep_counter_intel_search
 
     deep_links = deep_counter_intel_search(search_context, max_links=4)
-    logger.info(f"✅ Deep CI found {len(deep_links)} links")
+    logger.info(f"✅ Deep CI found &#123;len(deep_links)&#125; links")
 except ImportError:
     # OSS version: skip deep CI (requires private module)
     logger.info("Deep CI module not available (private repo feature)")
@@ -150,14 +150,14 @@ try:
     from verityngn.services.search.web_search import deep_counter_intel_search
 
     deep_links = deep_counter_intel_search(search_context, max_links=4)
-    logger.info(f"✅ Deep CI found {len(deep_links)} links")
+    logger.info(f"✅ Deep CI found &#123;len(deep_links)&#125; links")
 except ImportError as ie:
     # Fallback if module not available
-    logger.warning(f"Deep CI module import failed: {ie}")
+    logger.warning(f"Deep CI module import failed: &#123;ie&#125;")
     deep_links = []
 except Exception as e:
     # Catch any runtime errors in Deep CI
-    logger.warning(f"Deep CI search failed: {e}")
+    logger.warning(f"Deep CI search failed: &#123;e&#125;")
     deep_links = []
 ```
 

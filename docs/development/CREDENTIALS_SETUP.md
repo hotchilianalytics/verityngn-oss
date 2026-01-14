@@ -32,10 +32,10 @@ export GOOGLE_CSE_ID="your-custom-search-engine-id"
 
 **How to get these:**
 
-1. Go to <https://console.cloud.google.com/apis/credentials>
+1. Go to https://console.cloud.google.com/apis/credentials
 2. Create API key
 3. Enable "Custom Search API"
-4. Create Custom Search Engine at <https://programmablesearchengine.google.com/>
+4. Create Custom Search Engine at https://programmablesearchengine.google.com/
 
 **What this enables:**
 
@@ -54,7 +54,7 @@ export YOUTUBE_API_KEY="your-youtube-api-key"
 
 **How to get this:**
 
-1. Go to <https://console.cloud.google.com/apis/credentials>
+1. Go to https://console.cloud.google.com/apis/credentials
 2. Create API key
 3. Enable "YouTube Data API v3"
 

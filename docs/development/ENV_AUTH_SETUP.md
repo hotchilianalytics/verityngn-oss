@@ -53,7 +53,7 @@ YOUTUBE_API_KEY=AIza...
 
 ### 1. Download Service Account JSON
 
-1. Go to: <https://console.cloud.google.com/iam-admin/serviceaccounts>
+1. Go to: https://console.cloud.google.com/iam-admin/serviceaccounts
 2. Select your project
 3. Click service account → Keys → Add Key → JSON
 4. Download the file
@@ -138,7 +138,7 @@ else:
 # Check GOOGLE_APPLICATION_CREDENTIALS
 json_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 if json_path and Path(json_path).exists():
-    print(f'✅ Service account JSON: {json_path}')
+    print(f'✅ Service account JSON: &#123;json_path&#125;')
 else:
     print(f'❌ GOOGLE_APPLICATION_CREDENTIALS not set or file not found')
 
@@ -146,9 +146,9 @@ else:
 for key in ['GOOGLE_API_KEY', 'GOOGLE_CSE_ID', 'YOUTUBE_API_KEY']:
     val = os.getenv(key)
     if val:
-        print(f'✅ {key}: {val[:10]}...')
+        print(f'✅ &#123;key&#125;: &#123;val[:10]&#125;...')
     else:
-        print(f'⚠️  {key} not set')
+        print(f'⚠️  &#123;key&#125; not set')
 "
 ```
 

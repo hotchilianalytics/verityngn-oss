@@ -172,7 +172,7 @@ Check logs for:
 
 ```
 🎯 ENHANCED: Analyzing transcripts of top 3 counter-videos
-📝 Analyzing transcript for counter-video: <video_id>
+📝 Analyzing transcript for counter-video: [video_id]
 ✅ Extracted N counter-claims from transcript
 ✅ Enhanced counter-intelligence with transcript analysis
 ```

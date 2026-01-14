@@ -85,7 +85,7 @@ if not verdict:
         explanation = assessment[1]  # Full description
     else:
         # Fallback to quick_summary
-        quick_summary = report.get("quick_summary", {})
+        quick_summary = report.get("quick_summary", &#123;&#125;)
         verdict = quick_summary.get("verdict", "Unknown")
         explanation = quick_summary.get("summary", "No explanation available")
 ```
@@ -97,7 +97,7 @@ st.markdown("---")
 st.markdown("## 📄 Full HTML Report")
 
 # Find the HTML report in the same directory as the JSON
-html_path = selected_report_file.parent / f"{selected_report_file.parent.parent.name}_report.html"
+html_path = selected_report_file.parent / f"&#123;selected_report_file.parent.parent.name&#125;_report.html"
 
 if html_path.exists():
     try:
@@ -157,17 +157,17 @@ No explanation available
 
 ### Old Format (Expected)
 ```json
-{
+&#123;
   "verified_claims": [...],
   "overall_truthfulness_score": 0.25,
   "verdict": "Mostly False",
   "explanation": "..."
-}
+&#125;
 ```
 
 ### New Format (Actual)
 ```json
-{
+&#123;
   "claims_breakdown": [...],
   "overall_assessment": [
     "Likely to be False",
@@ -176,24 +176,24 @@ No explanation available
   "media_embed": "...",
   "title": "...",
   "quick_summary": "..."
-}
+&#125;
 ```
 
 ### Nested Claim Structure
 ```json
-{
+&#123;
   "claim_id": 0,
   "claim_text": "...",
-  "verification_result": {
+  "verification_result": &#123;
     "result": "LIKELY_FALSE",
-    "probability_distribution": {
+    "probability_distribution": &#123;
       "TRUE": 0.25,
       "FALSE": 0.70,
       "UNCERTAIN": 0.05
-    },
+    &#125;,
     "sources": [...]
-  }
-}
+  &#125;
+&#125;
 ```
 
 ---

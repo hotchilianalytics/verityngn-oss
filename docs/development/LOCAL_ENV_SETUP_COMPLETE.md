@@ -168,7 +168,7 @@ cd /Users/ajjc/proj/verityngn-oss
 python -c "
 from verityngn.workflows.pipeline import run_verification
 state, output_dir = run_verification('https://www.youtube.com/watch?v=dQw4w9WgXcQ', out_dir_path=None)
-print(f'✅ Verification complete! Output: {output_dir}')
+print(f'✅ Verification complete! Output: &#123;output_dir&#125;')
 "
 ```
 
@@ -217,7 +217,7 @@ git commit -m "Update .gitignore"
 ## Next Steps
 
 1. **Test Streamlit UI**: Run `./run_streamlit.sh` and process a video
-2. **Verify Reports**: Check `outputs/{video_id}/` for generated reports
+2. **Verify Reports**: Check `outputs/&#123;video_id&#125;/` for generated reports
 3. **Test Gallery**: Submit a report to gallery and test moderation
 4. **Development**: Make changes, test locally, commit to git
 

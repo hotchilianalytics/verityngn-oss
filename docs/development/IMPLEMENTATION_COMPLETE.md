@@ -83,7 +83,7 @@ I've successfully implemented a comprehensive enhanced claims extraction system 
 **Expected Improvement**:
 
 - Claim quality: 30 → 52 avg specificity (+73%)
-- Verifiable claims: <40% → >60% (+50%)
+- Verifiable claims: &lt;40% → >60% (+50%)
 - Absence claims: 0 → 3-5 per video (NEW!)
 
 ### 4. **Type-Specific Verification Queries** ✅ (Phase 3 - Complete)
@@ -174,7 +174,7 @@ queries = [
 
 **The Problem**: 80% of extracted claims were too vague to verify ("a study showed...", "experts say...").
 
-**The Solution**: Score every claim 0-100, filter out <40, prioritize >60.
+**The Solution**: Score every claim 0-100, filter out &lt;40, prioritize >60.
 
 **Impact**:
 
@@ -280,7 +280,7 @@ python -m verityngn.analysis.claim_corpus_analysis
 # Test specificity scoring
 python -c "from verityngn.workflows.claim_specificity import *; ..."
 # ✅ Absence claims score 85/100, verifiability 0.88
-# ✅ Generic claims score <10/100 (correctly identified as weak)
+# ✅ Generic claims score &lt;10/100 (correctly identified as weak)
 # ✅ Specific claims score >50/100
 
 # Test query generation
@@ -342,13 +342,13 @@ async def main():
     result = await extract_claims_enhanced_wrapper(
         video_url="https://www.youtube.com/watch?v=tLJC8hkK-ao",
         video_id="tLJC8hkK-ao",
-        video_info={"title": "Lipozem", "duration": 1998}
+        video_info=&#123;"title": "Lipozem", "duration": 1998&#125;
     )
     
     for claim in result['claims']:
-        print(f"{claim['claim_text'][:80]}...")
-        print(f"  Specificity: {claim['specificity_score']}/100")
-        print(f"  Type: {claim['claim_type']}")
+        print(f"&#123;claim['claim_text'][:80]&#125;...")
+        print(f"  Specificity: &#123;claim['specificity_score']&#125;/100")
+        print(f"  Type: &#123;claim['claim_type']&#125;")
 
 asyncio.run(main())
 ```
@@ -396,7 +396,7 @@ for claim in claims_to_verify:
 |--------|---------------|---------------|---------|---------|
 | Claim count | 10 | 15 | 15-18 | Multi-pass selection |
 | Specificity | ~25 | ~30 | >50 | Specificity scoring |
-| Verifiable % | <30% | ~40% | >60% | Verifiability prediction |
+| Verifiable % | &lt;30% | ~40% | >60% | Verifiability prediction |
 | TRUE verdicts | 0% | 0% | >30% | Absence claims! |
 | Absence claims | 0 | 0 | 3-5 | Explicit generation |
 | Conspiracy filtered | No | No | Yes | Type classification |

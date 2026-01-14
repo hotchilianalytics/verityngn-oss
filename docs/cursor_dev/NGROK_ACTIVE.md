@@ -27,7 +27,7 @@ Click "Visit Site" on the ngrok warning page.
 
 ```bash
 curl https://oriented-flea-large.ngrok-free.app/health
-# Should return: {"status":"healthy"}
+# Should return: &#123;"status":"healthy"&#125;
 ```
 
 ### Test List Reports
@@ -84,8 +84,8 @@ API_URL = "https://oriented-flea-large.ngrok-free.app"
 
 # Verify connection
 import requests
-response = requests.get(f"{API_URL}/health")
-print(f"API Status: {response.json()}")
+response = requests.get(f"&#123;API_URL&#125;/health")
+print(f"API Status: &#123;response.json()&#125;")
 ```
 
 ### Example: Submit a Verification
@@ -99,19 +99,19 @@ API_URL = "https://oriented-flea-large.ngrok-free.app"
 
 # Submit a verification task
 response = requests.post(
-    f"{API_URL}/api/v1/verification/verify",
-    json={"video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+    f"&#123;API_URL&#125;/api/v1/verification/verify",
+    json=&#123;"video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"&#125;
 )
 
 task_data = response.json()
 task_id = task_data["task_id"]
-print(f"Task submitted: {task_id}")
+print(f"Task submitted: &#123;task_id&#125;")
 
 # Check status
 status_response = requests.get(
-    f"{API_URL}/api/v1/verification/status/{task_id}"
+    f"&#123;API_URL&#125;/api/v1/verification/status/&#123;task_id&#125;"
 )
-print(f"Status: {status_response.json()}")
+print(f"Status: &#123;status_response.json()&#125;")
 ```
 
 ---
@@ -124,10 +124,10 @@ print(f"Status: {status_response.json()}")
 # Submit verification
 curl -X POST https://oriented-flea-large.ngrok-free.app/api/v1/verification/verify \
   -H "Content-Type: application/json" \
-  -d '{"video_url":"https://www.youtube.com/watch?v=tLJC8hkK-ao"}'
+  -d '&#123;"video_url":"https://www.youtube.com/watch?v=tLJC8hkK-ao"&#125;'
 
 # Example response:
-# {"task_id":"abc-123-def","status":"processing"}
+# &#123;"task_id":"abc-123-def","status":"processing"&#125;
 ```
 
 ### Check Task Status
@@ -214,7 +214,7 @@ API_BASE_URL = os.getenv(
 ```javascript
 const API_URL = "https://oriented-flea-large.ngrok-free.app";
 
-fetch(`${API_URL}/health`)
+fetch(`$&#123;API_URL&#125;/health`)
   .then(response => response.json())
   .then(data => console.log("API Status:", data));
 ```
@@ -312,7 +312,7 @@ curl https://oriented-flea-large.ngrok-free.app/api/v1/reports/list
 # Submit verification
 curl -X POST https://oriented-flea-large.ngrok-free.app/api/v1/verification/verify \
   -H "Content-Type: application/json" \
-  -d '{"video_url":"https://www.youtube.com/watch?v=VIDEO_ID"}'
+  -d '&#123;"video_url":"https://www.youtube.com/watch?v=VIDEO_ID"&#125;'
 
 # ngrok web interface
 open http://localhost:4040
@@ -335,7 +335,7 @@ open http://localhost:4040
 
 1. **Test the health endpoint** in your browser:
    - Visit: https://oriented-flea-large.ngrok-free.app/health
-   - Should see: `{"status":"healthy"}`
+   - Should see: `&#123;"status":"healthy"&#125;`
 
 2. **Add to Streamlit secrets** (if using Streamlit Community Cloud)
 

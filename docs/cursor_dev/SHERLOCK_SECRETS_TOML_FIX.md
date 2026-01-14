@@ -95,7 +95,7 @@ def _override_placeholder_env_vars():
         
         # Is current value a placeholder?
         if is_placeholder(current_value) and env_file_value:
-            print(f"🔄 Overriding placeholder {key} with .env value")
+            print(f"🔄 Overriding placeholder &#123;key&#125; with .env value")
             os.environ[key] = env_file_value  # FORCE OVERRIDE
 ```
 

@@ -54,7 +54,7 @@ This checkpoint consolidates major improvements to the VerityNgn system in prepa
 **Fixed Critical Bug:**
 - `verityngn/workflows/pipeline.py` was returning tuple instead of dict
 - API expected dict with `video_id` key
-- Changed return type: `(state, path)` → `{video_id, output_dir, claims_count, state}`
+- Changed return type: `(state, path)` → `&#123;video_id, output_dir, claims_count, state&#125;`
 
 **Other Fixes:**
 - Reduced API log noise (filtered HTTP access logs)

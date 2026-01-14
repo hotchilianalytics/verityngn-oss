@@ -34,7 +34,7 @@ python scripts/find_replacement_videos.py --verify VIDEO_ID1 VIDEO_ID2 ...
 ### Step 3: Update test_videos.json
 Once verified, update using:
 ```bash
-python scripts/update_placeholder_videos.py --replacements '{"5":"VIDEO_ID","7":"VIDEO_ID2",...}'
+python scripts/update_placeholder_videos.py --replacements '&#123;"5":"VIDEO_ID","7":"VIDEO_ID2",...&#125;'
 ```
 
 ## Suggested Video Sources
@@ -92,17 +92,17 @@ python scripts/update_placeholder_videos.py --replacements '{"5":"VIDEO_ID","7":
 
 2. If verified, add to replacements JSON:
    ```json
-   {
+   &#123;
      "5": "VERIFIED_VIDEO_ID",
      "7": "VERIFIED_VIDEO_ID",
      ...
-   }
+   &#125;
    ```
 
 3. Update test_videos.json:
    ```bash
-   python scripts/update_placeholder_videos.py --replacements '{"5":"VIDEO_ID",...}' --dry-run
-   python scripts/update_placeholder_videos.py --replacements '{"5":"VIDEO_ID",...}'
+   python scripts/update_placeholder_videos.py --replacements '&#123;"5":"VIDEO_ID",...&#125;' --dry-run
+   python scripts/update_placeholder_videos.py --replacements '&#123;"5":"VIDEO_ID",...&#125;'
    ```
 
 ## Notes

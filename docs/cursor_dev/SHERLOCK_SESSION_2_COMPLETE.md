@@ -121,7 +121,7 @@ llm = ChatVertexAI(
 ```
 JSON parsing failed: Invalid control character at: line 2 column 21
 Attempted to parse:
-{
+&#123;
   "youtube_urls\": [
     \"https://...
 ```
@@ -132,7 +132,7 @@ Attempted to parse:
 The Deep CI already has URL extraction fallback:
 ```python
 # Fallback: tolerant URL extraction if JSON parse yields nothing
-url_pattern = re.compile(r"https?://[^\s\)\]\}\>\"']+")
+url_pattern = re.compile(r"https?://[^\s\)\]\&#125;\>\"']+")
 all_urls = url_pattern.findall(text or "")
 ```
 

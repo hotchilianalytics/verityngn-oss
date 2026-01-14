@@ -314,7 +314,7 @@ echo "✅ Security verification passed"
 **Technical:**
 - [ ] Zero credential exposure incidents
 - [ ] Repository cloneable and functional
-- [ ] Documentation clear (< 5 setup questions)
+- [ ] Documentation clear (&lt; 5 setup questions)
 - [ ] No critical bugs reported
 
 **Community:**

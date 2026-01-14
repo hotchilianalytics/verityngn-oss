@@ -22,8 +22,8 @@ Add this BEFORE line 4079 in `verityngn/workflows/analysis.py`:
 
 ```python
 # Line 4078 - ADD THIS:
-logger.info(f"🎬 [VERTEX] Starting segment {segment_count}: {start}s to {end}s ({end-start}s duration)")
-logger.info(f"   This may take 5-10 minutes for {(end-start)/60:.1f} minute segment...")
+logger.info(f"🎬 [VERTEX] Starting segment &#123;segment_count&#125;: &#123;start&#125;s to &#123;end&#125;s (&#123;end-start&#125;s duration)")
+logger.info(f"   This may take 5-10 minutes for &#123;(end-start)/60:.1f&#125; minute segment...")
 
 # Line 4079 - existing code:
 texts.append(call_segment(start, end))

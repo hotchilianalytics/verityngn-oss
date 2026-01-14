@@ -57,7 +57,7 @@ LOCATION=us-central1
 
 # Service Account (as JSON string)
 GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json
-GCP_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"..."}
+GCP_SERVICE_ACCOUNT_JSON=&#123;"type":"service_account","project_id":"..."&#125;
 
 # Storage Configuration
 DEPLOYMENT_MODE=production

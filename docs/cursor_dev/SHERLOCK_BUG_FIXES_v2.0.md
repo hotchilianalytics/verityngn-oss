@@ -107,17 +107,17 @@ Users MUST set `YOUTUBE_API_KEY` in `.env` file for this to work!
 # verification.py:271-288
 if is_press_release:
     # Check if press release references the video/product being analyzed
-    content_to_check = f"{url} {text} {title}".lower()
+    content_to_check = f"&#123;url&#125; &#123;text&#125; &#123;title&#125;".lower()
     
     # Self-referential if it contains video channel, product names, or key terms
     if video_channel and video_channel.lower() in content_to_check:
         is_self_referential = True
         validation_power = 0.0
-        logger.info(f"🚫 Self-referential press release detected (channel match): {url[:50]}...")
+        logger.info(f"🚫 Self-referential press release detected (channel match): &#123;url[:50]&#125;...")
     elif any(term in content_to_check for term in product_names):
         is_self_referential = True  
         validation_power = 0.0
-        logger.info(f"🚫 Self-referential press release detected (product match): {url[:50]}...")
+        logger.info(f"🚫 Self-referential press release detected (product match): &#123;url[:50]&#125;...")
 ```
 
 ### Fix Status
@@ -154,10 +154,10 @@ def get_recommendations_from_agent(video_title: str, claims: List[Claim]) -> Lis
 # FIX BUG 3: Generate LLM-based recommendations
 recommendations = []
 try:
-    recommendations = get_recommendations_from_agent(video_info.get("title", f"Video {video_id}"), claims_typed)
-    logger.info(f"✅ Generated {len(recommendations)} LLM-based recommendations")
+    recommendations = get_recommendations_from_agent(video_info.get("title", f"Video &#123;video_id&#125;"), claims_typed)
+    logger.info(f"✅ Generated &#123;len(recommendations)&#125; LLM-based recommendations")
 except Exception as e:
-    logger.error(f"Error generating recommendations: {e}")
+    logger.error(f"Error generating recommendations: &#123;e&#125;")
     # Fallback recommendations
     recommendations = [
         "Verify information from reputable sources before making decisions",
@@ -186,8 +186,8 @@ To verify all fixes are working:
 ### 1. Check YouTube API is Enabled
 ```python
 from verityngn.config.settings import YOUTUBE_DISABLE_V3, YOUTUBE_API_KEY
-print(f"YouTube API Disabled: {YOUTUBE_DISABLE_V3}")  # Should be False
-print(f"API Key Set: {bool(YOUTUBE_API_KEY)}")  # Should be True
+print(f"YouTube API Disabled: &#123;YOUTUBE_DISABLE_V3&#125;")  # Should be False
+print(f"API Key Set: &#123;bool(YOUTUBE_API_KEY)&#125;")  # Should be True
 ```
 
 ### 2. Check Counter-Intelligence Works
@@ -195,7 +195,7 @@ print(f"API Key Set: {bool(YOUTUBE_API_KEY)}")  # Should be True
 from verityngn.services.search.youtube_search import youtube_search_service
 
 # This should NOT be None
-print(f"YouTube API Client Available: {youtube_search_service.is_available()}")
+print(f"YouTube API Client Available: &#123;youtube_search_service.is_available()&#125;")
 ```
 
 ### 3. Check Press Release Detection
@@ -226,7 +226,7 @@ Users MUST add YouTube API key to `.env` file:
 YOUTUBE_API_KEY=your_youtube_api_key_here
 
 # Or use the same key as Google Custom Search
-YOUTUBE_API_KEY=${GOOGLE_SEARCH_API_KEY}
+YOUTUBE_API_KEY=$&#123;GOOGLE_SEARCH_API_KEY&#125;
 ```
 
 **How to Get YouTube API Key:**

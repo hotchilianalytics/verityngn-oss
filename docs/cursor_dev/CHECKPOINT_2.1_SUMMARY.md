@@ -126,7 +126,7 @@ if os.getenv("DEBUG_OUTPUTS", "False").lower() == "true":
 
 # Handle timestamped subdirectories
 for complete_dir in video_dir.glob('*_complete'):
-    if (complete_dir / f'{video_id}_report.json').exists():
+    if (complete_dir / f'&#123;video_id&#125;_report.json').exists():
         return load_report(...)
 ```
 

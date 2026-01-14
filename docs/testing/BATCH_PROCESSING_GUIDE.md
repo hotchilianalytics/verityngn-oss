@@ -95,7 +95,7 @@ python scripts/batch_process_test_videos.py --api-url http://localhost:8080
 ```
 
 **Output**:
-- Creates `test_results/batch_{timestamp}/batch_tracking.json`
+- Creates `test_results/batch_&#123;timestamp&#125;/batch_tracking.json`
 - Tracks all submitted videos and their task IDs
 - Shows status summary at the end
 
@@ -287,17 +287,17 @@ python scripts/import_test_results_to_gallery.py --batch-file test_results/batch
 
 ### Batch Tracking File
 
-Location: `test_results/batch_{timestamp}/batch_tracking.json`
+Location: `test_results/batch_&#123;timestamp&#125;/batch_tracking.json`
 
 Structure:
 ```json
-{
+&#123;
   "batch_id": "batch_2025-11-12T10-30-00",
   "started_at": "2025-11-12T10:30:00",
   "total_videos": 20,
   "api_url": "http://localhost:8080",
   "videos": [
-    {
+    &#123;
       "test_id": 1,
       "video_id": "tLJC8hkK-ao",
       "youtube_url": "https://www.youtube.com/watch?v=tLJC8hkK-ao",
@@ -310,20 +310,20 @@ Structure:
       "result_path": "outputs/tLJC8hkK-ao/2025-11-12T10-30-05_complete",
       "processing_time_seconds": 3595,
       "error_message": null
-    }
+    &#125;
   ]
-}
+&#125;
 ```
 
 ### Gallery Files
 
-Location: `ui/gallery/approved/{video_id}_{title_slug}.json`
+Location: `ui/gallery/approved/&#123;video_id&#125;_&#123;title_slug&#125;.json`
 
 Structure: Original report JSON + test metadata:
 ```json
-{
+&#123;
   ...original report fields...,
-  "test_metadata": {
+  "test_metadata": &#123;
     "test_id": 1,
     "category": "Health & Medicine",
     "subcategory": "Weight Loss Supplements",
@@ -332,8 +332,8 @@ Structure: Original report JSON + test metadata:
     "imported_at": "2025-11-12T12:00:00",
     "imported_from": "test_videos.json",
     "verdict_match": true
-  }
-}
+  &#125;
+&#125;
 ```
 
 ---
@@ -362,7 +362,7 @@ python -m verityngn.api
 
 **Solution**:
 - Check API logs: `docker compose logs api -f`
-- Check workflow logs in `outputs/{video_id}/{video_id}_workflow.log`
+- Check workflow logs in `outputs/&#123;video_id&#125;/&#123;video_id&#125;_workflow.log`
 - Verify API has sufficient resources
 - Check for rate limiting or API errors
 
@@ -372,8 +372,8 @@ python -m verityngn.api
 
 **Solution**:
 - Verify video completed successfully
-- Check `outputs/{video_id}/` directory
-- Ensure `{video_id}_report.json` exists in `*_complete` directory
+- Check `outputs/&#123;video_id&#125;/` directory
+- Ensure `&#123;video_id&#125;_report.json` exists in `*_complete` directory
 - Try running import with `--dry-run` first
 
 ### Batch File Not Found

@@ -91,7 +91,7 @@ JSON parsing failed: Invalid control character at: line 2 column 21
 # Fallback: tolerant URL extraction if JSON parse yields nothing
 if not yt and not web:
     import re
-    url_pattern = re.compile(r"https?://[^\s\)\]\}\>\"']+")
+    url_pattern = re.compile(r"https?://[^\s\)\]\&#125;\>\"']+")
     all_urls = url_pattern.findall(text or "")
 ```
 
@@ -130,7 +130,7 @@ Watch for:
 
 - `🔍 [SHERLOCK]` markers showing timeout protection is active
 - Claims completing in ~20-30 seconds each
-- Total run time < 1 hour (vs. infinite before)
+- Total run time &lt; 1 hour (vs. infinite before)
 
 ---
 

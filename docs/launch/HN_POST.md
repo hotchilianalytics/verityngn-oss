@@ -14,7 +14,7 @@ I built an open-source system that generates truthfulness reports for YouTube vi
 
 **Live demo:** https://verityngn.streamlit.app  
 **Repo:** https://github.com/hotchilianalytics/verityngn-oss
-
+**Substack Article:** https://ajjcop.substack.com/p/i-built-an-ai-that-fact-checks-youtube
 ### The Problem
 
 Existing fact-checking tools only analyze text transcripts. They miss on-screen graphics, visual demonstrations, and the multimodal nature of video. Worse, when you search for evidence, you often get promotional press releases that *confirm* false claims because the misinformation ecosystem is SEO-optimized.

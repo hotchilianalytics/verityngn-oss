@@ -133,7 +133,7 @@ Edit `test_tl_video.py` and change:
 
 ```python
 video_id = "your_video_id"
-video_url = f"https://www.youtube.com/watch?v={video_id}"
+video_url = f"https://www.youtube.com/watch?v=&#123;video_id&#125;"
 ```
 
 ---

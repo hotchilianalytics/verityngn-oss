@@ -91,7 +91,7 @@ Expose local API to the internet for:
 ```bash
 # Check API health
 curl http://localhost:8080/health
-# Should return: {"status": "healthy"}
+# Should return: &#123;"status": "healthy"&#125;
 
 # If not running, start it
 docker compose up api
@@ -125,7 +125,7 @@ Forwarding    https://abc123-def456.ngrok-free.app -> http://localhost:8080
 # Replace with your actual ngrok URL
 curl https://YOUR-URL.ngrok-free.app/health
 
-# Should return: {"status": "healthy"}
+# Should return: &#123;"status": "healthy"&#125;
 ```
 
 ### Usage Examples
@@ -154,7 +154,7 @@ curl https://YOUR-URL.ngrok-free.app/health
 # Submit verification
 curl -X POST https://YOUR-URL.ngrok-free.app/api/v1/verification/verify \
   -H "Content-Type: application/json" \
-  -d '{"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
+  -d '&#123;"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"&#125;'
 ```
 
 ### ngrok Web Interface
@@ -243,12 +243,12 @@ For better experience (persistent URLs, higher limits):
 - [ ] Run `./scripts/start_ngrok_tunnel.sh`
 - [ ] Copy ngrok URL from output
 - [ ] Test: `curl https://YOUR-URL.ngrok-free.app/health`
-- [ ] Should return `{"status": "healthy"}`
+- [ ] Should return `&#123;"status": "healthy"&#125;`
 - [ ] Test verification API:
   ```bash
   curl -X POST https://YOUR-URL.ngrok-free.app/api/v1/verification/verify \
     -H "Content-Type: application/json" \
-    -d '{"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
+    -d '&#123;"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"&#125;'
   ```
 - [ ] Open http://localhost:4040 - should see ngrok web interface
 

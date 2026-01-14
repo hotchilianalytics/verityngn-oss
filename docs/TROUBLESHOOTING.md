@@ -1,3 +1,8 @@
+---
+title: "Troubleshooting"
+description: "Common issues and how to fix them"
+---
+
 # VerityNgn Troubleshooting Guide
 
 Solutions to common issues and debugging strategies.
@@ -141,7 +146,7 @@ gcloud projects get-iam-policy YOUR-PROJECT-ID \
 
 **🔍 How to check:**
 
-1. **Check timestamp** - Has it been < 15 minutes?
+1. **Check timestamp** - Has it been \&lt; 15 minutes?
    - If YES: **Wait** - this is normal!
    - If NO: May be hung, proceed to debugging
 
@@ -170,7 +175,7 @@ ping google.com
 # 3. Check API quotas
 gcloud services quota list --service=aiplatform.googleapis.com --project=YOUR-PROJECT-ID
 
-# 4. Try with shorter video first (< 10 minutes)
+# 4. Try with shorter video first (\&lt; 10 minutes)
 python -m verityngn.workflows.main_workflow --url "https://www.youtube.com/watch?v=SHORT_VIDEO_ID"
 
 # 5. Enable debug logging
@@ -226,9 +231,9 @@ nslookup aiplatform.googleapis.com
 # Test video URL directly
 from yt_dlp import YoutubeDL
 
-ydl = YoutubeDL({'quiet': True})
+ydl = YoutubeDL(&#123;'quiet': True&#125;)
 info = ydl.extract_info("https://www.youtube.com/watch?v=VIDEO_ID", download=False)
-print(f"Duration: {info['duration']}s")
+print(f"Duration: &#123;info['duration']&#125;s")
 ```
 
 **4. Check API quotas:**
@@ -324,7 +329,7 @@ cd /path/to/verityngn-oss
 pip install -e .
 
 # 3. Or add to PYTHONPATH
-export PYTHONPATH="${PYTHONPATH}:/path/to/verityngn-oss"
+export PYTHONPATH="$&#123;PYTHONPATH&#125;:/path/to/verityngn-oss"
 ```
 
 ---
@@ -465,10 +470,10 @@ python test_credentials.py
 ```bash
 python -c "
 from yt_dlp import YoutubeDL
-ydl = YoutubeDL({'quiet': True})
+ydl = YoutubeDL(&#123;'quiet': True&#125;)
 info = ydl.extract_info('https://www.youtube.com/watch?v=VIDEO_ID', download=False)
-print(f'Title: {info[\"title\"]}')
-print(f'Duration: {info[\"duration\"]}s')
+print(f'Title: &#123;info[\"title\"]&#125;')
+print(f'Duration: &#123;info[\"duration\"]&#125;s')
 "
 ```
 

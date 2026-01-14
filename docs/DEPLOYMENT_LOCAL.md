@@ -1,3 +1,8 @@
+---
+title: "Local Deployment"
+description: "Run VerityNgn on your own machine"
+---
+
 # Local Deployment Guide
 
 This guide covers deploying VerityNgn locally using Docker Compose for both development and testing.
@@ -96,12 +101,12 @@ This will:
 ### View Reports
 
 Reports are saved to:
-- **Local directory**: `./outputs/{video_id}/`
+- **Local directory**: `./outputs/\&#123;video_id\&#125;/`
 - **Formats**: HTML, JSON, Markdown
 
 You can also access reports via API:
-- HTML: http://localhost:8080/api/v1/reports/{video_id}/report.html
-- JSON: http://localhost:8080/api/v1/reports/{video_id}/report.json
+- HTML: http://localhost:8080/api/v1/reports/\&#123;video_id\&#125;/report.html
+- JSON: http://localhost:8080/api/v1/reports/\&#123;video_id\&#125;/report.json
 
 ## Common Commands
 
@@ -167,7 +172,7 @@ verityngn-oss/
 ├── .env                     # Environment variables
 ├── service-account.json     # GCP credentials
 ├── outputs/                 # Generated reports
-│   └── {video_id}/
+│   └── \&#123;video_id\&#125;/
 │       ├── report.html
 │       ├── report.json
 │       ├── report.md

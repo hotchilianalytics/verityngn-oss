@@ -162,26 +162,26 @@ Segments for 50-min:          2 segments
 Created `QUALITY_PARAMS.json` to prevent future regressions:
 
 ```json
-{
-  "claim_extraction": {
+&#123;
+  "claim_extraction": &#123;
     "max_output_tokens": 32768,
     "target_segment_duration_seconds": 2628,
     "segment_fps": 1.0,
     "min_claims_per_segment": 15,
     "thinking_budget_tokens": 100000
-  },
-  "claim_selection": {
+  &#125;,
+  "claim_selection": &#123;
     "target_claims_long_video_min": 15,
     "target_claims_long_video_max": 25,
     "long_video_threshold_minutes": 30,
     "clustering_divisor": 2
-  },
-  "quality_thresholds": {
+  &#125;,
+  "quality_thresholds": &#123;
     "min_claims_50min_video": 15,
     "min_claims_30min_video": 10,
     "max_downsampling_ratio": 0.6
-  }
-}
+  &#125;
+&#125;
 ```
 
 ---
@@ -292,8 +292,8 @@ Created `test_claim_quality.py` with 4 test suites:
 Monitor these metrics to detect future regressions:
 
 1. **Claim Count Drops**
-   - Alert if <15 claims for 50-min video
-   - Alert if <10 claims for 30-min video
+   - Alert if &lt;15 claims for 50-min video
+   - Alert if &lt;10 claims for 30-min video
 
 2. **Output Truncation**
    - Check for incomplete JSON output
@@ -301,7 +301,7 @@ Monitor these metrics to detect future regressions:
    - Verify all segments produce >8K output tokens
 
 3. **Downsampling Ratio**
-   - Alert if final/extracted ratio <0.6
+   - Alert if final/extracted ratio &lt;0.6
    - E.g., 27 extracted → should have ≥16 final claims
 
 4. **Parameter Drift**

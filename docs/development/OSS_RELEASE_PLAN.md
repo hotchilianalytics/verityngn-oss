@@ -324,9 +324,9 @@
 **Technical:**
 - [ ] Zero critical security issues
 - [ ] 80%+ test coverage
-- [ ] < 5 min setup time for new users
-- [ ] < 10 min processing time per video (average)
-- [ ] Well-calibrated probabilities (Brier < 0.15)
+- [ ] &lt; 5 min setup time for new users
+- [ ] &lt; 10 min processing time per video (average)
+- [ ] Well-calibrated probabilities (Brier &lt; 0.15)
 
 **Community:**
 - [ ] 50+ GitHub stars (first week)

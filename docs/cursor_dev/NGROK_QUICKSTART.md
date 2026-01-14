@@ -19,7 +19,7 @@ docker compose up api
 Or check if it's already running:
 ```bash
 curl http://localhost:8080/health
-# Should return: {"status": "healthy"}
+# Should return: &#123;"status": "healthy"&#125;
 ```
 
 ### 2. Start ngrok Tunnel
@@ -50,7 +50,7 @@ Forwarding    https://abc123-ngrok-free.app -> http://localhost:8080
 # Replace with your actual ngrok URL
 curl https://YOUR-URL.ngrok-free.app/health
 
-# Should return: {"status": "healthy"}
+# Should return: &#123;"status": "healthy"&#125;
 ```
 
 ## Usage Examples
@@ -78,7 +78,7 @@ curl https://YOUR-URL.ngrok-free.app/health
 # Submit a verification task
 curl -X POST https://YOUR-URL.ngrok-free.app/api/v1/verification/verify \
   -H "Content-Type: application/json" \
-  -d '{"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
+  -d '&#123;"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"&#125;'
 ```
 
 ## ngrok Web Interface

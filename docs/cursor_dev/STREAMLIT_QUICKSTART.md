@@ -67,7 +67,7 @@ DEPLOYMENT_MODE = "research"
 type = "service_account"
 project_id = "verityindex-0-0-1"
 private_key_id = "abc123..."
-private_key = "<PASTE_PRIVATE_KEY_PEM_HERE>"
+private_key = "[PASTE_PRIVATE_KEY_PEM_HERE]"
 client_email = "your-sa@project.iam.gserviceaccount.com"
 client_id = "123456789"
 auth_uri = "https://accounts.google.com/o/oauth2/auth"
@@ -152,7 +152,7 @@ After deploying, check credentials status:
 
 If you see errors:
 - Check that all secrets are filled in (no "your-key-here" placeholders)
-- Verify service account JSON is complete (starts with `{` or `type = "service_account"`)
+- Verify service account JSON is complete (starts with `&#123;` or `type = "service_account"`)
 - Ensure API keys are valid
 
 ---

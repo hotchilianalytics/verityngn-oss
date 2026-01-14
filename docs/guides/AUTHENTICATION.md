@@ -1,3 +1,8 @@
+---
+title: "Authentication"
+description: "Configuring Google Cloud and API keys for VerityNgn"
+---
+
 # VerityNgn Authentication Guide
 
 Deep dive into Google Cloud authentication options for VerityNgn.
@@ -398,7 +403,7 @@ import os
 from dotenv import load_dotenv
 
 env = os.getenv("ENVIRONMENT", "development")
-load_dotenv(f".env.{env}")
+load_dotenv(f".env.&#123;env&#125;")
 ```
 
 ---
@@ -529,9 +534,9 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 google_cse_id = os.getenv("GOOGLE_CSE_ID")
 youtube_api_key = os.getenv("YOUTUBE_API_KEY")
 
-print(f"Google Search API: {'✅ Configured' if google_api_key else '⚠️  Not configured (optional)'}")
-print(f"Custom Search Engine: {'✅ Configured' if google_cse_id else '⚠️  Not configured (optional)'}")
-print(f"YouTube API: {'✅ Configured' if youtube_api_key else '⚠️  Not configured (optional)'}")
+print(f"Google Search API: &#123;'✅ Configured' if google_api_key else '⚠️  Not configured (optional)'&#125;")
+print(f"Custom Search Engine: &#123;'✅ Configured' if google_cse_id else '⚠️  Not configured (optional)'&#125;")
+print(f"YouTube API: &#123;'✅ Configured' if youtube_api_key else '⚠️  Not configured (optional)'&#125;")
 ```
 
 ---

@@ -14,7 +14,7 @@ That's it! The app will auto-detect it.
 
 ## 📥 Get Your JSON File
 
-1. **Go here:** <https://console.cloud.google.com/iam-admin/serviceaccounts>
+1. **Go here:** https://console.cloud.google.com/iam-admin/serviceaccounts
 2. **Select your project**
 3. **Click on service account** → Keys tab
 4. **Add Key** → Create new key → **JSON**
@@ -47,7 +47,7 @@ Your service account needs these roles:
 - ✅ **Vertex AI User** (for Gemini)
 - ✅ **Storage Object Admin** (optional, for GCS)
 
-Add roles at: <https://console.cloud.google.com/iam-admin/iam>
+Add roles at: https://console.cloud.google.com/iam-admin/iam
 
 ---
 

@@ -19,7 +19,7 @@ https://oriented-flea-large.ngrok-free.app
 Test the tunnel:
 ```bash
 curl https://oriented-flea-large.ngrok-free.app/health
-# Should return: {"status":"healthy"}
+# Should return: &#123;"status":"healthy"&#125;
 ```
 
 ## 📱 Use with Streamlit Community Cloud
@@ -87,7 +87,7 @@ When done:
 ps aux | grep ngrok
 
 # Kill it
-kill <PID>
+kill [PID]
 ```
 
 Or use the PID from above: `kill 12427`

@@ -1,3 +1,8 @@
+---
+title: "Methodology"
+description: "The science behind multimodal verification and probabilistic scoring"
+---
+
 # VerityNgn Methodology Documentation
 
 **Version 1.0** | **Last Updated:** October 23, 2025
@@ -165,13 +170,13 @@ CRITICAL INSTRUCTIONS FOR MULTIMODAL VIDEO ANALYSIS:
 Claims are extracted in structured JSON:
 
 ```json
-{
+&#123;
   "claim_text": "Dr. X has 20 years of experience in endocrinology",
   "timestamp": "02:15",
   "speaker": "Dr. X (Narrator)",
   "source_type": "spoken",
   "initial_assessment": "Verifiable credential claim requiring external verification"
-}
+&#125;
 ```
 
 ---
@@ -265,11 +270,11 @@ Result: TRUE probability reduced by 24% (0.4 * 0.6)
 **Search Strategy:**
 ```python
 COUNTER_INTEL_QUERIES = [
-    "{video_title} scam review",
-    "{video_title} fake exposed",
-    "{video_title} debunk analysis",
-    "{main_keywords} + warning review",
-    "{product_name} doesn't work"
+    "&#123;video_title&#125; scam review",
+    "&#123;video_title&#125; fake exposed",
+    "&#123;video_title&#125; debunk analysis",
+    "&#123;main_keywords&#125; + warning review",
+    "&#123;product_name&#125; doesn't work"
 ]
 ```
 
@@ -296,7 +301,7 @@ counter_ratio = counter_signals / (counter_signals + supporting_signals)
 if counter_ratio > 0.7:
     stance = 'counter'
     confidence = min(0.95, 0.6 + (counter_ratio - 0.7) * 1.17)
-elif counter_ratio < 0.3:
+elif counter_ratio &lt; 0.3:
     stance = 'supporting'
     confidence = min(0.95, 0.6 + (0.3 - counter_ratio) * 1.17)
 else:
@@ -359,11 +364,11 @@ P(TRUE) + P(FALSE) + P(UNCERTAIN) = 1.0
 ### Base Probability Initialization
 
 ```python
-base_dist = {
+base_dist = &#123;
     "TRUE": 0.3,      # Starting assumption: neutral
     "FALSE": 0.3,      # Equal weight to false
     "UNCERTAIN": 0.4   # Highest initial uncertainty
-}
+&#125;
 ```
 
 ### Enhancement Factors
@@ -427,7 +432,7 @@ After all adjustments, probabilities are normalized:
 ```python
 total = sum(enhanced_dist.values())
 if total > 0:
-    enhanced_dist = {k: v / total for k, v in enhanced_dist.items()}
+    enhanced_dist = &#123;k: v / total for k, v in enhanced_dist.items()&#125;
 
 # Ensure minimum thresholds
 for key in ["TRUE", "FALSE", "UNCERTAIN"]:
@@ -443,19 +448,19 @@ TRUE% = P(TRUE) * 100
 FALSE% = P(FALSE) * 100
 UNCERTAIN% = P(UNCERTAIN) * 100
 
-if TRUE > 70 and FALSE < 10:
+if TRUE \> 70 and FALSE \&lt; 10:
     verdict = "HIGHLY_LIKELY_TRUE"
-elif (TRUE + UNCERTAIN) > 65 and FALSE < 35:
+elif (TRUE + UNCERTAIN) \> 65 and FALSE \&lt; 35:
     verdict = "LIKELY_TRUE"
-elif TRUE > 40 and FALSE < 35:
+elif TRUE \> 40 and FALSE \&lt; 35:
     verdict = "LEANING_TRUE"
-elif abs(TRUE - FALSE) < 10:
+elif abs(TRUE - FALSE) \&lt; 10:
     verdict = "UNCERTAIN"
-elif FALSE > 35 and TRUE < 30:
+elif FALSE \> 35 and TRUE \&lt; 30:
     verdict = "LEANING_FALSE"
-elif (FALSE + UNCERTAIN) > 65 and TRUE < 35:
+elif (FALSE + UNCERTAIN) \> 65 and TRUE \&lt; 35:
     verdict = "LIKELY_FALSE"
-elif FALSE > 75:
+elif FALSE \> 75:
     verdict = "HIGHLY_LIKELY_FALSE"
 ```
 
@@ -591,10 +596,10 @@ For each extracted claim, the system follows this process:
 
 ```
 1. Generate search queries
-   ├─ Fact-check queries: "{claim} fact check"
-   ├─ Scientific queries: "{claim} study research"
+   ├─ Fact-check queries: "&#123;claim&#125; fact check"
+   ├─ Scientific queries: "&#123;claim&#125; study research"
    ├─ General queries: exact claim text
-   └─ Debunk queries: "{claim} debunk false"
+   └─ Debunk queries: "&#123;claim&#125; debunk false"
 
 2. Execute web searches
    ├─ Google Custom Search API
@@ -653,7 +658,7 @@ def calculate_enhanced_probability_distribution(
     if coverage_score > 1.0:
         coverage_boost = min(0.3, coverage_score * 0.15)
         enhanced_dist["TRUE"] += coverage_boost
-        modifications.append(f"Evidence coverage boost: +{coverage_boost:.2f}")
+        modifications.append(f"Evidence coverage boost: +&#123;coverage_boost:.2f&#125;")
     
     # Factor 2: Independent source ratio
     if independent_power > 0:
@@ -661,30 +666,30 @@ def calculate_enhanced_probability_distribution(
         if independent_ratio > 0.5:
             indie_boost = min(0.25, (independent_ratio - 0.5) * 0.5)
             enhanced_dist["TRUE"] += indie_boost
-            modifications.append(f"Independent sources boost: +{indie_boost:.2f}")
+            modifications.append(f"Independent sources boost: +&#123;indie_boost:.2f&#125;")
     
     # Factor 3: Scientific evidence weighting
     if scientific_power > 0:
         science_weight = min(0.4, scientific_power * 0.2)
         enhanced_dist["TRUE"] += science_weight
-        modifications.append(f"Scientific evidence boost: +{science_weight:.2f}")
+        modifications.append(f"Scientific evidence boost: +&#123;science_weight:.2f&#125;")
     
     # Factor 4: YouTube counter-intelligence
     if youtube_counter_power > 0:
         youtube_impact = min(0.20, youtube_counter_power * 0.08)
         enhanced_dist["FALSE"] += youtube_impact
-        modifications.append(f"YouTube CI penalty: +{youtube_impact:.2f} to FALSE")
+        modifications.append(f"YouTube CI penalty: +&#123;youtube_impact:.2f&#125; to FALSE")
     
     # Factor 5: Press release penalty
     self_ref_count = len([pr for pr in press_releases if pr.get('self_referential')])
     if self_ref_count > 0:
         penalty = min(0.4, self_ref_count * 0.15)
         enhanced_dist["FALSE"] += penalty
-        modifications.append(f"Press release penalty: +{penalty:.2f} to FALSE")
+        modifications.append(f"Press release penalty: +&#123;penalty:.2f&#125; to FALSE")
     
     # Normalize
     total = sum(enhanced_dist.values())
-    enhanced_dist = {k: v / total for k, v in enhanced_dist.items()}
+    enhanced_dist = &#123;k: v / total for k, v in enhanced_dist.items()&#125;
     
     # Ensure minimums
     for key in ["TRUE", "FALSE", "UNCERTAIN"]:

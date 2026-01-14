@@ -142,7 +142,7 @@ transcript_analysis = await asyncio.wait_for(
 Added comprehensive `[SHERLOCK]` debug logs at every critical step:
 
 ```python
-logger.info("🔍 [SHERLOCK] Starting transcript download for video: {video_id}")
+logger.info("🔍 [SHERLOCK] Starting transcript download for video: &#123;video_id&#125;")
 logger.info("🔍 [SHERLOCK] Fetching transcript list with 30s timeout")
 logger.info("🔍 [SHERLOCK] Creating ChatVertexAI with 120s timeout")
 logger.info("🔍 [SHERLOCK] Invoking LLM with timeout protection")
@@ -179,20 +179,20 @@ Layer 3: Per-Video Timeout (200s)
 ### Before:
 ```python
 except Exception as e:
-    logger.error(f"Failed to extract counter-claims with LLM: {e}")
+    logger.error(f"Failed to extract counter-claims with LLM: &#123;e&#125;")
     return []
 ```
 
 ### After:
 ```python
 except TimeoutError as e:
-    logger.error(f"🔍 [SHERLOCK] Timeout during LLM transcript analysis: {e}")
+    logger.error(f"🔍 [SHERLOCK] Timeout during LLM transcript analysis: &#123;e&#125;")
     return []
 except Exception as e:
-    logger.error(f"🔍 [SHERLOCK] Failed to extract counter-claims with LLM: {e}")
-    logger.error(f"🔍 [SHERLOCK] Exception type: {type(e).__name__}")
+    logger.error(f"🔍 [SHERLOCK] Failed to extract counter-claims with LLM: &#123;e&#125;")
+    logger.error(f"🔍 [SHERLOCK] Exception type: &#123;type(e).__name__&#125;")
     import traceback
-    logger.error(f"🔍 [SHERLOCK] Traceback: {traceback.format_exc()}")
+    logger.error(f"🔍 [SHERLOCK] Traceback: &#123;traceback.format_exc()&#125;")
     return []
 ```
 
@@ -219,8 +219,8 @@ tail -f logs/*.log | grep SHERLOCK
 - Verify graceful failure and continuation
 
 ### 3. Performance Validation
-- Measure time per video (should be < 200s)
-- Verify 3-video analysis completes in < 10 minutes
+- Measure time per video (should be &lt; 200s)
+- Verify 3-video analysis completes in &lt; 10 minutes
 - Check that successful videos still process correctly
 
 ## Expected Behavior

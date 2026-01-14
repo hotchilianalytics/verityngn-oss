@@ -125,7 +125,7 @@ All workflow files have been restored to their FULL PRODUCTION versions with NO 
 
 **Primary: Local-First** ⭐
 - Default execution on user's machine
-- CLI: `verityngn verify <youtube_url>`
+- CLI: `verityngn verify [youtube_url]`
 - Streamlit UI: `streamlit run ui/streamlit_app.py`
 - No cloud account required
 
@@ -136,7 +136,7 @@ All workflow files have been restored to their FULL PRODUCTION versions with NO 
 
 **Demo: Streamlit Community Cloud**
 - Public demo with pre-populated gallery
-- Process short videos (<5 min)
+- Process short videos (&lt;5 min)
 
 **Tutorial: Google Colab**
 - Jupyter notebook walkthrough

@@ -54,7 +54,7 @@ This guide covers deploying the VerityNgn Streamlit UI across different platform
    type = "service_account"
    project_id = "verityindex-0-0-1"
    private_key_id = "your-private-key-id"
-  private_key = "<PASTE_PRIVATE_KEY_PEM_HERE>"
+   private_key = "[PASTE_PRIVATE_KEY_PEM_HERE]"
    client_email = "your-service-account@project.iam.gserviceaccount.com"
    client_id = "your-client-id"
    auth_uri = "https://accounts.google.com/o/oauth2/auth"
@@ -118,7 +118,7 @@ This guide covers deploying the VerityNgn Streamlit UI across different platform
 5. **Create environment file**
    ```bash
    # Create .env file (or use systemd environment files)
-   cat > .env << 'EOF'
+   cat > .env &lt;&lt; 'EOF'
    GOOGLE_APPLICATION_CREDENTIALS=/home/yourusername/.verityngn/secrets/service-account.json
    GOOGLE_SEARCH_API_KEY=your-search-api-key
    CSE_ID=your-cse-id
@@ -163,11 +163,11 @@ This guide covers deploying the VerityNgn Streamlit UI across different platform
 
 7. **Set up reverse proxy** (nginx example)
    ```nginx
-   server {
+   server &#123;
        listen 80;
        server_name your-domain.com;
        
-       location / {
+       location / &#123;
            proxy_pass http://localhost:8501;
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
@@ -176,8 +176,8 @@ This guide covers deploying the VerityNgn Streamlit UI across different platform
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
            proxy_set_header X-Forwarded-Proto $scheme;
-       }
-   }
+       &#125;
+   &#125;
    ```
 
 ---
@@ -315,7 +315,7 @@ def load_secrets():
             load_dotenv(env_file)
             return True
     except Exception as e:
-        print(f"Warning: Could not load .env file: {e}")
+        print(f"Warning: Could not load .env file: &#123;e&#125;")
     
     return False
 
@@ -403,8 +403,8 @@ import os
 import streamlit as st
 
 st.write("Debug: Checking environment variables")
-st.write(f"GOOGLE_SEARCH_API_KEY: {'✅ Set' if os.getenv('GOOGLE_SEARCH_API_KEY') else '❌ Missing'}")
-st.write(f"CSE_ID: {'✅ Set' if os.getenv('CSE_ID') else '❌ Missing'}")
+st.write(f"GOOGLE_SEARCH_API_KEY: &#123;'✅ Set' if os.getenv('GOOGLE_SEARCH_API_KEY') else '❌ Missing'&#125;")
+st.write(f"CSE_ID: &#123;'✅ Set' if os.getenv('CSE_ID') else '❌ Missing'&#125;")
 ```
 
 ### Streamlit Cloud "Module not found"

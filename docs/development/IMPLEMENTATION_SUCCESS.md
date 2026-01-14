@@ -363,13 +363,13 @@ ui_display:
 **Example**:
 
 ```json
-{
+&#123;
   "claim_text": "Video does not state Dr. Ross's medical license number",
   "specificity_score": 85,
   "verifiability_score": 0.90,
   "claim_type": "absence",
   "quality_level": "EXCELLENT"
-}
+&#125;
 ```
 
 **Impact**: These become the HIGHEST quality claims (85+ specificity, 0.9 verifiability) and are easily verifiable by searching medical license databases.
@@ -383,12 +383,12 @@ ui_display:
 **Example**:
 
 ```json
-{
+&#123;
   "counter_claim": "No study by Harvard on turmeric exists in 2013",
   "evidence_snippet": "I searched PubMed and Google Scholar—there's no Harvard study from 2013 about turmeric for weight loss",
   "credibility_score": 0.85,
   "claim_type": "contradiction"
-}
+&#125;
 ```
 
 **Impact**: Provides direct contradictions with evidence quotes, dramatically strengthening verification.

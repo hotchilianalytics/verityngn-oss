@@ -70,17 +70,17 @@ claim = "Time Magazine dubbed Dr. Ross the Most Relevant Health Expert of 2023."
 
 # Calculate specificity (0-100)
 specificity, breakdown = calculate_specificity_score(claim)
-print(f"Specificity: {specificity}/100")
-print(f"Breakdown: {breakdown}")  
-# {'proper_nouns': 10, 'temporal': 15, 'quantitative': 0, 'attribution': 10}
+print(f"Specificity: &#123;specificity&#125;/100")
+print(f"Breakdown: &#123;breakdown&#125;")  
+# &#123;'proper_nouns': 10, 'temporal': 15, 'quantitative': 0, 'attribution': 10&#125;
 
 # Classify claim type
 claim_type = classify_claim_type(claim)
-print(f"Type: {claim_type.value}")  # 'publication'
+print(f"Type: &#123;claim_type.value&#125;")  # 'publication'
 
 # Predict verifiability
 verifiability = predict_verifiability(claim, claim_type)
-print(f"Verifiability: {verifiability:.2f}")  # 0.66
+print(f"Verifiability: &#123;verifiability:.2f&#125;")  # 0.66
 
 # Determine if claim is worth verifying
 if specificity >= 40 and verifiability >= 0.5:
@@ -99,22 +99,22 @@ async def main():
     result = await extract_claims_enhanced_wrapper(
         video_url="https://www.youtube.com/watch?v=tLJC8hkK-ao",
         video_id="tLJC8hkK-ao",
-        video_info={"title": "Lipozem Interview", "duration": 1998}
+        video_info=&#123;"title": "Lipozem Interview", "duration": 1998&#125;
     )
     
     claims = result['claims']
     metadata = result['extraction_metadata']
     
-    print(f"Extracted {len(claims)} high-quality claims")
-    print(f"Initial: {metadata['initial_claim_count']} → Final: {len(claims)}")
-    print(f"Absence claims generated: {metadata['absence_claims']}")
+    print(f"Extracted &#123;len(claims)&#125; high-quality claims")
+    print(f"Initial: &#123;metadata['initial_claim_count']&#125; → Final: &#123;len(claims)&#125;")
+    print(f"Absence claims generated: &#123;metadata['absence_claims']&#125;")
     
     # Analyze quality
     for claim in claims:
-        print(f"\nClaim: {claim['claim_text'][:80]}...")
-        print(f"  Type: {claim['claim_type']}, Quality: {claim['quality_level']}")
-        print(f"  Specificity: {claim['specificity_score']}/100")
-        print(f"  Verifiability: {claim['verifiability_score']:.2f}")
+        print(f"\nClaim: &#123;claim['claim_text'][:80]&#125;...")
+        print(f"  Type: &#123;claim['claim_type']&#125;, Quality: &#123;claim['quality_level']&#125;")
+        print(f"  Specificity: &#123;claim['specificity_score']&#125;/100")
+        print(f"  Verifiability: &#123;claim['verifiability_score']:.2f&#125;")
 
 asyncio.run(main())
 ```
@@ -133,7 +133,7 @@ claim_type = "credential"
 # Generate optimized queries
 queries = generate_verification_queries(claim, claim_type, max_queries=3)
 for i, query in enumerate(queries, 1):
-    print(f"{i}. {query}")
+    print(f"&#123;i&#125;. &#123;query&#125;")
 
 # Output:
 # 1. "Julian Ross" medical license physician lookup
@@ -142,9 +142,9 @@ for i, query in enumerate(queries, 1):
 
 # Generate multi-strategy queries
 strategy = generate_multi_query_strategy(claim, claim_type)
-print(f"\nPrimary: {strategy['primary']}")
-print(f"Fallback: {strategy['fallback']}")
-print(f"Negative: {strategy['negative']}")
+print(f"\nPrimary: &#123;strategy['primary']&#125;")
+print(f"Fallback: &#123;strategy['fallback']&#125;")
+print(f"Negative: &#123;strategy['negative']&#125;")
 ```
 
 ---
@@ -280,14 +280,14 @@ passed, failed = filter_low_quality_claims(
     min_verifiability=0.6  # Require 0.6/1.0
 )
 
-print(f"Passed: {len(passed)}, Failed: {len(failed)}")
+print(f"Passed: &#123;len(passed)&#125;, Failed: &#123;len(failed)&#125;")
 
 # Examine why claims failed
 for claim in failed[:5]:
-    print(f"\nFailed: {claim['claim_text'][:60]}...")
-    print(f"  Specificity: {claim['specificity_score']}/100")
-    print(f"  Verifiability: {claim['verifiability_score']:.2f}")
-    print(f"  Reason: {'Too vague' if claim['specificity_score'] < 50 else 'Low verifiability'}")
+    print(f"\nFailed: &#123;claim['claim_text'][:60]&#125;...")
+    print(f"  Specificity: &#123;claim['specificity_score']&#125;/100")
+    print(f"  Verifiability: &#123;claim['verifiability_score']:.2f&#125;")
+    print(f"  Reason: &#123;'Too vague' if claim['specificity_score'] &lt; 50 else 'Low verifiability'&#125;")
 ```
 
 ### Generate Custom Absence Claims
@@ -296,14 +296,14 @@ for claim in failed[:5]:
 from verityngn.workflows.enhanced_claim_extraction import _generate_absence_claims
 
 existing_claims = [...]  # Your extracted claims
-video_info = {"title": "...", "duration": 1998}
+video_info = &#123;"title": "...", "duration": 1998&#125;
 
 # Generate absence claims based on what's missing
 absence_claims = _generate_absence_claims(existing_claims, video_info)
 
 for claim in absence_claims:
-    print(f"Absence: {claim['claim_text']}")
-    print(f"  Verifiability: {claim['verifiability_score']:.2f}")
+    print(f"Absence: &#123;claim['claim_text']&#125;")
+    print(f"  Verifiability: &#123;claim['verifiability_score']:.2f&#125;")
 ```
 
 ### Enhance Weak Claims
@@ -315,12 +315,12 @@ weak_claim = "A study showed that turmeric helps with weight loss"
 
 enhancement = enhance_claim_specificity(weak_claim)
 
-print(f"Original: {weak_claim}")
-print(f"Specificity: {enhancement['specificity_score']}/100")
-print(f"Quality: {enhancement['quality_level']}")
+print(f"Original: &#123;weak_claim&#125;")
+print(f"Specificity: &#123;enhancement['specificity_score']&#125;/100")
+print(f"Quality: &#123;enhancement['quality_level']&#125;")
 print(f"\nSuggestions for improvement:")
 for suggestion in enhancement['suggestions']:
-    print(f"  - {suggestion}")
+    print(f"  - &#123;suggestion&#125;")
 
 # Output:
 # Suggestions for improvement:
@@ -451,7 +451,7 @@ SUCCESS CRITERIA EVALUATION
 
 - Claim count: 7-20 (inconsistent)
 - Avg specificity: ~30/100 (estimated)
-- Verifiable claims: <40%
+- Verifiable claims: &lt;40%
 - TRUE verdicts: 0% (0 out of 171 claims)
 - Absence claims: 0
 
@@ -514,7 +514,7 @@ Log and analyze which queries work:
 
 ## 🔧 Troubleshooting
 
-### Problem: Low Specificity Scores (<40)
+### Problem: Low Specificity Scores (&lt;40)
 
 **Cause**: Claims are too vague
 **Solution**:
@@ -534,7 +534,7 @@ for suggestion in enhancement['suggestions']:
 **Solution**: Manually add absence claims:
 
 ```python
-absence_claim = {
+absence_claim = &#123;
     'claim_text': "Video does not state where Dr. X obtained medical degree",
     'timestamp': "N/A",
     'speaker': "Analyst",
@@ -542,7 +542,7 @@ absence_claim = {
     'specificity_score': 85,
     'verifiability_score': 0.9,
     'claim_type': 'absence'
-}
+&#125;
 claims.append(absence_claim)
 ```
 
@@ -554,7 +554,7 @@ claims.append(absence_claim)
 ```python
 # Check claim type classification
 claim_type = classify_claim_type(claim_text)
-print(f"Classified as: {claim_type.value}")
+print(f"Classified as: &#123;claim_type.value&#125;")
 
 # If wrong, manually specify type
 queries = generate_verification_queries(claim_text, 'credential')  # Force type

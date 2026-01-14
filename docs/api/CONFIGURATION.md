@@ -1,3 +1,8 @@
+---
+title: "Configuration Reference"
+description: "Environment variables and engine tuning parameters"
+---
+
 # VerityNgn Configuration Reference
 
 Complete reference for all configuration options.
@@ -582,7 +587,7 @@ import os
 from dotenv import load_dotenv
 
 env = os.getenv("ENVIRONMENT", "development")
-load_dotenv(f".env.{env}")
+load_dotenv(f".env.&#123;env&#125;")
 ```
 
 ---

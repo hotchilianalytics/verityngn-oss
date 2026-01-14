@@ -292,7 +292,7 @@ YouTube videos to assess the truthfulness of claims using:
 **Technical:**
 - [ ] Zero credential exposure incidents ⚠️ CRITICAL
 - [ ] Repository cloneable and functional
-- [ ] < 5 setup questions (docs are clear)
+- [ ] &lt; 5 setup questions (docs are clear)
 - [ ] No critical bugs
 
 **Community:**

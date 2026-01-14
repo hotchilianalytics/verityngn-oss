@@ -93,7 +93,7 @@ def run_verification_workflow(video_url: str, config: dict, log_queue: Queue):
 ```python
 def add_log(level: str, message: str, log_queue=None):
     """Thread-safe logging via queue"""
-    log_entry = {'timestamp': time.time(), 'level': level, 'message': message}
+    log_entry = &#123;'timestamp': time.time(), 'level': level, 'message': message&#125;
     
     if log_queue is not None:
         log_queue.put(log_entry)  # From thread
@@ -141,16 +141,16 @@ if status == 'processing':
 **Fix Applied to `verityngn/workflows/pipeline.py`:**
 ```python
 except Exception as e:
-    logger.error(f"❌ Workflow failed: {e}", exc_info=True)
+    logger.error(f"❌ Workflow failed: &#123;e&#125;", exc_info=True)
     
     # Save error state for debugging
     try:
-        error_state = {...}
+        error_state = &#123;...&#125;
         with open(error_file, "w") as f:
             json.dump(error_state, f, indent=2)
-        logger.info(f"💾 Error state saved to: {error_file}")
+        logger.info(f"💾 Error state saved to: &#123;error_file&#125;")
     except Exception as save_error:
-        logger.error(f"Failed to save error state: {save_error}")
+        logger.error(f"Failed to save error state: &#123;save_error&#125;")
     
     # Re-raise the original exception so callers know it failed
     raise  # ← ADDED THIS
@@ -165,7 +165,7 @@ except Exception as e:
 def add_log(level: str, message: str, log_queue=None):
     # Always print to console for visibility
     timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-    console_msg = f"[{timestamp}] [{level.upper()}] {message}"
+    console_msg = f"[&#123;timestamp&#125;] [&#123;level.upper()&#125;] &#123;message&#125;"
     print(console_msg, flush=True)  # Force immediate output
 ```
 

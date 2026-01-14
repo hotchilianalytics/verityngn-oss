@@ -1,0 +1,51 @@
+---
+title: "Benchmarks & Performance"
+description: "How VerityNgn performs against real-world misinformation"
+---
+
+# Benchmarks & Performance
+
+VerityNgn has been evaluated on a **200-claim test set** spanning health supplements, financial advice, cryptocurrency, and viral misinformation.
+
+## Key Metrics
+
+| Metric | Result |
+| :--- | :--- |
+| **Accuracy vs. Ground Truth** | 78% (95% CI: 61-85%) |
+| **Counter-Intel Lift** | +18% on misleading content |
+| **Calibration (Brier Score)** | 0.12 |
+| **Precision (False Claims)** | 85% |
+
+### The "Counter-Intel" Advantage
+The counter-intelligence module is the primary differentiator for VerityNgn. By actively searching for debunking videos and detecting promotional press releases, we achieve an **18 percentage point improvement** in accuracy when analyzing misleading content (scams, conspiracy theories).
+
+## Efficiency (v2.0)
+
+With the introduction of **Intelligent Video Segmentation**, VerityNgn v2.0 significantly reduces costs and processing time by maximizing the 1M token context window of Gemini 2.5 Flash.
+
+| Metric | v1.0 (Fixed) | v2.0 (Intelligent) | Improvement |
+| :--- | :--- | :--- | :--- |
+| **API Calls** (33-min video) | 7 | 1 | **86% Reduction** |
+| **Processing Time** | 56-84 min | 8-12 min | **~7x Faster** |
+| **Context Utilization** | ~3% | ~58% | **19x Improvement** |
+
+## Token Economics
+
+Processing a typical video costs between **$0.50 – $2.00** depending on:
+1. Video length (impacts multimodal input tokens).
+2. Number of claims extracted (impacts output tokens).
+3. Search depth (Google Search API costs).
+
+## Error Calibration
+We avoid binary "True/False" labels. Instead, we use a calibrated three-state distribution:
+`P(TRUE) + P(FALSE) + P(UNCERTAIN) = 1.0`
+
+This ensures that when the system is unsure (e.g., a "Likely False" verdict with 40% Uncertainty), it signals the need for human review rather than forcing a potentially incorrect binary choice.
+
+## CRAAP Analysis
+The system performs a deep credibility analysis, scoring content on the industry-standard **CRAAP Analysis** framework:
+- **Currency**: When was the information published?
+- **Relevance**: Is it relevant to the video's main message?
+- **Authority**: What credentials or expertise is claimed?
+- **Accuracy**: Can it be verified with external sources?
+- **Purpose**: Is it promotional, educational, or persuasive?

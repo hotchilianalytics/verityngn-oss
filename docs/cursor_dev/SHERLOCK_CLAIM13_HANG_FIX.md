@@ -115,7 +115,7 @@ result = future.result(timeout=90.0)  # ✅ Reduced to 90 seconds
 **Before:**
 ```python
 evidence_text = "\n".join([
-    f"Source: {item.get('source_name', 'Unknown')}\n...Text: {item.get('text', '')[:500]}\n"
+    f"Source: &#123;item.get('source_name', 'Unknown')&#125;\n...Text: &#123;item.get('text', '')[:500]&#125;\n"
     for item in main_evidence[:10]  # 10 items × 500 chars
 ])
 ```
@@ -124,10 +124,10 @@ evidence_text = "\n".join([
 ```python
 evidence_items = main_evidence[:8]  # ✅ Reduced from 10 to 8
 evidence_text = "\n".join([
-    f"Source: {item.get('source_name', 'Unknown')}\n...Text: {item.get('text', '')[:400]}\n"
+    f"Source: &#123;item.get('source_name', 'Unknown')&#125;\n...Text: &#123;item.get('text', '')[:400]&#125;\n"
     for item in evidence_items  # ✅ 8 items × 400 chars
 ])
-logger.info(f"📊 [SHERLOCK] Formatted {len(evidence_items)} evidence items for LLM")
+logger.info(f"📊 [SHERLOCK] Formatted &#123;len(evidence_items)&#125; evidence items for LLM")
 ```
 
 **Impact**: 
@@ -176,7 +176,7 @@ if consecutive_timeouts == 0:
 else:
     delay = 10  # Double delay after timeout to let API recover
 
-logger.info(f"⏸️ Rate limiting: waiting {delay}s before next claim...")
+logger.info(f"⏸️ Rate limiting: waiting &#123;delay&#125;s before next claim...")
 await asyncio.sleep(delay)
 ```
 
@@ -396,7 +396,7 @@ Watch for:
 ### The Bottom Line
 
 **Before**: Could hang for 12+ hours on a single video
-**After**: Completes or fails gracefully in < 30 minutes
+**After**: Completes or fails gracefully in &lt; 30 minutes
 
 **Status**: ✅ **PRODUCTION READY** with realistic rate limit handling
 

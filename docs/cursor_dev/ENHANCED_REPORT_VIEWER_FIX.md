@@ -74,7 +74,7 @@ output_dir = None
 for dir_path in possible_dirs:
     if dir_path.exists():
         output_dir = dir_path
-        print(f"✅ Found output directory: {output_dir.absolute()}")
+        print(f"✅ Found output directory: &#123;output_dir.absolute()&#125;")
         break
 
 # Fallback to config if outputs_debug not found
@@ -108,7 +108,7 @@ for video_dir in output_dir.iterdir():
     for complete_dir in complete_dirs:
         # Try both naming conventions
         report_paths = [
-            complete_dir / f'{video_id}_report.json',
+            complete_dir / f'&#123;video_id&#125;_report.json',
             complete_dir / 'report.json',
         ]
         

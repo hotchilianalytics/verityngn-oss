@@ -259,7 +259,7 @@ See [Setup Guide - API Keys](SETUP.md#api-keys-optional-but-recommended)
 2. API quota exceeded - check Google Cloud quotas
 3. Model error - check logs for specific error
 
-**Solution:** Try a shorter video first (< 10 minutes)
+**Solution:** Try a shorter video first (&lt; 10 minutes)
 
 ### "Permission denied"
 

@@ -48,7 +48,7 @@ Improve claim extraction quality for signature video tLJC8hkK-ao through data-dr
   - **Quantitative data** (20 pts): Numbers, percentages, measurements
   - **Source attribution** (25 pts): Citations, DOIs, journals
 - Special handling for absence claims (automatic 85/100 score)
-- Threshold: Claims scoring <40 are flagged for enhancement or rejection
+- Threshold: Claims scoring &lt;40 are flagged for enhancement or rejection
 
 **1.2 Verifiability Prediction Model**
 
@@ -100,7 +100,7 @@ Improve claim extraction quality for signature video tLJC8hkK-ao through data-dr
 - Scores each claim for specificity (0-100)
 - Classifies claim type
 - Predicts verifiability (0.0-1.0)
-- Filters out conspiracy theories and very weak claims (<20 specificity)
+- Filters out conspiracy theories and very weak claims (&lt;20 specificity)
 
 **PASS 3**: Claim enhancement (optional, currently disabled)
 
@@ -151,7 +151,7 @@ Improve claim extraction quality for signature video tLJC8hkK-ao through data-dr
 ### 2. Specificity-Based Filtering
 
 **Problem**: 80% of claims were too vague to verify
-**Solution**: Score claims 0-100, filter out <40, prioritize >60
+**Solution**: Score claims 0-100, filter out &lt;40, prioritize >60
 **Example**:
 
 - "A study showed..." → 2/100 (rejected)
@@ -250,7 +250,7 @@ from verityngn.workflows.enhanced_claim_extraction import extract_claims_enhance
 result = await extract_claims_enhanced_wrapper(
     video_url="https://www.youtube.com/watch?v=tLJC8hkK-ao",
     video_id="tLJC8hkK-ao",
-    video_info={"title": "...", "duration": 1998}
+    video_info=&#123;"title": "...", "duration": 1998&#125;
 )
 
 claims = result['claims']  # Enhanced, scored, and ranked claims
@@ -271,9 +271,9 @@ specificity, breakdown = calculate_specificity_score(claim_text)
 claim_type = classify_claim_type(claim_text)
 verifiability = predict_verifiability(claim_text, claim_type)
 
-print(f"Specificity: {specificity}/100")
-print(f"Type: {claim_type.value}")
-print(f"Verifiability: {verifiability:.2f}")
+print(f"Specificity: &#123;specificity&#125;/100")
+print(f"Type: &#123;claim_type.value&#125;")
+print(f"Verifiability: &#123;verifiability:.2f&#125;")
 ```
 
 ### Analyze Claim Corpus

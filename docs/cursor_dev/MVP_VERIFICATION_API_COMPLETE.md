@@ -14,7 +14,7 @@ The Streamlit UI was getting a **404 error** when trying to submit verification 
 
 New endpoints:
 - `POST /api/v1/verification/verify` - Submit verification task
-- `GET /api/v1/verification/status/{task_id}` - Check task status
+- `GET /api/v1/verification/status/&#123;task_id&#125;` - Check task status
 - `GET /api/v1/verification/tasks` - List all tasks
 
 Features:
@@ -40,11 +40,11 @@ Features:
 ```bash
 # Test 1: Submit verification task
 ✅ POST /api/v1/verification/verify
-   Response: {"task_id": "9a9e53b9-...", "status": "pending"}
+   Response: &#123;"task_id": "9a9e53b9-...", "status": "pending"&#125;
 
 # Test 2: Check task status
-✅ GET /api/v1/verification/status/{task_id}
-   Response: {"status": "processing", "progress": 0.2, "message": "Downloading video..."}
+✅ GET /api/v1/verification/status/&#123;task_id&#125;
+   Response: &#123;"status": "processing", "progress": 0.2, "message": "Downloading video..."&#125;
 
 # Test 3: UI integration
 ✅ Streamlit UI can now submit verification requests without 404 errors

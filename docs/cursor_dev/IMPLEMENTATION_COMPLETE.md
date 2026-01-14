@@ -44,7 +44,7 @@ Successfully identified and fixed the claim extraction quality regression that r
 - Lines 56-64: Replaced aggressive 5-10 claim cap with scaled targets:
   - Videos >30 min: 15-25 claims
   - Videos >15 min: 10-15 claims  
-  - Videos <15 min: 5-10 claims
+  - Videos &lt;15 min: 5-10 claims
 
 **Impact:** 50-minute videos now target 25 claims instead of 10
 

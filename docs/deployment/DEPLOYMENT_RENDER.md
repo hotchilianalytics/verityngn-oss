@@ -57,7 +57,7 @@ PROJECT_ID=your-project-id
 LOCATION=us-central1
 
 # Service Account JSON (as single-line string)
-GCP_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+GCP_SERVICE_ACCOUNT_JSON=&#123;"type":"service_account",...&#125;
 
 # Storage Configuration
 DEPLOYMENT_MODE=production

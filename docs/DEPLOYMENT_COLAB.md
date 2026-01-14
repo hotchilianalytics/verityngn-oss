@@ -55,19 +55,19 @@ API_URL = "https://your-api.run.app"
 
 # Submit
 VIDEO_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-response = requests.post(f"{API_URL}/api/v1/verification/verify", 
-                         json={"video_url": VIDEO_URL})
+response = requests.post(f"&#123;API_URL&#125;/api/v1/verification/verify", 
+                         json=&#123;"video_url": VIDEO_URL&#125;)
 task_id = response.json()["task_id"]
 
 # Monitor
 while True:
-    status = requests.get(f"{API_URL}/api/v1/verification/status/{task_id}")
+    status = requests.get(f"&#123;API_URL&#125;/api/v1/verification/status/&#123;task_id&#125;")
     if status.json()["status"] == "completed":
         break
     time.sleep(5)
 
 # Get report
-report = requests.get(f"{API_URL}/api/v1/reports/{video_id}/report.html")
+report = requests.get(f"&#123;API_URL&#125;/api/v1/reports/&#123;video_id&#125;/report.html")
 display(HTML(report.text))
 ```
 

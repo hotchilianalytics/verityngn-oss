@@ -18,13 +18,13 @@ texts.append(call_segment(start, end))
 total_segments = max(1, (duration_sec + SEGMENT_DURATION_SECONDS - 1) // SEGMENT_DURATION_SECONDS)
 
 # Show segmentation plan
-logger.info(f"🎬 [VERTEX] Segmentation plan: {duration_sec}s video → {total_segments} segment(s)")
-logger.info(f"   Expected time: ~{total_segments * 8}-{total_segments * 12} minutes total")
+logger.info(f"🎬 [VERTEX] Segmentation plan: &#123;duration_sec&#125;s video → &#123;total_segments&#125; segment(s)")
+logger.info(f"   Expected time: ~&#123;total_segments * 8&#125;-&#123;total_segments * 12&#125; minutes total")
 
 # Log EVERY segment (including segment 0!)
-logger.info(f"🎬 [VERTEX] Segment {segment_count + 1}/{total_segments}: Processing {start}s → {end}s")
+logger.info(f"🎬 [VERTEX] Segment &#123;segment_count + 1&#125;/&#123;total_segments&#125;: Processing &#123;start&#125;s → &#123;end&#125;s")
 logger.info(f"   ⏱️  Expected processing time: 8-12 minutes for this segment")
-logger.info(f"   📊 Progress: {((segment_count) / total_segments * 100):.0f}% complete")
+logger.info(f"   📊 Progress: &#123;((segment_count) / total_segments * 100):.0f&#125;% complete")
 logger.info(f"   ⏳ Please wait... (this is NORMAL, not hung)")
 
 texts.append(call_segment(start, end))

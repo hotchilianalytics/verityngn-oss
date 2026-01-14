@@ -1,3 +1,8 @@
+---
+title: "Streamlit Cloud"
+description: "Deploy the VerityNgn UI to Streamlit Community Cloud"
+---
+
 # 🚀 Deploy VerityNgn UI to Streamlit Community Cloud
 
 ## Current Status

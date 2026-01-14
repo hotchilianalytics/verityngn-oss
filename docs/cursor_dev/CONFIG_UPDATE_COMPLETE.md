@@ -80,7 +80,7 @@ RUN mkdir -p /app/outputs /app/ui/gallery/approved
 ```
 
 **verityngn/services/search/youtube_search.py**:
-- Line 187: Changed `f"outputs_debug/{video_id}/**/{video_id}.info.json"` to `f"{OUTPUTS_DIR.name}/{video_id}/**/{video_id}.info.json"`
+- Line 187: Changed `f"outputs_debug/&#123;video_id&#125;/**/&#123;video_id&#125;.info.json"` to `f"&#123;OUTPUTS_DIR.name&#125;/&#123;video_id&#125;/**/&#123;video_id&#125;.info.json"`
 - Line 1029: Changed `os.path.join("outputs_debug", ...)` to `os.path.join(str(OUTPUTS_DIR), ...)`
 - Added `OUTPUTS_DIR` to imports (line 24)
 
@@ -168,7 +168,7 @@ Run a test verification to ensure the new model configuration works:
 # Or via API:
 curl -X POST http://localhost:8080/api/v1/verification/verify \
   -H "Content-Type: application/json" \
-  -d '{"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
+  -d '&#123;"video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"&#125;'
 ```
 
 ---

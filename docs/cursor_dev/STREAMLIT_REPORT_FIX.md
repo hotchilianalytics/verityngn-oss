@@ -69,7 +69,7 @@ for complete_dir in video_dir.glob('*_complete'):
     # Try both naming conventions
     paths = [
         complete_dir / 'report.json',
-        complete_dir / f'{video_id}_report.json'
+        complete_dir / f'&#123;video_id&#125;_report.json'
     ]
     ...
 ```
@@ -95,7 +95,7 @@ for d in output_dir.iterdir():
     
     # Check new format (timestamped subdirectories)
     for complete_dir in d.glob('*_complete'):
-        if (complete_dir / f'{d.name}_report.json').exists():
+        if (complete_dir / f'&#123;d.name&#125;_report.json').exists():
             has_report = True
     
     if has_report:

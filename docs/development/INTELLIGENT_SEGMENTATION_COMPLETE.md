@@ -215,13 +215,13 @@ Then wait 8-12 minutes for completion (not 56-84 minutes!).
 Edit `verityngn/config/video_segmentation.py`:
 
 ```python
-MODEL_SPECS = {
-    "your-new-model": {
+MODEL_SPECS = &#123;
+    "your-new-model": &#123;
         "context_window": 4_000_000,  # 4M tokens
         "max_output_tokens": 100_000,   # 100K tokens
         "recommended_fps": 1.0,
-    },
-}
+    &#125;,
+&#125;
 ```
 
 ### Test Segmentation Plan

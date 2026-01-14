@@ -12,7 +12,7 @@
 ```
 JSON parsing failed even after cleaning: Invalid control character at: line 2 column 21 (char 22)
 Attempted to parse:
-{
+&#123;
   "youtube_urls\": [
 ```
 
@@ -24,7 +24,7 @@ The `clean_gemini_json()` function was removing **ALL** backslashes, which broke
 ### Solution
 Modified `verityngn/utils/json_fix.py` to:
 - ✅ Fix escaped quotes in JSON keys (pattern: `"key\":` → `"key":`)
-- ✅ Fix escaped quotes at end of values (`\"}` → `"}`)
+- ✅ Fix escaped quotes at end of values (`\"&#125;` → `"&#125;`)
 - ✅ Fix double-escaped quotes (multiple backslashes → single escape)
 - ✅ **Preserve valid JSON escapes** (don't remove all backslashes)
 - ✅ Remove control characters (but preserve newlines/tabs)
@@ -36,7 +36,7 @@ content = content.replace('\\', '')  # ❌ Breaks valid JSON
 
 # After: Fix specific patterns, preserve valid escapes
 content = re.sub(r'"([^"]+)\\":', r'"\1":', content)  # Fix escaped quotes in keys
-content = re.sub(r'\\"([,}\]])', r'"\1', content)  # Fix escaped quotes before punctuation
+content = re.sub(r'\\"([,&#125;\]])', r'"\1', content)  # Fix escaped quotes before punctuation
 ```
 
 ---
@@ -50,11 +50,11 @@ HTML reports generated links to API endpoints that didn't exist, so claim source
 Created complete API server infrastructure:
 
 1. **Created `/verityngn/api/routes/reports.py`**
-   - `GET /api/v1/reports/{video_id}/report.html` - Serve HTML reports
-   - `GET /api/v1/reports/{video_id}/report.json` - Serve JSON reports
-   - `GET /api/v1/reports/{video_id}/report.md` - Serve Markdown reports
-   - `GET /api/v1/reports/{video_id}/claim/{claim_id}/sources.html` - Claim sources HTML
-   - `GET /api/v1/reports/{video_id}/claim/{claim_id}/sources.md` - Claim sources Markdown
+   - `GET /api/v1/reports/&#123;video_id&#125;/report.html` - Serve HTML reports
+   - `GET /api/v1/reports/&#123;video_id&#125;/report.json` - Serve JSON reports
+   - `GET /api/v1/reports/&#123;video_id&#125;/report.md` - Serve Markdown reports
+   - `GET /api/v1/reports/&#123;video_id&#125;/claim/&#123;claim_id&#125;/sources.html` - Claim sources HTML
+   - `GET /api/v1/reports/&#123;video_id&#125;/claim/&#123;claim_id&#125;/sources.md` - Claim sources Markdown
 
 2. **Features:**
    - ✅ Uses timestamped storage to find latest complete reports
@@ -77,8 +77,8 @@ python -m verityngn.api
 uvicorn verityngn.api:app --host 0.0.0.0 --port 8000
 
 # Access reports:
-# http://localhost:8000/api/v1/reports/{video_id}/report.html
-# http://localhost:8000/api/v1/reports/{video_id}/claim/claim_0/sources.html
+# http://localhost:8000/api/v1/reports/&#123;video_id&#125;/report.html
+# http://localhost:8000/api/v1/reports/&#123;video_id&#125;/claim/claim_0/sources.html
 ```
 
 ---
@@ -93,7 +93,7 @@ The "View Reports" section never worked because:
 
 ### Root Cause
 - Streamlit runs from different working directory
-- Reports are in `verityngn-oss/verityngn/outputs_debug/{video_id}/{timestamp}_complete/{video_id}_report.json`
+- Reports are in `verityngn-oss/verityngn/outputs_debug/&#123;video_id&#125;/&#123;timestamp&#125;_complete/&#123;video_id&#125;_report.json`
 - Code was looking in `./outputs` or relative paths
 
 ### Solution
@@ -119,7 +119,7 @@ Fixed `ui/components/report_viewer.py`:
 
 3. **Fixed Report Discovery:**
    - Check timestamped directories first
-   - Look for `{video_id}_report.json` (most common)
+   - Look for `&#123;video_id&#125;_report.json` (most common)
    - Fallback to `report.json`
    - Error handling for file loading
 
@@ -173,7 +173,7 @@ streamlit run ui/streamlit_app.py
 
 ### API Functionality
 - [ ] Start API server: `python -m verityngn.api`
-- [ ] Access report HTML: `http://localhost:8000/api/v1/reports/{video_id}/report.html`
+- [ ] Access report HTML: `http://localhost:8000/api/v1/reports/&#123;video_id&#125;/report.html`
 - [ ] Verify claim source links work
 - [ ] Check API logs for correct file serving
 
@@ -243,7 +243,7 @@ streamlit run ui/streamlit_app.py
 ### Report Viewer Fix
 - **Absolute path resolution** from workspace root
 - **Timestamped directory detection** (most recent first)
-- **Multiple filename pattern matching** (`{video_id}_report.json`, `report.json`)
+- **Multiple filename pattern matching** (`&#123;video_id&#125;_report.json`, `report.json`)
 - **Graceful error handling** for missing files
 
 ---

@@ -44,8 +44,8 @@ from verityngn.services.search.web_search import deep_counter_intel_search  # âœ
 3. **Returns structured counter-intelligence**:
    ```python
    [
-       {"url": "https://www.youtube.com/watch?v=...", "source_type": "youtube_counter_intelligence"},
-       {"url": "https://snopes.com/...", "source_type": "web_counter_intelligence"}
+       &#123;"url": "https://www.youtube.com/watch?v=...", "source_type": "youtube_counter_intelligence"&#125;,
+       &#123;"url": "https://snopes.com/...", "source_type": "web_counter_intelligence"&#125;
    ]
    ```
 

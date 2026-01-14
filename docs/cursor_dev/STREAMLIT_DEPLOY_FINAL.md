@@ -18,7 +18,7 @@
 **Cause:** Missing both Python package AND system binary  
 **Fix:** ✅ Added `ffmpeg-python==0.2.0` + `ui/packages.txt`
 
-### Issue 4: ⚠️ `FutureWarning: google-cloud-storage < 3.0.0`
+### Issue 4: ⚠️ `FutureWarning: google-cloud-storage &lt; 3.0.0`
 **Cause:** Old version of google-cloud-storage  
 **Fix:** ✅ Upgraded to `google-cloud-storage>=3.0.0`
 

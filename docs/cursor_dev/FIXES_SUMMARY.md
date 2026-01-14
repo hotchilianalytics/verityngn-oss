@@ -31,7 +31,7 @@
 ### 3. Workflow Log Saving ✅
 **Problem**: No persistent workflow logs for debugging  
 **Solution**:
-- Added file handler to save all workflow logs to `{video_id}_workflow.log`
+- Added file handler to save all workflow logs to `&#123;video_id&#125;_workflow.log`
 - Logs saved in outputs directory alongside reports
 - Captures DEBUG level logs from all workflow modules
 - Includes function names and line numbers for debugging

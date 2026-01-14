@@ -5,7 +5,7 @@
 ### Symptoms
 ```
 [VERTEX] Multiple content parts detected: Cannot get the response text.
-"parts": [{ }, { }]  ← EMPTY!
+"parts": [&#123; &#125;, &#123; &#125;]  ← EMPTY!
 📊 Claims processed: 3  ← Should be 15-25!
 ```
 
@@ -131,7 +131,7 @@ The response has `thoughts_token_count: 3058`. Thinking mode might:
 - Store actual output in a specific part only
 
 ### Source 3: Response Serialization Issue
-When logging the response, parts show as empty `{ }`. This could mean:
+When logging the response, parts show as empty `&#123; &#125;`. This could mean:
 - Parts exist but don't serialize to JSON properly
 - Need to access raw Part objects differently
 - Proto/dataclass has hidden fields

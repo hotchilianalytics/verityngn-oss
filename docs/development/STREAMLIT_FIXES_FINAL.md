@@ -14,11 +14,11 @@ Notice the **space** after `v=` and before `sbChYUijRKE`!
 ### Evidence from Trace
 
 ```
-widgets {
+widgets &#123;
   id: "$$ID-0becff6dde67b41bf8472c2e27f128dc-video_url_input"
   string_value: "https://www.youtube.com/watch?v= sbChYUijRKE"
                                                     ↑ SPACE HERE!
-}
+&#125;
 ```
 
 ### Why This Broke Everything
@@ -172,7 +172,7 @@ url = user_input.strip()
 ### 4. Debug Logging is Essential
 ```python
 if start_button:
-    st.write(f"DEBUG: video_id={video_id}")  # This helped us find the issue!
+    st.write(f"DEBUG: video_id=&#123;video_id&#125;")  # This helped us find the issue!
 ```
 
 ### 5. Test with Real User Behavior

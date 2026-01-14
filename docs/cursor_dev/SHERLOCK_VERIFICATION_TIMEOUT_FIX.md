@@ -11,7 +11,7 @@ Additionally, JSON parsing errors in Deep CI:
 JSON parsing failed even after cleaning: Invalid control character at: line 2 column 21 (char 22)
 
 Attempted to parse:
-{
+&#123;
   "youtube_urls\": [
     \"https://www.youtube.com/watch?v=S02F793wGj0",
 ```
@@ -71,11 +71,11 @@ with ThreadPoolExecutor(max_workers=1) as executor:
     try:
         result = future.result(timeout=150.0)  # 150 second timeout
         elapsed = time.time() - start_time
-        logger.info(f"🔍 [SHERLOCK] Agent verification completed in {elapsed:.1f}s")
+        logger.info(f"🔍 [SHERLOCK] Agent verification completed in &#123;elapsed:.1f&#125;s")
     except FuturesTimeoutError:
         logger.error(f"🔍 [SHERLOCK] Agent verification timed out after 150s")
         # Return uncertain result on timeout
-        return {...}
+        return &#123;...&#125;
 ```
 
 **Lines 1577-1582:** Added timeout to async verification function
@@ -150,14 +150,14 @@ Or on timeout:
 ```
 JSON parsing failed: Invalid control character at: line 2 column 21 (char 22)
 Attempted to parse:
-{
+&#123;
   "youtube_urls\": [
     \"https://www.youtube.com/watch?v=S02F793wGj0",
 ```
 
 **After Fix:**
 ```
-{
+&#123;
   "youtube_urls": [
     "https://www.youtube.com/watch?v=S02F793wGj0",
 ```
@@ -239,7 +239,7 @@ Watch for:
 
 ### Action Items:
 1. **If timeouts are frequent (>10%):** Consider increasing timeout or optimizing LLM prompts
-2. **If timeouts are rare (<5%):** Current settings are appropriate
+2. **If timeouts are rare (&lt;5%):** Current settings are appropriate
 3. **Monitor timing logs:** Identify slow claims for optimization
 
 ## Next Steps

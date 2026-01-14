@@ -1,0 +1,86 @@
+Here is the enhanced Substack post, incorporating the text from your blog draft and integrating relevant images and charts from the provided sources.
+
+# I Built an AI That Fact-Checks YouTube Videos — Here's What I Learned About Fighting Misinformation
+
+*Video misinformation is growing faster than fact-checkers can keep up. So I built an open-source system that fights back — with counter-intelligence.* 1  
+VerityNgn Brand Logo*(Source: VerityNgn Brand Asset 2\)*
+
+### The Problem No One Is Solving
+
+Every minute, 500 hours of video are uploaded to YouTube. That's 720,000 hours per day 1\. Meanwhile, professional fact-checkers can review maybe 10-20 claims per day — if they're working full-time 1\.  
+The math doesn't work 3\.  
+But here's what really bothers me: **existing automated fact-checking tools only analyze text** 3\. They read the transcript and call it a day, missing the on-screen graphics claiming "clinically proven" or visual demonstrations that look convincing but are meaningless 3\. Video misinformation is fundamentally different from text misinformation because it combines multiple modalities — spoken words, visuals, on-screen text, audio cues — into a persuasive package that bypasses our critical thinking 3\.  
+And there's another problem: **search engines are broken for fact-checking** 4\. When you Google claims from a scam supplement video, you often find promotional press releases designed to look like news 4\. The search results *confirm* the false claims because the misinformation ecosystem is optimized for SEO 4\.  
+VerityNgn Demo Animation*VerityNgn accepts a YouTube URL and analyzes the video content directly. (Source: Demo GIF 5\)*
+
+### Building VerityNgn: A Counter-Intelligence Approach
+
+I spent the last year building **VerityNgn** (Verity Engine) — an open-source system that takes a fundamentally different approach to video verification 6\. The core insight is that we need counter-intelligence, not just fact-checking 6\.
+
+#### 1\. Multimodal Analysis — Not Just Text
+
+VerityNgn uses Google's Gemini 2.5 Flash to analyze the *full video* at 1 frame per second, processing spoken words, on-screen text (OCR), visual demonstrations, and audio cues 6\. The 1M token context window means we can process up to 47 minutes of video in a single pass without losing context 6\.  
+VerityNgn Architecture*The 4-stage pipeline: Ingestion, Extraction (Multimodal), Evidence gathering, and Verdict. (Source: Architecture Slide 7\)*
+
+#### 2\. Counter-Intelligence — Actively Seeking Contradictory Evidence
+
+This is the key innovation 8\. Instead of just searching for evidence that confirms or denies claims, VerityNgn actively hunts for:
+
+* **YouTube review videos:** Independent creators who have reviewed, tested, or debunked the content 8\.  
+* **Press release detection:** Identifies promotional content masquerading as news with 94% precision 8\.  
+* **Contradiction weighting:** Evidence that contradicts the claim is weighted more heavily than confirming evidence 8\.
+
+Why? Because misinformation is designed to generate supporting evidence 8\. Counter-intelligence cuts through this by explicitly searching for opposition 8\.
+
+#### 3\. Probabilistic Truthfulness — Not Binary Verdicts
+
+Real-world claims are rarely simply "true" or "false" 9\. VerityNgn generates a three-state probability distribution: **TRUE** (evidence supports), **FALSE** (evidence contradicts), and **UNCERTAIN** (insufficient or conflicting evidence) 9\.  
+CRAAP Analysis Report*The system performs a deep credibility analysis, scoring content on Currency, Relevance, Authority, Accuracy, and Purpose. (Source: CRAAP Analysis 10\)*  
+We report calibrated probabilities, not confident-sounding guesses 11\. A claim might be TRUE for some people, FALSE as a general claim, and UNCERTAIN given specific evidence 9\.
+
+### The Results
+
+We evaluated VerityNgn on claims spanning health supplements, financial advice, cryptocurrency, and misinformation videos 11\.  
+Accuracy Statistics*VerityNgn achieves 75% accuracy against ground truth, with a significant boost from its counter-intelligence module. (Source: Stats Graphic 12\)*  
+Metric,Result  
+Accuracy vs. ground truth,75% (95% CI: 61-85%) 13  
+Improvement from counter-intel,+18% on misleading content 13  
+Calibration (Brier score),0.12 13  
+Precision (FALSE claims),85% 13  
+The counter-intelligence system adds 18 percentage points of accuracy on misleading content (scam videos, conspiracy theories) 13\. That's the difference between a usable system and a toy 13\.
+
+### See It In Action
+
+The output is an interactive HTML report showing each claim extracted from the video, evidence found for and against, and specific recommendations for the viewer 11, 14\.  
+Example Gallery*The VerityNgn Gallery displays reports from analyzed videos, allowing users to browse community verifications. (Source: Gallery Overview 15\)*  
+You can review specific recommendations generated by the AI based on the evidence found:  
+Recommendations Screen*Actionable, evidence-based recommendations provided to the viewer. (Source: Recommendations View 14\)*
+
+### Try It Right Now
+
+The easiest way to try VerityNgn is the live Streamlit app 16:  
+[**verityngn.streamlit.app**](https://verityngn.streamlit.app)
+
+1. Paste a YouTube URL 16\.  
+2. Click "Start Verification" 16\.  
+3. Browse the Gallery to see your report 16\.
+
+App Input Screen*The main interface allows for direct video URL input or channel selection. (Source: App Screenshot 17\)*
+
+### Open Source: Apache 2.0
+
+The entire codebase is open source under Apache 2.0 16\. You can find it here:  
+[**github.com/hotchilianalytics/verityngn-oss**](https://github.com/hotchilianalytics/verityngn-oss)  
+This includes the complete verification engine, Streamlit UI, three methodology papers with full transparency, Docker deployment configurations, and API documentation 16\.  
+I'm releasing this because I believe misinformation is too important a problem to solve behind closed doors 18\. The methodology needs to be transparent, the code needs to be auditable, and the community needs to be able to improve it 18\.
+
+### Limitations (Honest Assessment)
+
+VerityNgn is a research project, not a production fact-checking service 18\. The 75% accuracy means 25% of claims are incorrectly assessed 19\. It is currently English-only, works only on YouTube, and while it has a 94% precision in detecting press releases, it is still susceptible to coordinated campaigns if enough fake "review" videos exist 8, 18\.  
+This is a tool to augment human judgment, not replace it 19\.
+
+### What's Next
+
+We are currently prioritizing multi-language support (Spanish, French, German), additional platforms like TikTok and Instagram Reels, and expanded evidence sources such as Reddit and specialized databases 19\.  
+If you're interested in misinformation research, AI, or just want to see how this works, please **star the repo** and try the demo 20\. The fight against misinformation needs all of us 20\.  
+*Alan Coppola is the creator of VerityNgn and founder of HotChili Analytics. Follow him on X [@AlanJCoppola](https://twitter.com/AlanJCoppola) and LinkedIn.* 21  

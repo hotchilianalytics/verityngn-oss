@@ -1,3 +1,8 @@
+---
+title: "Setup Guide"
+description: "Complete installation and configuration walkthrough"
+---
+
 # VerityNgn Setup Guide
 
 Complete guide to setting up VerityNgn with Google Cloud authentication.

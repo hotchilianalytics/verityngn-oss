@@ -25,16 +25,16 @@
 ### 3. **Nested Probability Distribution**
 **Problem:** `probability_distribution` was nested inside `verification_result`
 ```json
-{
+&#123;
   "claim_id": 0,
   "probability_distribution": null,  // ← Empty at top level
-  "verification_result": {
-    "probability_distribution": {    // ← Actually here!
+  "verification_result": &#123;
+    "probability_distribution": &#123;    // ← Actually here!
       "TRUE": 0.25,
       "FALSE": 0.70
-    }
-  }
-}
+    &#125;
+  &#125;
+&#125;
 ```
 
 **Fix:** Created `get_prob_dist()` helper to extract from nested structure
@@ -67,7 +67,7 @@ def find_latest_report_file(video_id: str, filename_pattern: str) -> Path:
     
     for complete_dir in complete_dirs:
         # Try with video_id prefix first
-        candidate = complete_dir / f"{video_id}_{filename_pattern}"
+        candidate = complete_dir / f"&#123;video_id&#125;_&#123;filename_pattern&#125;"
         if candidate.exists():
             return candidate
         # Fallback to plain filename
@@ -92,12 +92,12 @@ claims = report.get('verified_claims') or report.get('claims_breakdown', [])
 
 # Helper to extract nested probability_distribution
 def get_prob_dist(claim):
-    prob = claim.get('probability_distribution', {})
+    prob = claim.get('probability_distribution', &#123;&#125;)
     if not prob:
-        ver = claim.get('verification_result', {})
+        ver = claim.get('verification_result', &#123;&#125;)
         if isinstance(ver, dict):
-            prob = ver.get('probability_distribution', {})
-    return prob or {}
+            prob = ver.get('probability_distribution', &#123;&#125;)
+    return prob or &#123;&#125;
 ```
 
 ### Fix 3: Claims Table Rendering
@@ -184,23 +184,23 @@ The viewer now supports **both** report formats:
 
 ### Old Format (still supported):
 ```json
-{
+&#123;
   "verified_claims": [...],
   "overall_truthfulness_score": 0.5,
   "summary": "..."
-}
+&#125;
 ```
 
 ### New Format (current):
 ```json
-{
+&#123;
   "claims_breakdown": [...],
   "overall_assessment": ["status", "description"],
   "key_findings": [...],
-  "verification_result": {
-    "probability_distribution": {...}
-  }
-}
+  "verification_result": &#123;
+    "probability_distribution": &#123;...&#125;
+  &#125;
+&#125;
 ```
 
 ---

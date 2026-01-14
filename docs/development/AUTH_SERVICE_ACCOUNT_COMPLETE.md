@@ -27,7 +27,7 @@ The system checks these locations automatically:
 
 ### 1. Download Service Account JSON
 
-<https://console.cloud.google.com/iam-admin/serviceaccounts>
+https://console.cloud.google.com/iam-admin/serviceaccounts
 
 - Select your project
 - Click service account → Keys → Add Key → JSON
@@ -172,7 +172,7 @@ locations = [
 
 for loc in locations:
     if loc and Path(loc).exists():
-        print(f"✅ Found: {loc}")
+        print(f"✅ Found: &#123;loc&#125;")
         break
 else:
     print("❌ No service account JSON found")
@@ -200,7 +200,7 @@ echo $GOOGLE_APPLICATION_CREDENTIALS
 
 **Solution:**
 
-1. Go to: <https://console.cloud.google.com/iam-admin/iam>
+1. Go to: https://console.cloud.google.com/iam-admin/iam
 2. Find your service account email
 3. Edit → Add role → **Vertex AI User**
 4. Save
@@ -225,7 +225,7 @@ python test_credentials.py
 python -c "
 from google.oauth2 import service_account
 creds = service_account.Credentials.from_service_account_file('service-account.json')
-print(f'✅ Valid: {creds.service_account_email}')
+print(f'✅ Valid: &#123;creds.service_account_email&#125;')
 "
 ```
 

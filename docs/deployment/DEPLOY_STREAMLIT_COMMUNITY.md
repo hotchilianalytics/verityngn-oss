@@ -4,7 +4,7 @@
 
 Your UI is **already running** locally!
 
-**Access it at:** <http://localhost:8501>
+**Access it at:** http://localhost:8501
 
 ---
 
@@ -25,7 +25,7 @@ docker compose restart ui
 docker compose stop ui
 ```
 
-**Access:** <http://localhost:8501>
+**Access:** http://localhost:8501
 
 ### Option 2: Run UI Directly (Alternative)
 
@@ -48,7 +48,7 @@ streamlit run ui/streamlit_app.py
 ### Prerequisites
 
 ✅ **GitHub Account** - To host the code  
-✅ **Streamlit Community Account** - Free at <https://share.streamlit.io>  
+✅ **Streamlit Community Account** - Free at https://share.streamlit.io  
 ✅ **ngrok Tunnel Running** - Your API at `https://oriented-flea-large.ngrok-free.app`
 
 ---
@@ -78,7 +78,7 @@ git push origin main
 
 ### Step 2: Deploy to Streamlit Community
 
-1. **Go to:** <https://share.streamlit.io>
+1. **Go to:** https://share.streamlit.io
 
 2. **Sign in** with GitHub
 
@@ -271,7 +271,7 @@ View app health:
 
 Monitor API calls:
 
-- **URL:** <http://localhost:4040>
+- **URL:** http://localhost:4040
 - Shows all requests from Streamlit to your API
 
 ---
@@ -386,7 +386,7 @@ Streamlit App: https://your-subdomain.streamlit.app
 
 ## ✅ Deployment Checklist
 
-- [ ] Local UI tested at <http://localhost:8501>
+- [ ] Local UI tested at http://localhost:8501
 - [ ] ngrok tunnel running
 - [ ] Repo pushed to GitHub (public)
 - [ ] Streamlit Community account created
@@ -397,4 +397,4 @@ Streamlit App: https://your-subdomain.streamlit.app
 
 ---
 
-**Ready to deploy?** Go to <https://share.streamlit.io> and click "New app"! 🚀
+**Ready to deploy?** Go to https://share.streamlit.io and click "New app"! 🚀

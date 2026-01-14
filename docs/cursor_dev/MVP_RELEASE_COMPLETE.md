@@ -33,8 +33,8 @@ All core functionality is implemented and documented. Ready for user testing and
 - [x] Reports now work both standalone (file://) and API-served (http://)
 
 **Changed paths**:
-- `/api/v1/reports/{video_id}/claim/...` → `claim/...`
-- `/api/v1/reports/{video_id}/youtube-counter-intel.html` → `youtube-counter-intel.html`
+- `/api/v1/reports/&#123;video_id&#125;/claim/...` → `claim/...`
+- `/api/v1/reports/&#123;video_id&#125;/youtube-counter-intel.html` → `youtube-counter-intel.html`
 - Improved JavaScript handling for both modes
 
 ### 3. API Client Module ✅
@@ -181,7 +181,7 @@ All core functionality is implemented and documented. Ready for user testing and
 
 ```
 outputs/
-└── {video_id}/
+└── &#123;video_id&#125;/
     ├── report.html              # Main report (works standalone)
     ├── report.json              # Structured data
     ├── report.md                # Markdown version

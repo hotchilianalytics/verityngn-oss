@@ -43,7 +43,7 @@ Your `.vscode/launch.json` now has three debug configurations:
 # File: verityngn/workflows/analysis.py
 
 # Line 4087: Before segment processing starts
-logger.info(f"🎬 [VERTEX] Segment {segment_count + 1}/{total_segments}...")
+logger.info(f"🎬 [VERTEX] Segment &#123;segment_count + 1&#125;/&#123;total_segments&#125;...")
 
 # Line 4093: When calling LLM (this takes 8-12 minutes)
 texts.append(call_segment(start, end))
@@ -52,7 +52,7 @@ texts.append(call_segment(start, end))
 resp = model.generate_content(...)
 
 # Line 4041: After segment completes
-logger.info(f"[VERTEX] segment=({start_s},{end_s}) finish={finish}...")
+logger.info(f"[VERTEX] segment=(&#123;start_s&#125;,&#123;end_s&#125;) finish=&#123;finish&#125;...")
 ```
 
 ### For Investigating Segmentation
@@ -144,7 +144,7 @@ duration_sec > 1800
 ### Log Points (No Stop)
 Right-click line → "Add Logpoint" → Enter message:
 ```python
-Segment {segment_count}: {start}s to {end}s
+Segment &#123;segment_count&#125;: &#123;start&#125;s to &#123;end&#125;s
 ```
 Logs without stopping execution!
 

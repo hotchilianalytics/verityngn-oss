@@ -42,7 +42,7 @@ python -m verityngn.api
 Verify API is running:
 ```bash
 curl http://localhost:8080/health
-# Should return: {"status": "healthy"}
+# Should return: &#123;"status": "healthy"&#125;
 ```
 
 ### 2. Start the ngrok tunnel
@@ -70,7 +70,7 @@ Your public API URL is: `https://abc123.ngrok-free.app`
 ```bash
 # Replace with your ngrok URL
 curl https://abc123.ngrok-free.app/health
-# Should return: {"status": "healthy"}
+# Should return: &#123;"status": "healthy"&#125;
 ```
 
 ## Usage Examples
@@ -108,7 +108,7 @@ Use the ngrok URL as your API base:
 import httpx
 
 api_url = "https://abc123.ngrok-free.app"
-response = httpx.get(f"{api_url}/health")
+response = httpx.get(f"&#123;api_url&#125;/health")
 print(response.json())
 ```
 

@@ -61,8 +61,8 @@ Backend (Railway - $5-10/mo):
           │   - 50MB Python dependencies                   │
           └───────────┬────────────────────────────────────┘
                       │ POST /api/v1/verification/verify
-                      │ GET  /api/v1/verification/status/{id}
-                      │ GET  /api/v1/reports/{video_id}/report.html
+                      │ GET  /api/v1/verification/status/&#123;id&#125;
+                      │ GET  /api/v1/reports/&#123;video_id&#125;/report.html
                       │
           ┌───────────▼────────────────────────────────────┐
           │   Railway/Render ($5-10/mo)                    │
@@ -92,9 +92,9 @@ app = FastAPI(title="VerityNgn API")
 
 # Routes:
 POST   /api/v1/verification/verify          # Start verification
-GET    /api/v1/verification/status/{task_id} # Check status
-GET    /api/v1/reports/{video_id}/report.html # Get report
-GET    /api/v1/reports/{video_id}/report.json # Get JSON
+GET    /api/v1/verification/status/&#123;task_id&#125; # Check status
+GET    /api/v1/reports/&#123;video_id&#125;/report.html # Get report
+GET    /api/v1/reports/&#123;video_id&#125;/report.json # Get JSON
 ```
 
 **Deploy to Railway:**
@@ -126,8 +126,8 @@ youtube_url = st.text_input("Enter YouTube URL:")
 if st.button("Verify Video"):
     # Call backend API
     response = requests.post(
-        f"{API_URL}/api/v1/verification/verify",
-        json={"youtube_url": youtube_url}
+        f"&#123;API_URL&#125;/api/v1/verification/verify",
+        json=&#123;"youtube_url": youtube_url&#125;
     )
     
     if response.status_code == 200:
@@ -137,7 +137,7 @@ if st.button("Verify Video"):
         with st.spinner("Processing..."):
             while True:
                 status = requests.get(
-                    f"{API_URL}/api/v1/verification/status/{task_id}"
+                    f"&#123;API_URL&#125;/api/v1/verification/status/&#123;task_id&#125;"
                 ).json()
                 
                 if status["status"] == "completed":
@@ -150,10 +150,10 @@ if st.button("Verify Video"):
         
         # Display report
         video_id = status["video_id"]
-        report_url = f"{API_URL}/api/v1/reports/{video_id}/report.html"
+        report_url = f"&#123;API_URL&#125;/api/v1/reports/&#123;video_id&#125;/report.html"
         
         st.success("Verification complete!")
-        st.markdown(f"[View Full Report]({report_url})")
+        st.markdown(f"[View Full Report](&#123;report_url&#125;)")
         
         # Optionally embed report
         report_html = requests.get(report_url).text

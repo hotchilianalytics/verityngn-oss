@@ -29,9 +29,9 @@ The timeout wrapper in `verification.py` (lines 914-942) protects `agent.invoke(
 if not state.evidence:
     try:
         state.evidence = gather_evidence(claim_text)  # ❌ HANGS HERE
-        logger.info(f"Gathered {len(state.evidence)} pieces of evidence...")
+        logger.info(f"Gathered &#123;len(state.evidence)&#125; pieces of evidence...")
     except Exception as e:
-        logger.error(f"Error gathering evidence: {e}")
+        logger.error(f"Error gathering evidence: &#123;e&#125;")
         state.evidence = []
 
 # Lines 914-942: ThreadPoolExecutor timeout (never reached)
@@ -114,9 +114,9 @@ with ThreadPoolExecutor(max_workers=1) as executor:
 # SHERLOCK FIX: Add 60-second timeout per search
 try:
     regular_results = regular_future.result(timeout=60.0)  # ✅ TIMEOUT
-    logger.debug(f"✅ Regular search completed in {elapsed:.1f}s")
+    logger.debug(f"✅ Regular search completed in &#123;elapsed:.1f&#125;s")
 except Exception as e:
-    logger.warning(f"⚠️ Regular search timed out: {e}")
+    logger.warning(f"⚠️ Regular search timed out: &#123;e&#125;")
     regular_results = []  # Graceful degradation
 ```
 
@@ -305,7 +305,7 @@ Start with aggressive timeouts, relax if needed:
    ```
    ✅ [SHERLOCK] All evidence searches completed
    ```
-   - Normal: < 40s
+   - Normal: &lt; 40s
    - Concerning: > 60s
    - Critical: > 120s
 

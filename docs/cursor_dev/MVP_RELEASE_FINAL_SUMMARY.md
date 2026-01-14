@@ -22,9 +22,9 @@ The VerityNgn MVP is now fully deployed and operational using an API-first archi
   - `GET /health` - Health check
   - `GET /isalive` - Alive check
   - `POST /api/v1/verification/verify` - Submit verification tasks
-  - `GET /api/v1/verification/status/{task_id}` - Check task status
+  - `GET /api/v1/verification/status/&#123;task_id&#125;` - Check task status
   - `GET /api/v1/verification/tasks` - List all tasks
-  - `GET /api/v1/reports/{video_id}/report.{format}` - Get reports (html/json/md)
+  - `GET /api/v1/reports/&#123;video_id&#125;/report.&#123;format&#125;` - Get reports (html/json/md)
   - `GET /api/v1/reports/list` - List reports
 
 ### 2. Streamlit UI (Port 8501)
@@ -193,9 +193,9 @@ docker compose logs -f
 
 ### API Tests
 ```bash
-✅ Health Check: {"status":"healthy"}
-✅ Verification Submit: {"task_id":"...","status":"pending"}
-✅ Status Check: {"status":"processing","progress":0.2}
+✅ Health Check: &#123;"status":"healthy"&#125;
+✅ Verification Submit: &#123;"task_id":"...","status":"pending"&#125;
+✅ Status Check: &#123;"status":"processing","progress":0.2&#125;
 ✅ Reports List: Returns available reports
 ```
 
@@ -277,7 +277,7 @@ docker compose logs -f
 - [x] Links working in reports (relative paths)
 - [x] No authentication errors
 - [x] No dependency conflicts
-- [x] Fast build times (<30 seconds each)
+- [x] Fast build times (&lt;30 seconds each)
 - [x] Health checks passing
 - [x] Credentials properly mounted
 - [x] Documentation complete

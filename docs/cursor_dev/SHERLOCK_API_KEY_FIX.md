@@ -9,7 +9,7 @@
 Despite implementing `secrets_loader.py` to load `.env` files correctly, the Streamlit app continued to show:
 
 ```
-❌ YouTube Data API extraction failed: <HttpError 400 when requesting 
+❌ YouTube Data API extraction failed: [HttpError 400 when requesting]
 https://youtube.googleapis.com/youtube/v3/videos?...&key=your-youtube-api-key&alt=json 
 returned "API key not valid. Please pass a valid API key.">
 ```
@@ -93,7 +93,7 @@ def _override_placeholder_env_vars():
         
         if is_placeholder and env_file_value:
             # Override with .env file value
-            print(f"🔄 Overriding placeholder {key} with .env value")
+            print(f"🔄 Overriding placeholder &#123;key&#125; with .env value")
             os.environ[key] = env_file_value
 ```
 
@@ -112,11 +112,11 @@ def _validate_loaded_secrets_sherlock():
     """
     🔍 SHERLOCK MODE: Validate loaded secrets for placeholder values.
     """
-    keys_to_check = {
+    keys_to_check = &#123;
         "GOOGLE_SEARCH_API_KEY": "Google Search API",
         "CSE_ID": "Custom Search Engine ID",
         "YOUTUBE_API_KEY": "YouTube Data API",
-    }
+    &#125;
     
     placeholder_patterns = [
         "your-", "your_", "placeholder", "example", "change-me",
@@ -127,19 +127,19 @@ def _validate_loaded_secrets_sherlock():
         value = os.getenv(env_key, "")
         
         if not value:
-            print(f"❌ {label} ({env_key}): MISSING (empty)")
+            print(f"❌ &#123;label&#125; (&#123;env_key&#125;): MISSING (empty)")
         else:
             is_placeholder = any(pattern in value.lower() for pattern in placeholder_patterns)
             
             if is_placeholder:
-                print(f"❌ {label} ({env_key}): PLACEHOLDER VALUE DETECTED")
-                print(f"   Current value: \"{value[:30]}...\"")
+                print(f"❌ &#123;label&#125; (&#123;env_key&#125;): PLACEHOLDER VALUE DETECTED")
+                print(f"   Current value: \"&#123;value[:30]&#125;...\"")
                 print(f"   ⚠️  This will cause \"API key not valid\" errors!")
             else:
                 # Show preview for valid keys
                 preview = value[:15] + "..." + value[-5:] if len(value) > 20 else value[:8] + "..."
-                print(f"✅ {label} ({env_key}): Valid")
-                print(f"   Preview: {preview}")
+                print(f"✅ &#123;label&#125; (&#123;env_key&#125;): Valid")
+                print(f"   Preview: &#123;preview&#125;")
 ```
 
 **Key Features:**
@@ -161,16 +161,16 @@ def load_secrets():
         # ... load .env file ...
         env_loaded = True
     except Exception as e:
-        print(f"⚠️  Could not load .env file: {e}")
+        print(f"⚠️  Could not load .env file: &#123;e&#125;")
     
     # STEP 1.5: CRITICAL FIX - Override placeholder values in environment
     # Streamlit loads .streamlit/secrets.toml into os.environ BEFORE our code runs
     if env_loaded:
-        _override_placeholder_env_vars()  # <-- NEW OVERRIDE
+        _override_placeholder_env_vars()  # &lt;-- NEW OVERRIDE
     
     # 🔍 SHERLOCK MODE: Validate loaded .env values for placeholders
     if env_loaded:
-        _validate_loaded_secrets_sherlock()  # <-- VALIDATION
+        _validate_loaded_secrets_sherlock()  # &lt;-- VALIDATION
     
     # STEP 2: Try Streamlit secrets
     # ... (existing code) ...
@@ -195,14 +195,14 @@ def render_report_viewer_tab():
     
     # Source 1: Environment variable
     env_debug = os.getenv("DEBUG_OUTPUTS", "False").lower() == "true"
-    print(f"📋 Source 1 - os.getenv('DEBUG_OUTPUTS'): {os.getenv('DEBUG_OUTPUTS', 'Not set')} -> {env_debug}")
+    print(f"📋 Source 1 - os.getenv('DEBUG_OUTPUTS'): &#123;os.getenv('DEBUG_OUTPUTS', 'Not set')&#125; -> &#123;env_debug&#125;")
     
     # Source 2: Streamlit secrets
     # ... with detailed logging ...
     
     # Source 3: Auto-detect directory
     dir_exists = debug_dir.exists()
-    print(f"📋 Source 3 - Directory check: {debug_dir.absolute()} exists: {dir_exists}")
+    print(f"📋 Source 3 - Directory check: &#123;debug_dir.absolute()&#125; exists: &#123;dir_exists&#125;")
     
     print("="*80 + "\n")
 ```

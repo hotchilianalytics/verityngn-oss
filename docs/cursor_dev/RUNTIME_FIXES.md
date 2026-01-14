@@ -28,7 +28,7 @@ File "/app/verityngn/api/routes/verification.py", line 84
 
 **Fix Applied:**
 - Modified `verityngn/workflows/pipeline.py` line 232-238
-- Now returns dict: `{"video_id": ..., "output_dir": ..., "claims_count": ..., "state": ...}`
+- Now returns dict: `&#123;"video_id": ..., "output_dir": ..., "claims_count": ..., "state": ...&#125;`
 
 ---
 
@@ -54,8 +54,8 @@ File "/app/verityngn/api/routes/verification.py", line 84
 **Error:**
 ```
 JSON parsing failed: Invalid control character at: line 2 column 23 (char 24)
-{
-  "search_phrases\": [    <-- Missing opening quote
+&#123;
+  "search_phrases\": [    &lt;-- Missing opening quote
 ```
 
 **Root Cause:**

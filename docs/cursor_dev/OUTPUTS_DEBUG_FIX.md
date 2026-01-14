@@ -47,7 +47,7 @@ for video_dir in output_dir.iterdir():
     if video_dir.is_dir():
         complete_dirs = list(video_dir.glob('*_complete'))
         for complete_dir in complete_dirs:
-            if (complete_dir / f'{video_dir.name}_report.html').exists():
+            if (complete_dir / f'&#123;video_dir.name&#125;_report.html').exists():
                 report_count += 1
                 break
 ```
