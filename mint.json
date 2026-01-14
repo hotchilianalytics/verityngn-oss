@@ -1,0 +1,114 @@
+{
+  "name": "VerityNgn",
+  "logo": {
+    "light": "/docs/launch/collateral/logo.png",
+    "dark": "/docs/launch/collateral/logo.png"
+  },
+  "favicon": "/docs/launch/collateral/logo.png",
+  "colors": {
+    "primary": "#3B82F6",
+    "light": "#60A5FA",
+    "dark": "#1E40AF"
+  },
+  "topbarLinks": [
+    {
+      "name": "Try Demo",
+      "url": "https://verityngn.streamlit.app"
+    },
+    {
+      "name": "GitHub",
+      "url": "https://github.com/hotchilianalytics/verityngn-oss"
+    },
+    {
+      "name": "Substack",
+      "url": "https://ajjcop.substack.com/p/i-built-an-ai-that-fact-checks-youtube"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Star on GitHub",
+    "url": "https://github.com/hotchilianalytics/verityngn-oss"
+  },
+  "anchors": [
+    {
+      "name": "Demo",
+      "icon": "desktop",
+      "url": "https://verityngn.streamlit.app"
+    },
+    {
+      "name": "Research",
+      "icon": "microscope",
+      "url": "docs/METHODOLOGY"
+    },
+    {
+      "name": "Community",
+      "icon": "comments",
+      "url": "https://github.com/hotchilianalytics/verityngn-oss/discussions"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Introduction",
+      "pages": [
+        "introduction",
+        "benchmarking"
+      ]
+    },
+    {
+      "group": "Getting Started",
+      "pages": [
+        "docs/guides/QUICK_START",
+        "docs/guides/SETUP",
+        "docs/guides/AUTHENTICATION"
+      ]
+    },
+    {
+      "group": "Core Engine",
+      "pages": [
+        "docs/ARCHITECTURE",
+        "docs/METHODOLOGY",
+        "docs/api/CONFIGURATION"
+      ]
+    },
+    {
+      "group": "Deployment",
+      "pages": [
+        "docs/DEPLOYMENT_LOCAL",
+        "docs/DEPLOYMENT_CLOUD_RUN",
+        "docs/deployment/DEPLOY_TO_STREAMLIT"
+      ]
+    },
+    {
+      "group": "Reference & Roadmap",
+      "pages": [
+        "roadmap",
+        "docs/TROUBLESHOOTING",
+        "CHANGELOG"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/hotchilianalytics/verityngn-oss",
+    "x": "https://x.com/AlanJCoppola",
+    "linkedin": "https://www.linkedin.com/in/alan-j-coppola"
+  },
+  "feedback": {
+    "suggestEdit": true,
+    "raiseIssue": true
+  },
+  "editOnGitHub": {
+    "owner": "hotchilianalytics",
+    "repo": "verityngn-oss",
+    "branch": "main"
+  },
+  "metadata": {
+    "og:title": "VerityNgn Documentation",
+    "og:description": "AI-Powered YouTube Video Verification Engine. Analyze multimodal content to assess the truthfulness of claims.",
+    "og:image": "https://raw.githubusercontent.com/hotchilianalytics/verityngn-oss/main/docs/launch/collateral/substack_header.png",
+    "twitter:card": "summary_large_image"
+  },
+  "analytics": {
+    "ga4": {
+      "measurementId": "G-XXXXXXXXXX"
+    }
+  }
+}
