@@ -27,10 +27,10 @@ def map_probabilities_to_verification_result(prob_dist: dict) -> str:
         return "HIGHLY_LIKELY_TRUE"
     elif true_uncertain_combined > 65 and f < 35:
         return "LIKELY_TRUE"
+    elif f > 75 and t < 10:
+        return "HIGHLY_LIKELY_FALSE"
     elif false_uncertain_combined > 65 and t < 35:
         return "LIKELY_FALSE"
-    elif f > 75:
-        return "HIGHLY_LIKELY_FALSE"
     elif t > 50 and f < 20:
         return "LIKELY_TRUE"
     elif f > 45 and t < 25:
@@ -62,11 +62,11 @@ class CredibilityLevel(str, Enum):
 
 class MediaEmbed(BaseModel):
     """Embedding details for the media content."""
-    title: str = Field(..., description="Title of the media content")
-    video_id: str = Field(..., description="Unique ID of the video")
-    thumbnail_url: HttpUrl = Field(..., description="URL of the video thumbnail")
-    video_url: HttpUrl = Field(..., description="URL of the video")
-    description: str = Field(..., description="Description of the video")
+    title: str = Field(default="", description="Not persisted; live oEmbed at render time")
+    video_id: str = Field(..., description="Unique ID of the video (only retained YT-derived field)")
+    thumbnail_url: Optional[str] = Field(default=None, description="Not persisted; live oEmbed at render time")
+    video_url: Optional[str] = Field(default=None, description="Not persisted; deterministic from video_id")
+    description: str = Field(default="", description="Not persisted; raw YT text used in-RAM only during analysis")
     timestamp: Optional[datetime] = Field(None, description="Timestamp of video processing or analysis")
     channel: Optional[str] = Field(None, description="Name of the channel")
     channel_follower_count: Optional[int] = Field(None, description="Number of followers/subscribers")
@@ -75,25 +75,10 @@ class MediaEmbed(BaseModel):
     uploader: Optional[str] = Field(None, description="Name of the uploader")
     uploader_id: Optional[str] = Field(None, description="ID of the uploader")
     uploader_url: Optional[HttpUrl] = Field(None, description="URL of the uploader's channel")
-    view_count: Optional[int] = Field(None, description="Number of views")
+    view_count: Optional[int] = Field(None, description="Not persisted; YouTube API statistic")
 
     def to_markdown(self) -> str:
-        if not self.thumbnail_url:
-            self.thumbnail_url = f"https://img.youtube.com/vi/{self.video_id}/0.jpg"
-        if not self.video_url:
-            self.video_url = f"https://youtu.be/{self.video_id}"
-        
-        # Use HTML div structure for better display, including title and description
-        return f"""<div class="video-embed">
-    <h2>{self.title}</h2>
-    <a href="{self.video_url}" target="_blank">
-        <img src="{self.thumbnail_url}" alt="{self.title}" width="560">
-    </a>
-    <div class="video-description">
-        <h3>YouTube Video Description:</h3>
-        <p>{self.description}</p>
-    </div>
-</div>"""
+        return f"| Video ID | `{self.video_id}` |"
 
 class KeyFinding(BaseModel):
     category: str
@@ -201,6 +186,14 @@ class VerityReport(BaseModel):
     # NEW: Counter-Intelligence Analysis fields
     youtube_counter_intelligence: List[Dict[str, Any]] = []
     press_release_counter_intelligence: List[Dict[str, Any]] = []
+
+    # Qualitative / structural mappings for numeric-free public reports (full metrics stay elsewhere in JSON)
+    category_mappings: Optional[Dict[str, Any]] = None
+
+    # YouTube API compliance audit (fingerprint of consumed .info.json; API data not retained)
+    source_info_hash: Optional[str] = Field(None, description="sha256 of .info.json at ingest, before deletion")
+    info_ingested_at: Optional[str] = Field(None, description="ISO timestamp when API metadata was ingested")
+    report_generated_at: Optional[str] = Field(None, description="ISO timestamp when editorial report was written")
 
     def dict(self, **kwargs):
         """Convert the report to a dictionary with serializable values."""

@@ -5,8 +5,6 @@ import sys
 import tempfile
 from typing import Dict, Any, List, Tuple, Optional, TypedDict
 from pathlib import Path
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_vertexai import ChatVertexAI
 from langchain_core.output_parsers import JsonOutputParser
 from langgraph.graph import StateGraph, END, START
 from datetime import datetime
@@ -45,13 +43,41 @@ from verityngn.models.report import (
 from verityngn.config.prompts import FINAL_REPORT_PROMPT
 from verityngn.services.storage.unified_storage import unified_storage
 from verityngn.config.settings import (
-    AGENT_MODEL_NAME, 
-    OUTPUTS_DIR, 
-    MAX_OUTPUT_TOKENS_2_0_FLASH, 
+    AGENT_MODEL_NAME,
+    OUTPUTS_DIR,
+    MAX_OUTPUT_TOKENS_2_0_FLASH,
     MAX_OUTPUT_TOKENS_2_5_FLASH,
+    PROJECT_ID,
     STORAGE_BACKEND,
-    StorageBackend
+    StorageBackend,
+    VERTEX_LOCATION,
+    VERIFICATION_MODEL_NAME,
 )
+
+
+def _invoke_vertex_genai(prompt: str, max_tokens: int = 8192, temperature: float = 0.3) -> str:
+    """Call Vertex AI via google.genai SDK (avoids ChatVertexAI 404 with location=global). Returns response text."""
+    try:
+        from google import genai
+        from google.genai import types as genai_types
+        client = genai.Client(
+            vertexai=True, project=PROJECT_ID, location=VERTEX_LOCATION
+        )
+        config = genai_types.GenerateContentConfig(
+            max_output_tokens=max_tokens,
+            temperature=temperature,
+        )
+        resp = client.models.generate_content(
+            model=AGENT_MODEL_NAME,
+            contents=prompt,
+            config=config,
+        )
+        if resp and resp.text:
+            return resp.text.strip()
+        return ""
+    except Exception as e:
+        logger.warning("Vertex genai invoke failed: %s", e)
+        raise
 
 from verityngn.services.report.unified_generator import log_report_system_usage
 from verityngn.utils.date_utils import get_current_date_context
@@ -81,6 +107,10 @@ if not logger.handlers:
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
+from verityngn.utils.third_party_logging import configure_third_party_loggers
+
+configure_third_party_loggers()
+
 # Custom JSON encoder for Pydantic models and other types
 class CustomJsonEncoder(json.JSONEncoder):
     def default(self, o):
@@ -106,199 +136,196 @@ def get_state_value(state, key, default=None):
         return getattr(state, key, default)
 
 def get_recommendations_from_agent(video_title: str, claims: List[Claim]) -> List[str]:
-    """Generate smart recommendations based on the verified claims."""
+    """Generate smart recommendations via Vertex AI (google.genai). Excludes UNVERIFIABLE claims from input."""
     try:
-        llm = ChatVertexAI(model_name=AGENT_MODEL_NAME, temperature=0.3, max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH)
-        
-        prompt = ChatPromptTemplate.from_template("""
-        Based on the following video title and verified claims, provide 5-7 specific, actionable recommendations 
-        for viewers who may have watched this content. Focus on evidence-based advice.
-        
-        Video Title: {title}
-        
-        Claims and Their Verification:
-        {claims_summary}
-        
-        Provide your recommendations as a list of specific, actionable advice points.
-        Each recommendation should be evidence-based and directly relate to the claims being made.
-        Format your response as a simple list with one recommendation per line.
-        """)
-        
-        claims_summary = ""
-        for claim in claims:
-            result = claim.verification_result or {}
-            claims_summary += f"- Claim: \"{claim.claim_text}\" | Assessment: {result.get('result', 'Unknown')} | Explanation: {result.get('explanation', 'No explanation provided')}\n"
-        
-        response = llm.invoke(prompt.format(title=video_title, claims_summary=claims_summary))
-        
-        # Extract and clean recommendations
-        recommendations_text = response.content
-        recommendations = [line.strip().replace("- ", "") for line in recommendations_text.split("\n") if line.strip()]
-        
-        return recommendations[:7]  # Limit to 7 recommendations max
-        
+        # Exclude UNVERIFIABLE claims; truncate for prompt size
+        vr_result = lambda c: getattr(c, "verification_result", None) or {}
+        get_result = lambda c: (vr_result(c).get("result") if isinstance(vr_result(c), dict) else None) or ""
+        filtered_claims = [c for c in claims if get_result(c) != "UNVERIFIABLE"][:30]
+        claims_summary_parts = []
+        for claim in filtered_claims:
+            vr = claim.verification_result or {}
+            result = vr.get("result", "Unknown")
+            expl = (vr.get("explanation") or "No explanation provided")[:200]
+            text = (claim.claim_text or "")[:300]
+            claims_summary_parts.append(f"- Claim: \"{text}\" | Assessment: {result} | Explanation: {expl}")
+        claims_summary = "\n".join(claims_summary_parts) or "No claims provided."
+
+        prompt = """
+Based on the following video title and verified claims, provide 5-7 specific, actionable recommendations
+for viewers who may have watched this content. Focus on evidence-based advice.
+
+Video Title: {title}
+
+Claims and Their Verification:
+{claims_summary}
+
+Provide your recommendations as a list of specific, actionable advice points.
+Each recommendation should be evidence-based and directly relate to the claims being made.
+Format your response as a simple list with one recommendation per line.
+""".format(title=video_title, claims_summary=claims_summary)
+        recommendations_text = _invoke_vertex_genai(
+            prompt, max_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH, temperature=0.3
+        )
+        recommendations = [line.strip().replace("- ", "", 1).strip() for line in recommendations_text.split("\n") if line.strip()]
+        return recommendations[:7]
+
     except Exception as e:
-        logger.error(f"Error generating recommendations: {e}")
-        return ["Consult healthcare professionals before acting on health claims in this video",
-                "Verify information from reputable sources before making decisions",
-                "Be cautious of products claiming rapid or miraculous results"]
+        logger.error("Error generating recommendations: %s", e, exc_info=True)
+        return [
+            "Consult healthcare professionals before acting on health claims in this video",
+            "Verify information from reputable sources before making decisions",
+            "Be cautious of products claiming rapid or miraculous results",
+        ]
 
 def generate_craap_analysis(video_title: str, claims: List[Claim]) -> Dict[str, Tuple[CredibilityLevel, str]]:
-    """Generate a comprehensive CRAAP analysis of the content."""
+    """Generate CRAAP analysis via Vertex AI (google.genai). Uses verified claims only, truncated input; asks for JSON and falls back to regex."""
     try:
-        llm = ChatVertexAI(model_name=AGENT_MODEL_NAME, temperature=0.2, max_output_tokens=MAX_OUTPUT_TOKENS_2_5_FLASH)
-        
-        # SHERLOCK FIX: Inject current date context to prevent LLM from treating 2025 sources as "future-dated"
+        # Filter to verified claims (exclude UNVERIFIABLE and pure UNCERTAIN for CRAAP input)
+        vr_result = lambda c: (getattr(c, "verification_result", None) or {}) if not isinstance(c, dict) else (c.get("verification_result") or {})
+        get_result = lambda c: (vr_result(c).get("result") if isinstance(vr_result(c), dict) else None) or ""
+        verified_claims = [c for c in claims if get_result(c) not in ("UNVERIFIABLE", "UNCERTAIN", None, "")]
+        if not verified_claims:
+            verified_claims = [c for c in claims if get_result(c) != "UNVERIFIABLE"]
+        claims_for_craap = verified_claims[:30]
+
         current_date = get_current_date_context()
-        
-        prompt = ChatPromptTemplate.from_template(f"""
-        IMPORTANT DATE CONTEXT:
-        Today's date is {current_date}. When evaluating Currency:
-        - Sources from 2025 are current, NOT future-dated
-        - The year 2025 is the current year
-        - Evaluate recency relative to today ({current_date})
-        - Do not penalize sources simply because they have 2025 dates
-        
-        Perform a CRAAP (Currency, Relevance, Authority, Accuracy, Purpose) analysis on the following video 
-        and its claims. Provide a detailed assessment for each criterion.
-        
-        Video Title: {{title}}
-        
-        Claims and Their Verification:
-        {{claims_summary}}
-        
-        For each CRAAP criterion, provide:
-        1. A rating level (LOW, MEDIUM, or HIGH)
-        2. A detailed explanation (2-3 sentences)
-        
-        Format your response as:
-        Currency: RATING_LEVEL
-        Currency explanation: Your detailed explanation here.
-        
-        Relevance: RATING_LEVEL
-        Relevance explanation: Your detailed explanation here.
-        
-        Authority: RATING_LEVEL
-        Authority explanation: Your detailed explanation here.
-        
-        Accuracy: RATING_LEVEL
-        Accuracy explanation: Your detailed explanation here.
-        
-        Purpose: RATING_LEVEL
-        Purpose explanation: Your detailed explanation here.
-        """)
-        
-        claims_summary = ""
-        for claim in claims:
-            result = claim.verification_result or {}
-            claims_summary += f"- Claim: \"{claim.claim_text}\" | Assessment: {result.get('result', 'Unknown')} | Explanation: {result.get('explanation', 'No explanation provided')}\n"
-        
-        response = llm.invoke(prompt.format(title=video_title, claims_summary=claims_summary))
-        
-        # Parse the CRAAP analysis response
-        analysis_text = response.content
-        logger.info(f"📊 CRAAP LLM response received for '{video_title}' ({len(analysis_text)} chars)")
-        if not analysis_text.strip():
-            logger.warning("⚠️ Received empty CRAAP analysis text")
-            
+        claims_summary_parts = []
+        for claim in claims_for_craap:
+            vr = claim.verification_result if hasattr(claim, "verification_result") else (claim.get("verification_result") if isinstance(claim, dict) else {})
+            if not isinstance(vr, dict):
+                vr = {}
+            result = vr.get("result", "Unknown")
+            expl = vr.get("explanation", "No explanation provided") or "No explanation provided"
+            if len(expl) > 200:
+                expl = expl[:200] + "..."
+            text = (claim.claim_text if hasattr(claim, "claim_text") else claim.get("claim_text", "")) or ""
+            if len(text) > 300:
+                text = text[:300] + "..."
+            claims_summary_parts.append(f"- Claim: \"{text}\" | Assessment: {result} | Explanation: {expl}")
+        claims_summary = "\n".join(claims_summary_parts) or "No verified claims."
+
+        prompt_str = """IMPORTANT DATE CONTEXT: Today's date is {current_date}. Sources from 2025 are current.
+
+Perform a CRAAP (Currency, Relevance, Authority, Accuracy, Purpose) analysis on this video and its verified claims.
+
+Video Title: {title}
+
+Claims and Their Verification:
+{claims_summary}
+
+Respond with JSON only (no markdown). For each criterion use "level" (LOW, MEDIUM, or HIGH) and "explanation" (2-3 sentences).
+Example shape: currency/relevance/authority/accuracy/purpose each with "level" and "explanation".
+""".format(title=video_title, claims_summary=claims_summary, current_date=current_date)
+        analysis_text = _invoke_vertex_genai(
+            prompt_str, max_tokens=MAX_OUTPUT_TOKENS_2_5_FLASH, temperature=0.2
+        )
+        logger.info("CRAAP LLM response received for '%s' (%s chars)", video_title, len(analysis_text))
+        if not analysis_text:
+            raise ValueError("Empty CRAAP analysis text")
+
         craap_analysis = {}
-        
-        # Extract ratings and explanations using regex
-        criteria = ["Currency", "Relevance", "Authority", "Accuracy", "Purpose"]
-        for criterion in criteria:
-            rating_match = re.search(rf"{criterion}: (LOW|MEDIUM|HIGH)", analysis_text, re.IGNORECASE)
-            explanation_match = re.search(rf"{criterion} explanation: (.*?)(?=\n\n|\n[a-zA-Z]+:|\Z)", analysis_text, re.DOTALL | re.IGNORECASE)
-            
-            rating = CredibilityLevel.MEDIUM  # Default
-            if rating_match:
-                rating_text = rating_match.group(1).upper()
-                if rating_text == "LOW":
+        data = None
+        # Try JSON parse (raw or markdown-fenced)
+        for raw in (analysis_text, re.sub(r"^```(?:json)?\s*", "", re.sub(r"\s*```\s*$", "", analysis_text))):
+            try:
+                data = json.loads(raw)
+                if isinstance(data, dict):
+                    break
+            except (json.JSONDecodeError, TypeError):
+                pass
+        if isinstance(data, dict):
+            for criterion in ["currency", "relevance", "authority", "accuracy", "purpose"]:
+                block = data.get(criterion) if isinstance(data.get(criterion), dict) else {}
+                level_str = (block.get("level") or "MEDIUM").upper()
+                explanation = (block.get("explanation") or "Assessment in progress").strip()
+                if level_str == "LOW":
                     rating = CredibilityLevel.LOW
-                elif rating_text == "HIGH":
+                elif level_str == "HIGH":
                     rating = CredibilityLevel.HIGH
-                logger.info(f"✅ CRAAP {criterion} rating: {rating_text}")
-            else:
-                logger.warning(f"⚠️ CRAAP {criterion} rating not found in response, using default MEDIUM")
-            
-            explanation = "Assessment in progress"
-            if explanation_match:
-                explanation = explanation_match.group(1).strip()
-            else:
-                logger.warning(f"⚠️ CRAAP {criterion} explanation not found in response")
-            
-            craap_analysis[criterion.lower()] = (rating, explanation)
-        
-        logger.info(f"✅ CRAAP analysis generation successful for '{video_title}'")
-        return craap_analysis
-        
+                else:
+                    rating = CredibilityLevel.MEDIUM
+                craap_analysis[criterion] = (rating, explanation)
+        else:
+            # Regex fallback (same as old code)
+            criteria = ["Currency", "Relevance", "Authority", "Accuracy", "Purpose"]
+            for criterion in criteria:
+                rating_match = re.search(rf"{criterion}: (LOW|MEDIUM|HIGH)", analysis_text, re.IGNORECASE)
+                explanation_match = re.search(rf"{criterion} explanation: (.*?)(?=\n\n|\n[a-zA-Z]+:|\Z)", analysis_text, re.DOTALL | re.IGNORECASE)
+                rating = CredibilityLevel.MEDIUM
+                if rating_match:
+                    rt = rating_match.group(1).upper()
+                    rating = CredibilityLevel.LOW if rt == "LOW" else (CredibilityLevel.HIGH if rt == "HIGH" else CredibilityLevel.MEDIUM)
+                explanation = explanation_match.group(1).strip() if explanation_match else "Assessment in progress"
+                craap_analysis[criterion.lower()] = (rating, explanation)
+
+        if len(craap_analysis) == 5:
+            logger.info("CRAAP analysis generation successful for '%s'", video_title)
+            return craap_analysis
+        raise ValueError("CRAAP response missing criteria")
     except Exception as e:
-        logger.error(f"❌ Error generating CRAAP analysis: {e}", exc_info=True)
-        default_analysis = {
+        logger.error("Error generating CRAAP analysis: %s", e, exc_info=True)
+        return {
             "currency": (CredibilityLevel.MEDIUM, "Assessment in progress"),
             "relevance": (CredibilityLevel.MEDIUM, "Assessment in progress"),
             "authority": (CredibilityLevel.MEDIUM, "Assessment in progress"),
             "accuracy": (CredibilityLevel.MEDIUM, "Assessment in progress"),
-            "purpose": (CredibilityLevel.MEDIUM, "Assessment in progress")
+            "purpose": (CredibilityLevel.MEDIUM, "Assessment in progress"),
         }
-        return default_analysis
 
 def generate_key_findings(claims: List[Claim]) -> List[KeyFinding]:
     """Generate key findings based on the verified claims."""
     try:
         if not claims:
             return []
-        
-        llm = ChatVertexAI(model_name=AGENT_MODEL_NAME, temperature=0.2, max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH)
-        
+
         # Count claim assessments
         assessment_counts = {}
         for claim in claims:
             result = claim.verification_result or {}
             assessment = result.get("result", "UNKNOWN")
             assessment_counts[assessment] = assessment_counts.get(assessment, 0) + 1
-        
+
         # Prepare summary of claims for the agent
         claims_summary = ""
         for claim in claims:
             result = claim.verification_result or {}
             claims_summary += f"- Claim: \"{claim.claim_text}\" | Assessment: {result.get('result', 'Unknown')} | Explanation: {result.get('explanation', 'No explanation provided')}\n"
-        
-        prompt = ChatPromptTemplate.from_template("""
-        Based on the following verified claims, identify 3-5 key findings or patterns. 
-        Focus on the most important insights that would help someone understand the overall credibility of the content.
-        
-        Claims Assessment Summary:
-        {assessment_summary}
-        
-        Detailed Claims:
-        {claims_summary}
-        
-        For each key finding, provide:
-        1. A category/label (e.g., "Scientific Validity", "Source Credibility", "Misleading Claims")
-        2. A detailed 1-2 sentence explanation
-        
-        Format your response as:
-        Category 1: Short Label/Title
-        Description 1: Detailed explanation
-        
-        Category 2: Short Label/Title
-        Description 2: Detailed explanation
-        
-        And so on.
-        """)
-        
+
         # Prepare assessment summary
         assessment_summary = ""
         for assessment, count in assessment_counts.items():
             assessment_summary += f"{assessment}: {count} claims\n"
-        
-        response = llm.invoke(prompt.format(
-            assessment_summary=assessment_summary,
-            claims_summary=claims_summary
-        ))
-        
+
+        prompt = """
+Based on the following verified claims, identify 3-5 key findings or patterns.
+Focus on the most important insights that would help someone understand the overall credibility of the content.
+
+Claims Assessment Summary:
+{assessment_summary}
+
+Detailed Claims:
+{claims_summary}
+
+For each key finding, provide:
+1. A category/label (e.g., "Scientific Validity", "Source Credibility", "Misleading Claims")
+2. A detailed 1-2 sentence explanation
+
+Format your response as:
+Category 1: Short Label/Title
+Description 1: Detailed explanation
+
+Category 2: Short Label/Title
+Description 2: Detailed explanation
+
+And so on.
+""".format(assessment_summary=assessment_summary, claims_summary=claims_summary)
+
+        findings_text = _invoke_vertex_genai(
+            prompt, max_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH, temperature=0.2
+        )
+
         # Parse the findings
-        findings_text = response.content
         findings = []
         
         finding_pattern = r"Category \d+: (.*?)\nDescription \d+: (.*?)(?=\n\nCategory|\Z)"
@@ -376,7 +403,7 @@ def generate_sophisticated_assessment(claims: List[Claim]) -> Tuple[AssessmentLe
     true_count = (result_counts.get("TRUE", 0) + 
                   result_counts.get("HIGHLY_LIKELY_TRUE", 0) + 
                   result_counts.get("LIKELY_TRUE", 0))
-    uncertain_count = result_counts.get("UNCERTAIN", 0)
+    uncertain_count = result_counts.get("UNCERTAIN", 0) + result_counts.get("UNVERIFIABLE", 0)
     
     false_percentage = (false_count / total_claims) * 100
     true_percentage = (true_count / total_claims) * 100
@@ -739,13 +766,18 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
         claims = state.get("claims", [])
         if not claims:
             logger.warning(f"⚠️ [FINAL_REPORT] No claims found in state for video {video_id}")
+            
+            # Use specific availability status from upstream analysis if available
+            status_val = state.get("video_availability", "failed")
+            error_val = state.get("error_reason", "No claims were extracted during analysis")
+            
             # Create a minimal report with error information
             minimal_report = {
                 "video_id": video_id,
                 "video_url": video_url,
-                "error": "No claims were extracted during analysis",
+                "error": error_val,
                 "timestamp": datetime.now().isoformat(),
-                "status": "failed"
+                "status": status_val
             }
             
             # Save minimal report
@@ -765,9 +797,10 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
         
         logger.info(f"✅ [FINAL_REPORT] Found {len(claims)} claims to process")
         
-        # Create the unified report generator
+        # Create the unified report generator (user_id for commercial user-scoped paths)
         from verityngn.services.report.unified_generator import UnifiedReportGenerator
-        generator = UnifiedReportGenerator(video_id, out_dir_path)
+        user_id = get_state_value(state, "user_id")
+        generator = UnifiedReportGenerator(video_id, out_dir_path, user_id=user_id)
         
         logger.info(f"🔧 [FINAL_REPORT] Created UnifiedReportGenerator for {video_id}")
         
@@ -816,15 +849,13 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
             except Exception:
                 pass
 
+        # description_value kept in-RAM for LLM review only; stripped before JSON persist
         media_embed = MediaEmbed(
             title=video_info.get("title", f"Video {video_id}"),
             video_id=video_id,
             thumbnail_url=thumbnail_url,
             video_url=video_url_final,
             description=description_value,
-            channel=video_info.get("channel", None),
-            upload_date=video_info.get("upload_date", None),
-            view_count=video_info.get("view_count", None),
         )
 
         # Convert claims to typed Claim objects (claim_id must be int; ensure required fields)
@@ -848,10 +879,24 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
         # Generate sophisticated key findings using LLM analysis
         key_findings = generate_key_findings(claims_typed)
         if not key_findings:
-            # Fallback to minimal if LLM generation fails
+            # Fallback to minimal if LLM generation fails (no claim counts in public-facing text)
             key_findings = [
-                KeyFinding(category="Summary", description=f"Analyzed {len(claims_typed)} claims for video {video_id}.")
+                KeyFinding(
+                    category="Summary",
+                    description=f"Editorial claim review completed for video {video_id}.",
+                )
             ]
+
+        # Inject Sherlock CI Report if available
+        sherlock_report = state.get("sherlock_ci_report")
+        if sherlock_report and isinstance(sherlock_report, dict):
+            summary = sherlock_report.get("executive_summary", "")
+            sentiment = sherlock_report.get("sentiment", "UNKNOWN")
+            if summary:
+                key_findings.append(KeyFinding(
+                    category=f"External Web Consensus ({sentiment})",
+                    description=summary
+                ))
 
         # Generate sophisticated assessment and verdict
         verdict, overall_msg, main_concerns = generate_sophisticated_assessment(claims_typed)
@@ -883,25 +928,32 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
                 title=video_info.get("title", f"Video {video_id}"),
             ))
 
-        # Aggregate press release and YouTube CI counts and sources from claims
-        pr_count = 0
-        yt_count = 0
+        # Aggregate press release and YouTube CI counts and sources from claims (deduplicated by URL)
+        seen_pr_urls = set()
+        seen_yt_urls = set()
         press_release_counter_intelligence = []
         youtube_counter_intelligence = []
-        
+
+        def _is_youtube_url(url: str) -> bool:
+            if not url or not isinstance(url, str):
+                return False
+            return "youtube.com" in url or "youtu.be" in url
+
         try:
             for c in claims:
                 vr = c.get("verification_result") or {}
                 if isinstance(vr, dict):
-                    # Aggregate PR sources
+                    # Aggregate PR sources (dedupe by url)
                     pr_list = vr.get("pr_sources") or []
                     if isinstance(pr_list, list):
-                        pr_count += len(pr_list)
                         for pr_source in pr_list:
                             if isinstance(pr_source, dict) and pr_source.get("url"):
-                                # Convert to consistent format for report-level aggregation
+                                url = pr_source.get("url", "").strip()
+                                if url in seen_pr_urls:
+                                    continue
+                                seen_pr_urls.add(url)
                                 aggregated_pr = {
-                                    'url': pr_source.get('url', ''),
+                                    'url': url,
                                     'title': pr_source.get('title', pr_source.get('source_name', 'Press Release')),
                                     'description': pr_source.get('text', ''),
                                     'source_name': pr_source.get('source_name', 'Press Release'),
@@ -912,18 +964,20 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
                                     'claim_text': c.get('claim_text', '')[:100] + '...' if len(c.get('claim_text', '')) > 100 else c.get('claim_text', '')
                                 }
                                 press_release_counter_intelligence.append(aggregated_pr)
-                    
-                    # Aggregate YouTube CI sources
+
+                    # Aggregate YouTube CI sources (dedupe by url; only include real YouTube URLs)
                     yt_list = vr.get("youtube_counter_sources") or []
                     if isinstance(yt_list, list):
-                        yt_count += len(yt_list)
                         for yt_source in yt_list:
                             if isinstance(yt_source, dict) and yt_source.get("url"):
-                                # Convert to consistent format for report-level aggregation  
+                                url = (yt_source.get("url") or "").strip()
+                                if not _is_youtube_url(url) or url in seen_yt_urls:
+                                    continue
+                                seen_yt_urls.add(url)
                                 aggregated_yt = {
-                                    'video_id': yt_source.get('url', '').split('v=')[-1] if 'youtube.com' in yt_source.get('url', '') else 'unknown',
+                                    'video_id': url.split('v=')[-1].split('&')[0] if 'youtube.com' in url or 'youtu.be' in url else 'unknown',
                                     'title': yt_source.get('title', yt_source.get('source_name', 'YouTube Source')),
-                                    'url': yt_source.get('url', ''),
+                                    'url': url,
                                     'description': yt_source.get('text', ''),
                                     'source_name': yt_source.get('source_name', 'YouTube Counter-Intelligence'),
                                     'source_type': 'youtube_counter_intelligence'
@@ -932,6 +986,34 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
         except Exception as e:
             logger.warning(f"Error aggregating CI sources: {e}")
             pass
+
+        # Pull CI-once from state and merge into youtube_counter_intelligence (Section 8 self-contained)
+        try:
+            ci_once = state.get("counter_intel_once", []) or state.get("ci_once", []) or []
+            added_ci = 0
+            for item in ci_once:
+                if not isinstance(item, dict):
+                    continue
+                url = (item.get("url") or "").strip()
+                if not url or not _is_youtube_url(url) or url in seen_yt_urls:
+                    continue
+                seen_yt_urls.add(url)
+                added_ci += 1
+                video_id_ci = url.split("v=")[-1].split("&")[0] if ("youtube.com" in url or "youtu.be" in url) else item.get("video_id", "unknown")
+                youtube_counter_intelligence.append({
+                    "video_id": video_id_ci,
+                    "title": item.get("title", item.get("source_name", "YouTube Source")),
+                    "url": url,
+                    "source_name": item.get("source_name", "YouTube Counter-Intelligence"),
+                    "source_type": item.get("source_type", "youtube_counter_intelligence"),
+                })
+            if added_ci:
+                logger.info("🎯 Merged %s CI-once links into report (Section 8)", added_ci)
+        except Exception as e:
+            logger.warning(f"Error merging CI-once into report: {e}")
+
+        pr_count = len(press_release_counter_intelligence)
+        yt_count = len(youtube_counter_intelligence)
 
         # Add CRAAP analysis if available via generator
         craap: Dict[str, Any] = {}
@@ -959,10 +1041,25 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
                 "Cross-reference information with multiple independent sources"
             ]
 
+        metadata = {
+            "description_review": state.get("description_review", ""),
+            "ai_disclosure": state.get("ai_disclosure", False),
+            "ai_indicators_detected": state.get("ai_indicators_detected", False),
+            "ai_indicators": state.get("ai_indicators", []) or [],
+        }
+        from verityngn.services.report.category_mappings import build_category_mappings
+
+        category_mappings = build_category_mappings(
+            claims_typed,
+            evidence_sources,
+            craap,
+            youtube_counter_intelligence,
+            press_release_counter_intelligence,
+        )
         report = VerityReport(
             media_embed=media_embed,
             title=video_info.get("title", f"Video {video_id}"),
-            description=video_info.get("description", ""),
+            description="",
             quick_summary=quick_summary,
             overall_assessment=(verdict, overall_msg),
             key_findings=key_findings,
@@ -974,6 +1071,8 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
             youtube_response_count=yt_count,
             craap_analysis=craap,
             recommendations=recommendations,  # Add LLM-generated recommendations
+            metadata=metadata,
+            category_mappings=category_mappings,
         )
         logger.info(f"📊 [FINAL_REPORT] Created VerityReport object with {len(claims_typed)} claims")
         
@@ -1088,16 +1187,12 @@ async def run_generate_report(state: Dict[str, Any]) -> Dict[str, Any]:
             video_info = {
                 "id": video_id,
                 "title": media_embed.get("title", f"Video {video_id}"),
-                "description": media_embed.get("description", ""),
                 "thumbnail": media_embed.get("thumbnail_url", f"https://img.youtube.com/vi/{video_id}/0.jpg"),
                 "webpage_url": media_embed.get("video_url", ""),
-                "uploader": media_embed.get("uploader", "Unknown"),
-                "view_count": media_embed.get("view_count"),
-                "upload_date": media_embed.get("upload_date")
             }
         
-        # Create a proper InitialAnalysisState from the dict state
-        initial_analysis_state = InitialAnalysisState(
+        # Build state dict for state_to_report (includes CI-once so Section 8 is self-contained)
+        initial_analysis_state = dict(InitialAnalysisState(
             video_id=video_id,
             video_url=state.get("video_url", ""),
             out_dir_path=out_dir_path,
@@ -1106,47 +1201,30 @@ async def run_generate_report(state: Dict[str, Any]) -> Dict[str, Any]:
             media_embed=media_embed,
             transcription=state.get("transcription", ""),
             video_info=video_info
-        )
-        
-        # Use the GOOD report generation system
+        ))
+        initial_analysis_state["counter_intel_once"] = state.get("counter_intel_once", []) or state.get("ci_once", []) or []
+        initial_analysis_state["ai_disclosure"] = state.get("ai_disclosure", False)
+        initial_analysis_state["ai_indicators_detected"] = state.get("ai_indicators_detected", False)
+        initial_analysis_state["ai_indicators"] = state.get("ai_indicators", []) or []
+        initial_analysis_state["description_review"] = state.get("description_review", "")
+
+        # Use the GOOD report generation system (CI-once merged inside state_to_report)
         logger.info("📊 Using GOOD report generation system (state_to_report)")
         report = await state_to_report(initial_analysis_state)
 
-        # Merge CI-once links (from dict state) into report.youtube_counter_intelligence
-        try:
-            # Support both legacy 'counter_intel_once' and new 'ci_once' keys
-            ci_once = (state.get("counter_intel_once", []) or state.get("ci_once", []) or [])
-            if ci_once:
-                seen = set(x.get('url','') for x in (report.youtube_counter_intelligence or []))
-                merged = list(report.youtube_counter_intelligence or [])
-                added = 0
-                for item in ci_once:
-                    if not isinstance(item, dict):
-                        continue
-                    url = item.get('url','')
-                    if not url or url in seen:
-                        continue
-                    merged.append({
-                        'video_id': url.split('v=')[-1] if ('youtube.com' in url or 'youtu.be' in url) else item.get('video_id','unknown'),
-                        'title': item.get('title', item.get('source_name','YouTube Source')),
-                        'url': url,
-                        'description': item.get('text', item.get('description','')),
-                        'source_name': item.get('source_name', ''),
-                        'source_type': item.get('source_type', 'youtube_counter_intelligence')
-                    })
-                    seen.add(url)
-                    added += 1
-                if added:
-                    report.youtube_counter_intelligence = merged
-                    logger.info(f"🎯 Injected {added} CI-once links into report.youtube_counter_intelligence")
-        except Exception as e:
-            logger.warning(f"Failed to merge CI-once links: {e}")
-        
-        # Use the UNIFIED report generation system
+        import os
+
+        # Check if state_to_report returned a short-circuited state dict containing the error
+        if isinstance(report, dict) and "final_report" in report and "error" in report.get("final_report", {}):
+            logger.info("⏭️ [UNIFIED] Skipping full report generation for minimal error report.")
+            return report
+
+        # Use the UNIFIED report generation system (user_id for commercial user-scoped paths)
         from verityngn.services.report.unified_generator import UnifiedReportGenerator
         
         logger.info("🚀 Using UNIFIED report generation system")
-        generator = UnifiedReportGenerator(video_id, out_dir_path)
+        user_id = state.get("user_id") or os.environ.get("USER_ID")
+        generator = UnifiedReportGenerator(video_id, out_dir_path, user_id=user_id)
         report_paths = await generator.generate_all_reports(report)
         
         # Generate additional JSON output and completion marker
@@ -1159,20 +1237,137 @@ async def run_generate_report(state: Dict[str, Any]) -> Dict[str, Any]:
         
         return {
             **state,
-            "final_report": report.model_dump(),
+            "final_report": report.model_dump() if hasattr(report, "model_dump") else report,
             "json_path": report_paths["json_path"],
             "markdown_path": report_paths["markdown_path"],
             "html_path": report_paths["html_path"],
             "claim_files": report_paths.get("claim_files", []),
             "claims_json_path": claims_json_path,
-            "completion_marker_path": completion_marker_path
+            "completion_marker_path": completion_marker_path,
+            "timestamped_dir": getattr(generator, "timestamped_dir", None),
         }
         
     except Exception as e:
         logger.error(f"❌ [UNIFIED] Report generation failed: {e}")
         raise
 
-async def notify_job_completion(job_id: str, video_id: str, status: str, gcs_path: str) -> None:
+
+async def generate_partial_report(state: Dict[str, Any], reason: str) -> Dict[str, Any]:
+    """
+    Generate a partial report from whatever claims have been verified.
+    
+    This function is called when claim verification times out or fails partway through,
+    ensuring that completed work is not lost. The report will include all claims that
+    were successfully verified, with clear indication that it's a partial report.
+    
+    Args:
+        state: Current workflow state with claims (some may have verification_result)
+        reason: Reason for generating partial report (e.g., "Timeout after claim 11/20")
+        
+    Returns:
+        Updated state with partial report generated
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    video_id = state.get("video_id", "unknown")
+    log_report_system_usage("generate_partial_report", video_id, "generate_partial_report")
+    
+    logger.warning(f"⚠️ [PARTIAL REPORT] Generating partial report: {reason}")
+    
+    try:
+        claims = state.get("claims", [])
+        
+        # Count verified vs unverified claims
+        verified_claims = [c for c in claims if c.get("verification_result")]
+        unverified_claims = [c for c in claims if not c.get("verification_result")]
+        
+        logger.info(f"📊 [PARTIAL REPORT] Verified: {len(verified_claims)}/{len(claims)} claims")
+        
+        if not verified_claims:
+            logger.warning("⚠️ [PARTIAL REPORT] No verified claims available - generating minimal report")
+            # Create minimal error report
+            out_dir_path = state.get("out_dir_path", "")
+            if out_dir_path:
+                partial_marker_path = os.path.join(out_dir_path, f"{video_id}_partial_report.json")
+                partial_info = {
+                    "video_id": video_id,
+                    "status": "partial_failed",
+                    "reason": reason,
+                    "verified_claims": 0,
+                    "total_claims": len(claims),
+                    "timestamp": datetime.now().isoformat(),
+                }
+                with open(partial_marker_path, "w") as f:
+                    json.dump(partial_info, f, indent=2)
+                logger.info(f"📄 [PARTIAL REPORT] Saved partial report marker: {partial_marker_path}")
+            return {**state, "partial_report": True, "partial_reason": reason}
+        
+        # Mark unverified claims as UNCERTAIN with explanation
+        for claim in unverified_claims:
+            claim["verification_result"] = {
+                "result": "UNCERTAIN",
+                "explanation": f"Verification not completed: {reason}",
+                "probability_distribution": {
+                    "TRUE": 0.33,
+                    "FALSE": 0.33,
+                    "UNCERTAIN": 0.34,
+                },
+                "sources": [],
+            }
+            claim["evidence"] = []
+        
+        # Update state with all claims (verified + now-marked-as-uncertain)
+        updated_state = {
+            **state,
+            "claims": claims,
+            "partial_report": True,
+            "partial_reason": reason,
+            "verified_count": len(verified_claims),
+            "total_count": len(claims),
+        }
+        
+        logger.info(f"📄 [PARTIAL REPORT] Generating report with {len(verified_claims)} verified + {len(unverified_claims)} uncertain claims")
+        
+        # Generate the report using the standard report generation
+        result = await run_generate_report(updated_state)
+        
+        # Add partial report metadata to output files
+        out_dir_path = state.get("out_dir_path", "")
+        if out_dir_path:
+            partial_info_path = os.path.join(out_dir_path, f"{video_id}_partial_info.json")
+            partial_info = {
+                "video_id": video_id,
+                "status": "partial_success",
+                "reason": reason,
+                "verified_claims": len(verified_claims),
+                "total_claims": len(claims),
+                "timestamp": datetime.now().isoformat(),
+                "verified_claim_indices": [i for i, c in enumerate(claims) if c.get("verification_result", {}).get("result") != "UNCERTAIN" or "Verification not completed" not in c.get("verification_result", {}).get("explanation", "")],
+            }
+            with open(partial_info_path, "w") as f:
+                json.dump(partial_info, f, indent=2)
+            logger.info(f"📄 [PARTIAL REPORT] Saved partial report info: {partial_info_path}")
+        
+        logger.info(f"✅ [PARTIAL REPORT] Partial report generated successfully")
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ [PARTIAL REPORT] Failed to generate partial report: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        # Return state with error info even if report generation fails
+        return {
+            **state,
+            "partial_report": True,
+            "partial_reason": reason,
+            "partial_error": str(e),
+        }
+
+
+async def notify_job_completion(
+    job_id: str, video_id: str, status: str, gcs_path: str, error: Optional[str] = None
+) -> None:
     """
     Notify Cloud Run that a video has completed processing via Pub/Sub.
     
@@ -1181,6 +1376,7 @@ async def notify_job_completion(job_id: str, video_id: str, status: str, gcs_pat
         video_id: YouTube video ID
         status: Completion status (success/failure)
         gcs_path: GCS path to the completed reports
+        error: Optional error message when status is 'failure' (shown in API/Firestore)
     """
     try:
         try:
@@ -1196,13 +1392,15 @@ async def notify_job_completion(job_id: str, video_id: str, status: str, gcs_pat
         publisher = pubsub_v1.PublisherClient()
         topic_path = publisher.topic_path(PROJECT_ID, 'batch-completions')
         
-        message_data = {
+        message_data: Dict[str, Any] = {
             'job_id': job_id,
             'video_id': video_id,
             'status': status,
             'timestamp': datetime.now().isoformat(),
             'gcs_path': gcs_path
         }
+        if status == 'failure' and error:
+            message_data['error'] = error[:2000]  # cap length for Firestore
         
         # Publish message
         future = publisher.publish(
@@ -1224,6 +1422,7 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
     import logging
     import glob
     from verityngn.config.settings import ENABLE_LOCAL_GCS_BACKUP, GCS_LOCAL_OUTPUTS_BUCKET
+    from verityngn.services.storage.gcs_storage import upload_to_gcs
     logger = logging.getLogger(__name__)
     logger.info("☁️ Uploading reports to cloud storage")
     
@@ -1231,7 +1430,26 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
         out_dir_path = state.get("out_dir_path", "")
         video_id = state.get("video_id", "")
         uploaded_files = []
-        
+        from verityngn.config.settings import (
+            USE_TIMESTAMPED_STORAGE,
+            GCS_BUCKET_NAME,
+            GCS_COMMERCIAL_BUCKET,
+        )
+
+        timestamped_dir = state.get("timestamped_dir") or ""
+        user_id = state.get("user_id") or os.environ.get("USER_ID")
+        report_bucket = (
+            GCS_COMMERCIAL_BUCKET
+            if (
+                USE_TIMESTAMPED_STORAGE
+                and timestamped_dir
+                and user_id
+                and GCS_COMMERCIAL_BUCKET
+                and timestamped_dir.startswith("vngn/accounts/")
+            )
+            else None
+        )
+
         # Determine if we should actually upload to cloud
         should_upload = STORAGE_BACKEND == StorageBackend.GCS
         
@@ -1269,8 +1487,9 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
         # Upload JSON report to GCS (main bucket)
         json_path = state.get("json_path", "")
         if json_path and os.path.exists(json_path):
-            gcs_path = f"reports/{video_id}/{os.path.basename(json_path)}"
-            gcs_uri = upload_to_gcs(json_path, gcs_path)
+            base_gcs_path = timestamped_dir if (USE_TIMESTAMPED_STORAGE and timestamped_dir) else f"reports/{video_id}"
+            gcs_path = f"{base_gcs_path}/{os.path.basename(json_path)}"
+            gcs_uri = upload_to_gcs(json_path, gcs_path, bucket_name=report_bucket)
             uploaded_files.append(f"JSON: {gcs_uri}")
         else:
             gcs_uri = None
@@ -1278,15 +1497,17 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
         # Upload HTML report to GCS
         html_path = state.get("html_path", "")
         if html_path and os.path.exists(html_path):
-            gcs_path = f"reports/{video_id}/{os.path.basename(html_path)}"
-            html_gcs_uri = upload_to_gcs(html_path, gcs_path)
+            base_gcs_path = timestamped_dir if (USE_TIMESTAMPED_STORAGE and timestamped_dir) else f"reports/{video_id}"
+            gcs_path = f"{base_gcs_path}/{os.path.basename(html_path)}"
+            html_gcs_uri = upload_to_gcs(html_path, gcs_path, bucket_name=report_bucket)
             uploaded_files.append(f"HTML: {html_gcs_uri}")
         
         # Upload Markdown report to GCS
         markdown_path = state.get("markdown_path", "")
         if markdown_path and os.path.exists(markdown_path):
-            gcs_path = f"reports/{video_id}/{os.path.basename(markdown_path)}"
-            md_gcs_uri = upload_to_gcs(markdown_path, gcs_path)
+            base_gcs_path = timestamped_dir if (USE_TIMESTAMPED_STORAGE and timestamped_dir) else f"reports/{video_id}"
+            gcs_path = f"{base_gcs_path}/{os.path.basename(markdown_path)}"
+            md_gcs_uri = upload_to_gcs(markdown_path, gcs_path, bucket_name=report_bucket)
             uploaded_files.append(f"MD: {md_gcs_uri}")
         
         # Upload all claim source files (both .md and .html)
@@ -1294,8 +1515,9 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
             claim_files = glob.glob(os.path.join(out_dir_path, f"{video_id}_claim_*_sources.*"))
             for claim_file in claim_files:
                 if os.path.exists(claim_file):
-                    gcs_path = f"reports/{video_id}/{os.path.basename(claim_file)}"
-                    claim_gcs_uri = upload_to_gcs(claim_file, gcs_path)
+                    base_gcs_path = timestamped_dir if (USE_TIMESTAMPED_STORAGE and timestamped_dir) else f"reports/{video_id}"
+                    gcs_path = f"{base_gcs_path}/{os.path.basename(claim_file)}"
+                    claim_gcs_uri = upload_to_gcs(claim_file, gcs_path, bucket_name=report_bucket)
                     uploaded_files.append(f"Claim: {os.path.basename(claim_file)}")
         
         # 🚀 SHERLOCK FIX: Upload counter intelligence files (YouTube and Press Release)
@@ -1305,8 +1527,9 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
             logger.info(f"🔍 [SHERLOCK] Found {len(youtube_ci_files)} YouTube counter-intelligence files to upload")
             for ci_file in youtube_ci_files:
                 if os.path.exists(ci_file):
-                    gcs_path = f"reports/{video_id}/{os.path.basename(ci_file)}"
-                    ci_gcs_uri = upload_to_gcs(ci_file, gcs_path)
+                    base_gcs_path = timestamped_dir if (USE_TIMESTAMPED_STORAGE and timestamped_dir) else f"reports/{video_id}"
+                    gcs_path = f"{base_gcs_path}/{os.path.basename(ci_file)}"
+                    ci_gcs_uri = upload_to_gcs(ci_file, gcs_path, bucket_name=report_bucket)
                     uploaded_files.append(f"YouTube CI: {os.path.basename(ci_file)}")
                     logger.info(f"✅ [SHERLOCK] Uploaded YouTube CI file: {os.path.basename(ci_file)} -> {ci_gcs_uri}")
             
@@ -1315,21 +1538,39 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
             logger.info(f"🔍 [SHERLOCK] Found {len(pr_ci_files)} Press Release counter-intelligence files to upload")
             for ci_file in pr_ci_files:
                 if os.path.exists(ci_file):
-                    gcs_path = f"reports/{video_id}/{os.path.basename(ci_file)}"
-                    ci_gcs_uri = upload_to_gcs(ci_file, gcs_path)
+                    base_gcs_path = timestamped_dir if (USE_TIMESTAMPED_STORAGE and timestamped_dir) else f"reports/{video_id}"
+                    gcs_path = f"{base_gcs_path}/{os.path.basename(ci_file)}"
+                    ci_gcs_uri = upload_to_gcs(ci_file, gcs_path, bucket_name=report_bucket)
                     uploaded_files.append(f"Press Release CI: {os.path.basename(ci_file)}")
                     logger.info(f"✅ [SHERLOCK] Uploaded Press Release CI file: {os.path.basename(ci_file)} -> {ci_gcs_uri}")
         
-        # Upload workflow log file to GCS for debugging
+        # Upload workflow log to GCS (same bucket/path layout as reports — no legacy reports/ on main bucket when commercial)
         log_path = state.get("log_path", "")
         if not log_path and out_dir_path:
-            # Fallback: try to find log file in output directory
             log_path = os.path.join(out_dir_path, f"{video_id}_workflow.log")
         if log_path and os.path.exists(log_path):
-            gcs_path = f"reports/{video_id}/{os.path.basename(log_path)}"
-            log_gcs_uri = upload_to_gcs(log_path, gcs_path)
-            uploaded_files.append(f"LOG: {log_gcs_uri}")
-            logger.info(f"📝 Uploaded workflow log: {os.path.basename(log_path)} -> {log_gcs_uri}")
+            log_name = os.path.basename(log_path)
+
+            if USE_TIMESTAMPED_STORAGE and timestamped_dir:
+                bucket_to_use = (
+                    GCS_COMMERCIAL_BUCKET
+                    if (user_id and GCS_COMMERCIAL_BUCKET and timestamped_dir.startswith("vngn/accounts/"))
+                    else GCS_BUCKET_NAME
+                )
+                log_dest = f"{timestamped_dir}/{log_name}"
+                log_gcs_uri = upload_to_gcs(log_path, log_dest, bucket_name=bucket_to_use)
+                uploaded_files.append(f"LOG: {log_gcs_uri}")
+                logger.info(f"📝 Uploaded workflow log: {log_gcs_uri}")
+            elif GCS_COMMERCIAL_BUCKET and user_id:
+                log_dest = f"vngn/accounts/{user_id}/videos/{video_id}/logs/{log_name}"
+                log_gcs_uri = upload_to_gcs(log_path, log_dest, bucket_name=GCS_COMMERCIAL_BUCKET)
+                uploaded_files.append(f"LOG: {log_gcs_uri}")
+                logger.info(f"📝 Uploaded workflow log: {log_gcs_uri}")
+            else:
+                gcs_path = f"reports/{video_id}/{log_name}"
+                log_gcs_uri = upload_to_gcs(log_path, gcs_path)
+                uploaded_files.append(f"LOG: {log_gcs_uri}")
+                logger.info(f"📝 Uploaded workflow log: {log_gcs_uri}")
         
         logger.info(f"✅ Uploaded {len(uploaded_files)} files to GCS:")
         for uploaded_file in uploaded_files:
@@ -1338,18 +1579,19 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
         # Notify batch job completion if BATCH_JOB_ID is set
         batch_job_id = os.environ.get('BATCH_JOB_ID')
         if batch_job_id:
-            # Determine correct GCS path based on storage backend
-            from verityngn.config.settings import GCS_BUCKET_NAME
-            if USE_TIMESTAMPED_STORAGE:
-                # Using timestamped storage - get path from state
-                timestamped_dir = state.get("timestamped_dir", "")
-                if timestamped_dir:
-                    gcs_path = f"gs://{GCS_BUCKET_NAME}/vngn_reports/{video_id}/"
+            from verityngn.config.settings import GCS_BUCKET_NAME, GCS_COMMERCIAL_BUCKET, USE_TIMESTAMPED_STORAGE
+            timestamped_dir = state.get("timestamped_dir", "")
+            user_id = state.get("user_id") or os.environ.get("USER_ID")
+            if USE_TIMESTAMPED_STORAGE and timestamped_dir:
+                # Use actual timestamped path; commercial bucket when user-scoped
+                if user_id and GCS_COMMERCIAL_BUCKET and timestamped_dir.startswith("vngn/accounts/"):
+                    gcs_path = f"gs://{GCS_COMMERCIAL_BUCKET}/{timestamped_dir}"
                 else:
-                    gcs_path = f"gs://{GCS_BUCKET_NAME}/reports/{video_id}/"
+                    bucket = GCS_BUCKET_NAME
+                    gcs_path = f"gs://{bucket}/{timestamped_dir}" if timestamped_dir else f"gs://{bucket}/vngn_reports/{video_id}/"
             else:
-                # Legacy upload system
-                gcs_path = f"gs://{GCS_LOCAL_OUTPUTS_BUCKET if ENABLE_LOCAL_GCS_BACKUP else GCS_BUCKET_NAME}/reports/{video_id}/"
+                bucket = GCS_LOCAL_OUTPUTS_BUCKET if ENABLE_LOCAL_GCS_BACKUP else GCS_BUCKET_NAME
+                gcs_path = f"gs://{bucket}/reports/{video_id}/"
             
             logger.info(f"📤 Sending Pub/Sub notification for job {batch_job_id}")
             await notify_job_completion(
@@ -1369,7 +1611,7 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"❌ Upload failed: {e}")
         
-        # Notify batch job failure if BATCH_JOB_ID is set
+        # Notify batch job failure if BATCH_JOB_ID is set (include error for API/Firestore)
         batch_job_id = os.environ.get('BATCH_JOB_ID')
         if batch_job_id:
             video_id = state.get("video_id", "unknown")
@@ -1377,7 +1619,8 @@ async def run_upload_report(state: Dict[str, Any]) -> Dict[str, Any]:
                 job_id=batch_job_id,
                 video_id=video_id,
                 status='failure',
-                gcs_path=''
+                gcs_path='',
+                error=str(e)
             )
         
         # Don't fail the whole workflow for upload issues
@@ -1406,7 +1649,7 @@ def create_final_report(
         # Count claim results
         true_count = sum(1 for claim in claims if claim.get("verification_result", {}).get("result") in ["TRUE", "HIGHLY_LIKELY_TRUE", "LIKELY_TRUE"])
         false_count = sum(1 for claim in claims if claim.get("verification_result", {}).get("result") in ["FALSE", "HIGHLY_LIKELY_FALSE", "LIKELY_FALSE"])
-        uncertain_count = sum(1 for claim in claims if claim.get("verification_result", {}).get("result") in ["UNCERTAIN", "UNABLE_DETERMINE"])
+        uncertain_count = sum(1 for claim in claims if claim.get("verification_result", {}).get("result") in ["UNCERTAIN", "UNABLE_DETERMINE", "UNVERIFIABLE"])
         
         false_percentage = (false_count / total_claims) * 100
         true_percentage = (true_count / total_claims) * 100

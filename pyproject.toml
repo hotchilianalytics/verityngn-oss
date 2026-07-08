@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "verityngn"
+version = "0.3.0"
+description = "Open-source multimodal YouTube video claim verification engine"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.12"
+authors = [{ name = "HotChili Analytics, LLC" }]
+keywords = ["fact-checking", "youtube", "verification", "osint", "multimodal"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "rapidfuzz>=3.0.0",
+    "markdown-it-py[plugins]>=3.0.0",
+    "pydantic>=2.7.4",
+    "langchain>=0.3.17",
+    "langchain-google-vertexai>=2.0.0",
+    "langgraph>=0.2.50",
+    "google-cloud-aiplatform>=1.81.0",
+    "google-cloud-storage>=2.18.0",
+    "yt-dlp>=2024.12.13",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[project.scripts]
+verityngn = "verityngn.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["verityngn*"]
+
+[tool.setuptools.package-data]
+verityngn = ["config/*.yaml", "config/*.json"]

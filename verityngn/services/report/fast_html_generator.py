@@ -1,8 +1,52 @@
+import html
 import logging
+import re
 from typing import Dict, Any, Optional
 from verityngn.models.report import VerityReport, CredibilityLevel
+from verityngn.services.report.category_mappings import LLM_PLATFORM_VISIBLE_NOTICE
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_fast_review_text(text: str, *, preserve_paragraphs: bool = False) -> str:
+    """Strip patterns that look like derived metrics from LLM review prose (public fast HTML)."""
+    if not text:
+        return text
+    out = text
+    out = re.sub(r"\b\d{1,3}\.\d+\s*%", "[redacted]", out)
+    out = re.sub(r"\b\d{1,3}\s*%", "[redacted]", out)
+    out = re.sub(r"\b\d+\s+of\s+\d+\b", "[redacted]", out, flags=re.I)
+    out = re.sub(r"\bT[1-5]\s*:\s*\d+\s*%?", "[redacted]", out, flags=re.I)
+    if preserve_paragraphs:
+        return out.strip()
+    return re.sub(r"\s+", " ", out).strip()
+
+
+def _inline_md_bold_to_html(text: str) -> str:
+    """Convert **bold** markers to <strong> after html.escape."""
+    return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+
+
+def _format_review_html(text: str) -> str:
+    """Render Verity Review prose as HTML paragraphs (not raw markdown in one p tag)."""
+    if not text or not text.strip():
+        return "<p>No description available to review.</p>"
+
+    cleaned = text.strip()
+    cleaned = re.sub(r"^\*?\*?Verity Review:\*?\*?\s*", "", cleaned, flags=re.I)
+    cleaned = _sanitize_fast_review_text(cleaned, preserve_paragraphs=True)
+
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", cleaned) if p.strip()]
+    if not paragraphs:
+        paragraphs = [cleaned.strip()]
+
+    html_parts = []
+    for para in paragraphs:
+        escaped = html.escape(para)
+        escaped = _inline_md_bold_to_html(escaped)
+        html_parts.append(f"<p>{escaped}</p>")
+    return "\n            ".join(html_parts)
+
 
 def generate_fast_html_report(report: VerityReport, review_text: str) -> str:
     """
@@ -15,12 +59,13 @@ def generate_fast_html_report(report: VerityReport, review_text: str) -> str:
     - CRAAP Analysis Table
     """
     
-    # Extract data
     video_id = report.media_embed.video_id
-    title = report.media_embed.title
-    thumbnail_url = report.media_embed.thumbnail_url
-    video_url = report.media_embed.video_url
-    
+    source_info_hash = html.escape(report.source_info_hash or "(unavailable)")
+    report_generated_at = html.escape(report.report_generated_at or "(unavailable)")
+    safe_video_id = html.escape(video_id)
+
+    review_html = _format_review_html(review_text)
+
     # CRAAP Analysis
     craap_rows = ""
     if report.craap_analysis:
@@ -35,15 +80,18 @@ def generate_fast_html_report(report: VerityReport, review_text: str) -> str:
             elif level_str == "MEDIUM":
                 color_class = "warning"
                 
+            safe_explanation = _sanitize_fast_review_text(str(explanation or ""))
             craap_rows += f"""
             <tr>
                 <td class="criterion"><strong>{criterion.capitalize()}</strong></td>
                 <td class="level"><span class="badge {color_class}">{level}</span></td>
-                <td class="explanation">{explanation}</td>
+                <td class="explanation">{safe_explanation}</td>
             </tr>
             """
     else:
         craap_rows = "<tr><td colspan='3'>No CRAAP analysis available.</td></tr>"
+
+    notice_html = html.escape(LLM_PLATFORM_VISIBLE_NOTICE)
 
     # HTML Template
     html_content = f"""<!DOCTYPE html>
@@ -51,7 +99,7 @@ def generate_fast_html_report(report: VerityReport, review_text: str) -> str:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verity Fast Report - {title}</title>
+    <title>Verity Fast Report - {safe_video_id}</title>
     <style>
         :root {{
             --primary-color: #2c3e50;
@@ -96,32 +144,29 @@ def generate_fast_html_report(report: VerityReport, review_text: str) -> str:
             margin-top: 30px;
         }}
         
-        .media-container {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 30px;
-        }}
-        
-        .thumbnail {{
+        .report-header {{
             width: 100%;
-            max-width: 640px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 15px;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
         }}
-        
-        .video-link {{
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #ff0000;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.9rem;
+        .report-header th {{
+            text-align: left;
+            width: 28%;
+            color: var(--primary-color);
         }}
-        
+        .report-header td code {{
+            word-break: break-all;
+            font-size: 0.85rem;
+        }}
+        .verity-llm-notice {{
+            border-left: 4px solid #c0392b;
+            background: #fff8f6;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }}
         .review-box {{
             background-color: #f0f7ff;
             border-left: 5px solid var(--secondary-color);
@@ -131,8 +176,11 @@ def generate_fast_html_report(report: VerityReport, review_text: str) -> str:
         }}
         
         .review-box p {{
-            margin: 0;
+            margin: 0 0 1em 0;
             font-size: 1.05rem;
+        }}
+        .review-box p:last-child {{
+            margin-bottom: 0;
         }}
         
         table {{
@@ -182,19 +230,20 @@ def generate_fast_html_report(report: VerityReport, review_text: str) -> str:
 </head>
 <body>
     <div class="container">
+        <div class="verity-llm-notice" role="region" aria-label="YouTube API compliance notice">
+            <strong>Notice:</strong> {notice_html}
+        </div>
         <h1>Verity Fast Report</h1>
         
-        <div class="media-container">
-            <a href="{video_url}" target="_blank">
-                <img src="{thumbnail_url}" alt="Thumbnail for {title}" class="thumbnail">
-            </a>
-            <h3>{title}</h3>
-            <a href="{video_url}" target="_blank" class="video-link">Watch on YouTube</a>
-        </div>
-        
+        <table class="report-header">
+            <tr><th>Video ID</th><td><code>{safe_video_id}</code></td></tr>
+            <tr><th>Source Info Hash</th><td><code>{source_info_hash}</code></td></tr>
+            <tr><th>Report Generated</th><td>{report_generated_at}</td></tr>
+        </table>
+
         <h2>📋 Verity Review</h2>
         <div class="review-box">
-            <p>{review_text}</p>
+            {review_html}
         </div>
         
         <h2>🔍 CRAAP Analysis</h2>

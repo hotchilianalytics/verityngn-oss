@@ -19,6 +19,8 @@ Key Features:
 import logging
 import json
 import os
+import shutil
+import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
@@ -26,18 +28,27 @@ from pydantic import BaseModel
 from langchain_google_vertexai import ChatVertexAI
 from langchain_core.prompts import ChatPromptTemplate
 
-from verityngn.config.settings import AGENT_MODEL_NAME, MAX_OUTPUT_TOKENS_2_0_FLASH
+from verityngn.config.settings import AGENT_MODEL_NAME, MAX_OUTPUT_TOKENS_2_0_FLASH, PROJECT_ID, VERTEX_LOCATION
 from verityngn.models.report import VerityReport
 from verityngn.services.report.markdown_generator import generate_markdown_report
 from verityngn.services.report.html_generator import generate_html_report
 from verityngn.services.report.fast_html_generator import generate_fast_html_report
 from verityngn.services.storage.timestamped_storage import timestamped_storage
+from verityngn.utils.html_to_pdf import async_convert_html_content_to_pdf
 from verityngn.services.report.evidence_utils import (
     enhance_source_credibility,
     search_youtube_counter_intelligence,
     analyze_youtube_evidence_content,
     generate_press_release_sources_file,
-    generate_youtube_sources_file
+    generate_youtube_sources_file,
+)
+from verityngn.services.report.report_sanitize import (
+    apply_audit_and_sanitize,
+    report_to_persisted_dict,
+)
+from verityngn.services.storage.yt_artefact_cleanup import (
+    capture_info_audit,
+    cleanup_yt_api_artefacts,
 )
 
 logger = logging.getLogger(__name__)
@@ -69,13 +80,14 @@ class UnifiedReportGenerator:
     All other report generation systems should eventually be replaced by this.
     """
     
-    def __init__(self, video_id: str, out_dir_path: str):
+    def __init__(self, video_id: str, out_dir_path: str, user_id: Optional[str] = None):
         self.video_id = video_id
         self.out_dir_path = out_dir_path
+        self.user_id = user_id
         self.logger = logging.getLogger(__name__)
         
-        # Create timestamped directory for this report generation
-        self.timestamped_dir = timestamped_storage.create_timestamped_directory(video_id)
+        # Create timestamped directory for this report generation (user-scoped when user_id + commercial bucket)
+        self.timestamped_dir = timestamped_storage.create_timestamped_directory(video_id, user_id=user_id)
         
         # Ensure output directory exists (for local storage)
         os.makedirs(out_dir_path, exist_ok=True)
@@ -91,7 +103,13 @@ class UnifiedReportGenerator:
             return "No description available to review."
             
         try:
-            llm = ChatVertexAI(model_name=AGENT_MODEL_NAME, temperature=0.3, max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH)
+            llm = ChatVertexAI(
+                model_name=AGENT_MODEL_NAME,
+                temperature=0.3,
+                max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+                project=PROJECT_ID,
+                location=VERTEX_LOCATION,
+            )
             prompt = ChatPromptTemplate.from_template("""
             You are VerityNgn, a video verification AI. 
             Review the following YouTube video description. 
@@ -100,8 +118,6 @@ class UnifiedReportGenerator:
             
             Description:
             {description}
-            
-            Verity Review:
             """)
             
             response = await llm.ainvoke(prompt.format(description=description[:5000])) # Limit context
@@ -150,11 +166,7 @@ class UnifiedReportGenerator:
                             report['evidence_summary'] = []
                         if not report.get('media_embed'):
                             report['media_embed'] = {
-                                'title': report.get('title', f"Video {self.video_id}"),
                                 'video_id': self.video_id,
-                                'thumbnail_url': f"https://img.youtube.com/vi/{self.video_id}/0.jpg",
-                                'video_url': f"https://youtu.be/{self.video_id}",
-                                'description': report.get('description', '')
                             }
                         from verityngn.models.report import VerityReport as _VR2
                         report = _VR2(**report)
@@ -242,63 +254,121 @@ class UnifiedReportGenerator:
                     'html': yt_files[1]
                 }
             
-            # Generate markdown report, claim sources, and counter-intelligence files
-            # Note: claim_source_content and counter_intel_content will be empty as they are now embedded
-            markdown_content, _, _ = generate_markdown_report(report)
-            
-            # Generate HTML report (Full)
-            html_content = generate_html_report(report)
-            
-            # Generate Description Review
-            description = report.media_embed.description if report.media_embed else ""
-            review_text = await self.generate_description_review(description)
-            
-            # Store review in metadata
+            # In-RAM description for LLM review only (not persisted in report JSON)
+            description_for_review = ""
+            if report.media_embed:
+                description_for_review = report.media_embed.description or ""
+
+            report_original = copy.deepcopy(report)
+
+            audit = capture_info_audit(self.out_dir_path, self.video_id)
+            review_text = await self.generate_description_review(description_for_review)
+
+            apply_audit_and_sanitize(
+                report,
+                source_info_hash=audit.get("source_info_hash"),
+                info_ingested_at=audit.get("info_ingested_at"),
+            )
             if not report.metadata:
                 report.metadata = {}
-            report.metadata['description_review'] = review_text
-            
-            # Generate Fast HTML Report
+            report.metadata["description_review"] = review_text
+
+            # Report families (second _-delimited segment after video_id):
+            #   _report.*           — user-controlled original (pre-sanitize snapshot)
+            #   _private_report.*   — YouTube-compliant public gallery
+            #   _fast_report.html   — compliant CRAAP teaser
+            original_markdown_content, _, _ = generate_markdown_report(report_original, tier="original")
+            original_html_content = generate_html_report(report_original, tier="original")
+            compliant_markdown_content, _, _ = generate_markdown_report(report, tier="public")
+            compliant_html_content = generate_html_report(report, tier="public")
             fast_html_content = generate_fast_html_report(report, review_text)
+
+            self.logger.info(
+                f"📊 [UNIFIED] Generated content: original(MD={len(original_markdown_content)}, HTML={len(original_html_content)}), "
+                f"compliant(MD={len(compliant_markdown_content)}, HTML={len(compliant_html_content)}), "
+                f"FastHTML={len(fast_html_content)} chars"
+            )
+
+            for _label, _content in (
+                ("original Markdown", original_markdown_content),
+                ("original HTML", original_html_content),
+                ("compliant Markdown", compliant_markdown_content),
+                ("compliant HTML", compliant_html_content),
+                ("Fast HTML", fast_html_content),
+            ):
+                if not _content.strip():
+                    self.logger.warning(f"⚠️ [UNIFIED] Generated {_label} content is empty")
+
+            # Set up file paths in timestamped directory (local uses os.path.join; GCS uses "/")
+            def _report_path(name: str) -> str:
+                if timestamped_storage.storage_backend.value == "local":
+                    return os.path.join(self.timestamped_dir, name)
+                return f"{self.timestamped_dir}/{name}"
+
+            json_path = _report_path(f"{self.video_id}_report.json")
+            markdown_path = _report_path(f"{self.video_id}_report.md")
+            html_path = _report_path(f"{self.video_id}_report.html")
+            fast_html_path = _report_path(f"{self.video_id}_fast_report.html")
+            private_markdown_path = _report_path(f"{self.video_id}_private_report.md")
+            private_html_path = _report_path(f"{self.video_id}_private_report.html")
             
-            self.logger.info(f"📊 [UNIFIED] Generated content: MD={len(markdown_content)} chars, HTML={len(html_content)} chars, FastHTML={len(fast_html_content)} chars")
-            
-            if not markdown_content.strip():
-                self.logger.warning("⚠️ [UNIFIED] Generated Markdown content is empty")
-            if not html_content.strip():
-                self.logger.warning("⚠️ [UNIFIED] Generated HTML content is empty")
-            if not fast_html_content.strip():
-                self.logger.warning("⚠️ [UNIFIED] Generated Fast HTML content is empty")
-            
-            # Set up file paths in timestamped directory
-            if timestamped_storage.storage_backend.value == "local":
-                # For local storage, use the timestamped directory directly
-                json_path = os.path.join(self.timestamped_dir, f"{self.video_id}_report.json")
-                markdown_path = os.path.join(self.timestamped_dir, f"{self.video_id}_report.md")
-                html_path = os.path.join(self.timestamped_dir, f"{self.video_id}_report.html")
-                fast_html_path = os.path.join(self.timestamped_dir, f"{self.video_id}_fast_report.html")
-            else:
-                # For GCS, we'll upload to the timestamped directory
-                json_path = f"{self.timestamped_dir}/{self.video_id}_report.json"
-                markdown_path = f"{self.timestamped_dir}/{self.video_id}_report.md"
-                html_path = f"{self.timestamped_dir}/{self.video_id}_report.html"
-                fast_html_path = f"{self.timestamped_dir}/{self.video_id}_fast_report.html"
-            
-            # Write JSON report
-            self._write_file(json_path, json.dumps(report.model_dump(), indent=2, cls=CustomJsonEncoder))
+            # Write JSON report (editorial-only; no YouTube API statistics at rest)
+            persisted = report_to_persisted_dict(report)
+            self._write_file(
+                json_path,
+                json.dumps(persisted, indent=2, cls=CustomJsonEncoder),
+            )
             self.logger.info(f"✅ [UNIFIED] Wrote JSON report: {json_path}")
-            
-            # Write Markdown report
-            self._write_file(markdown_path, markdown_content)
-            self.logger.info(f"✅ [UNIFIED] Wrote Markdown report: {markdown_path}")
-            
-            # Write HTML report
-            self._write_file(html_path, html_content)
-            self.logger.info(f"✅ [UNIFIED] Wrote HTML report: {html_path}")
-            
-            # Write Fast HTML report
+
+            # Original user-controlled reports (_report.md/.html/.pdf)
+            self._write_file(markdown_path, original_markdown_content)
+            self.logger.info(f"✅ [UNIFIED] Wrote original Markdown report: {markdown_path}")
+            self._write_file(html_path, original_html_content)
+            self.logger.info(f"✅ [UNIFIED] Wrote original HTML report: {html_path}")
             self._write_file(fast_html_path, fast_html_content)
             self.logger.info(f"✅ [UNIFIED] Wrote Fast HTML report: {fast_html_path}")
+
+            # Gallery-compliant reports (_private_report.md/.html/.pdf)
+            self._write_file(private_markdown_path, compliant_markdown_content)
+            self.logger.info(f"✅ [UNIFIED] Wrote gallery-compliant Markdown report: {private_markdown_path}")
+            self._write_file(private_html_path, compliant_html_content)
+            self.logger.info(f"✅ [UNIFIED] Wrote gallery-compliant HTML report: {private_html_path}")
+
+            # 5. Generate PDF reports from HTML (high-quality using Playwright) for both tiers
+            async def _render_pdf(html_for_pdf: str, target_path: str, label: str) -> None:
+                try:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_pdf:
+                        tmp_pdf_path = tmp_pdf.name
+                    result_pdf = await async_convert_html_content_to_pdf(html_for_pdf, tmp_pdf_path)
+                    if result_pdf:
+                        if timestamped_storage.storage_backend.value == "local":
+                            shutil.move(tmp_pdf_path, target_path)
+                            self.logger.info(f"✅ [UNIFIED] Generated {label} PDF report: {target_path}")
+                        else:
+                            success, _ = timestamped_storage.upload_file(tmp_pdf_path, target_path)
+                            if success:
+                                self.logger.info(f"✅ [UNIFIED] Uploaded {label} PDF report to GCS: {target_path}")
+                            else:
+                                self.logger.warning(f"⚠️ [UNIFIED] Failed to upload {label} PDF report to GCS")
+                            os.unlink(tmp_pdf_path)
+                    else:
+                        self.logger.warning(
+                            f"⚠️ [UNIFIED] {label} PDF generation returned no result. "
+                            "If running in Batch, ensure the image has Chromium installed: "
+                            "playwright install chromium (and Chromium runtime deps) in Dockerfile.batch."
+                        )
+                except Exception as pdf_error:
+                    self.logger.error(
+                        f"⚠️ [UNIFIED] {label} PDF generation failed: {pdf_error}. "
+                        "If running in Batch, ensure the image has Chromium: "
+                        "playwright install chromium and Chromium runtime deps in Dockerfile.batch."
+                    )
+
+            pdf_path = _report_path(f"{self.video_id}_report.pdf")
+            private_pdf_path = _report_path(f"{self.video_id}_private_report.pdf")
+            await _render_pdf(original_html_content, pdf_path, "original")
+            await _render_pdf(compliant_html_content, private_pdf_path, "gallery-compliant")
             
             # No separate claim files to write now (embedded)
             claim_files = [] 
@@ -356,7 +426,11 @@ class UnifiedReportGenerator:
                     f"{self.video_id}_report.json",
                     f"{self.video_id}_report.md", 
                     f"{self.video_id}_report.html",
-                    f"{self.video_id}_fast_report.html"
+                    f"{self.video_id}_fast_report.html",
+                    f"{self.video_id}_report.pdf",
+                    f"{self.video_id}_private_report.md",
+                    f"{self.video_id}_private_report.html",
+                    f"{self.video_id}_private_report.pdf"
                 ],
                 "claim_source_files": [],
                 "counter_intelligence_files": [os.path.basename(f) for f in all_ci_files],
@@ -377,12 +451,21 @@ class UnifiedReportGenerator:
                 timestamped_storage.cleanup_old_versions(self.video_id, keep_count=5)
             else:
                 self.logger.warning(f"⚠️ [TIMESTAMPED] Failed to mark generation complete")
+
+            try:
+                cleanup_yt_api_artefacts(self.out_dir_path, self.video_id)
+            except Exception as cleanup_exc:
+                self.logger.warning("YT artefact cleanup after report write: %s", cleanup_exc)
             
             return {
                 "json_path": json_path,
                 "markdown_path": markdown_path,
                 "html_path": html_path,
                 "fast_html_path": fast_html_path,
+                "private_markdown_path": private_markdown_path,
+                "private_html_path": private_html_path,
+                "private_pdf_path": private_pdf_path,
+                "pdf_path": pdf_path,
                 "claim_files": claim_files,
                 "timestamped_dir": self.timestamped_dir
             }
@@ -405,7 +488,7 @@ class UnifiedReportGenerator:
                 temp_file_path = temp_file.name
             
             try:
-                success, _ = timestamped_storage.gcs_service.upload_file(temp_file_path, file_path)
+                success, _ = timestamped_storage.upload_file(temp_file_path, file_path)
                 if not success:
                     raise Exception(f"Failed to upload {file_path} to GCS")
             finally:
@@ -580,12 +663,12 @@ class CustomJsonEncoder(json.JSONEncoder):
                 return str(o)
         return super().default(o)
 
-def create_unified_generator(video_id: str, out_dir_path: str) -> UnifiedReportGenerator:
+def create_unified_generator(video_id: str, out_dir_path: str, user_id: Optional[str] = None) -> UnifiedReportGenerator:
     """Factory function to create a unified report generator."""
-    return UnifiedReportGenerator(video_id, out_dir_path)
+    return UnifiedReportGenerator(video_id, out_dir_path, user_id=user_id)
 
 # Convenience function for backward compatibility
-def generate_unified_reports(report: VerityReport, video_id: str, out_dir_path: str) -> Dict[str, str]:
+def generate_unified_reports(report: VerityReport, video_id: str, out_dir_path: str, user_id: Optional[str] = None) -> Dict[str, str]:
     """Generate all reports using the unified system."""
-    generator = create_unified_generator(video_id, out_dir_path)
+    generator = create_unified_generator(video_id, out_dir_path, user_id=user_id)
     return generator.generate_all_reports(report) 

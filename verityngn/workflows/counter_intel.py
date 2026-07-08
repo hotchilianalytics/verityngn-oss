@@ -31,6 +31,13 @@ except ImportError:
     YOUTUBE_TRANSCRIPT_MAX_VIDEOS = 3
 
 
+def _is_file_upload_state(state: Dict[str, Any]) -> bool:
+    if state.get("ingest_source") == "file_upload":
+        return True
+    url = state.get("video_url") or ""
+    return isinstance(url, str) and url.startswith("upload://")
+
+
 def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Run YouTube counter-intelligence search once after initial analysis.
@@ -60,9 +67,16 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
     - title: Title of the source
     - source_type: Type of source (youtube_counter_intelligence, web, etc.)
     """
+    if state.get("video_availability") in ["Not Available", "Not Processed"] or not state.get("claims"):
+        logger.info("⏭️ Skipping counter-intelligence due to empty claims or unavailability.")
+        state["ci_once"] = []
+        return state
+
+    is_file_upload = _is_file_upload_state(state)
+
     video_id = state.get("video_id", "")
     video_info = state.get("video_info") or {}
-    title = (video_info.get("title") or "").strip()
+    title = (video_info.get("title") or state.get("upload_title") or "").strip()
 
     logger.info(f"🔎 Running counter-intelligence for video: {video_id}")
 
@@ -72,8 +86,8 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
         :4000
     ]
 
-    # Fetch video metadata if not already available
-    if not title:
+    # Fetch video metadata if not already available (YouTube only)
+    if not title and not is_file_upload:
         try:
             # Try private repo module first
             from verityngn.services.video.metadata import fetch_video_metadata
@@ -118,6 +132,40 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
         "claims": claims,
     }
 
+    sherlock_links = []
+    try:
+        from verityngn.config.settings import USE_SHERLOCK_CI
+    except ImportError:
+        USE_SHERLOCK_CI = False
+
+    if USE_SHERLOCK_CI:
+        logger.info("🕵️‍♂️ [SHERLOCK CI] Running new Web Grounded LLM Counter-Intelligence...")
+        from verityngn.services.search.sherlock_ci import generate_sherlock_ci_report
+        
+        ci_report = generate_sherlock_ci_report(
+            video_title=search_context["title"],
+            video_description=search_context["description"],
+            claims=search_context["claims"],
+            context=search_context["initial_report"]
+        )
+        
+        state["sherlock_ci_report"] = ci_report
+        
+        # Map sources to ci_once for downstream compatibility
+        if ci_report and isinstance(ci_report.get("sources"), list):
+            for src in ci_report.get("sources", []):
+                sherlock_links.append({
+                    "url": src.get("url", ""),
+                    "title": src.get("title", ""),
+                    "source_type": "web",
+                    "text": ci_report.get("executive_summary", "")[:200]
+                })
+                
+        logger.info(f"✅ Sherlock CI mapped {len(sherlock_links)} links for later merging.")
+
+    # Track YouTube and Google searches for metrics
+    _youtube_searches = 0
+
     # Run deep counter-intelligence search (primary method)
     deep_links = []
     try:
@@ -127,20 +175,16 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
         deep_links = deep_counter_intel_search(search_context, max_links=4)
         logger.info(f"✅ Deep CI found {len(deep_links)} links")
     except ImportError:
-        # OSS version: skip deep CI (requires private module)
-        logger.info("Deep CI module not available (private repo feature)")
-        deep_links = []
+        # OSS version: use Google CSE as fallback when deep_ci is unavailable
+        logger.info("Deep CI module not available (private repo feature); using Google web search fallback")
+        deep_links = _oss_google_ci_fallback(search_context)
     except Exception as e:
         logger.warning(f"Deep CI search failed: {e}")
         deep_links = []
 
-    # Fallback to YouTube API search (if configured and needed)
+    # Fallback to YouTube API search (YouTube sources only)
     api_results = []
-    has_youtube_links = any(
-        isinstance(x, dict) and "youtube" in (x.get("url", "")) for x in deep_links
-    )
-
-    if not has_youtube_links:
+    if not is_file_upload:
         try:
             from verityngn.config.settings import YOUTUBE_API_ENABLED
 
@@ -151,6 +195,7 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
                         search_counter_intelligence,
                     )
 
+                    _youtube_searches += 1
                     api_results = search_counter_intelligence(
                         title or f"Video {video_id}",
                         context=initial_text or None,
@@ -170,6 +215,7 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
                             search_youtube_counter_intelligence_with_context,
                         )
 
+                        _youtube_searches += 1
                         api_results = search_youtube_counter_intelligence_with_context(
                             video_title=title or f"Video {video_id}",
                             initial_review_text=initial_text or None,
@@ -238,7 +284,14 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
     merged_results = []
     seen_urls = set()
 
-    # Add API results first (if any)
+    # Add Sherlock CI results first
+    for result in sherlock_links:
+        url = result.get("url", "")
+        if url and url not in seen_urls:
+            merged_results.append(result)
+            seen_urls.add(url)
+
+    # Add API results next (if any)
     for result in api_results:
         url = result.get("url", "")
         if url and url not in seen_urls:
@@ -253,7 +306,10 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
             seen_urls.add(url)
 
     # Store results in state
-    state["ci_once"] = merged_results
+    from verityngn.services.reputation.url_safety import filter_safe_evidence
+
+    state["ci_once"] = filter_safe_evidence(merged_results)
+    state["_metrics_youtube_searches"] = state.get("_metrics_youtube_searches", 0) + _youtube_searches
 
     if len(merged_results) == 0:
         logger.warning(
@@ -299,6 +355,91 @@ def run_counter_intel_once(state: Dict[str, Any]) -> Dict[str, Any]:
             )
 
     return state
+
+
+def _generate_ci_search_queries_oss(search_context: Dict[str, Any]) -> List[str]:
+    """Generate 3-5 counter-intelligence search queries (OSS fallback when deep_ci unavailable)."""
+    title = (search_context.get("title") or "").strip() or "video"
+    initial = (search_context.get("initial_report") or "")[:2000]
+    claims_preview = " ".join((search_context.get("claims") or [])[:5])[:500]
+    try:
+        from langchain_google_vertexai import ChatVertexAI
+        from langchain_core.prompts import ChatPromptTemplate
+        from verityngn.config.settings import AGENT_MODEL_NAME, PROJECT_ID, VERTEX_LOCATION
+
+        llm = ChatVertexAI(
+            model_name=AGENT_MODEL_NAME,
+            temperature=0.2,
+            max_output_tokens=1024,
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
+        )
+        prompt = ChatPromptTemplate.from_template(
+            "Generate exactly 3 to 5 short search queries to find counter-evidence, reviews, debunks, or fact-checks about this video. "
+            "Use only the video title and context below. Return one query per line, no numbering or bullets.\n\n"
+            "Title: {title}\n\nContext: {context}\n\nQueries (one per line):"
+        )
+        response = llm.invoke(
+            prompt.format(title=title, context=(initial or "") + " " + (claims_preview or ""))
+        )
+        text = (response.content or "").strip()
+        queries = [q.strip() for q in text.split("\n") if q.strip()][:5]
+        if queries:
+            return queries
+    except Exception as e:
+        logger.debug("LLM CI query generation failed, using heuristic: %s", e)
+    # Heuristic fallback
+    return [
+        f"{title} review",
+        f"{title} fact check",
+        f"{title} debunk",
+        f"{title} scam warning",
+        f"{title} controversy",
+    ][:5]
+
+
+def _oss_google_ci_fallback(search_context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """When deep_ci is unavailable, use Google Custom Search for counter-intelligence (OSS)."""
+    try:
+        from verityngn.config.settings import ENABLE_GOOGLE_SEARCH
+        from verityngn.services.search.web_search import (
+            GoogleSearchAPIError,
+            search_for_evidence,
+        )
+    except ImportError:
+        return []
+    if not ENABLE_GOOGLE_SEARCH:
+        logger.info("Google search disabled; skipping OSS CI web fallback")
+        return []
+    queries = _generate_ci_search_queries_oss(search_context)
+    seen_urls = set()
+    deep_links = []
+    for q in queries:
+        if not q:
+            continue
+        try:
+            results = search_for_evidence(q, num_results=5)
+        except GoogleSearchAPIError as api_err:
+            logger.warning(
+                "CI search unavailable (API access): %s. Check Custom Search API setup.",
+                api_err,
+            )
+            break
+        except Exception as e:
+            logger.warning("OSS CI search failed for query %r: %s", q[:50], e)
+            continue
+        for r in results:
+            url = r.get("url") or r.get("link") or ""
+            if not url or url in seen_urls:
+                continue
+            seen_urls.add(url)
+            deep_links.append({
+                "url": url,
+                "title": r.get("title") or r.get("source_name") or "",
+                "source_type": "web",
+            })
+    logger.info("OSS Google CI fallback found %s web links", len(deep_links))
+    return deep_links
 
 
 def _extract_topic_terms(title: str, description: str, tags: List[str]) -> List[str]:

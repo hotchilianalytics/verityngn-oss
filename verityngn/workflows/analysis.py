@@ -31,9 +31,11 @@ from verityngn.config.settings import (
     GOOGLE_AI_STUDIO_KEY,
     USE_GENAI_YOUTUBE_URL,
     USE_VERTEX_YOUTUBE_URL,
+    VERTEX_MODEL_NAME,
     YOUTUBE_VIDEO_GCS_URI,
     PROJECT_ID,
     LOCATION,
+    VERTEX_LOCATION,
 )
 from verityngn.services.video.transcription import get_video_transcript
 from verityngn.llm_logging.logger import log_llm_call, log_llm_response
@@ -362,6 +364,7 @@ def extract_video_metadata_reliable(
         "subtitle_path": None,
         "video_info": {},
         "error": None,
+        "ai_disclosure": False,
     }
 
     logger.info(f"📋 METADATA EXTRACTION: Starting for {video_url}")
@@ -403,7 +406,11 @@ def extract_video_metadata_reliable(
                 metadata_result["video_info"] = video_info
                 metadata_result["info_json_path"] = info_json_path
                 metadata_result["success"] = True
-
+                desc = video_info.get("description") or ""
+                metadata_result["ai_disclosure"] = (
+                    "altered or synthetic" in desc.lower()
+                    or "how this content was made" in desc.lower()
+                )
                 logger.info(f"📄 Info JSON saved via YouTube API: {info_json_path}")
                 return metadata_result
 
@@ -450,6 +457,11 @@ def extract_video_metadata_reliable(
 
                 metadata_result["video_info"] = info_dict
                 metadata_result["info_json_path"] = info_json_path
+                desc = info_dict.get("description") or ""
+                metadata_result["ai_disclosure"] = (
+                    "altered or synthetic" in desc.lower()
+                    or "how this content was made" in desc.lower()
+                )
                 logger.info(f"📄 Info JSON saved: {info_json_path}")
 
                 # Try to download subtitles separately if they exist
@@ -780,6 +792,48 @@ def analyze_video_content(state):
 
     logger.info(f"🎬 AGGRESSIVE MULTIMODAL ANALYSIS START: {video_id}")
 
+    # ── DURATION GATE ──────────────────────────────────────────────────
+    # Use YouTube Data API v3 to check video length BEFORE any expensive
+    # Gemini ingestion.  Prevents multi-hour live streams from hanging
+    # the batch pipeline indefinitely.
+    try:
+        from verityngn.config.settings import VIDEO_LENGTH_LIMIT_MINS
+        api_meta = extract_metadata_youtube_api(video_id, logger)
+        video_duration_seconds = api_meta.get("duration", 0)
+        video_duration_mins = video_duration_seconds / 60 if video_duration_seconds else 0
+
+        if video_duration_seconds and video_duration_mins > VIDEO_LENGTH_LIMIT_MINS:
+            logger.warning(
+                f"⏭️ SKIPPING: Video {video_id} is {video_duration_mins:.0f} min, "
+                f"exceeds {VIDEO_LENGTH_LIMIT_MINS} min limit."
+            )
+            print(
+                f"⏭️ SKIPPING video {video_id} — {video_duration_mins:.0f} min "
+                f"exceeds {VIDEO_LENGTH_LIMIT_MINS} min cap."
+            )
+            return {
+                "claims": [],
+                "initial_analysis": {
+                    "claims": [],
+                    "analysis_source": "duration_exceeded",
+                    "skip_reason": (
+                        f"Video duration ({video_duration_mins:.0f} min) "
+                        f"exceeds limit ({VIDEO_LENGTH_LIMIT_MINS} min)"
+                    ),
+                    "video_duration_minutes": video_duration_mins,
+                },
+                "analysis_method": "skipped_duration_exceeded",
+                "partial_report": True,
+            }
+        elif video_duration_seconds:
+            logger.info(
+                f"✅ Duration gate passed: {video_duration_mins:.1f} min "
+                f"(limit: {VIDEO_LENGTH_LIMIT_MINS} min)"
+            )
+    except Exception as dur_err:
+        logger.warning(f"⚠️ Duration gate check failed (proceeding anyway): {dur_err}")
+    # ── END DURATION GATE ──────────────────────────────────────────────
+
     # STEP 1: Initial memory and system status
     log_memory_usage("ANALYSIS_START", logger)
     monitor_garbage_collection(logger)
@@ -861,11 +915,20 @@ JSON FORMAT - Use this structure:
   "video_analysis_summary": "One sentence summary of analysis process and findings"
 }}
 
+AI-GENERATED CONTENT DETECTION:
+- Look for unnatural lip sync, skin texture artifacts, inconsistent lighting on the face
+- Detect robotic or monotone voice patterns
+- Identify stock footage substituted for real demonstrations
+- Note if the speaker never appears with hands visible near their face
+- Flag repeated exact phrases or unnatural sentence cadence
+- Return ai_indicators: list of observed anomalies (empty array if none)
+
 JSON GUIDELINES:
 - Use straight quotes " not curly quotes
 - Keep claim_text under 200 characters
-- Use timestamps like "05:30" 
+- Use timestamps like "05:30"
 - Extract claims from ACTUAL video content only
+- Include "ai_indicators": [] in your JSON (list of AI/synthetic content indicators if any)
 
 Respond with only the JSON object.
         """
@@ -1057,8 +1120,8 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                 )
 
                 # Initialize Vertex AI with updated pattern
-                vertexai.init(project=PROJECT_ID, location=LOCATION)
-                model = GenerativeModel("gemini-2.5-flash")
+                vertexai.init(project=PROJECT_ID, location=VERTEX_LOCATION)
+                model = GenerativeModel(VERTEX_MODEL_NAME)
 
                 # Create prompt for 1 frame/sec analysis
                 analysis_prompt = f"""
@@ -1097,7 +1160,7 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                 call_id = log_llm_call(
                     operation="analyze_video_content_vertex_yt_direct",
                     prompt=analysis_prompt,
-                    model="gemini-2.5-flash",
+                    model=VERTEX_MODEL_NAME,
                     video_id=video_id,
                     metadata={"video_url": video_url}
                 )
@@ -1142,7 +1205,7 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                         debug_data = {
                             "timestamp": datetime.now().isoformat(),
                             "video_id": video_id,
-                            "llm_model": "gemini-2.5-flash",
+                            "llm_model": VERTEX_MODEL_NAME,
                             "analysis_type": "vertex_youtube_url",
                             "prompt_text": analysis_prompt,
                             "prompt_length": len(analysis_prompt),
@@ -1176,7 +1239,7 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
 
             try:
                 from google import genai
-                from google.genai.types import HttpOptions, Part
+                from google.genai.types import HttpOptions, Part, FileData, VideoMetadata
 
                 # Initialize genai client with API key from settings
                 client = genai.Client(
@@ -1200,28 +1263,52 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                 call_id = log_llm_call(
                     operation="analyze_video_content_genai_yt_direct",
                     prompt=prompt_text,
-                    model="gemini-2.0-flash",
+                    model=VERTEX_MODEL_NAME,
                     video_id=video_id,
                     metadata={"video_url": video_url}
                 )
 
                 try:
-                    # Use proper genai format for YouTube URL
-                    response = client.models.generate_content(
-                        # Force 2.0 flash for YouTube URL to respect 8k limit
-                        model="gemini-2.0-flash",
-                        contents=[
-                            Part.from_uri(
-                                file_uri=video_url,
-                                mime_type="video/youtube",  # Correct mime type for YouTube URLs
-                            ),
-                            prompt_text,  # The analysis prompt
-                        ],
-                        config={
-                            "response_mime_type": "application/json",
-                            "max_output_tokens": GENAI_VIDEO_MAX_OUTPUT_TOKENS,
-                        },
+                    # Use proper genai format for YouTube URL with clipping
+                    limit_seconds = VIDEO_LENGTH_LIMIT_MINS * 60
+                    logger.info(f"✂️ Setting video clipping end_offset to {limit_seconds}s ({VIDEO_LENGTH_LIMIT_MINS} mins)")
+                    
+                    video_part = Part(
+                        file_data=FileData(
+                            file_uri=video_url,
+                            mime_type="video/youtube"
+                        ),
+                        video_metadata=VideoMetadata(
+                            end_offset=f"{limit_seconds}s"
+                        )
                     )
+                    
+                    # Use a ThreadPoolExecutor to enforce a hard timeout on the API call
+                    # This prevents the job from hanging indefinitely on massive YouTube live streams
+                    import concurrent.futures
+                    
+                    def call_genai():
+                        return client.models.generate_content(
+                            model=VERTEX_MODEL_NAME,
+                            contents=[
+                                video_part,
+                                prompt_text,  # The analysis prompt
+                            ],
+                            config={
+                                "response_mime_type": "application/json",
+                                "max_output_tokens": GENAI_VIDEO_MAX_OUTPUT_TOKENS,
+                            },
+                        )
+                        
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                        future = executor.submit(call_genai)
+                        try:
+                            # 15 minute hard timeout
+                            response = future.result(timeout=900)
+                        except concurrent.futures.TimeoutError:
+                            logger.error(f"❌ Vertex AI hanging! Timeout after 900s trying to ingest {video_url}.")
+                            raise TimeoutError("Vertex AI API call timed out trying to ingest the video stream.")
+                            
                     duration = time.time() - start_time
                     log_llm_response(call_id, response, duration=duration)
 
@@ -2078,6 +2165,67 @@ def fuse_segmented_json_responses(
                 f"({len(timestamps_seconds)} with valid timestamps)"
             )
 
+    # Fix 1: Spread timestamp clustering — if >3 claims share same timestamp, spread across ±60s, cap 3 per exact timestamp
+    def seconds_to_timestamp(sec: int) -> str:
+        """Convert seconds to MM:SS or HH:MM:SS."""
+        sec = max(0, sec)
+        h, remainder = divmod(sec, 3600)
+        m, s = divmod(remainder, 60)
+        if h > 0:
+            return f"{h}:{m:02d}:{s:02d}"
+        return f"{m}:{s:02d}"
+
+    from collections import defaultdict
+    by_ts = defaultdict(list)
+    for claim in unique_claims:
+        if isinstance(claim, dict):
+            ts = claim.get("timestamp", "") or ""
+            by_ts[ts].append(claim)
+
+    # For each (ts, claim_text) that should get a spread timestamp, we assign one new_ts; consume in order when iterating
+    spread_queue = defaultdict(list)  # (ts, claim_text) -> [new_ts, ...]
+
+    for ts, group in by_ts.items():
+        if not ts or ts.lower() == "unknown" or len(group) <= 3:
+            continue
+        sorted_group = sorted(
+            group,
+            key=lambda c: -(len((c.get("claim_text") or "").strip())),
+        )
+        spread_claims = sorted_group[3:]
+        base_sec = parse_timestamp_to_seconds(ts)
+        if base_sec <= 0:
+            base_sec = 0
+        n_spread = len(spread_claims)
+        if n_spread > 0:
+            step = max(1, 120 // (n_spread + 1))
+            offsets = list(range(-60, 61, step))[:n_spread]
+            if len(offsets) < n_spread:
+                offsets = [-60 + (i * 120 // (n_spread - 1)) for i in range(n_spread)] if n_spread > 1 else [-30]
+            for i, c in enumerate(spread_claims):
+                offset = offsets[i] if i < len(offsets) else (i - n_spread // 2) * 15
+                new_sec = max(0, base_sec + offset)
+                new_ts = seconds_to_timestamp(new_sec)
+                key = (ts, (c.get("claim_text") or "").strip())
+                spread_queue[key].append(new_ts)
+
+    spread_count = 0
+    for claim in unique_claims:
+        if not isinstance(claim, dict):
+            continue
+        ts = claim.get("timestamp", "") or ""
+        text = (claim.get("claim_text") or "").strip()
+        key = (ts, text)
+        if spread_queue.get(key):
+            new_ts = spread_queue[key].pop(0)
+            claim["timestamp"] = new_ts
+            spread_count += 1
+
+    if spread_count > 0:
+        logger.info(
+            f"📅 Timestamp spread: Redistributed {spread_count} claims that shared same timestamp (cap 3 per timestamp)"
+        )
+
     # Create fused result
     return {
         "initial_report": (
@@ -2500,7 +2648,7 @@ def calculate_craap_score(
     # 3. AUTHORITY (0-2 points) - Speaker credibility
     authority_score = 0.0
 
-    # Known authority indicators
+    # Known authority indicators (domain-neutral)
     authority_titles = [
         "dr",
         "doctor",
@@ -2509,19 +2657,29 @@ def calculate_craap_score(
         "researcher",
         "scientist",
         "expert",
-        "specialist",
+        "ceo",
+        "cfo",
+        "founder",
+        "director",
+        "commissioner",
+        "judge",
+        "senator",
+        "analyst",
     ]
     if any(title in speaker.lower() for title in authority_titles):
         authority_score += 1.5
 
-    # Institutional indicators
+    # Institutional indicators (domain-neutral)
     institutions = [
         "university",
-        "hospital",
-        "clinic",
         "institute",
         "foundation",
         "center",
+        "court",
+        "agency",
+        "commission",
+        "bureau",
+        "exchange",
     ]
     if any(inst in speaker.lower() for inst in institutions):
         authority_score += 1.0
@@ -2552,14 +2710,17 @@ def calculate_craap_score(
     if any(term in claim_lower for term in credibility_keywords):
         authority_score += 1.5  # Significant boost for speaker credibility claims
 
-    # Specific professional indicators in claim
+    # Specific professional indicators in claim (domain-neutral)
     professional_terms = [
         "study",
         "research",
-        "clinical trial",
         "published",
         "peer reviewed",
         "journal",
+        "investigation",
+        "audit",
+        "ruling",
+        "filing",
     ]
     if any(term in claim_lower for term in professional_terms):
         authority_score += 0.5
@@ -2573,20 +2734,23 @@ def calculate_craap_score(
     import re
 
     if re.search(
-        r"\b\d+(?:\.\d+)?(?:%|percent|pounds|kg|lbs|days|weeks|months)\b", claim_text
+        r"\b\d+(?:\.\d+)?(?:%|percent|kg|lbs|days|weeks|months|dollars|billion|million|years|hours)\b",
+        claim_text,
     ):
         accuracy_score += 1.0
 
-    # Scientific/medical terminology suggests accuracy
+    # Domain-neutral terminology suggesting verifiability
     scientific_terms = [
-        "clinical",
-        "trial",
         "study",
         "research",
         "analysis",
         "test",
         "experiment",
         "data",
+        "investigation",
+        "report",
+        "finding",
+        "audit",
     ]
     if any(term in claim_lower for term in scientific_terms):
         accuracy_score += 0.5
@@ -2861,40 +3025,56 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
         video_url = state["video_url"]
         video_id = state["video_id"]
         out_dir_path = state["out_dir_path"]
-
-        # ===== ALWAYS EXTRACT METADATA FIRST =====
-        logger.info("📋 EXTRACTING RELIABLE METADATA AND SUBTITLES")
-        print("📋 Extracting video metadata and subtitles...")
-
-        # Extract metadata FIRST - this always runs regardless of analysis path
-        metadata_result = extract_video_metadata_reliable(
-            video_url, out_dir_path, logger
+        is_file_upload = (
+            state.get("ingest_source") == "file_upload"
+            or (isinstance(video_url, str) and video_url.startswith("upload://"))
         )
 
         video_info_extracted = {}
-        if metadata_result["success"]:
-            logger.info(
-                f"✅ METADATA EXTRACTED: {metadata_result['video_info'].get('title', 'Unknown')}"
-            )
-            print(
-                f"✅ Video metadata extracted: {metadata_result['video_info'].get('title', 'Unknown')}"
-            )
+        info_json_path = None
+        subtitle_path = None
 
-            # Store metadata info for report generation
-            video_info_extracted = metadata_result["video_info"]
-            info_json_path = metadata_result["info_json_path"]
-            subtitle_path = metadata_result["subtitle_path"]
-
-            logger.info(f"📄 Info JSON: {info_json_path}")
-            if subtitle_path:
-                logger.info(f"📝 Subtitles: {subtitle_path}")
+        if is_file_upload:
+            upload_title = (state.get("upload_title") or video_id).strip()
+            logger.info("📋 File upload — skipping YouTube metadata extraction")
+            print(f"📋 Using upload title: {upload_title}")
+            video_info_extracted = {
+                "id": video_id,
+                "title": upload_title,
+                "description": "",
+                "tags": [],
+                "duration": 0,
+            }
+            state["video_info"] = video_info_extracted
         else:
-            logger.warning(
-                f"⚠️ METADATA EXTRACTION FAILED: {metadata_result.get('error', 'Unknown error')}"
+            # ===== EXTRACT METADATA (YouTube URL path) =====
+            logger.info("📋 EXTRACTING RELIABLE METADATA AND SUBTITLES")
+            print("📋 Extracting video metadata and subtitles...")
+
+            metadata_result = extract_video_metadata_reliable(
+                video_url, out_dir_path, logger
             )
-            video_info_extracted = {}
-            info_json_path = None
-            subtitle_path = None
+
+            if metadata_result["success"]:
+                logger.info(
+                    f"✅ METADATA EXTRACTED: {metadata_result['video_info'].get('title', 'Unknown')}"
+                )
+                print(
+                    f"✅ Video metadata extracted: {metadata_result['video_info'].get('title', 'Unknown')}"
+                )
+
+                video_info_extracted = metadata_result["video_info"]
+                info_json_path = metadata_result["info_json_path"]
+                subtitle_path = metadata_result["subtitle_path"]
+
+                logger.info(f"📄 Info JSON: {info_json_path}")
+                if subtitle_path:
+                    logger.info(f"📝 Subtitles: {subtitle_path}")
+            else:
+                logger.warning(
+                    f"⚠️ METADATA EXTRACTION FAILED: {metadata_result.get('error', 'Unknown error')}"
+                )
+                video_info_extracted = {}
 
         # ===== CHECK FOR DOWNLOADED .MP4 FILE FIRST =====
         # Check for downloaded .mp4 file from sherlock analysis or previous download
@@ -3050,22 +3230,20 @@ Video Duration: {video_duration_minutes:.1f} minutes (estimated)
 - What CLAIMS can be verified from external sources?
 - What CREDENTIALS or BACKGROUND is mentioned about speakers?
 
-🎯 MANDATORY CLAIM EXTRACTION MIX:
-**REQUIRED SPEAKER CREDIBILITY CLAIMS (minimum 20% of total):**
-- Educational background (where they studied, degrees obtained)
-- Professional experience (years in field, previous positions)
-- Institutional affiliations (hospitals, universities, organizations)
-- Awards, recognitions, or honors received
-- Publications, research, or books authored
-- Professional certifications or licenses
-- Leadership roles or founding positions
+🎯 CLAIM CATEGORIES TO EXTRACT (aim for diversity across these):
+- **FACTUAL ASSERTIONS:** Specific statements of fact that can be verified (dates, events, outcomes, statistics, named entities)
+- **CREDIBILITY CLAIMS:** Statements about credentials, affiliations, track records, or authority of people mentioned
+- **CAUSAL/OUTCOME CLAIMS:** Assertions that X caused Y, or that some action led to a measurable result
+- **COMPARATIVE CLAIMS:** Statements that X is better/worse/different than Y with specific metrics
+- **QUANTITATIVE CLAIMS:** Any claim involving specific numbers, percentages, dollar amounts, or measurements
 
-**CONTENT CLAIMS (remaining 80%):**
-- Study results, research findings, statistics
-- Product claims, effectiveness statements
-- Health outcomes, treatment results
-- Scientific discoveries or breakthroughs
-- Specific numerical data or percentages
+AI-GENERATED CONTENT DETECTION:
+- Look for unnatural lip sync, skin texture artifacts, inconsistent lighting on the face
+- Detect robotic or monotone voice patterns
+- Identify stock footage substituted for real demonstrations
+- Note if the speaker never appears with hands visible near their face
+- Flag repeated exact phrases or unnatural sentence cadence
+- Return ai_indicators: list of observed anomalies (empty array if none)
 
 OUTPUT FORMAT: Provide detailed JSON with:
 {{
@@ -3079,7 +3257,8 @@ OUTPUT FORMAT: Provide detailed JSON with:
             "initial_assessment": "Assessment of claim verifiability and factual nature"
         }}
     ],
-    "video_analysis_summary": "Summary of video content, themes, and claim extraction process from multimodal analysis"
+    "video_analysis_summary": "Summary of video content, themes, and claim extraction process from multimodal analysis",
+    "ai_indicators": ["list of observed AI/synthetic content anomalies or empty array"]
 }}
 
 🚨 EXTRACT CLAIMS FROM ACTUAL VIDEO FRAMES & AUDIO - NOT METADATA OR DESCRIPTIONS! 🚨
@@ -3337,8 +3516,30 @@ OUTPUT FORMAT: Provide detailed JSON with:
 
         # ===== PROCESS RESULTS =====
         if not isinstance(analysis_result, dict) or analysis_result.get("error"):
-            logger.error(f"❌ Multimodal analysis failed: {analysis_result['error']}")
-            raise ValueError(f"Multimodal analysis failed: {analysis_result['error']}")
+            error_str = analysis_result.get("error", "Unknown error") if isinstance(analysis_result, dict) else str(analysis_result)
+            logger.error(f"❌ Multimodal analysis failed: {error_str}")
+            
+            # Check availability with oembed to distinguish "Not Available" from "Not Processed"
+            import urllib.request
+            availability = "Not Processed"
+            try:
+                urllib.request.urlopen(f"https://www.youtube.com/oembed?url={video_url}")
+            except Exception as he:
+                if hasattr(he, 'code') and he.code in (401, 404):
+                    availability = "Not Available"
+                else:
+                    availability = "Not Available" # If any other network error, conservative fallback or leave as Not Processed
+            
+            logger.warning(f"Returning empty state gracefully. Availability: {availability}")
+            return {
+                **state,
+                "video_path": None,
+                "transcription": None,
+                "video_info": video_info if 'video_info' in locals() else {},
+                "claims": [],
+                "video_availability": availability,
+                "error_reason": error_str
+            }
 
         # Extract claims from analysis
         claims = analysis_result.get("claims", [])
@@ -3351,15 +3552,15 @@ OUTPUT FORMAT: Provide detailed JSON with:
             logger.error(
                 "❌ MULTIMODAL_ANALYSIS_FAILED: No claims extracted from video analysis"
             )
-            logger.error(
-                "❌ This is a critical failure - the multimodal LLM call did not produce any claims"
-            )
-            logger.error(
-                "❌ The program must terminate as there is no reasonable fallback without claims"
-            )
-            raise Exception(
-                "MULTIMODAL_ANALYSIS_FAILED: No claims extracted from video analysis. This is a critical failure that requires termination."
-            )
+            return {
+                **state,
+                "video_path": None,
+                "transcription": None,
+                "video_info": video_info if 'video_info' in locals() else {},
+                "claims": [],
+                "video_availability": "Not Processed",
+                "error_reason": "No claims extracted from video analysis LLM response"
+            }
 
         # Create media embed with extracted or fallback info
         if video_info_extracted:
@@ -3376,6 +3577,7 @@ OUTPUT FORMAT: Provide detailed JSON with:
         }
 
         # Return updated state as simple dict with extracted metadata
+        ai_indicators = analysis_result.get("ai_indicators") or []
         return {
             **state,
             "video_path": None,  # No downloaded file
@@ -3388,6 +3590,8 @@ OUTPUT FORMAT: Provide detailed JSON with:
             "metadata_extraction_success": metadata_result["success"],
             "info_json_path": info_json_path if "info_json_path" in locals() else None,
             "subtitle_path": subtitle_path if "subtitle_path" in locals() else None,
+            "ai_disclosure": metadata_result.get("ai_disclosure", False),
+            "ai_indicators_detected": bool(ai_indicators),
         }
 
     except Exception as e:
@@ -3395,155 +3599,184 @@ OUTPUT FORMAT: Provide detailed JSON with:
         raise
 
 
+def _claim_timestamp_to_seconds(claim: Dict[str, Any], duration_sec: float) -> float:
+    """Get claim timestamp in seconds for temporal bucketing; return 0 if unknown."""
+    ts = claim.get("timestamp") if isinstance(claim, dict) else getattr(claim, "timestamp", None)
+    ts_sec = claim.get("timestamp_seconds") if isinstance(claim, dict) else getattr(claim, "timestamp_seconds", None)
+    if ts_sec is not None and isinstance(ts_sec, (int, float)):
+        return min(max(0, float(ts_sec)), duration_sec)
+    if not ts or not isinstance(ts, str) or ts.strip().lower() in ("unknown", "n/a", ""):
+        return 0.0
+    import re
+    parts = re.findall(r"\d+", ts.strip())
+    if not parts:
+        return 0.0
+    parts = [int(p) for p in parts]
+    if len(parts) == 1:
+        s = float(parts[0])
+    elif len(parts) == 2:
+        s = parts[0] * 60 + parts[1]
+    else:
+        s = parts[0] * 3600 + parts[1] * 60 + parts[2]
+    return min(max(0, s), duration_sec)
+
+
+async def _rank_claims_with_llm(
+    claims: List[Dict[str, Any]],
+    video_title: str,
+    target_total: int,
+) -> List[Dict[str, Any]]:
+    """Use LLM to score claims by verifiability, impact, specificity, uniqueness; return ranked list."""
+    import json
+    from langchain_google_vertexai import ChatVertexAI
+    from verityngn.config.settings import AGENT_MODEL_NAME
+
+    n = len(claims)
+    lines = []
+    for i, c in enumerate(claims):
+        text = (c.get("claim_text", "") if isinstance(c, dict) else getattr(c, "claim_text", ""))[:300]
+        lines.append(f"{i}. {text}")
+    claims_block = "\n".join(lines)
+    prompt = f"""You are a fact-checking claim ranker. Given {n} claims extracted from a video titled "{video_title[:200]}", score each claim on 4 dimensions (1-10 each):
+
+- VERIFIABILITY: Can this claim be checked against public records, news, databases, or authoritative sources? (10 = trivially checkable, 1 = pure opinion)
+- IMPACT: How much does this claim's truth/falsity affect the video's overall credibility? (10 = central thesis, 1 = trivial aside)
+- SPECIFICITY: Does the claim contain concrete facts (names, numbers, dates, institutions) vs vague assertions? (10 = all concrete, 1 = all vague)
+- UNIQUENESS: How different is this claim from the others? (10 = completely novel angle, 1 = essentially a duplicate)
+
+Return valid JSON only, no markdown. Format:
+{{"ranked_claims": [{{"index": 0, "verifiability": 8, "impact": 7, "specificity": 9, "uniqueness": 6}}, ...]}}
+Include one object per claim (indices 0 to {n - 1}). Order by (verifiability + impact + specificity + uniqueness) descending in your list.
+
+Claims:
+{claims_block}
+"""
+
+    try:
+        llm = ChatVertexAI(
+            model_name=AGENT_MODEL_NAME,
+            temperature=0.2,
+            max_output_tokens=8192,
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
+        )
+        resp = llm.invoke(prompt)
+        text = (resp.content or "").strip()
+        # Strip markdown code fence if present
+        if text.startswith("```"):
+            text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
+        data = json.loads(text)
+        items = data.get("ranked_claims") or []
+        # Build index -> total score
+        scores = {}
+        for item in items:
+            idx = item.get("index")
+            if idx is None or idx < 0 or idx >= n:
+                continue
+            v = item.get("verifiability", 5)
+            i = item.get("impact", 5)
+            s = item.get("specificity", 5)
+            u = item.get("uniqueness", 5)
+            scores[idx] = float(v) + float(i) + float(s) + float(u)
+        # Sort by score descending, return claims in that order
+        ordered = sorted(scores.items(), key=lambda x: -x[1])
+        return [claims[idx] for idx, _ in ordered]
+    except Exception as e:
+        logger = __import__("logging").getLogger(__name__)
+        logger.warning("LLM claim ranking failed (%s), using fallback", e)
+        return []
+
+
 async def run_prepare_claims(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Prepare claims for verification."""
+    """Prepare claims for verification using LLM-powered ranking (verifiability, impact, specificity, uniqueness) and temporal distribution."""
     import logging
 
     logger = logging.getLogger(__name__)
 
     claims = state.get("claims", [])
-    logger.info(f"📋 Preparing {len(claims)} claims for verification")
+    logger.info("📋 Preparing %s claims for verification", len(claims))
 
-    # CRAAP-inspired diversification: ensure we keep coverage across categories (speaker credibility, medical/science, product efficacy, mechanism, safety)
-    categories = {
-        "speaker_credibility": [],
-        "medical_science": [],
-        "product_efficacy": [],
-        "mechanism": [],
-        "safety": [],
-        "other": [],
-    }
+    video_duration_minutes = state.get("video_duration_minutes", 30.0)
+    if not video_duration_minutes and state.get("video_info"):
+        dur_sec = state["video_info"].get("duration")
+        if dur_sec is not None:
+            video_duration_minutes = float(dur_sec) / 60.0
+    if not video_duration_minutes:
+        video_duration_minutes = 30.0
+    target_total = min(90, max(40, int(video_duration_minutes * 0.75)))
+    duration_sec = video_duration_minutes * 60.0
 
-    def classify_claim(text: str) -> str:
-        t = (text or "").lower()
-        if any(
-            k in t
-            for k in [
-                "dr.",
-                "doctor",
-                "md",
-                "phd",
-                "professor",
-                "endocrinologist",
-                "credentials",
-                "johns hopkins",
-                "harvard",
-            ]
-        ):
-            return "speaker_credibility"
-        if any(
-            k in t
-            for k in [
-                "study",
-                "clinical",
-                "trial",
-                "randomized",
-                "peer-reviewed",
-                "evidence",
-                "meta-analysis",
-            ]
-        ):
-            return "medical_science"
-        if any(
-            k in t
-            for k in [
-                "works",
-                "results",
-                "lose",
-                "pounds",
-                "improves",
-                "effective",
-                "efficacy",
-            ]
-        ):
-            return "product_efficacy"
-        if any(
-            k in t
-            for k in [
-                "mechanism",
-                "inflammation",
-                "metabolism",
-                "hormone",
-                "insulin",
-                "glp-1",
-                "mct",
-            ]
-        ):
-            return "mechanism"
-        if any(
-            k in t
-            for k in [
-                "side effects",
-                "safety",
-                "danger",
-                "unsafe",
-                "contraindicated",
-                "fda warning",
-            ]
-        ):
-            return "safety"
-        return "other"
+    if not claims:
+        return {**state, "claims": [], "aggregated_evidence": []}
 
-    for c in claims:
-        text = (
-            c.get("claim_text", "")
-            if isinstance(c, dict)
-            else getattr(c, "claim_text", "")
-        )
-        categories[classify_claim(text)].append(c)
+    if len(claims) <= target_total:
+        selected = list(claims)
+    else:
+        video_info = state.get("video_info") or {}
+        video_title = (video_info.get("title") or "Video")[:200]
+        ranked = await _rank_claims_with_llm(claims, video_title, target_total)
+        if not ranked:
+            # Fallback: sort by claim text length (proxy for specificity)
+            def _key(c):
+                t = c.get("claim_text", "") if isinstance(c, dict) else getattr(c, "claim_text", "")
+                return -len(t)
+            ranked = sorted(claims, key=_key)
+        selected = list(ranked[:target_total])
+        remaining_by_rank = ranked[target_total:]  # preserve score order for promotion
 
-    # Selection: aim for 20 claims with at least 3 per primary category when available
-    target_total = 20
-    min_per_cat = {
-        "speaker_credibility": 3,
-        "medical_science": 3,
-        "product_efficacy": 3,
-        "mechanism": 3,
-        "safety": 2,
-    }
-    selected = []
-
-    # First satisfy minimums
-    for cat, minimum in min_per_cat.items():
-        selected.extend(categories[cat][:minimum])
-
-    # Fill remaining slots round-robin across categories to diversify
-    cats_order = [
-        "speaker_credibility",
-        "medical_science",
-        "product_efficacy",
-        "mechanism",
-        "safety",
-        "other",
-    ]
-    idx_map = {k: min_per_cat.get(k, 0) for k in cats_order}
-    while len(selected) < min(target_total, len(claims)):
-        progressed = False
-        for cat in cats_order:
-            arr = categories[cat]
-            i = idx_map[cat]
-            if i < len(arr):
-                selected.append(arr[i])
-                idx_map[cat] += 1
-                progressed = True
-                if len(selected) >= target_total:
-                    break
-        if not progressed:
-            break
+        # Temporal enforcement: ensure at least 20% from each third of video
+        if duration_sec > 0 and remaining_by_rank:
+            third = duration_sec / 3.0
+            buckets = {"early": [], "mid": [], "late": []}
+            for c in selected:
+                s = _claim_timestamp_to_seconds(c, duration_sec)
+                if s < third:
+                    buckets["early"].append(c)
+                elif s < 2 * third:
+                    buckets["mid"].append(c)
+                else:
+                    buckets["late"].append(c)
+            min_per_third = max(1, int(0.2 * target_total))
+            need_early = max(0, min_per_third - len(buckets["early"]))
+            need_mid = max(0, min_per_third - len(buckets["mid"]))
+            need_late = max(0, min_per_third - len(buckets["late"]))
+            by_third = {"early": [], "mid": [], "late": []}
+            for c in remaining_by_rank:
+                s = _claim_timestamp_to_seconds(c, duration_sec)
+                if s < third:
+                    by_third["early"].append(c)
+                elif s < 2 * third:
+                    by_third["mid"].append(c)
+                else:
+                    by_third["late"].append(c)
+            # Promote from underrepresented thirds (first in list = next best by score)
+            promoted = []
+            for _ in range(need_early):
+                if by_third["early"]:
+                    promoted.append(by_third["early"].pop(0))
+            for _ in range(need_mid):
+                if by_third["mid"]:
+                    promoted.append(by_third["mid"].pop(0))
+            for _ in range(need_late):
+                if by_third["late"]:
+                    promoted.append(by_third["late"].pop(0))
+            if promoted:
+                # Drop lowest-ranked from selected to make room
+                drop = len(promoted)
+                selected = selected[:-drop] if drop < len(selected) else selected[:1]
+                selected.extend(promoted)
 
     # Deduplicate while preserving order
-    seen_ids = set()
+    seen = set()
     deduped = []
     for c in selected:
         cid = c.get("claim_id") if isinstance(c, dict) else getattr(c, "claim_id", None)
-        key = cid or (
-            c.get("claim_text") if isinstance(c, dict) else getattr(c, "claim_text", "")
-        )
-        if key not in seen_ids:
-            seen_ids.add(key)
+        key = cid or (c.get("claim_text", "") if isinstance(c, dict) else getattr(c, "claim_text", ""))
+        if key not in seen:
+            seen.add(key)
             deduped.append(c)
 
-    logger.info(f"✅ Selected {len(deduped)} diversified claims for verification")
+    logger.info("✅ Selected %s claims for verification (LLM-ranked, temporal-enforced)", len(deduped))
     return {**state, "claims": deduped, "aggregated_evidence": []}
 
 
@@ -3567,6 +3800,8 @@ async def extract_claims_with_llm(
             top_k=40,
             verbose=True,  # Help with debugging
             streaming=False,  # Disable streaming to prevent "No generations found in stream" errors
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
         )
 
         prompt = ChatPromptTemplate.from_template(
@@ -3708,6 +3943,8 @@ async def extract_claims_with_gemini_multimodal_youtube_url(
             top_k=40,
             verbose=True,  # Help with debugging
             streaming=False,  # Disable streaming to prevent "No generations found in stream" errors
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
         )
 
         # Create AGGRESSIVE multimodal prompt (restored from July 20th)
@@ -3741,22 +3978,12 @@ Video Title: {video_info.get('title', 'Unknown') if video_info else 'Unknown'}
 - What CLAIMS can be verified from external sources?
 - What CREDENTIALS or BACKGROUND is mentioned about speakers?
 
-🎯 MANDATORY CLAIM EXTRACTION MIX:
-**REQUIRED SPEAKER CREDIBILITY CLAIMS (minimum 20% of total):**
-- Educational background (where they studied, degrees obtained)
-- Professional experience (years in field, previous positions)
-- Institutional affiliations (hospitals, universities, organizations)
-- Awards, recognitions, or honors received
-- Publications, research, or books authored
-- Professional certifications or licenses
-- Leadership roles or founding positions
-
-**CONTENT CLAIMS (remaining 80%):**
-- Study results, research findings, statistics
-- Product claims, effectiveness statements
-- Health outcomes, treatment results
-- Scientific discoveries or breakthroughs
-- Specific numerical data or percentages
+🎯 CLAIM CATEGORIES TO EXTRACT (aim for diversity across these):
+- **FACTUAL ASSERTIONS:** Specific statements of fact that can be verified (dates, events, outcomes, statistics, named entities)
+- **CREDIBILITY CLAIMS:** Statements about credentials, affiliations, track records, or authority of people mentioned
+- **CAUSAL/OUTCOME CLAIMS:** Assertions that X caused Y, or that some action led to a measurable result
+- **COMPARATIVE CLAIMS:** Statements that X is better/worse/different than Y with specific metrics
+- **QUANTITATIVE CLAIMS:** Any claim involving specific numbers, percentages, dollar amounts, or measurements
 
 OUTPUT FORMAT: Provide detailed JSON with:
 {{
@@ -3919,7 +4146,7 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_genai(
         ]
         contents = types.Content(parts=parts)
         resp = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=VERTEX_MODEL_NAME,
             contents=contents,
             config=types.GenerateContentConfig(
                 max_output_tokens=GENAI_VIDEO_MAX_OUTPUT_TOKENS,
@@ -3989,9 +4216,12 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
     from typing import Any, Dict, List
     import vertexai
     from vertexai.generative_models import GenerativeModel, Part, GenerationConfig
+    from google import genai as _genai_sdk
+    from google.genai import types as _genai_types
     from verityngn.config.settings import (
         PROJECT_ID,
         LOCATION,
+        VERTEX_LOCATION,
         VERTEX_MODEL_NAME,
         SEGMENTED_URL_ANALYSIS,
         SEGMENT_FPS,
@@ -4010,8 +4240,13 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
         f"🌐 [VERTEX] Intelligent segmented YouTube URL analysis for {video_id}"
     )
 
-    vertexai.init(project=PROJECT_ID, location=LOCATION)
+    vertexai.init(project=PROJECT_ID, location=VERTEX_LOCATION)
     model = GenerativeModel(VERTEX_MODEL_NAME)
+
+    # google.genai client configured for Vertex AI — supports VideoMetadata clipping
+    _genai_client = _genai_sdk.Client(
+        vertexai=True, project=PROJECT_ID, location=VERTEX_LOCATION
+    )
 
     # Guard: video_info may be None
     if not video_info:
@@ -4059,10 +4294,10 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
     #
 
     # Create AGGRESSIVE multimodal prompt (restored from July 20th)
-
-    base_prompt = f"""
+    # Use template so call_segment can inject per-segment target and scope
+    base_prompt_template = """
 🎬 ENHANCED VIDEO FRAME ANALYSIS - HIGH-QUALITY CLAIMS EXTRACTION 🎬
-- Extract {target_claims} SUBSTANTIAL, high-quality, verifiable claims from the video content (audio+visual)
+- {segment_scope_line}Extract {target_claims} SUBSTANTIAL, high-quality, verifiable claims from the video content (audio+visual)
 - Ensure at least 20% are speaker-credibility claims; the rest are content claims
 - Apply CRAAP criteria (Currency, Relevance, Authority, Accuracy, Purpose)
 - AVOID micro-claims and overly fine-grained statements
@@ -4086,7 +4321,7 @@ CRITICAL INSTRUCTIONS FOR MULTIMODAL VIDEO ANALYSIS:
 
 Video ID: {video_id}
 Video URL: {video_url}
-Video Title: {video_info.get('title', 'Unknown') if video_info else 'Unknown'}
+Video Title: {video_title}
 
 🎯 ENHANCED MULTIMODAL REQUIREMENTS:
 1. Sample video at 1 frame per second (aggressive temporal resolution)
@@ -4104,32 +4339,14 @@ Video Title: {video_info.get('title', 'Unknown') if video_info else 'Unknown'}
 - ACCURACY: What specific facts, statistics, or verifiable data is presented?
 - PURPOSE: What persuasive claims or promotional statements are made?
 
-🎯 MANDATORY HIGH-QUALITY CLAIM EXTRACTION MIX:
-**PRIORITY: SCIENTIFIC & VERIFIABLE CLAIMS (minimum 70% - CRUCIAL for truthfulness):**
-- Specific study results: "[Institution] study found [specific quantified outcome]"
-- Research findings: "Research published in [journal] shows [specific data]"
-- Statistical claims: "[X]% of [specific population] experienced [measurable outcome]"
-- Product effectiveness: "[Product] caused [specific measurable effect] in [timeframe]"
-- Health outcomes: "[Treatment] resulted in [specific health improvement] in [study size]"
-- Scientific discoveries: "[Researcher] discovered [specific finding] published in [year]"
-- Comparative claims: "[X] is [quantifiably] better than [Y] based on [specific metric]"
+🎯 CLAIM CATEGORIES TO EXTRACT (aim for diversity and high verifiability):
+- **FACTUAL ASSERTIONS:** Specific statements of fact that can be verified (dates, events, outcomes, statistics, named entities)
+- **CREDIBILITY CLAIMS:** Statements about credentials, affiliations, track records, or authority of people mentioned
+- **CAUSAL/OUTCOME CLAIMS:** Assertions that X caused Y, or that some action led to a measurable result
+- **COMPARATIVE CLAIMS:** Statements that X is better/worse/different than Y with specific metrics
+- **QUANTITATIVE CLAIMS:** Any claim involving specific numbers, percentages, dollar amounts, or measurements
 
-**SECONDARY: SPEAKER CREDIBILITY CLAIMS (minimum 10% only if clearly stated):**
-- Educational background: "Dr. X studied/graduated from [specific institution]"
-- Professional experience: "Dr. X has [X] years of experience in [specific field]"
-- Institutional affiliations: "Dr. X works at/is affiliated with [specific organization]"
-- Awards/recognitions: "Dr. X received [specific award] from [organization]"
-- Publications: "Dr. X authored [specific publication/book title]"
-- Professional certifications: "Dr. X is board-certified/licensed by [organization]"
-
-**OTHER VERIFIABLE CLAIMS (remaining 20%):**
-- Specific study results: "[Institution] study found [specific quantified outcome]"
-- Research findings: "Research published in [journal] shows [specific data]"
-- Statistical claims: "[X]% of [specific population] experienced [measurable outcome]"
-- Product effectiveness: "[Product] caused [specific measurable effect] in [timeframe]"
-- Health outcomes: "[Treatment] resulted in [specific health improvement] in [study size]"
-- Scientific discoveries: "[Researcher] discovered [specific finding] published in [year]"
-- Comparative claims: "[X] is [quantifiably] better than [Y] based on [specific metric]"
+Prioritize claims that are specific (institution, study, metric, timeframe) and verifiable from external sources. Include speaker credibility claims only when clearly stated.
 
 🚫 AVOID LOW-QUALITY/MICRO-CLAIMS:
 - Vague motivational statements
@@ -4167,12 +4384,41 @@ OUTPUT FORMAT: Provide detailed JSON with:
     )
 
     def build_part_with_metadata(start: int = None, end: int = None, fps: float = None):
-        # Use simple URI part; rely on textual segment hints to avoid API 400s
-        return Part.from_uri(video_url, mime_type="video/youtube")
+        # Use google.genai types which support VideoMetadata for YouTube URL clipping.
+        # The _genai_client (configured for Vertex AI) handles the actual API call.
+        vm_kwargs = {}
+        if start is not None:
+            vm_kwargs["start_offset"] = f"{start}s"
+        if end is not None:
+            vm_kwargs["end_offset"] = f"{end}s"
+        if vm_kwargs:
+            logger.info(f"[VERTEX] Building part with VideoMetadata: {start}s → {end}s")
+        return _genai_types.Part(
+            file_data=_genai_types.FileData(
+                file_uri=video_url, mime_type="video/youtube"
+            ),
+            video_metadata=_genai_types.VideoMetadata(**vm_kwargs) if vm_kwargs else None,
+        )
 
     def call_segment(start_s: int = None, end_s: int = None) -> str:
         video_part = build_part_with_metadata(
             start_s, end_s, SEGMENT_FPS if SEGMENTED_URL_ANALYSIS else None
+        )
+        # Per-segment target: ask for claims proportional to this segment's duration
+        if start_s is not None and end_s is not None:
+            segment_duration_min = (end_s - start_s) / 60.0
+            segment_target = max(15, int(segment_duration_min * 3))
+            segment_scope_line = f"Extract {segment_target} claims from this segment ({start_s}s to {end_s}s). "
+        else:
+            segment_target = target_claims
+            segment_scope_line = ""
+        video_title = (video_info.get("title", "Unknown") if video_info else "Unknown")
+        base_prompt = base_prompt_template.format(
+            target_claims=segment_target,
+            segment_scope_line=segment_scope_line,
+            video_id=video_id,
+            video_url=video_url,
+            video_title=video_title,
         )
         # Add explicit segment hint in text in case metadata is not honored
         segment_hint = (
@@ -4191,82 +4437,38 @@ OUTPUT FORMAT: Provide detailed JSON with:
             metadata={"start_s": start_s, "end_s": end_s}
         )
 
-        # Primary attempt
-        try:
-            resp = model.generate_content(
-                contents=contents,
-                generation_config=gen_cfg,
-                stream=False,
-            )
-            duration = time.time() - start_time
-            log_llm_response(call_id, resp, duration=duration)
-        except Exception as e:
-            # Implement exponential backoff for 503 and other transient errors
-            error_msg = str(e).lower()
-            original_error = str(e)
-            
-            # Detect video unavailability errors (non-retryable)
-            is_video_unavailable = any(
-                x in error_msg
-                for x in [
-                    "not owned by the user",
-                    "video unavailable",
-                    "video not found",
-                    "private video",
-                    "deleted video",
-                    "age-restricted",
-                    "403",
-                ]
-            )
-            
-            if is_video_unavailable:
-                logger.error(f"❌ [VERTEX] Video unavailable error (non-retryable): {original_error}")
-                # Return special marker that will be caught later
-                return f"__VIDEO_UNAVAILABLE__:{original_error}"
-            
-            is_503_or_transient = any(
-                x in error_msg
-                for x in [
-                    "503",
-                    "unavailable",
-                    "overloaded",
-                    "timeout",
-                    "deadline",
-                    "rate limit",
-                ]
-            )
-
-            if is_503_or_transient:
-                # Exponential backoff with jitter for 503/transient errors
-                base_delay = 2.0
-                jitter = random.uniform(0.5, 1.5)
-                backoff_delay = base_delay * jitter
-                logger.warning(
-                    f"[VERTEX] 503/Transient error detected: {e}. Waiting {backoff_delay:.1f}s before retry..."
-                )
-                time.sleep(backoff_delay)
-            else:
-                logger.warning(
-                    f"[VERTEX] Primary generate_content failed: {e}. Retrying with relaxed config..."
-                )
-
+        # Retry loop with exponential backoff (429, 503, transient errors)
+        # Use google.genai client (supports VideoMetadata); fall back to vertexai SDK if needed.
+        _genai_cfg_normal = _genai_types.GenerateContentConfig(
+            max_output_tokens=min(32768, MAX_OUTPUT_TOKENS_2_5_FLASH),
+            temperature=0.25,
+            top_p=0.95,
+            top_k=40,
+        )
+        _genai_cfg_relaxed = _genai_types.GenerateContentConfig(
+            max_output_tokens=min(32768, MAX_OUTPUT_TOKENS_2_5_FLASH),
+            temperature=0.35,
+            top_p=0.95,
+            top_k=40,
+        )
+        max_retries = 4
+        resp = None
+        for attempt in range(max_retries + 1):
             try:
-                relaxed_cfg = GenerationConfig(
-                    max_output_tokens=min(32768, MAX_OUTPUT_TOKENS_2_5_FLASH),
-                    temperature=0.25,
-                    top_p=0.95,
-                    top_k=40,
-                )
-                resp = model.generate_content(
+                cfg = _genai_cfg_normal if attempt % 2 == 0 else _genai_cfg_relaxed
+                resp = _genai_client.models.generate_content(
+                    model=VERTEX_MODEL_NAME,
                     contents=contents,
-                    generation_config=relaxed_cfg,
-                    stream=False,
+                    config=cfg,
                 )
-            except Exception as e2:
-                error2_msg = str(e2).lower()
-                # Check again for video unavailability in retry
-                is_video_unavailable_retry = any(
-                    x in error2_msg
+                duration = time.time() - start_time
+                log_llm_response(call_id, resp, duration=duration)
+                break
+            except Exception as e:
+                error_msg = str(e).lower()
+                original_error = str(e)
+                is_video_unavailable = any(
+                    x in error_msg
                     for x in [
                         "not owned by the user",
                         "video unavailable",
@@ -4277,14 +4479,25 @@ OUTPUT FORMAT: Provide detailed JSON with:
                         "403",
                     ]
                 )
-                if is_video_unavailable_retry:
-                    logger.error(f"❌ [VERTEX] Video unavailable error (non-retryable): {e2}")
-                    return f"__VIDEO_UNAVAILABLE__:{e2}"
-                    
-                logger.error(
-                    f"[VERTEX] Relaxed config failed: {e2}. No further model fallback will be attempted."
+                if is_video_unavailable:
+                    logger.error(
+                        f"[VERTEX] Video unavailable error (non-retryable): {original_error}"
+                    )
+                    return f"__VIDEO_UNAVAILABLE__:{original_error}"
+                if attempt == max_retries:
+                    logger.error(
+                        f"[VERTEX] All {max_retries + 1} attempts failed. Last error: {e}"
+                    )
+                    return ""
+                # 429 Resource exhausted / 503 / transient: exponential backoff
+                delay = min(120, 15 * (2 ** attempt)) + random.uniform(0, 5)
+                logger.warning(
+                    f"[VERTEX] Attempt {attempt + 1} failed: {e}. Retrying in {delay:.0f}s..."
                 )
-                return ""
+                time.sleep(delay)
+
+        if resp is None:
+            return ""
 
         # ============================================================
         # DIAGNOSTIC LOGGING: Deep inspection of response structure
@@ -4473,12 +4686,12 @@ OUTPUT FORMAT: Provide detailed JSON with:
         import time
         import os
 
-        # Get rate limiting configuration
+        # Get rate limiting configuration (default on to avoid 429s between segments)
         rate_limit_enabled = os.getenv(
-            "SEGMENT_RATE_LIMIT_ENABLED", "false"
+            "SEGMENT_RATE_LIMIT_ENABLED", "true"
         ).lower() in ("true", "1", "t")
         segment_delay = (
-            float(os.getenv("SEGMENT_PROCESSING_DELAY", "2.0"))
+            float(os.getenv("SEGMENT_PROCESSING_DELAY", "15.0"))
             if rate_limit_enabled
             else 0.0
         )
@@ -4650,15 +4863,13 @@ async def extract_claims_with_gemini_multimodal(
                 1. Watch/analyze the video content carefully
                 2. Extract the {target_claims} MOST IMPORTANT and verifiable claims, MANDATORY MIX:
                    
-                   **REQUIRED SPEAKER CREDIBILITY CLAIMS (minimum 2-3 claims):**
-                   - Dr. Julian Ross worked at/studied at [institution]
-                   - Dr. Julian Ross has [years] of experience in [field]
-                   - Dr. Julian Ross received award/recognition from [organization]
-                   - Dr. Julian Ross authored/published [research/book]
-                   - Dr. Julian Ross founded/directed [organization/clinic]
+                   **SPEAKER CREDIBILITY CLAIMS (2-3 claims):**
+                   - [Speaker name] worked at / is affiliated with [institution]
+                   - [Speaker name] has [X] years of experience in [field]
+                   - [Speaker name] founded / led [organization]
                    
                    **CONTENT CLAIMS (remaining claims):**
-                   - Study results, product claims, statistics, outcomes
+                   - Factual assertions, statistics, outcomes, events
                 
                 3. Focus on claims that can be verified through external sources
                 4. Include timestamps where possible
@@ -4745,6 +4956,8 @@ async def extract_claims_fallback_text_only(
             top_k=40,
             verbose=True,  # Help with debugging
             streaming=False,  # Disable streaming to prevent "No generations found in stream" errors
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
         )
 
         # Get video metadata and transcript if available

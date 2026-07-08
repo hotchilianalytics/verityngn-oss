@@ -4,23 +4,58 @@ import re
 from typing import List, Dict, Any, Optional
 from concurrent.futures import ThreadPoolExecutor
 
-from verityngn.config.settings import GOOGLE_SEARCH_API_KEY, CSE_ID, ENABLE_GOOGLE_SEARCH
+from verityngn.config.settings import (
+    AGENT_MODEL_NAME,
+    GOOGLE_SEARCH_API_KEY,
+    CSE_ID,
+    ENABLE_GOOGLE_SEARCH,
+    PROJECT_ID,
+    VERTEX_LOCATION,
+)
+
+_logger = logging.getLogger(__name__)
+
+
+class GoogleSearchAPIError(Exception):
+    """403 or other permanent API access failure — do not retry."""
+
+
 from langchain_google_vertexai import VertexAI
 from langchain_core.prompts import ChatPromptTemplate
 
-def search_for_evidence(query: str, num_results: int = 10) -> List[Dict[str, Any]]:
+if ENABLE_GOOGLE_SEARCH and (not GOOGLE_SEARCH_API_KEY or not CSE_ID):
+    _logger.warning(
+        "Google Custom Search credentials missing (GOOGLE_SEARCH_API_KEY or CSE_ID); "
+        "evidence search will return no results and reports will have no sources."
+    )
+
+
+def search_for_evidence(
+    query: str,
+    num_results: int = 10,
+    tier: Optional[int] = None,
+) -> List[Dict[str, Any]]:
     """
-    Search for evidence related to a claim using multiple search strategies.
-    
+    Search for evidence related to a claim using tier-based search strategies.
+
+    Tier 1: 3 searches (regular + scientific + fact-check).
+    Tier 2: 2 searches (regular + fact-check).
+    Tier 3: no search (returns []).
+    tier=None: legacy 5 parallel searches (unchanged).
+
     Args:
         query (str): The search query
         num_results (int): Number of results to return per source type
-        
+        tier (int|None): Verification tier 1, 2, or 3; None = full 5 searches
+
     Returns:
         List[Dict[str, Any]]: List of evidence items from various sources
     """
     logger = logging.getLogger(__name__)
     logger.info(f"Searching for evidence: {query}")
+    if tier == 3:
+        logger.debug("📡 [SEARCH] Tier 3: skipping web search")
+        return []
     
     def is_press_release_relevant_to_claim(press_release_result: Dict[str, Any], claim_query: str) -> bool:
         """Filter out irrelevant press releases that don't relate to the claim topic."""
@@ -82,89 +117,72 @@ def search_for_evidence(query: str, num_results: int = 10) -> List[Dict[str, Any
             logger.warning("ENABLE_GOOGLE_SEARCH is false; skipping web search")
             return []
         evidence = []
-        
+
+        # Tier-based search budget: 1 = 3 searches + recency news, 2 = 2 searches, None = 5 (legacy)
+        do_regular = True
+        do_scientific = tier is None or tier == 1
+        do_wiki_fact = True
+        do_medical = tier is None
+        do_press_release = tier is None
+        do_news_recent = tier is None or tier == 1  # Recency-aware news for Tier 1
+        # Product/tech/announcement signal: add date-restricted search for recent launches
+        product_tech_pattern = re.compile(
+            r"announced|released|launched|MacBook|iPhone|version\s+\d|model\s+\d|new\s+\w+\s+(chip|GPU|CPU|laptop|phone)",
+            re.I,
+        )
+        do_recent_product = tier == 1 and bool(product_tech_pattern.search(query))
+        num_concurrent = (
+            do_regular + do_scientific + do_wiki_fact + do_medical + do_press_release
+            + (1 if do_news_recent else 0)
+            + (1 if do_recent_product else 0)
+        )
+        logger.info("🔍 [SHERLOCK] Starting parallel evidence searches (%d concurrent)", num_concurrent)
+
         # Create enhanced query variations
         scientific_query = f"{query} scientific evidence research"
         fact_check_query = f"{query} fact check"
         medical_query = f"{query} medical health"
-        # Explicit press release/newswire search (restores Aug-22 behavior)
         press_release_query = f"{query} press release announcement"
         pr_domains = "globenewswire.com,prnewswire.com,businesswire.com,newswire.com,prweb.com,apnews.com,marketwatch.com"
-        
-        # Run searches in parallel with detailed logging
-        logger.info("🔍 [SHERLOCK] Starting parallel evidence searches (5 concurrent)")
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            # Regular search
-            logger.debug("📡 [SEARCH] Launching regular search")
-            regular_future = executor.submit(google_search, query, num_results)
-            # Scientific search
-            logger.debug("📡 [SEARCH] Launching scientific search")
-            scientific_future = executor.submit(google_search, scientific_query, num_results, 
-                                             additional_params={"as_sitesearch": "nih.gov,nature.com,sciencedirect.com,scholar.google.com,ncbi.nlm.nih.gov"})
-            # Wikipedia and fact check search
-            logger.debug("📡 [SEARCH] Launching wiki/fact-check search")
-            wiki_fact_future = executor.submit(google_search, fact_check_query, num_results,
-                                            additional_params={"as_sitesearch": "wikipedia.org,snopes.com,factcheck.org,politifact.com"})
-            # Medical/health search
-            logger.debug("📡 [SEARCH] Launching medical search")
-            medical_future = executor.submit(google_search, medical_query, num_results,
-                                         additional_params={"as_sitesearch": "mayoclinic.org,cdc.gov,who.int,webmd.com,health.harvard.edu"})
-            # Press release/newswire search (domain-targeted)
-            logger.debug("📡 [SEARCH] Launching press release search")
-            press_release_future = executor.submit(google_search, press_release_query, num_results,
-                                              additional_params={"as_sitesearch": pr_domains})
-            
-            # Collect results with timeouts to prevent indefinite hangs
-            # SHERLOCK FIX: Add 60-second timeout per search to prevent evidence gathering hangs
-            import time
-            
+        from datetime import datetime
+        current_year = str(datetime.utcnow().year)
+        recent_product_query = f"{query} {current_year}" if do_recent_product else None
+
+        import time
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            regular_future = executor.submit(google_search, query, num_results) if do_regular else None
+            scientific_future = executor.submit(google_search, scientific_query, num_results, {"as_sitesearch": "nih.gov,nature.com,sciencedirect.com,scholar.google.com,ncbi.nlm.nih.gov"}) if do_scientific else None
+            wiki_fact_future = executor.submit(google_search, fact_check_query, num_results, {"as_sitesearch": "wikipedia.org,snopes.com,factcheck.org,politifact.com"}) if do_wiki_fact else None
+            medical_future = executor.submit(google_search, medical_query, num_results, {"as_sitesearch": "mayoclinic.org,cdc.gov,who.int,webmd.com,health.harvard.edu"}) if do_medical else None
+            press_release_future = executor.submit(google_search, press_release_query, num_results, {"as_sitesearch": pr_domains}) if do_press_release else None
+            news_recent_future = executor.submit(search_news, query, min(num_results, 5)) if do_news_recent else None
+            recent_product_future = (
+                executor.submit(google_search, recent_product_query, num_results, {"dateRestrict": "w2"})
+                if do_recent_product and recent_product_query
+                else None
+            )
+
             logger.info("⏱️ [SHERLOCK] Collecting search results with 60s timeout per search")
-            start_time = time.time()
-            
-            try:
-                logger.debug("📥 [SEARCH] Waiting for regular search...")
-                regular_results = regular_future.result(timeout=60.0)
-                logger.debug(f"✅ [SEARCH] Regular search completed in {time.time() - start_time:.1f}s")
-            except Exception as e:
-                logger.warning(f"⚠️ [SEARCH] Regular search timed out or failed after {time.time() - start_time:.1f}s: {e}")
-                regular_results = []
-            
-            start_time = time.time()
-            try:
-                logger.debug("📥 [SEARCH] Waiting for scientific search...")
-                scientific_results = scientific_future.result(timeout=60.0)
-                logger.debug(f"✅ [SEARCH] Scientific search completed in {time.time() - start_time:.1f}s")
-            except Exception as e:
-                logger.warning(f"⚠️ [SEARCH] Scientific search timed out or failed after {time.time() - start_time:.1f}s: {e}")
-                scientific_results = []
-            
-            start_time = time.time()
-            try:
-                logger.debug("📥 [SEARCH] Waiting for wiki/fact-check search...")
-                wiki_fact_results = wiki_fact_future.result(timeout=60.0)
-                logger.debug(f"✅ [SEARCH] Wiki/fact-check search completed in {time.time() - start_time:.1f}s")
-            except Exception as e:
-                logger.warning(f"⚠️ [SEARCH] Wiki/fact-check search timed out or failed after {time.time() - start_time:.1f}s: {e}")
-                wiki_fact_results = []
-            
-            start_time = time.time()
-            try:
-                logger.debug("📥 [SEARCH] Waiting for medical search...")
-                medical_results = medical_future.result(timeout=60.0)
-                logger.debug(f"✅ [SEARCH] Medical search completed in {time.time() - start_time:.1f}s")
-            except Exception as e:
-                logger.warning(f"⚠️ [SEARCH] Medical search timed out or failed after {time.time() - start_time:.1f}s: {e}")
-                medical_results = []
-            
-            start_time = time.time()
-            try:
-                logger.debug("📥 [SEARCH] Waiting for press release search...")
-                press_release_results = press_release_future.result(timeout=60.0)
-                logger.debug(f"✅ [SEARCH] Press release search completed in {time.time() - start_time:.1f}s")
-            except Exception as e:
-                logger.warning(f"⚠️ [SEARCH] Press release search timed out or failed after {time.time() - start_time:.1f}s: {e}")
-                press_release_results = []
-            
+
+            def _get(fut, default=None):
+                if fut is None:
+                    return default or []
+                try:
+                    return fut.result(timeout=60.0)
+                except GoogleSearchAPIError:
+                    raise
+                except Exception as e:
+                    logger.warning("⚠️ [SEARCH] Search timed out or failed: %s", e)
+                    return []
+
+            regular_results = _get(regular_future)
+            scientific_results = _get(scientific_future)
+            wiki_fact_results = _get(wiki_fact_future)
+            medical_results = _get(medical_future)
+            press_release_results = _get(press_release_future)
+            news_recent_results = _get(news_recent_future)
+            recent_product_results = _get(recent_product_future)
+
             logger.info("✅ [SHERLOCK] All evidence searches completed")
         
         # Format and combine results, adding source type metadata
@@ -240,6 +258,35 @@ def search_for_evidence(query: str, num_results: int = 10) -> List[Dict[str, Any
             }
             evidence.append(evidence_item)
 
+        # News (recency-aware) results for Tier 1
+        for item in (news_recent_results or []):
+            evidence_item = {
+                "source_name": item.get("source_name", "News"),
+                "source_type": "News",
+                "url": item.get("url", ""),
+                "title": item.get("title", ""),
+                "text": item.get("text", ""),
+                "relevance": "high",
+                "claim": query,
+                "recency": "recent",
+            }
+            evidence.append(evidence_item)
+
+        # Recent product/tech (dateRestrict=w2) results for Tier 1
+        for result in (recent_product_results or []):
+            url_link = result.get("link", "")
+            evidence_item = {
+                "source_name": result.get("title", "Unknown Source"),
+                "source_type": "Web",
+                "url": url_link,
+                "title": result.get("title", ""),
+                "text": result.get("snippet", ""),
+                "relevance": "high",
+                "claim": query,
+                "recency": "recent",
+            }
+            evidence.append(evidence_item)
+
         # Press release/newswire results (explicit)
         # Process press release results with relevance filtering  
         relevant_pr_count = 0
@@ -266,13 +313,17 @@ def search_for_evidence(query: str, num_results: int = 10) -> List[Dict[str, Any
         logger.info(f"Kept {relevant_pr_count}/{len(press_release_results)} relevant press releases for query: {query}")
         
         # Deduplicate results
+        from verityngn.services.reputation.url_safety import is_safe_url
+
         unique_evidence = []
         seen_urls = set()
         for item in evidence:
             url = item.get("url", "")
-            if url and url not in seen_urls:
+            if url and url not in seen_urls and is_safe_url(url):
                 seen_urls.add(url)
                 unique_evidence.append(item)
+            elif url and not is_safe_url(url):
+                logger.debug("Dropped unsafe search result URL: %s", url[:120])
         
         logger.info(f"Found {len(unique_evidence)} unique pieces of evidence across multiple sources")
         return unique_evidence
@@ -348,33 +399,45 @@ def google_search(query: str, num_results: int = 5, additional_params: Dict[str,
                 
                 # Check if the request was successful
                 if response.status_code != 200:
-                    # Enhanced error logging for 400 errors
                     try:
                         error_data = response.json()
                         error_message = error_data.get('error', {}).get('message', 'Unknown error')
-                        error_reason = error_data.get('error', {}).get('errors', [{}])[0].get('reason', 'unknown')
-                        
-                        if response.status_code == 400:
-                            logger.error(f"❌ Google Search API 400 Bad Request: {error_message}")
-                            logger.error(f"   Reason: {error_reason}")
-                            logger.error(f"   Query: {query[:100]}")
-                            logger.error(f"   API Key present: {bool(GOOGLE_SEARCH_API_KEY)}")
-                            logger.error(f"   API Key preview: {GOOGLE_SEARCH_API_KEY[:10] + '...' if GOOGLE_SEARCH_API_KEY else 'MISSING'}")
-                            logger.error(f"   CSE ID present: {bool(CSE_ID)}")
-                            logger.error(f"   CSE ID preview: {CSE_ID[:10] + '...' if CSE_ID else 'MISSING'}")
-                            
-                            # Check for placeholder values
-                            if GOOGLE_SEARCH_API_KEY and ('your-' in GOOGLE_SEARCH_API_KEY.lower() or 'placeholder' in GOOGLE_SEARCH_API_KEY.lower()):
-                                logger.error("   ⚠️  WARNING: API key appears to be a placeholder value!")
-                            if CSE_ID and ('your-' in CSE_ID.lower() or 'placeholder' in CSE_ID.lower()):
-                                logger.error("   ⚠️  WARNING: CSE ID appears to be a placeholder value!")
-                        else:
-                            logger.error(f"Error performing Google search: {response.status_code} - {error_message}")
-                    except:
-                        logger.error(f"Error performing Google search: {response.status_code} (could not parse error response)")
-                    
-                    if attempt < 1:  # Retry on error (only 1 retry now)
-                        time.sleep(2)  # Fixed 2s delay instead of exponential
+                        errors_list = error_data.get('error', {}).get('errors', [{}])
+                        error_reason = errors_list[0].get('reason', 'unknown') if errors_list else 'unknown'
+                    except Exception:
+                        error_message = 'Unknown error'
+                        error_reason = 'unknown'
+
+                    # 403 Forbidden: do not retry; raise so callers can distinguish API failure from zero results
+                    if response.status_code == 403:
+                        logger.error(
+                            "Google Custom Search API returned 403 Forbidden. Evidence search will return no results. "
+                            "Common causes: (1) Billing not enabled for the project, (2) API key restrictions "
+                            "blocking this environment, (3) Custom Search Engine ID invalid or not linked. "
+                            "Check Google Cloud Console and CSE setup."
+                        )
+                        logger.error("   API reason: %s - %s", error_reason, error_message)
+                        logger.error("   Query: %s", query[:100])
+                        raise GoogleSearchAPIError(f"403 Forbidden: {error_message}")
+
+                    # Enhanced error logging for 400 errors
+                    if response.status_code == 400:
+                        logger.error(f"❌ Google Search API 400 Bad Request: {error_message}")
+                        logger.error(f"   Reason: {error_reason}")
+                        logger.error(f"   Query: {query[:100]}")
+                        logger.error(f"   API Key present: {bool(GOOGLE_SEARCH_API_KEY)}")
+                        logger.error(f"   API Key preview: {GOOGLE_SEARCH_API_KEY[:10] + '...' if GOOGLE_SEARCH_API_KEY else 'MISSING'}")
+                        logger.error(f"   CSE ID present: {bool(CSE_ID)}")
+                        logger.error(f"   CSE ID preview: {CSE_ID[:10] + '...' if CSE_ID else 'MISSING'}")
+                        if GOOGLE_SEARCH_API_KEY and ('your-' in GOOGLE_SEARCH_API_KEY.lower() or 'placeholder' in GOOGLE_SEARCH_API_KEY.lower()):
+                            logger.error("   ⚠️  WARNING: API key appears to be a placeholder value!")
+                        if CSE_ID and ('your-' in CSE_ID.lower() or 'placeholder' in CSE_ID.lower()):
+                            logger.error("   ⚠️  WARNING: CSE ID appears to be a placeholder value!")
+                    else:
+                        logger.error(f"Error performing Google search: {response.status_code} - {error_message}")
+
+                    if attempt < 1:
+                        time.sleep(2)
                         continue
                     return []
                     
@@ -460,9 +523,16 @@ def search_news(query: str, num_results: int = 5) -> List[Dict[str, Any]]:
         
         # Check if the request was successful
         if response.status_code != 200:
-            logger.error(f"Error performing news search: {response.status_code}")
+            if response.status_code == 403:
+                logger.error(
+                    "Google Custom Search API returned 403 Forbidden (news search). Evidence search will return no results. "
+                    "Common causes: (1) Billing not enabled for the project, (2) API key restrictions, "
+                    "(3) Custom Search Engine ID invalid or not linked. Check Google Cloud Console and CSE setup."
+                )
+            else:
+                logger.error("Error performing news search: %s", response.status_code)
             return []
-            
+
         # Parse the response
         data = response.json()
         items = data.get("items", [])
@@ -598,7 +668,11 @@ You are Sherlock Mode. Given the video context and extracted claims, propose hig
         """
     )
     try:
-        llm = VertexAI(model_name="gemini-2.5-flash")
+        llm = VertexAI(
+            model_name=AGENT_MODEL_NAME,
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
+        )
         msg = prompt.format_messages(
             title=context.get("title", ""),
             video_id=context.get("video_id", ""),

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 import time
@@ -18,9 +19,18 @@ from verityngn.config.settings import (
     AGENT_MODEL_NAME,
     GOOGLE_SEARCH_API_KEY,
     CSE_ID,
+    GOOGLE_FACTCHECK_API_KEY,
     MAX_OUTPUT_TOKENS_2_0_FLASH,
+    PROJECT_ID,
+    QUICK_MODE,
+    QUICK_MODE_CONFIG,
+    VERTEX_LOCATION,
+    VERIFICATION_MODEL_NAME,
+    get_quick_mode_setting,
 )
 from verityngn.services.search.web_search import search_for_evidence
+from verityngn.workflows.verification_query_enhancement import generate_verification_queries
+from verityngn.services.search.factcheck_api import fetch_claim_review_evidence
 from verityngn.tools.search import SearchTool
 from verityngn.services.search.youtube_search import (
     analyze_youtube_evidence_content,
@@ -34,6 +44,19 @@ from verityngn.services.report.evidence_utils import (
 from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
 from verityngn.config.config_loader import get_config
 
+try:
+    from verityngn.services.reputation.domain_reputation import (
+        get_domain_tier,
+        get_domain_weight,
+        get_tier_breakdown,
+    )
+    _DOMAIN_REPUTATION_AVAILABLE = True
+except ImportError:
+    get_domain_tier = None
+    get_domain_weight = None
+    get_tier_breakdown = None
+    _DOMAIN_REPUTATION_AVAILABLE = False
+
 # Dict-based verification result schema (replaces Pydantic model)
 VERIFICATION_RESULT_SCHEMA = {
     "evidence_summary": "A single sentence summarizing the key evidence found",
@@ -41,6 +64,664 @@ VERIFICATION_RESULT_SCHEMA = {
     "probability_distribution": "Probability distribution over possible outcomes (TRUE, FALSE, UNCERTAIN), values should sum to 1.0",
     "sources": "List of source URLs or references that support the verification",
 }
+
+
+def _serialize_claim(c: Dict[str, Any]) -> Dict[str, Any]:
+    """Make a claim dict JSON-serializable (e.g. EvidenceSource -> dict)."""
+    out = dict(c)
+    if "evidence" in out and isinstance(out["evidence"], list):
+        out["evidence"] = [
+            e.model_dump() if hasattr(e, "model_dump") else (e if isinstance(e, dict) else {"source_name": str(e), "source_type": "text", "url": None, "text": str(e), "title": "Evidence"})
+            for e in out["evidence"]
+        ]
+    return out
+
+
+def save_verification_checkpoint(
+    video_id: str,
+    out_dir: str,
+    verified_claims: List[Dict[str, Any]],
+    all_claims: List[Dict[str, Any]],
+    current_index: int,
+    all_evidence: List[Dict[str, Any]],
+    state: Dict[str, Any],
+) -> str:
+    """
+    Save a checkpoint after each claim verification to enable resume and partial reports.
+    Returns the checkpoint file path, or empty string on failure.
+    """
+    import json
+    from datetime import datetime
+
+    logger = logging.getLogger(__name__)
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+        checkpoint_path = os.path.join(out_dir, f"{video_id}_checkpoint.json")
+        serializable_claims = [_serialize_claim(c) for c in verified_claims]
+        serializable_evidence = []
+        for e in all_evidence:
+            if isinstance(e, dict):
+                serializable_evidence.append(e)
+            else:
+                serializable_evidence.append({"source_name": getattr(e, "source_name", str(e)), "source_type": getattr(e, "source_type", "verification"), "url": getattr(e, "url", None), "text": getattr(e, "text", "")})
+
+        checkpoint = {
+            "video_id": video_id,
+            "video_url": state.get("video_url", ""),
+            "video_title": state.get("title", ""),
+            "completed_claims": serializable_claims,
+            "current_index": current_index + 1,  # 1-based for display
+            "total_claims": len(all_claims),
+            "all_evidence": serializable_evidence,
+            "timestamp": datetime.now().isoformat(),
+            "progress_percent": round((current_index + 1) / len(all_claims) * 100, 1) if all_claims else 0,
+        }
+        with open(checkpoint_path, "w") as f:
+            json.dump(checkpoint, f, indent=2, default=str)
+        logger.info(
+            f"💾 [CHECKPOINT] Saved: {current_index + 1}/{len(all_claims)} claims "
+            f"({checkpoint['progress_percent']}%) -> {checkpoint_path}"
+        )
+        return checkpoint_path
+    except Exception as e:
+        logger.warning(f"⚠️ [CHECKPOINT] Failed to save checkpoint: {e}")
+        return ""
+
+
+def load_verification_checkpoint(video_id: str, out_dir: str) -> Optional[Dict[str, Any]]:
+    """Load a checkpoint file if it exists. Returns checkpoint data dict or None."""
+    import json
+
+    logger = logging.getLogger(__name__)
+    try:
+        checkpoint_path = os.path.join(out_dir, f"{video_id}_checkpoint.json")
+        if not os.path.exists(checkpoint_path):
+            return None
+        with open(checkpoint_path, "r") as f:
+            checkpoint = json.load(f)
+        logger.info(
+            f"📂 [CHECKPOINT] Loaded: {checkpoint.get('current_index', 0)}/{checkpoint.get('total_claims', 0)} claims"
+        )
+        return checkpoint
+    except Exception as e:
+        logger.warning(f"⚠️ [CHECKPOINT] Failed to load checkpoint: {e}")
+        return None
+
+
+def save_restart_file(
+    video_id: str,
+    out_dir: str,
+    next_claim_index: int,
+    claims: List[Dict[str, Any]],
+    state: Dict[str, Any],
+    reason: str,
+    verified_claims: List[Dict[str, Any]],
+    all_evidence: List[Dict[str, Any]],
+) -> str:
+    """
+    Write a restart file so verification can resume from next_claim_index.
+    Returns the restart file path, or empty string on failure.
+    """
+    import json
+    from datetime import datetime
+
+    logger = logging.getLogger(__name__)
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+        restart_path = os.path.join(out_dir, f"{video_id}_restart.json")
+        serializable_claims = [_serialize_claim(c) for c in claims]
+        serializable_evidence = []
+        for e in all_evidence:
+            if isinstance(e, dict):
+                serializable_evidence.append(e)
+            else:
+                serializable_evidence.append({"source_name": getattr(e, "source_name", str(e)), "source_type": getattr(e, "source_type", "verification"), "url": getattr(e, "url", None), "text": getattr(e, "text", "")})
+
+        restart_data = {
+            "video_id": video_id,
+            "video_url": state.get("video_url", ""),
+            "out_dir_path": out_dir,
+            "next_claim_index": next_claim_index,
+            "claims": serializable_claims,
+            "initial_report": state.get("initial_report"),
+            "media_embed": state.get("media_embed"),
+            "video_info": state.get("video_info"),
+            "ci_once": state.get("ci_once"),
+            "reason": reason,
+            "timestamp": datetime.now().isoformat(),
+            "completed_claims": [_serialize_claim(c) for c in verified_claims],
+            "all_evidence": serializable_evidence,
+        }
+        with open(restart_path, "w") as f:
+            json.dump(restart_data, f, indent=2, default=str)
+        logger.info(f"💾 [RESTART] Saved: resume from claim {next_claim_index + 1} -> {restart_path}")
+        return restart_path
+    except Exception as e:
+        logger.warning(f"⚠️ [RESTART] Failed to save restart file: {e}")
+        return ""
+
+
+def load_restart_file(path: str) -> Optional[Dict[str, Any]]:
+    """Load a restart file. Returns dict with next_claim_index, claims, etc., or None."""
+    import json
+
+    logger = logging.getLogger(__name__)
+    try:
+        if not path or not os.path.exists(path):
+            return None
+        with open(path, "r") as f:
+            data = json.load(f)
+        logger.info(f"📂 [RESTART] Loaded: resume from claim {data.get('next_claim_index', 0) + 1} -> {path}")
+        return data
+    except Exception as e:
+        logger.warning(f"⚠️ [RESTART] Failed to load restart file: {e}")
+        return None
+
+
+
+
+# --- CHECKPOINT SAVING FOR RESILIENCE ---
+import json
+import os
+from datetime import datetime
+import signal
+import sys
+import threading
+
+
+# --- HARD TIMEOUT ENFORCEMENT (process isolation) ---
+# Signal/thread timeouts are unreliable: LangChain/gRPC can swallow SIGALRM.
+# Use a subprocess + watchdog timer so we can SIGKILL and guarantee the deadline on macOS.
+
+import re
+
+
+def _make_watchdog(proc, timeout_seconds: float):
+    """Start a timer that SIGKILLs the process after timeout_seconds. Returns the Timer (call .cancel() if proc exits naturally)."""
+    def _kill():
+        if proc.is_alive():
+            try:
+                os.kill(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+    t = threading.Timer(timeout_seconds, _kill)
+    t.daemon = True
+    t.start()
+    return t
+
+
+def _try_parse_fenced_json(value: Any) -> Optional[Dict]:
+    """If value is string with markdown-fenced JSON, strip fences and return parsed dict; else None."""
+    if isinstance(value, dict):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```\s*$", "", text)
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+
+def _invoke_verification_agent_worker(queue, agent_input):
+    """
+    Run in a subprocess: build agent and invoke with agent_input.
+    Puts (True, result) or (False, error_message) into queue.
+    """
+    try:
+        agent = get_agent(None)
+        result = agent.invoke(agent_input)
+        queue.put(("ok", result))
+    except Exception as e:
+        queue.put(("err", str(e)))
+
+
+def run_verification_agent_with_timeout(
+    agent_input: dict, timeout_seconds: float = 90.0
+) -> Tuple[Optional[Any], Optional[str]]:
+    """
+    Invoke the verification agent in a subprocess with hard timeout.
+    Watchdog timer guarantees SIGKILL after timeout_seconds (reliable on macOS).
+    Returns (result, None) or (None, error_message).
+    """
+    import multiprocessing
+    import sys
+    logger = logging.getLogger(__name__)
+    # On Linux (Batch VMs), use "fork" so child processes inherit the parent's memory space
+    # without needing to re-import __main__ from disk. "spawn" on Linux requires __main__
+    # to be a real file on disk, which fails when the entry-point script was read from stdin.
+    # On macOS (local dev), "fork" is unsafe with Objective-C runtimes; use "spawn" there.
+    ctx = multiprocessing.get_context("fork" if sys.platform == "linux" else "spawn")
+    queue = ctx.Queue()
+    proc = ctx.Process(
+        target=_invoke_verification_agent_worker,
+        args=(queue, agent_input),
+    )
+    proc.start()
+    watchdog = _make_watchdog(proc, timeout_seconds)
+    # Fix 3: join with timeout so we never block forever on gRPC teardown; then force-kill if still alive
+    proc.join(timeout=timeout_seconds + 10)
+    watchdog.cancel()
+    if proc.is_alive():
+        try:
+            os.kill(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        proc.join(timeout=5)
+    if queue.empty():
+        logger.error(
+            "🛑 [HARD TIMEOUT] Verification agent process terminated after %.1fs",
+            timeout_seconds,
+        )
+        return None, f"Operation timed out (hard timeout via process kill after {timeout_seconds}s)"
+    status, value = queue.get_nowait()
+    if status == "ok":
+        if isinstance(value, dict):
+            return value, None
+        parsed = _try_parse_fenced_json(value)
+        if parsed is not None:
+            return parsed, None
+        return None, f"Invalid json output: {str(value)[:200]}"
+    return None, value
+
+
+def run_with_hard_timeout(func, args=(), kwargs=None, timeout_seconds: float = 90.0):
+    """
+    Execute a function with hard timeout (fallback for non-agent use).
+    For verification agent, use run_verification_agent_with_timeout() which uses process isolation.
+    """
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+    logger = logging.getLogger(__name__)
+    kwargs = kwargs or {}
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(func, *args, **kwargs)
+        try:
+            result = future.result(timeout=timeout_seconds)
+            return result, None
+        except FuturesTimeoutError:
+            future.cancel()
+            logger.warning(
+                "⚠️ [TIMEOUT] ThreadPoolExecutor timeout after %ss", timeout_seconds
+            )
+            return None, f"Timeout after {timeout_seconds}s"
+        except Exception as e:
+            return None, f"Execution error: {str(e)}"
+
+
+def save_verification_checkpoint(
+    video_id: str,
+    out_dir: str,
+    verified_claims: List[Dict[str, Any]],
+    all_claims: List[Dict[str, Any]],
+    current_index: int,
+    all_evidence: List[Dict[str, Any]],
+    state: Dict[str, Any],
+) -> str:
+    """
+    Save a checkpoint after each claim verification to enable resume and partial reports.
+    
+    Args:
+        video_id: YouTube video ID
+        out_dir: Output directory path
+        verified_claims: List of claims that have been verified so far
+        all_claims: Full list of claims to process
+        current_index: Current claim index (0-based)
+        all_evidence: All evidence collected so far
+        state: Current workflow state
+        
+    Returns:
+        Path to the checkpoint file
+    """
+    logger = logging.getLogger(__name__)
+    
+    try:
+        checkpoint_path = os.path.join(out_dir, f"{video_id}_checkpoint.json")
+        
+        # Convert evidence to JSON-serializable format
+        serializable_evidence = []
+        for ev in all_evidence:
+            if hasattr(ev, 'model_dump'):
+                serializable_evidence.append(ev.model_dump())
+            elif isinstance(ev, dict):
+                serializable_evidence.append(ev)
+            else:
+                serializable_evidence.append(str(ev))
+        
+        # Convert claims to JSON-serializable format
+        serializable_claims = []
+        for claim in verified_claims:
+            if hasattr(claim, 'model_dump'):
+                serializable_claims.append(claim.model_dump())
+            elif isinstance(claim, dict):
+                # Deep copy to avoid modifying original
+                claim_copy = dict(claim)
+                # Convert any nested EvidenceSource objects
+                if 'evidence' in claim_copy:
+                    claim_copy['evidence'] = [
+                        e.model_dump() if hasattr(e, 'model_dump') else e 
+                        for e in claim_copy.get('evidence', [])
+                    ]
+                serializable_claims.append(claim_copy)
+            else:
+                serializable_claims.append(str(claim))
+        
+        checkpoint = {
+            "video_id": video_id,
+            "video_url": state.get("video_url", ""),
+            "video_title": state.get("title", ""),
+            "completed_claims": serializable_claims,
+            "current_index": current_index + 1,  # 1-based for display
+            "total_claims": len(all_claims),
+            "all_evidence": serializable_evidence,
+            "timestamp": datetime.now().isoformat(),
+            "progress_percent": round((current_index + 1) / len(all_claims) * 100, 1) if all_claims else 0,
+        }
+        
+        with open(checkpoint_path, "w") as f:
+            json.dump(checkpoint, f, indent=2, default=str)
+        
+        logger.info(
+            f"💾 [CHECKPOINT] Saved: {current_index + 1}/{len(all_claims)} claims "
+            f"({checkpoint['progress_percent']}%) -> {checkpoint_path}"
+        )
+        
+        return checkpoint_path
+        
+    except Exception as e:
+        logger.warning(f"⚠️ [CHECKPOINT] Failed to save checkpoint: {e}")
+        return ""
+
+
+def load_verification_checkpoint(video_id: str, out_dir: str) -> Optional[Dict[str, Any]]:
+    """
+    Load a checkpoint file if it exists.
+    
+    Args:
+        video_id: YouTube video ID
+        out_dir: Output directory path
+        
+    Returns:
+        Checkpoint data dict or None if no checkpoint exists
+    """
+    logger = logging.getLogger(__name__)
+    
+    try:
+        checkpoint_path = os.path.join(out_dir, f"{video_id}_checkpoint.json")
+        
+        if not os.path.exists(checkpoint_path):
+            return None
+        
+        with open(checkpoint_path, "r") as f:
+            checkpoint = json.load(f)
+        
+        logger.info(
+            f"📂 [CHECKPOINT] Loaded: {checkpoint.get('current_index', 0)}/{checkpoint.get('total_claims', 0)} claims"
+        )
+        
+        return checkpoint
+        
+    except Exception as e:
+        logger.warning(f"⚠️ [CHECKPOINT] Failed to load checkpoint: {e}")
+        return None
+
+
+# --- CLAIM TIERING (Choice 2) + FAST-FAIL (Choice 1) via direct google.genai SDK ---
+
+def classify_claims_by_tier(
+    claims: List[Dict[str, Any]],
+    video_title: str = "",
+    context_snippet: str = "",
+) -> List[Dict[str, Any]]:
+    """
+    Classify all claims into Tier 1 (full search + agent), Tier 2 (2 searches + agent), or Tier 3 (fast-fail, no search).
+    Uses a single batch LLM call via direct google.genai SDK.
+    Returns list of claims with added "verification_tier" (1|2|3) and "tier_reason" (short string).
+    """
+    logger = logging.getLogger(__name__)
+    if not claims:
+        return []
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError as e:
+        logger.warning("google.genai not available for claim tiering: %s; defaulting all to Tier 1", e)
+        for c in claims:
+            c["verification_tier"] = 1
+            c["tier_reason"] = "tiering unavailable"
+        return claims
+
+    client = genai.Client(
+        vertexai=True,
+        project=PROJECT_ID,
+        location=VERTEX_LOCATION,
+    )
+    claims_text = "\n".join(
+        f"{i+1}. {c.get('claim_text', '')[:200]}"
+        for i, c in enumerate(claims)
+    )
+    # Fix 4 Pass 1: Ask for simple comma-separated list of tier numbers (harder to parse-fail than JSON)
+    prompt = f"""You are classifying video claims for fact-checking. For each claim, assign exactly one tier: 1, 2, or 3.
+
+Video context (optional): {video_title or "Unknown"}. {context_snippet[:300] if context_snippet else ""}
+
+Claims:
+{claims_text}
+
+Tier definitions:
+- 1: Verifiable scientific/statistical claims (study citations, statistics, medical/scientific assertions).
+- 2: Identity/credibility claims about people or entities (e.g. "Dr X is a Johns Hopkins endocrinologist").
+- 3: Anecdotal, promotional, or unverifiable (personal stories, sales copy, encryption/price claims, "the way to go").
+
+Output ONLY a comma-separated list of tier numbers, one per claim in order. Example for 4 claims: 1,2,3,1
+Your output (no other text):"""
+
+    try:
+        response = client.models.generate_content(
+            model=VERIFICATION_MODEL_NAME,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                max_output_tokens=1024,
+            ),
+        )
+        text = (getattr(response, "text", None) or "").strip()
+        if not text:
+            raise ValueError("Empty response from tiering model")
+        # Parse comma-separated list; allow trailing/leading whitespace and newlines
+        parts = re.sub(r"[\s\n]+", " ", text).replace(" ", "").split(",")
+        tiers = []
+        for p in parts:
+            p = p.strip()
+            if p == "1" or p == "2" or p == "3":
+                tiers.append(int(p))
+            else:
+                try:
+                    t = int(p)
+                    tiers.append(max(1, min(3, t)))
+                except (ValueError, TypeError):
+                    tiers.append(1)
+        if len(tiers) >= len(claims):
+            for i, claim in enumerate(claims):
+                tier = tiers[i] if i < len(tiers) else 1
+                claim["verification_tier"] = tier
+                claim["tier_reason"] = "LLM list"
+            logger.info(
+                "📊 [TIER] Classified %d claims (comma-separated): Tier1=%d Tier2=%d Tier3=%d",
+                len(claims),
+                sum(1 for c in claims if c.get("verification_tier") == 1),
+                sum(1 for c in claims if c.get("verification_tier") == 2),
+                sum(1 for c in claims if c.get("verification_tier") == 3),
+            )
+            return claims
+        raise ValueError(f"Tier list length {len(tiers)} < claims {len(claims)}")
+    except Exception as e:
+        logger.warning("Claim tiering LLM failed: %s; using pattern fallback on initial_assessment", e)
+
+    # Fix 4 Pass 2: Fallback — classify by initial_assessment text patterns
+    tier3_patterns = re.compile(
+        r"product name|factual|promotional|personal story|anecdotal|testimonial|subjective|difficult|unverifiable",
+        re.I,
+    )
+    tier2_patterns = re.compile(
+        r"identity|credibility|credential|affiliation",
+        re.I,
+    )
+    for c in claims:
+        assess = (c.get("initial_assessment") or "").strip()
+        if tier3_patterns.search(assess):
+            c["verification_tier"] = 3
+            c["tier_reason"] = "pattern: anecdotal/promotional"
+        elif tier2_patterns.search(assess):
+            c["verification_tier"] = 2
+            c["tier_reason"] = "pattern: identity/credibility"
+        else:
+            c["verification_tier"] = 1
+            c["tier_reason"] = "pattern: default scientific"
+    logger.info(
+        "📊 [TIER] Classified %d claims (pattern fallback): Tier1=%d Tier2=%d Tier3=%d",
+        len(claims),
+        sum(1 for c in claims if c.get("verification_tier") == 1),
+        sum(1 for c in claims if c.get("verification_tier") == 2),
+        sum(1 for c in claims if c.get("verification_tier") == 3),
+    )
+    return claims
+
+
+def verify_claim_fast_fail(
+    claim_text: str,
+    initial_assessment: str = "",
+    video_title: str = "",
+    tier: int = 3,
+    reason: str = "",
+    circuit_breaker_fallback: bool = False,
+) -> Dict[str, Any]:
+    """
+    Fast verification without web search: single direct LLM call via google.genai SDK.
+    Used for Tier 3 claims (anecdotal/promotional) and for circuit-breaker fallback.
+    Returns same dict shape as verify_claim() so pipeline is unchanged.
+    """
+    logger = logging.getLogger(__name__)
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError as e:
+        logger.warning("google.genai not available for fast-fail: %s", e)
+        return {
+            "result": "UNCERTAIN",
+            "explanation": "Fast-fail unavailable (missing google.genai).",
+            "evidence": [],
+            "probability_distribution": {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34},
+            "sources": [],
+            "pr_sources": [],
+            "youtube_counter_sources": [],
+        }
+
+    prompt = f"""You are a fact-checker. This claim was classified as Tier {tier} (no web search): {reason or "anecdotal/promotional"}.
+
+Video title: {video_title or "Unknown"}
+Claim: {claim_text}
+Initial assessment: {initial_assessment or "Not provided"}
+
+Without external search, determine veracity from reasoning only. For personal anecdotes, testimonials, or promotional claims, typically the claim cannot be externally verified so lean UNCERTAIN or LIKELY_FALSE if it makes strong factual assertions. If the claim refers to a personal outcome, future event, internal company metric, or anything that cannot be externally validated, output UNVERIFIABLE.
+
+Respond with JSON only (no markdown):
+{{
+  "result": "LIKELY_TRUE" | "LIKELY_FALSE" | "UNCERTAIN" | "HIGHLY_LIKELY_FALSE" | "UNVERIFIABLE",
+  "explanation": "1-3 sentences",
+  "probability_distribution": {{ "TRUE": 0.0-1.0, "FALSE": 0.0-1.0, "UNCERTAIN": 0.0-1.0 }},
+  "sources": []
+}}
+Probabilities must sum to 1.0. Use UNVERIFIABLE when no external evidence could possibly confirm or refute the claim."""
+
+    if circuit_breaker_fallback:
+        prompt = "[Circuit breaker: full verification timed out. Give a quick verdict from claim text only.]\n\n" + prompt
+
+    try:
+        client = genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
+        )
+        response = client.models.generate_content(
+            model=VERIFICATION_MODEL_NAME,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.2,
+                max_output_tokens=2048,
+            ),
+        )
+        text = getattr(response, "text", None) or ""
+        if not text.strip():
+            raise ValueError("Empty response")
+
+        parsed = json.loads(text)
+        if isinstance(parsed, dict):
+            result = parsed.get("result", "UNCERTAIN")
+            explanation = parsed.get("explanation", "No explanation.")
+            prob = parsed.get("probability_distribution", {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34})
+            if not isinstance(prob, dict):
+                prob = {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34}
+            for k in ("TRUE", "FALSE", "UNCERTAIN"):
+                if k not in prob:
+                    prob[k] = 0.33
+            total = sum(prob.values())
+            if total > 0:
+                prob = {k: round(v / total, 3) for k, v in prob.items()}
+            return {
+                "result": result,
+                "explanation": explanation,
+                "evidence": [],
+                "probability_distribution": prob,
+                "sources": parsed.get("sources", []) if isinstance(parsed.get("sources"), list) else [],
+                "pr_sources": [],
+                "youtube_counter_sources": [],
+            }
+        raise ValueError("Response was not a JSON object")
+    except Exception as e:
+        logger.warning("Fast-fail verification error: %s", e)
+        text_raw = ""
+        try:
+            text_raw = text
+        except NameError:
+            pass
+        if not text_raw and "response" in dir():
+            text_raw = getattr(response, "text", None) or ""
+        parsed = _try_parse_fenced_json(text_raw) if text_raw else None
+        if isinstance(parsed, dict):
+            result = parsed.get("result", "UNCERTAIN")
+            explanation = parsed.get("explanation", "No explanation.")
+            prob = parsed.get("probability_distribution", {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34})
+            if not isinstance(prob, dict):
+                prob = {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34}
+            for k in ("TRUE", "FALSE", "UNCERTAIN"):
+                if k not in prob:
+                    prob[k] = 0.33
+            total = sum(prob.values())
+            if total > 0:
+                prob = {k: round(v / total, 3) for k, v in prob.items()}
+            return {
+                "result": result,
+                "explanation": explanation,
+                "evidence": [],
+                "probability_distribution": prob,
+                "sources": parsed.get("sources", []) if isinstance(parsed.get("sources"), list) else [],
+                "pr_sources": [],
+                "youtube_counter_sources": [],
+            }
+        m = re.search(r'"result"\s*:\s*"([A-Z_]+)"', text_raw or "")
+        result = m.group(1) if m else "UNCERTAIN"
+        return {
+            "result": result,
+            "explanation": "Fast-fail assessment based on initial analysis (JSON parse issue).",
+            "evidence": [],
+            "probability_distribution": {"TRUE": 0.2, "FALSE": 0.3, "UNCERTAIN": 0.5},
+            "sources": [],
+            "pr_sources": [],
+            "youtube_counter_sources": [],
+        }
 
 
 def get_agent(state):
@@ -53,6 +734,8 @@ def get_agent(state):
         max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
         request_timeout=60.0,  # Reduced from 120s to 60s
         max_retries=1,  # Limit retries to 1 (was: default unlimited)
+        project=PROJECT_ID,
+        location=VERTEX_LOCATION,
     )
 
     # SHERLOCK FIX: Inject current date context to prevent LLM from treating 2025 sources as "future-dated"
@@ -68,6 +751,7 @@ Context:
 Video Title: {{video_title}}
 Video URL: {{video_url}}
 Claim to Verify: {{claim}}
+{{context_research_section}}
 
 Evidence Found:
 {{evidence}}
@@ -128,6 +812,93 @@ Analyze the claim and provide your verification result."""
     output_parser = JsonOutputParser()
 
     return prompt | llm | output_parser
+
+
+def _invoke_grounded_verification_agent(
+    agent_input: Dict[str, Any],
+) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+    """
+    Call Vertex AI Gemini with Google Search grounding for the verification verdict.
+    Returns (parsed_result_dict, grounding_evidence_list). Grounding evidence can be
+    merged into all_evidence so validation power and verdict mapping see it.
+    """
+    logger = logging.getLogger(__name__)
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError as e:
+        logger.warning("google.genai not available for grounding: %s", e)
+        return {}, []
+
+    prompt_text = (
+        "You are an expert fact-checker with a focus on debunking misinformation. "
+        "Your task is to verify claims by analyzing provided evidence and determining their veracity.\n\n"
+        + get_date_context_prompt_section()
+        + "\n\nContext:\n"
+        f"Video Title: {agent_input.get('video_title', '')}\n"
+        f"Video URL: {agent_input.get('video_url', '')}\n"
+        f"Claim to Verify: {agent_input.get('claim', '')}\n"
+        f"{agent_input.get('context_research_section', '')}\n\n"
+        "Evidence Found:\n"
+        f"{agent_input.get('evidence', 'No relevant evidence found.')}\n\n"
+        "Guidelines: Review evidence carefully; determine a probability distribution; provide JSON only.\n\n"
+        "Respond with JSON only (no markdown) with keys: evidence_summary, conclusion_summary, "
+        "probability_distribution (TRUE, FALSE, UNCERTAIN summing to 1.0), sources (list of URLs)."
+    )
+    try:
+        client = genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
+        )
+        response = client.models.generate_content(
+            model=AGENT_MODEL_NAME,
+            contents=prompt_text,
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+                tools=[types.Tool(google_search=types.GoogleSearch())],
+            ),
+        )
+        text = (getattr(response, "text", None) or "").strip()
+        result = _try_parse_fenced_json(text)
+        if not isinstance(result, dict):
+            result = {}
+        grounding_evidence = []
+        if hasattr(response, "candidates") and response.candidates:
+            cand = response.candidates[0]
+            meta = getattr(cand, "grounding_metadata", None)
+            if meta is not None:
+                chunks = getattr(meta, "grounding_chunks", None) or getattr(meta, "grounding_supports", None)
+                if chunks:
+                    for ch in chunks:
+                        uri = ""
+                        title = ""
+                        if hasattr(ch, "web") and getattr(ch.web, "uri", None):
+                            uri = ch.web.uri
+                            title = getattr(ch.web, "title", "") or "Grounding source"
+                        elif hasattr(ch, "uri") and getattr(ch, "uri", None):
+                            uri = getattr(ch, "uri", "")
+                            title = getattr(ch, "title", "") or "Grounding source"
+                        if not uri:
+                            continue
+                        from verityngn.services.reputation.url_safety import is_safe_url
+                        if not is_safe_url(uri):
+                            continue
+                        grounding_evidence.append({
+                            "source_name": "Google Search (grounding)",
+                            "source_type": "Web",
+                            "url": uri,
+                            "title": title,
+                            "text": getattr(ch, "snippet", "") or getattr(ch, "content", "") or "",
+                            "relevance": "high",
+                            "claim": agent_input.get("claim", ""),
+                                "recency": "recent",
+                            })
+        return result, grounding_evidence
+    except Exception as e:
+        logger.warning("Grounded verification agent failed: %s", e)
+        return {}, []
 
 
 def search_youtube_counter_intel_standalone(
@@ -316,8 +1087,15 @@ def collect_and_group_evidence(
         if not isinstance(evidence, dict):
             continue
 
-        source_type = evidence.get("source_type", "").lower()
         url = evidence.get("url", "")
+        try:
+            from verityngn.services.reputation.url_safety import is_safe_url
+            if url and not is_safe_url(url):
+                continue
+        except ImportError:
+            pass
+
+        source_type = evidence.get("source_type", "").lower()
         text = evidence.get("text", "")
         title = evidence.get("title", "")
 
@@ -374,12 +1152,31 @@ def collect_and_group_evidence(
                     f"⚠️ Likely self-referential press release (term matches): {url[:50]}..."
                 )
 
+        # Domain tier weighting (graduated truth)
+        tier_weight = 1.0
+        evidence_tier = 5  # Unknown
+        if evidence.get("source_type") == "fact_check":
+            # Google Fact Check / ClaimReview injection: treat as Tier 3 (trusted news)
+            evidence_tier = 3
+            tier_weight = 1.0
+        elif _DOMAIN_REPUTATION_AVAILABLE and url:
+            try:
+                tier = get_domain_tier(url)
+                evidence_tier = int(tier)
+                tier_weight = get_domain_weight(url)
+            except Exception:
+                pass
+        weighted_power = validation_power * tier_weight
+
         # Enhance evidence with validation metadata
         enhanced_evidence = evidence.copy()
         enhanced_evidence.update(
             {
                 "self_referential": is_self_referential,
                 "validation_power": validation_power,
+                "evidence_tier": evidence_tier,
+                "tier_weight": tier_weight,
+                "weighted_validation_power": weighted_power,
                 "evidence_group": "",  # Will be set below
                 "supports_claim": False,  # Will be analyzed separately
             }
@@ -439,6 +1236,20 @@ def collect_and_group_evidence(
         logger.warning(
             f"🚫 Found {self_ref_count} self-referential press releases that cannot validate claims"
         )
+
+    # Tier breakdown for graduated truth (Tier1=Academic, Tier2=Official, Tier3=Trusted News, Tier4=Anti-scam, Tier5=Unknown)
+    evidence_groups["tier_breakdown"] = {}
+    if _DOMAIN_REPUTATION_AVAILABLE:
+        try:
+            urls = [e.get("url", "") for e in all_evidence if isinstance(e, dict) and e.get("url")]
+            breakdown = get_tier_breakdown(urls)
+            evidence_groups["tier_breakdown"] = breakdown
+            logger.info(
+                f"📊 Evidence tier breakdown: Tier1={breakdown.get('tier_1', 0)}, Tier2={breakdown.get('tier_2', 0)}, "
+                f"Tier3={breakdown.get('tier_3', 0)}, Tier4={breakdown.get('tier_4', 0)}, Tier5={breakdown.get('tier_5', 0)}"
+            )
+        except Exception as ex:
+            logger.debug(f"Tier breakdown skipped: {ex}")
 
     return evidence_groups
 
@@ -864,11 +1675,13 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
     video_url = get_value(state, "video_url", "")
     video_title = get_value(state, "video_title", "")
     video_channel = get_value(getattr(state, "media_embed", {}), "channel", "")
+    context_research = get_value(state, "context_research", "") or ""
 
-    # Gather evidence if not present
+    # Gather evidence if not present (tier controls search budget: 1=3 searches, 2=2, 3=no search)
     if not state.evidence:
         try:
-            state.evidence = gather_evidence(claim_text)
+            evidence_tier = get_value(state, "verification_tier", 1)
+            state.evidence = gather_evidence(claim_text, tier=evidence_tier)
             logger.info(
                 f"Gathered {len(state.evidence)} pieces of evidence for claim: {claim_text[:100]}..."
             )
@@ -877,8 +1690,18 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
             state.evidence = []
 
     # --- REDESIGNED EVIDENCE COLLECTION ---
+    all_evidence = list(state.evidence) + youtube_counter_evidence
+    # Optional: inject Google Fact Check ClaimReview results as Tier 3 evidence
+    if GOOGLE_FACTCHECK_API_KEY:
+        try:
+            factcheck_evidence = fetch_claim_review_evidence(claim_text, GOOGLE_FACTCHECK_API_KEY)
+            if factcheck_evidence:
+                all_evidence = all_evidence + factcheck_evidence
+                logger.info(f"Injected {len(factcheck_evidence)} Fact Check ClaimReview(s) as evidence")
+        except Exception as fc_err:
+            logger.debug("Fact Check API injection skipped: %s", fc_err)
     evidence_groups = collect_and_group_evidence(
-        all_evidence=list(state.evidence) + youtube_counter_evidence,
+        all_evidence=all_evidence,
         claim_text=claim_text,
         video_title=video_title,
         video_channel=video_channel,
@@ -922,29 +1745,21 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         agent = get_agent(state)
         # Use simple JSON output parser without Pydantic dependency
         output_parser = JsonOutputParser()
+        context_research_section = (
+            "Background (video subject research):\n" + context_research
+            if context_research else ""
+        )
         agent_input = {
             "claim": claim_text,
             "video_url": video_url,
             "video_title": video_title,
             "evidence": evidence_text or "No relevant evidence found.",
+            "context_research_section": context_research_section,
         }
 
-        # SHERLOCK FIX: Add timeout protection to agent.invoke()
-        # Reduced timeout from 150s to 90s to fail faster on rate limits
-        logger.info(
-            f"🔍 [SHERLOCK] Invoking verification agent with 90s timeout for claim: {claim_text[:50]}..."
-        )
-        from concurrent.futures import (
-            ThreadPoolExecutor,
-            TimeoutError as FuturesTimeoutError,
-        )
         import time
-        
-        # LLM interaction logging - already imported at top
         start_time = time.time()
-        # Extract video_id for logging, assuming it might be in state
         video_id = get_value(state, "video_id", "")
-
         call_id = log_llm_call(
             operation="verify_claim_agent",
             prompt=str(agent_input),
@@ -952,39 +1767,68 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
             video_id=video_id
         )
 
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(agent.invoke, agent_input)
-            try:
-                result = future.result(timeout=90.0)  # Reduced from 150s to 90s
-                elapsed = time.time() - start_time
-                log_llm_response(call_id, result, duration=elapsed)
-                logger.info(
-                    f"🔍 [SHERLOCK] Agent verification completed successfully in {elapsed:.1f}s"
+        use_vertex_grounding = os.environ.get("USE_VERTEX_GROUNDING", "").lower() in ("true", "1")
+        if use_vertex_grounding:
+            logger.info("🔍 [GROUNDING] Using Vertex AI Google Search grounding for verdict")
+            result, grounding_evidence = _invoke_grounded_verification_agent(agent_input)
+            timeout_error = None
+            if grounding_evidence:
+                all_evidence = list(all_evidence) if all_evidence else []
+                all_evidence.extend(grounding_evidence)
+                evidence_groups = collect_and_group_evidence(
+                    all_evidence=all_evidence,
+                    claim_text=claim_text,
+                    video_title=video_title,
+                    video_channel=video_channel,
                 )
-            except FuturesTimeoutError:
-                elapsed = time.time() - start_time
-                logger.error(
-                    f"🔍 [SHERLOCK] Agent verification timed out after {elapsed:.1f}s for claim: {claim_text[:50]}"
-                )
-                logger.error(
-                    f"⚠️ [SHERLOCK] Possible rate limiting or resource exhaustion after {elapsed:.1f}s"
-                )
-                # Return uncertain result on timeout with rate limit hint
-                return {
-                    "result": "UNCERTAIN",
-                    "explanation": f"Verification timed out after {elapsed:.1f}s - likely due to rate limiting or resource exhaustion. Unable to complete analysis.",
-                    "evidence": main_evidence,
-                    "probability_distribution": {
-                        "TRUE": 0.2,
-                        "FALSE": 0.3,
-                        "UNCERTAIN": 0.5,
-                    },
-                    "sources": [e.get("url", "") for e in main_evidence[:5]],
-                    "pr_sources": [e.get("url", "") for e in press_release_evidence],
-                    "youtube_counter_sources": [
-                        e.get("url", "") for e in youtube_review_evidence
-                    ],
-                }
+                main_evidence = evidence_groups["independent"]
+                press_release_evidence = evidence_groups["press_releases"]
+                youtube_review_evidence = evidence_groups["youtube_counter"]
+                scientific_evidence = evidence_groups["scientific"]
+                logger.info("🔍 [GROUNDING] Merged %d grounding sources into evidence", len(grounding_evidence))
+        else:
+            # SHERLOCK FIX: Add timeout protection to agent.invoke()
+            AGENT_TIMEOUT_SECONDS = get_quick_mode_setting("agent_timeout", 90.0)
+            logger.info(
+                f"🔍 [SHERLOCK] Invoking verification agent with {AGENT_TIMEOUT_SECONDS}s hard timeout for claim: {claim_text[:50]}..."
+            )
+            result, timeout_error = run_verification_agent_with_timeout(
+                agent_input,
+                timeout_seconds=AGENT_TIMEOUT_SECONDS,
+            )
+
+        elapsed = time.time() - start_time
+
+        if timeout_error:
+            # Timeout occurred - return uncertain result
+            logger.error(
+                f"🔍 [SHERLOCK] Agent verification timed out after {elapsed:.1f}s for claim: {claim_text[:50]}"
+            )
+            logger.error(
+                f"⚠️ [SHERLOCK] Timeout details: {timeout_error}"
+            )
+            # Return uncertain result on timeout with rate limit hint
+            return {
+                "result": "UNCERTAIN",
+                "explanation": f"Verification timed out after {elapsed:.1f}s - likely due to rate limiting or resource exhaustion. Unable to complete analysis.",
+                "evidence": main_evidence,
+                "probability_distribution": {
+                    "TRUE": 0.2,
+                    "FALSE": 0.3,
+                    "UNCERTAIN": 0.5,
+                },
+                "sources": [e.get("url", "") for e in main_evidence[:5]],
+                "pr_sources": [e.get("url", "") for e in press_release_evidence],
+                "youtube_counter_sources": [
+                    e.get("url", "") for e in youtube_review_evidence
+                ],
+            }
+        
+        # Success - log completion
+        log_llm_response(call_id, result, duration=elapsed)
+        logger.info(
+            f"🔍 [SHERLOCK] Agent verification completed successfully in {elapsed:.1f}s"
+        )
 
         if not isinstance(result, dict):
             # Fallback: attempt to repair/parse JSON from text
@@ -1011,6 +1855,35 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         if not isinstance(prob_dist, dict):
             prob_dist = {"TRUE": 0.15, "FALSE": 0.50, "UNCERTAIN": 0.35}
 
+        # UNVERIFIABLE gate: no evidence => do not assign LIKELY_TRUE/LIKELY_FALSE
+        total_sources = len(main_evidence) + len(scientific_evidence) + len(press_release_evidence)
+        def _gate_evidence_power(e: Dict[str, Any]) -> float:
+            return e.get("weighted_validation_power", e.get("validation_power", 1.0))
+        total_validation_power = (
+            sum(_gate_evidence_power(e) for e in evidence_groups["independent"])
+            + sum(_gate_evidence_power(e) for e in evidence_groups["press_releases"])
+            + sum(_gate_evidence_power(e) for e in evidence_groups["scientific"])
+            + sum(_gate_evidence_power(e) for e in evidence_groups["youtube_counter"])
+        )
+        if total_sources == 0 and total_validation_power < 0.5:
+            logger.info(
+                "UNVERIFIABLE gate: no sources (total_sources=0) and validation_power=%.2f < 0.5 — short-circuit to UNVERIFIABLE",
+                total_validation_power,
+            )
+            explanation = result.get("conclusion_summary", "") or "No external evidence was found to verify or refute this claim."
+            return {
+                "result": "UNVERIFIABLE",
+                "explanation": explanation,
+                "evidence": result.get("evidence_summary", "No evidence found."),
+                "probability_distribution": {"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 1.0},
+                "sources": [],
+                "pr_sources": press_release_evidence,
+                "youtube_counter_sources": youtube_review_evidence,
+                "counter_intelligence_boosts": [],
+                "tier_breakdown": evidence_groups.get("tier_breakdown", {}),
+                "credential_red_flag": False,
+            }
+
         # --- Enhanced Probability Distribution Logic with Validation Power ---
         def calculate_enhanced_probability_distribution(
             base_dist: Dict[str, float],
@@ -1028,23 +1901,26 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
             scientific_power = 0.0
             youtube_counter_power = 0.0
 
+            def _evidence_power(e: Dict[str, Any]) -> float:
+                return e.get("weighted_validation_power", e.get("validation_power", 1.0))
+
             for evidence in evidence_groups["independent"]:
-                power = evidence.get("validation_power", 1.0)
+                power = _evidence_power(evidence)
                 independent_power += power
                 total_validation_power += power
 
             for evidence in evidence_groups["press_releases"]:
-                power = evidence.get("validation_power", 1.0)
+                power = _evidence_power(evidence)
                 press_release_power += power
                 total_validation_power += power
 
             for evidence in evidence_groups["scientific"]:
-                power = evidence.get("validation_power", 1.0)
+                power = _evidence_power(evidence)
                 scientific_power += power
                 total_validation_power += power
 
             for evidence in evidence_groups["youtube_counter"]:
-                power = evidence.get("validation_power", 1.0)
+                power = _evidence_power(evidence)
                 youtube_counter_power += power
                 total_validation_power += power
 
@@ -1162,6 +2038,33 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                     f"⚠️ Low-credibility source (channel={channel_reputation:.2f}): TRUE -{reputation_penalty:.2f}"
                 )
 
+            # Factor 7: AI content disclosure or unverified credential penalty
+            ai_disclosure = getattr(state, "ai_disclosure", False)
+            ai_indicators = getattr(state, "ai_indicators_detected", False)
+            if ai_disclosure or ai_indicators:
+                enhanced_dist["TRUE"] = max(
+                    0.05, enhanced_dist.get("TRUE", 0.3) * 0.6
+                )
+                enhanced_dist["UNCERTAIN"] = min(
+                    0.9, enhanced_dist.get("UNCERTAIN", 0.3) + 0.15
+                )
+                modifications.append(
+                    "Factor 7: AI content disclosure or indicators — reduced TRUE, increased UNCERTAIN"
+                )
+            claim_obj = getattr(state, "claim", None)
+            if claim_obj:
+                claim_dict = claim_obj if isinstance(claim_obj, dict) else {}
+                implied = claim_dict.get("speaker_credentials_implied", False)
+                verified = claim_dict.get("credentials_verified", False)
+                if implied and not verified:
+                    enhanced_dist["TRUE"] = max(
+                        0.05, enhanced_dist.get("TRUE", 0.3) * 0.4
+                    )
+                    claim_dict["credential_red_flag"] = True
+                    modifications.append(
+                        "Factor 7: Speaker credentials implied but not verified — major derating (red flag)"
+                    )
+
             # Normalize to ensure probabilities sum to 1.0
             total = sum(enhanced_dist.values())
             if total > 0:
@@ -1213,7 +2116,8 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                 1 for e in press_release_evidence if e.get("self_referential", False)
             )
             total_pr_power = sum(
-                e.get("validation_power", 1.0) for e in press_release_evidence
+                e.get("weighted_validation_power", e.get("validation_power", 1.0))
+                for e in press_release_evidence
             )
 
             # Add press release counter-intelligence explanation with quotes
@@ -1246,7 +2150,8 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
 
         if youtube_negative_found:
             youtube_power = sum(
-                e.get("validation_power", 1.0) for e in youtube_review_evidence
+                e.get("weighted_validation_power", e.get("validation_power", 1.0))
+                for e in youtube_review_evidence
             )
 
             # Add YouTube counter-intelligence explanation with quotes
@@ -1271,7 +2176,8 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
 
         if scientific_evidence_found:
             scientific_power = sum(
-                e.get("validation_power", 1.0) for e in scientific_evidence
+                e.get("weighted_validation_power", e.get("validation_power", 1.0))
+                for e in scientific_evidence
             )
             supporting_scientific = sum(
                 1 for e in scientific_evidence if e.get("supports_claim", False)
@@ -1282,7 +2188,8 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
 
         if independent_evidence_found:
             independent_power = sum(
-                e.get("validation_power", 1.0) for e in main_evidence
+                e.get("weighted_validation_power", e.get("validation_power", 1.0))
+                for e in main_evidence
             )
             explanation_add.append(
                 f"INDEPENDENT EVIDENCE: {len(main_evidence)} independent sources (validation power={independent_power:.1f}) provide unbiased perspective."
@@ -1320,9 +2227,25 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         else:
             assessment_level = "LEANING_FALSE"
 
+        # Evidence floor: strong verdicts require at least one effective source
+        if total_validation_power == 0:
+            assessment_level = "UNVERIFIABLE"
+            prob_dist = {"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 1.0}
+            logger.info("Evidence floor: validation_power=0 — forcing UNVERIFIABLE")
+        elif total_validation_power < 1.0:
+            if assessment_level in ("HIGHLY_LIKELY_TRUE", "LIKELY_TRUE"):
+                assessment_level = "LEANING_TRUE"
+                logger.info("Evidence floor: validation_power=%.2f < 1.0 — capping LIKELY_TRUE to LEANING_TRUE", total_validation_power)
+            elif assessment_level in ("HIGHLY_LIKELY_FALSE", "LIKELY_FALSE"):
+                assessment_level = "LEANING_FALSE"
+                logger.info("Evidence floor: validation_power=%.2f < 1.0 — capping LIKELY_FALSE to LEANING_FALSE", total_validation_power)
+
         explanation = result.get("conclusion_summary", "No conclusion available")
         if explanation_add:
             explanation += "\n\n" + " ".join(explanation_add)
+        claim_obj = getattr(state, "claim", None)
+        if claim_obj and isinstance(claim_obj, dict) and claim_obj.get("credential_red_flag"):
+            explanation += "\n\n⚠️ RED FLAG: Speaker claims Dr./medical credentials but no verifiable records found in professional registries."
 
         # Compose evidence summary (only from main evidence, not press releases)
         evidence_summary = result.get(
@@ -1344,20 +2267,30 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                 + "\n".join([str(e.get("url", "")) for e in youtube_review_evidence])
             )
 
+        from verityngn.services.reputation.url_safety import (
+            filter_safe_evidence,
+            filter_safe_urls,
+            sanitize_url_list_in_text,
+        )
+
         verification_result = {
             "result": assessment_level,
             "explanation": explanation,
-            "evidence": evidence_summary,
+            "evidence": sanitize_url_list_in_text(evidence_summary),
             "probability_distribution": prob_dist,
-            "sources": list(
-                set(
-                    result.get("sources", [])
-                    + [item.get("url", "") for item in main_evidence if item.get("url")]
+            "sources": filter_safe_urls(
+                list(
+                    set(
+                        result.get("sources", [])
+                        + [item.get("url", "") for item in main_evidence if item.get("url")]
+                    )
                 )
             ),
-            "pr_sources": press_release_evidence,
-            "youtube_counter_sources": youtube_review_evidence,
+            "pr_sources": filter_safe_evidence(press_release_evidence),
+            "youtube_counter_sources": filter_safe_evidence(youtube_review_evidence),
             "counter_intelligence_boosts": counter_intel_boosts,  # Add counter-intelligence information
+            "tier_breakdown": evidence_groups.get("tier_breakdown", {}),  # Graduated truth: Tier1..Tier5 counts
+            "credential_red_flag": claim_obj.get("credential_red_flag", False) if claim_obj and isinstance(claim_obj, dict) else False,
         }
         return verification_result
     except Exception as e:
@@ -1376,11 +2309,14 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                     "FALSE": 0.85,
                     "UNCERTAIN": 0.10,
                 },
-                "sources": [
-                    item.get("url", "") for item in state.evidence if item.get("url")
-                ],
+                "sources": __import__(
+                    "verityngn.services.reputation.url_safety", fromlist=["filter_safe_urls"]
+                ).filter_safe_urls(
+                    [item.get("url", "") for item in state.evidence if item.get("url")]
+                ),
                 "pr_sources": [],
                 "youtube_counter_sources": [],
+                "tier_breakdown": {},
             }
         return {
             "result": "HIGHLY_LIKELY_FALSE",
@@ -1390,15 +2326,47 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
             "sources": [],
             "pr_sources": [],
             "youtube_counter_sources": [],
+            "tier_breakdown": {},
         }
 
 
-def gather_evidence(claim_text: str) -> List[Dict[str, Any]]:
+def _check_speaker_credentials(claim: Dict[str, Any]) -> None:
     """
-    Gather evidence for a claim.
+    If claim text implies Dr./medical credentials, run credential queries and set
+    speaker_credentials_implied and credentials_verified on the claim dict.
+    """
+    logger = logging.getLogger(__name__)
+    import re
+    claim_text = (claim.get("claim_text") or "") + " " + (claim.get("speaker") or "")
+    if not re.search(r"(?i)(\bDr\.|\bMD\b|\bPhD\b|Professor|specialist|physician)\b", claim_text):
+        return
+    claim["speaker_credentials_implied"] = True
+    queries = generate_verification_queries(claim.get("claim_text", ""), "credential", max_queries=1)
+    if not queries:
+        claim["credentials_verified"] = False
+        return
+    try:
+        evidence = search_for_evidence(queries[0], tier=1)
+    except Exception as e:
+        logger.warning("Credential search failed: %s", e)
+        claim["credentials_verified"] = False
+        return
+    confirming_domains = ("healthgrades.com", "doximity.com", ".gov")
+    confirmed = any(
+        (e.get("url") or e.get("link") or "").find(d) >= 0
+        for e in evidence
+        for d in confirming_domains
+    )
+    claim["credentials_verified"] = confirmed
+
+
+def gather_evidence(claim_text: str, tier: int = 1) -> List[Dict[str, Any]]:
+    """
+    Gather evidence for a claim. Tier controls search budget (1=3 searches, 2=2, 3=no search).
 
     Args:
         claim_text (str): The claim text
+        tier (int): Verification tier 1, 2, or 3 (3 returns [])
 
     Returns:
         List[Dict[str, Any]]: Evidence for the claim
@@ -1407,9 +2375,7 @@ def gather_evidence(claim_text: str) -> List[Dict[str, Any]]:
     logger.info(f"Gathering evidence for claim: {claim_text}")
 
     try:
-        # Search for evidence
-        evidence = search_for_evidence(claim_text)
-
+        evidence = search_for_evidence(claim_text, tier=tier)
         logger.info(f"Found {len(evidence)} pieces of evidence")
         return evidence
 
@@ -1683,9 +2649,18 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
 
     logger = logging.getLogger(__name__)
 
+    if state.get("video_availability") in ["Not Available", "Not Processed"] or not state.get("claims"):
+        logger.info("⏭️ Skipping verification due to empty claims or unavailability.")
+        return {**state, "verification_completed": True}
+        
+
     # SHERLOCK FIX: Circuit breaker to detect and handle rate limiting
+    # Quick mode uses more aggressive circuit breaker threshold
     consecutive_timeouts = 0
-    max_consecutive_timeouts = 2  # After 2 timeouts, switch to fast-fail mode
+    max_consecutive_timeouts = get_quick_mode_setting("circuit_breaker_threshold", 2)
+    
+    if QUICK_MODE:
+        logger.info(f"⚡ [QUICK MODE] Enabled - using faster timeouts, reduced search depth, circuit breaker threshold={max_consecutive_timeouts}")
 
     # Do not run independent YouTube CI here; CI-once already produced CI links
     init_rpt = state.get("initial_report") or {}
@@ -1821,6 +2796,63 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
             f"✅ Advanced claim processing selected {len(claims_to_process)} claims from {len(claims)} total video analysis claims"
         )
 
+        # Tier classification: Tier 1 = full search + agent, Tier 2 = 2 searches + agent, Tier 3 = fast-fail (no search)
+        context_snippet = (state.get("context_research") or "")[:500]
+        claims_to_process = classify_claims_by_tier(
+            claims_to_process,
+            video_title=video_title or "",
+            context_snippet=context_snippet,
+        )
+
+        # Fix 2: Pre-filter claims that cannot be independently verified (promotional/anecdotal/product name)
+        _UNVERIFIABLE_PATTERNS = (
+            "difficult", "unprovable", "unverifiable", "personal", "anecdotal",
+            "testimonial", "subjective", "product name", "factual claim",
+            "promotional", "personal story", "factual.", "factual,",
+        )
+        to_process = []
+        unverifiable_claims = []
+        for c in claims_to_process:
+            if not isinstance(c, dict):
+                to_process.append(c)
+                continue
+            assess = (c.get("initial_assessment") or "").lower().strip()
+            if not assess:
+                to_process.append(c)
+                continue
+            if any(p in assess for p in _UNVERIFIABLE_PATTERNS):
+                reason = "promotional/personal/anecdotal"
+                if "product name" in assess or "factual" in assess:
+                    reason = "product name or non-disputable factual"
+                unverifiable_claims.append({
+                    **c,
+                    "verification_result": {
+                        "result": "UNVERIFIABLE",
+                        "explanation": (
+                            "Claim pre-filtered: initial assessment indicates this cannot be "
+                            "independently verified (promotional/personal/anecdotal)."
+                        ),
+                        "initial_assessment": c.get("initial_assessment", ""),
+                        "probability_distribution": {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34},
+                        "sources": [],
+                    },
+                    "evidence": [],
+                })
+                logger.info(
+                    f"⏭️ Pre-filtered (unverifiable): {c.get('claim_text', '')[:80]}... — {assess[:60]}"
+                )
+            else:
+                to_process.append(c)
+        claims_to_process = to_process
+        if unverifiable_claims:
+            logger.info(
+                f"📋 Pre-filter: {len(unverifiable_claims)} claims moved to unverifiable (no web research); "
+                f"{len(claims_to_process)} claims to verify"
+            )
+
+        # Track Google searches made during verification (tier-dependent)
+        _google_searches_this_run = 0
+
         # Process each claim using the enhanced verification system
         for i, claim in enumerate(claims_to_process):
             claim_text = claim.get("claim_text", "")
@@ -1828,13 +2860,73 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                 f"🔎 Verifying claim {i+1}/{len(claims_to_process)}: {claim_text[:100]}..."
             )
 
+            # Tier 3: fast-fail path (no web search, direct LLM verdict)
+            if claim.get("verification_tier") == 3:
+                try:
+                    fast_result = verify_claim_fast_fail(
+                        claim_text=claim_text,
+                        initial_assessment=claim.get("initial_assessment", ""),
+                        video_title=video_title or "",
+                        tier=3,
+                        reason=claim.get("tier_reason", "anecdotal/promotional"),
+                        circuit_breaker_fallback=False,
+                    )
+                    evidence_list_t3 = []
+                    for source_url in fast_result.get("sources", []):
+                        if isinstance(source_url, str) and source_url:
+                            evidence_list_t3.append(
+                                EvidenceSource(
+                                    source_name=f"Source: {source_url.split('/')[-1][:50]}",
+                                    source_type="url",
+                                    url=source_url,
+                                    text=f"Verification source: {source_url}",
+                                    title="Verification Source",
+                                )
+                            )
+                    verified_claims.append({
+                        **claim,
+                        "verification_result": fast_result,
+                        "evidence": evidence_list_t3,
+                    })
+                    result_t3 = fast_result.get("result", "UNCERTAIN")
+                    logger.info(f"✅ Claim {i+1} verified with FAST-FAIL (Tier 3): {result_t3}")
+                    out_dir = state.get("out_dir_path", "")
+                    if out_dir and video_id:
+                        save_verification_checkpoint(
+                            video_id=video_id,
+                            out_dir=out_dir,
+                            verified_claims=verified_claims,
+                            all_claims=claims_to_process,
+                            current_index=i,
+                            all_evidence=all_evidence,
+                            state=state,
+                        )
+                    if i < len(claims_to_process) - 1:
+                        await asyncio.sleep(2)
+                except Exception as e:
+                    logger.warning("Tier 3 fast-fail error for claim %s: %s", i + 1, e)
+                    verified_claims.append({
+                        **claim,
+                        "verification_result": {
+                            "result": "UNCERTAIN",
+                            "explanation": f"Fast-fail failed: {e}",
+                            "probability_distribution": {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34},
+                            "sources": [],
+                        },
+                        "evidence": [],
+                    })
+                continue
+
             try:
+                # Dr./credential check: set speaker_credentials_implied and credentials_verified before verify_claim (Factor 7)
+                _check_speaker_credentials(claim)
+
                 # Create object wrapper for enhanced system compatibility
                 class StateWrapper:
                     def __init__(
                         self, claim, video_url, video_title, video_id, media_embed,
                         channel_reputation=0.5, credibility_boost=1.0,
-                        is_trusted_investigator=False
+                        is_trusted_investigator=False, context_research=""
                     ):
                         self.claim = claim
                         self.video_url = video_url
@@ -1842,6 +2934,7 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                         self.video_id = video_id
                         self.evidence = []
                         self.media_embed = media_embed
+                        self.context_research = context_research or ""
                         # Source reputation fields
                         self.channel_reputation = channel_reputation
                         self.credibility_boost = credibility_boost
@@ -1861,58 +2954,122 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                     channel_reputation=state.get("channel_reputation", 0.5),
                     credibility_boost=state.get("credibility_boost", 1.0),
                     is_trusted_investigator=state.get("is_trusted_investigator", False),
+                    context_research=state.get("context_research") or "",
                 )
 
                 # Add YouTube counter-intelligence to the verification state
                 verification_state.youtube_counter_evidence = youtube_counter_evidence
+                verification_state.verification_tier = claim.get("verification_tier", 1)
 
                 logger.info(
                     f"🔍 [CLAIM {i+1}] Starting verification for: {claim_text[:80]}..."
                 )
 
+                # Track time for each claim verification
+                claim_start_time = time.time()
+                
                 # Use the enhanced verify_claim function
-                verification_result = verify_claim(verification_state)
+                verification_result = await asyncio.to_thread(verify_claim, verification_state)
+                # Tier 1 = 3 searches, Tier 2 = 2 searches (tier 3 handled above)
+                _google_searches_this_run += {1: 3, 2: 2}.get(verification_state.verification_tier, 5)
+                
+                # Calculate elapsed time for this claim
+                claim_elapsed = time.time() - claim_start_time
 
-                # SHERLOCK FIX: Circuit breaker - detect consecutive timeouts
-                if (
+                # SHERLOCK FIX: Enhanced circuit breaker - detect timeouts AND long-running claims
+                is_timeout = (
                     verification_result.get("result") == "UNCERTAIN"
-                    and "timed out"
-                    in verification_result.get("explanation", "").lower()
-                ):
-                    consecutive_timeouts += 1
-                    logger.warning(
-                        f"⚠️ [CIRCUIT BREAKER] Timeout detected ({consecutive_timeouts}/{max_consecutive_timeouts})"
-                    )
+                    and "timed out" in verification_result.get("explanation", "").lower()
+                )
+                is_long_running = claim_elapsed > 120.0  # Consider >2 min as problematic
+                
+                if is_timeout or is_long_running:
+                    # Ignore fast SSL errors/glitches from tripping circuit breaker
+                    if is_timeout and claim_elapsed < 5.0:
+                        logger.warning(f"⚠️ [CIRCUIT BREAKER] Ignoring fast network failure ({claim_elapsed:.1f}s)")
+                    else:
+                        consecutive_timeouts += 1
+                    
+                    if is_long_running and not is_timeout:
+                        logger.warning(
+                            f"⚠️ [CIRCUIT BREAKER] Long-running claim detected: {claim_elapsed:.1f}s for claim {i+1}"
+                        )
+                    elif not (is_timeout and claim_elapsed < 5.0):
+                        logger.warning(
+                            f"⚠️ [CIRCUIT BREAKER] Timeout detected ({consecutive_timeouts}/{max_consecutive_timeouts}) after {claim_elapsed:.1f}s"
+                        )
 
-                    if consecutive_timeouts >= max_consecutive_timeouts:
+                    # ENHANCED: Trigger circuit breaker on FIRST long timeout (>120s) OR consecutive timeouts
+                    should_trigger_circuit_breaker = (
+                        claim_elapsed > 120.0 or  # First long timeout triggers immediately
+                        consecutive_timeouts >= max_consecutive_timeouts
+                    )
+                    
+                    if should_trigger_circuit_breaker:
+                        # Determine trigger reason for better logging
+                        if claim_elapsed > 120.0:
+                            trigger_reason = f"long-running claim ({claim_elapsed:.1f}s > 120s threshold)"
+                        else:
+                            trigger_reason = f"{consecutive_timeouts} consecutive timeouts"
+                        
                         logger.error(
-                            f"🚨 [CIRCUIT BREAKER] Rate limiting detected after {consecutive_timeouts} consecutive timeouts!"
+                            f"🚨 [CIRCUIT BREAKER] Triggered by {trigger_reason}!"
                         )
                         logger.error(
                             f"🚨 [CIRCUIT BREAKER] Switching to fast-fail mode for remaining {len(claims_to_process) - i - 1} claims"
                         )
-                        # Mark remaining claims as uncertain due to rate limiting
+                        # Softer circuit breaker: verify each remaining claim via fast-fail (no search, direct LLM)
+                        video_title_cb = state.get("title", "") or video_title or "Unknown"
                         for remaining_idx in range(i + 1, len(claims_to_process)):
                             remaining_claim = claims_to_process[remaining_idx]
+                            r_text = remaining_claim.get("claim_text", "")
+                            r_assess = remaining_claim.get("initial_assessment", "")
+                            fast_result = verify_claim_fast_fail(
+                                claim_text=r_text,
+                                initial_assessment=r_assess,
+                                video_title=video_title_cb,
+                                tier=3,
+                                reason=f"circuit breaker ({trigger_reason})",
+                                circuit_breaker_fallback=True,
+                            )
+                            evidence_list_cb = []
+                            for source_url in fast_result.get("sources", []):
+                                if isinstance(source_url, str) and source_url:
+                                    evidence_list_cb.append(
+                                        EvidenceSource(
+                                            source_name=f"Source: {source_url.split('/')[-1][:50]}",
+                                            source_type="url",
+                                            url=source_url,
+                                            text=f"Verification source: {source_url}",
+                                            title="Verification Source",
+                                        )
+                                    )
                             verified_claims.append(
                                 {
                                     **remaining_claim,
-                                    "verification_result": {
-                                        "result": "UNCERTAIN",
-                                        "explanation": "Skipped due to rate limiting detected on previous claims. API quota likely exhausted.",
-                                        "probability_distribution": {
-                                            "TRUE": 0.33,
-                                            "FALSE": 0.33,
-                                            "UNCERTAIN": 0.34,
-                                        },
-                                        "sources": [],
-                                    },
-                                    "evidence": [],
+                                    "verification_result": fast_result,
+                                    "evidence": evidence_list_cb,
                                 }
                             )
+                            if remaining_idx < len(claims_to_process) - 1:
+                                await asyncio.sleep(2)
                         logger.info(
-                            f"⏩ [CIRCUIT BREAKER] Skipped {len(claims_to_process) - i - 1} remaining claims"
+                            f"⏩ [CIRCUIT BREAKER] Fast-fail verified {len(claims_to_process) - i - 1} remaining claims"
                         )
+                        
+                        # Save final checkpoint before exiting loop
+                        out_dir = state.get("out_dir_path", "")
+                        if out_dir and video_id:
+                            save_verification_checkpoint(
+                                video_id=video_id,
+                                out_dir=out_dir,
+                                verified_claims=verified_claims,
+                                all_claims=claims_to_process,
+                                current_index=len(claims_to_process) - 1,  # All claims now have a result
+                                all_evidence=all_evidence,
+                                state=state,
+                            )
+                        
                         break  # Exit the claim processing loop
                 else:
                     consecutive_timeouts = 0  # Reset on success
@@ -1922,17 +3079,19 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                 )
 
                 # Add rate limiting between claims to avoid API throttling
-                import asyncio
-
                 if i < len(claims_to_process) - 1:  # Don't sleep after the last claim
                     # SHERLOCK FIX: Aggressive delays to respect API quotas (10 RPM = 6s minimum)
-                    # With 10 RPM default limit: need 6s between requests minimum
-                    # We use 8s normally, 15s after timeout for safety margin
-                    delay = (
-                        8 if consecutive_timeouts == 0 else 15
-                    )  # More aggressive delays to respect quotas
+                    # Quick mode uses shorter delays for faster iteration
+                    if QUICK_MODE:
+                        base_delay = get_quick_mode_setting("inter_claim_delay", 3)
+                        delay = base_delay if consecutive_timeouts == 0 else base_delay * 2
+                    else:
+                        # With 10 RPM default limit: need 6s between requests minimum
+                        # We use 8s normally, 15s after timeout for safety margin
+                        delay = 8 if consecutive_timeouts == 0 else 15
+                    
                     logger.info(
-                        f"⏸️ [QUOTA] Rate limiting: waiting {delay}s before next claim (respecting ~10 RPM API quota)..."
+                        f"⏸️ [QUOTA] Rate limiting: waiting {delay}s before next claim (respecting API quota)..."
                     )
                     await asyncio.sleep(delay)
 
@@ -2040,6 +3199,19 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                         f"📺 Claim {i+1}: Found {youtube_count} YouTube counter-intelligence sources"
                     )
 
+                # Save checkpoint after each successful claim verification
+                out_dir = state.get("out_dir_path", "")
+                if out_dir and video_id:
+                    save_verification_checkpoint(
+                        video_id=video_id,
+                        out_dir=out_dir,
+                        verified_claims=verified_claims,
+                        all_claims=claims_to_process,
+                        current_index=i,
+                        all_evidence=all_evidence,
+                        state=state,
+                    )
+
             except Exception as e:
                 logger.error(
                     f"❌ Failed to verify claim {i+1} with enhanced system: {e}"
@@ -2070,8 +3242,21 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(
             f"✅ Completed ENHANCED verification: {len(verified_claims)} claims, {len(all_evidence)} evidence items"
         )
+        logger.info(f"📊 Google searches made this run: {_google_searches_this_run}")
 
-        return {**state, "claims": verified_claims, "aggregated_evidence": all_evidence}
+        # Include pre-filtered unverifiable claims in output for report section
+        all_claims_for_report = list(verified_claims)
+        if unverifiable_claims:
+            all_claims_for_report.extend(unverifiable_claims)
+            logger.info(f"📋 Report will include {len(unverifiable_claims)} unverifiable claims in separate section")
+
+        return {
+            **state,
+            "claims": all_claims_for_report,
+            "unverifiable_claims": unverifiable_claims,
+            "aggregated_evidence": all_evidence,
+            "_metrics_google_searches": state.get("_metrics_google_searches", 0) + _google_searches_this_run,
+        }
 
     except Exception as e:
         logger.error(f"❌ Enhanced claim verification failed: {e}")
@@ -2185,6 +3370,8 @@ async def verify_claim_with_evidence(
             model_name=AGENT_MODEL_NAME,
             temperature=0.1,
             request_timeout=120.0,  # 120 second timeout
+            project=PROJECT_ID,
+            location=VERTEX_LOCATION,
         )
 
         # SHERLOCK FIX: Inject current date context to prevent LLM from treating 2025 sources as "future-dated"
@@ -2367,8 +3554,11 @@ def process_claims_with_advanced_ranking(
 
     # Load configuration
     config = get_config()
-    max_claims = config.get('processing.max_claims', 20)
-    
+    max_claims = config.get('processing.max_claims', 40)
+    # Scale with video duration: at least 0.75 claims per minute, cap at 90
+    duration_based = min(90, max(max_claims, int(video_duration_minutes * 0.75)))
+    max_claims = duration_based
+
     # Initialize the ClaimProcessor
     processor = ClaimProcessor(
         video_id=video_id,

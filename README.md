@@ -39,7 +39,25 @@ YouTube URL → Local/Cloud LLM Analysis → Enhanced Claims Extraction → Evid
 
 ## 🚀 Quick Start
 
-VerityNgn supports three deployment options:
+### Zero-friction CLI (2026-07 unfreeze)
+
+```bash
+git clone https://github.com/hotchilianalytics/verityngn-oss.git
+cd verityngn-oss
+pip install -e .
+
+# Set Vertex / search keys in .env (see .env.example)
+verityngn analyze "https://www.youtube.com/watch?v=tLJC8hkK-ao"
+
+# Local file (depositions, court video) — no YouTube required
+verityngn analyze --file /path/to/clip.mp4 --title "Expert witness excerpt"
+```
+
+Output: `{video_id}_report.md` in `.outputs/{video_id}/`.
+
+---
+
+VerityNgn also supports three deployment options:
 
 ### Option 1: Local-First Deployment (Recommended)
 

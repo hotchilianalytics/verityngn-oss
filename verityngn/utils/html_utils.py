@@ -794,8 +794,36 @@ def get_template_css() -> str:
             border-bottom: 1px solid #e2e8f0;
         }
         
-        /* For Typora compatibility */
+        /* Print styles for PDF generation (Playwright/Chrome and Typora compatible) */
         @media print {
+            /* Force all accordions (details/summary) to be expanded */
+            details {
+                display: block !important;
+                border: 1px solid #e1e4e8 !important;
+                border-radius: 6px !important;
+                margin-bottom: 16px !important;
+                page-break-inside: avoid;
+            }
+            details[open] {
+                display: block !important;
+            }
+            details > summary {
+                display: block !important;
+                padding: 12px 16px !important;
+                background-color: #f6f8fa !important;
+                border-radius: 6px 6px 0 0 !important;
+                font-weight: 600 !important;
+                list-style: none !important;
+            }
+            details > summary::marker,
+            details > summary::-webkit-details-marker {
+                display: none !important;
+            }
+            details > *:not(summary) {
+                display: block !important;
+            }
+            
+            /* Table styling */
             table {
                 page-break-inside: avoid;
                 border: 1px solid #4a5568;
@@ -807,11 +835,38 @@ def get_template_css() -> str:
                 background-color: #e2e8f0 !important;
                 color: #2d3748 !important;
             }
+            
+            /* Header page break control */
             h1, h2, h3, h4 {
                 page-break-after: avoid;
             }
+            
+            /* Container styling */
             .container {
                 box-shadow: none;
+                max-width: 100%;
+            }
+            
+            /* Video embed - hide image, show link */
+            .video-embed img {
+                max-width: 300px !important;
+                height: auto !important;
+            }
+            
+            /* Ensure backgrounds and colors print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Source sections */
+            .source-section, .claim-section {
+                page-break-inside: avoid;
+            }
+            
+            /* Links - show URL for print */
+            a[href^="http"]:after {
+                content: none; /* Don't show URLs inline - too cluttered */
             }
         }
         .video-container {
@@ -1466,7 +1521,7 @@ def report_to_markdown(report: Dict[str, Any]) -> str:
     video_container = f"""<div class="video-embed">
     <h2>{video_title}</h2>
     <a href="{video_url}" target="_blank">
-        <img src="{thumbnail_url}" alt="{video_title}" width="560">
+        <img src="{thumbnail_url}" alt="{video_title}" width="560" />
     </a>
     <p>Video ID: {video_id}</p>
 </div><!-- VIDEO_CONTAINER_END -->"""

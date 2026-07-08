@@ -1,17 +1,68 @@
 # services/report/markdown_generator.py
+import html
 import logging
 import os
 import pathlib
-from typing import List, Dict, Tuple, Any, Union
+import re
+from typing import List, Dict, Tuple, Any, Union, Literal
+
+ReportTier = Literal["public", "private", "original"]
 from urllib.parse import urlparse
 from datetime import datetime
-from collections import defaultdict # Added for counting evidence types
 from pathlib import Path
 
 from verityngn.models.workflow import InitialAnalysisState
-from verityngn.models.report import VerityReport, Claim, map_probabilities_to_verification_result
+from verityngn.models.report import VerityReport, Claim
+from verityngn.services.report.category_mappings import (
+    ensure_category_mappings,
+    claim_verdict_display_label,
+    VERDICT_BUCKET_LABELS,
+    LLM_PLATFORM_VISIBLE_NOTICE,
+    VERDICT_KEY_TO_LABEL,
+    _verdict_counts,
+    compute_overall_verdict_label,
+)
 
 from verityngn.config.settings import OUTPUTS_DIR, COMPARE_DIR, DOWNLOADS_DIR, DEBUG_OUTPUTS
+from verityngn.utils.third_party_logging import configure_third_party_loggers
+from verityngn.services.reputation.url_safety import filter_safe_urls, is_safe_url
+
+configure_third_party_loggers()
+
+
+def _esc(text: Any) -> str:
+    """HTML-escape user/LLM-derived text for raw HTML blocks."""
+    if text is None:
+        return ""
+    return html.escape(str(text), quote=True)
+
+
+def _safe_source_link(url: str, title: str) -> str:
+    """Return an escaped <a> tag or plain escaped title if URL is unsafe."""
+    title_esc = _esc(title or url or "Source")
+    if url and is_safe_url(url):
+        return f'<a href="{_esc(url)}" target="_blank" rel="noopener noreferrer">{title_esc}</a>'
+    return title_esc if title_esc else ""
+
+
+def _scrub_public_craap_explanation(text: str) -> str:
+    """Remove digit-percent patterns from CRAAP explanations (public report; JSON unchanged)."""
+    if not text:
+        return text
+    out = str(text)
+    out = re.sub(r"\b\d{1,3}\.\d+\s*%", "[rate omitted]", out)
+    out = re.sub(r"\b\d{1,3}\s*%(?![A-Za-z])", "[rate omitted]", out)
+    out = re.sub(r"\b\d+\s+of\s+\d+\b", "[proportion omitted]", out, flags=re.I)
+    out = re.sub(r"\(\d+\s+out\s+of\s+\d+\)", "(proportion omitted)", out, flags=re.I)
+    out = re.sub(
+        r"\b\d+\s+(claim|claims|sources?|videos?|releases?)\b",
+        "[count omitted]",
+        out,
+        flags=re.I,
+    )
+    out = re.sub(r"\((?:HIGHLY_)?LIKELY_(?:TRUE|FALSE)\s*\(\d+\)\)", "(verdict)", out, flags=re.I)
+    return out
+
 
 # Helper functions for enhanced explanation generation
 def count_scientific_sources(sources):
@@ -74,8 +125,6 @@ def extract_core_finding(explanation):
         return ""
     
     # Remove excessive technical jargon but preserve core meaning
-    import re
-    
     # Split into sentences and find the most substantive ones
     sentences = re.split(r'[.!?]+', explanation)
     core_sentences = []
@@ -121,109 +170,90 @@ def assess_evidence_quality(sources):
     return '. '.join(quality_descriptors) + '.' if quality_descriptors else ""
 
 def summarize_counter_intelligence_impact(counter_intel_boosts):
-    """Summarize counter-intelligence impact in narrative form."""
+    """Summarize counter-intelligence impact in narrative form (no percentages)."""
     if not counter_intel_boosts:
         return ""
-    
+
     summaries = []
     for boost in counter_intel_boosts:
-        adjustment = boost.get('probability_adjustment', 0)
-        boost_type = boost.get('type', 'unknown')
-        
-        if abs(adjustment) > 0.1:  # Only mention significant adjustments
-            if boost_type == 'youtube_counter':
-                summaries.append(f"YouTube counter-evidence reduces confidence by {abs(adjustment)*100:.0f}%")
-            elif boost_type == 'press_release_counter':
-                summaries.append(f"Press release counter-evidence reduces confidence by {abs(adjustment)*100:.0f}%")
-    
-    return '. '.join(summaries) + '.' if summaries else ""
+        adjustment = boost.get("probability_adjustment", 0)
+        boost_type = boost.get("type", "unknown")
+        if abs(adjustment) > 0.1:
+            if boost_type == "youtube_counter":
+                summaries.append("YouTube counter-evidence materially reduced confidence in this claim")
+            elif boost_type == "press_release_counter":
+                summaries.append("Press-release style counter-evidence materially reduced confidence in this claim")
+
+    return ". ".join(summaries) + "." if summaries else ""
 
 def explain_confidence_level(prob_dist, sources):
-    """Explain the confidence level based on probabilities and evidence."""
+    """Explain the confidence level based on probabilities (no source counts)."""
     if not prob_dist:
         return ""
-    
-    true_prob = prob_dist.get('TRUE', 0.0) * 100
-    false_prob = prob_dist.get('FALSE', 0.0) * 100
-    uncertain_prob = prob_dist.get('UNCERTAIN', 0.0) * 100
-    
-    # Determine confidence explanation
+
+    true_prob = prob_dist.get("TRUE", 0.0) * 100
+    false_prob = prob_dist.get("FALSE", 0.0) * 100
+
     if max(true_prob, false_prob) > 70:
         confidence_level = "high"
     elif max(true_prob, false_prob) > 50:
         confidence_level = "moderate"
     else:
         confidence_level = "low"
-    
-    source_count = len(sources) if sources else 0
-    
+
     if true_prob > false_prob:
-        return f"Assessment shows {confidence_level} confidence in claim validity based on {source_count} sources."
-    else:
-        return f"Assessment shows {confidence_level} confidence that claim is problematic based on {source_count} sources."
+        return f"Assessment shows {confidence_level} confidence in claim validity based on cited evidence."
+    return f"Assessment shows {confidence_level} confidence that the claim is problematic based on cited evidence."
 
 def generate_source_quality_indicators(sources):
-    """Generate quality indicators for the odds & sources column."""
+    """Qualitative source signal only (no counts)."""
     if not sources:
         return "No sources"
-    
+
     scientific_count = count_scientific_sources(sources)
     medical_count = count_medical_sources(sources)
     government_count = count_government_sources(sources)
-    
-    # Count source types for better categorization
-    news_count = 0
-    educational_count = 0
-    general_count = 0
-    
+    news_present = educational_present = 0
     for source in sources:
         if isinstance(source, str):
             source_lower = source.lower()
         else:
-            # Handle Pydantic EvidenceSource objects
-            url = getattr(source, 'url', '') or ''
-            source_type = getattr(source, 'source_type', '') or ''
-            source_lower = str(url + ' ' + source_type).lower()
-        
-        if any(term in source_lower for term in ['reuters.com', 'apnews.com', 'bbc.', 'nytimes.', 'wsj.', 'cnn.', 'news']):
-            news_count += 1
-        elif any(term in source_lower for term in ['.edu', 'university', 'academic']):
-            educational_count += 1
-        else:
-            general_count += 1
-    
-    # Build quality indicator string (no icons)
-    indicators = []
-    
+            url = getattr(source, "url", "") or ""
+            source_type = getattr(source, "source_type", "") or ""
+            source_lower = str(url + " " + source_type).lower()
+        if any(
+            term in source_lower
+            for term in ["reuters.com", "apnews.com", "bbc.", "nytimes.", "wsj.", "cnn.", "news"]
+        ):
+            news_present += 1
+        elif any(term in source_lower for term in [".edu", "university", "academic"]):
+            educational_present += 1
+
+    tags = []
     if scientific_count > 0:
-        indicators.append(f"{scientific_count} scientific")
+        tags.append("Scientific or research-oriented sources present")
     if medical_count > 0:
-        indicators.append(f"{medical_count} medical")
+        tags.append("Clinical or medical-domain sources present")
     if government_count > 0:
-        indicators.append(f"{government_count} government")
-    if educational_count > 0:
-        indicators.append(f"{educational_count} academic")
-    if news_count > 0:
-        indicators.append(f"{news_count} news")
-    if general_count > 0:
-        indicators.append(f"{general_count} general")
-    
-    # Determine overall quality assessment
+        tags.append("Government or official sources present")
+    if educational_present > 0:
+        tags.append("Academic-domain sources present")
+    if news_present > 0:
+        tags.append("News-media sources present")
+
     total_sources = len(sources)
-    high_quality_sources = scientific_count + medical_count + government_count + educational_count
-    quality_ratio = high_quality_sources / total_sources if total_sources > 0 else 0
-    
+    high_signal = scientific_count + medical_count + government_count + educational_present
+    quality_ratio = high_signal / total_sources if total_sources > 0 else 0
     if quality_ratio > 0.7:
-        quality_badge = "High Quality"
+        quality_badge = "Strong institutional signal"
     elif quality_ratio > 0.4:
-        quality_badge = "Good Quality"
+        quality_badge = "Mixed institutional and general web signal"
     else:
-        quality_badge = "Mixed Quality"
-    
-    if indicators:
-        return f"{quality_badge}<br>{' • '.join(indicators)}"
-    else:
-        return quality_badge
+        quality_badge = "Mostly general web signal"
+
+    if tags:
+        return f"{quality_badge}<br>{' • '.join(tags)}"
+    return quality_badge
 
 def _get_domain(url: str) -> str:
     """Extract domain from URL."""
@@ -258,6 +288,65 @@ def _map_source_type(source_type: str, url: str) -> str:
     return "Web Pages/Blogs"
 
 
+def _format_probability_cell(verification_result: dict) -> str:
+    """Compact probability column for private per-claim tables."""
+    if not verification_result or not isinstance(verification_result, dict):
+        return "—"
+    prob_dist = verification_result.get("probability_distribution") or {}
+    if not prob_dist:
+        return str(verification_result.get("result", "—"))
+    parts = []
+    for outcome in ("TRUE", "FALSE", "UNCERTAIN"):
+        val = prob_dist.get(outcome)
+        if val is not None:
+            try:
+                parts.append(f"{outcome} {float(val) * 100:.0f}%")
+            except (TypeError, ValueError):
+                continue
+    return " · ".join(parts) if parts else str(verification_result.get("result", "—"))
+
+
+def format_tier_breakdown_and_badges(
+    verification_result: dict,
+    *,
+    tier: ReportTier = "public",
+) -> Tuple[str, str]:
+    """
+    Tier summary for claim context. Public: qualitative only. Private: includes shares.
+    Returns (tier_summary_md, badge_md). Empty strings if no tier_breakdown.
+    """
+    if not verification_result or not isinstance(verification_result, dict):
+        return "", ""
+    breakdown = verification_result.get("tier_breakdown") or {}
+    t1 = breakdown.get("tier_1", 0) or 0
+    t2 = breakdown.get("tier_2", 0) or 0
+    t3 = breakdown.get("tier_3", 0) or 0
+    t4 = breakdown.get("tier_4", 0) or 0
+    t5 = breakdown.get("tier_5", 0) or 0
+    total = t1 + t2 + t3 + t4 + t5
+    if total == 0:
+        return "", ""
+    if tier in ("private", "original"):
+        summary = (
+            f"T1 {t1 / total * 100:.0f}% · T2 {t2 / total * 100:.0f}% · "
+            f"T3 {t3 / total * 100:.0f}% · T4 {t4 / total * 100:.0f}% · T5 {t5 / total * 100:.0f}%"
+        )
+        return summary, ""
+    share_top = (t1 + t2) / total
+    share_t5 = t5 / total
+    summary = "Mixed evidence tiers"
+    if share_top >= 0.4:
+        summary = "Mostly higher-tier (academic and official) sources"
+    elif share_t5 >= 0.6:
+        summary = "Evidence skews toward lower-tier or uncategorized web sources"
+    badge = ""
+    if share_top >= 0.4:
+        badge = " **Stronger institutional sourcing**"
+    elif share_t5 >= 0.6:
+        badge = " **Weaker evidence base**"
+    return summary, badge
+
+
 def generate_enhanced_explanation(verification_result: dict, claim_text: str, claim_index: int = None, video_id: str = None) -> str:
     """Generate comprehensive, narrative explanations instead of bullet points."""
     if not verification_result:
@@ -272,25 +361,23 @@ def generate_enhanced_explanation(verification_result: dict, claim_text: str, cl
     # Build narrative explanation parts
     narrative_parts = []
     
-    # 1. Evidence strength overview
+    # 1. Evidence strength overview (no source totals)
     if sources:
-        source_count = len(sources)
         scientific_sources = count_scientific_sources(sources)
         medical_sources = count_medical_sources(sources)
         government_sources = count_government_sources(sources)
-        
-        evidence_overview = f"Analysis of {source_count} sources"
-        quality_indicators = []
+        evidence_overview = "Verification drew on multiple external references"
+        flavor = []
         if scientific_sources > 0:
-            quality_indicators.append(f"{scientific_sources} scientific/research")
+            flavor.append("research-oriented material")
         if medical_sources > 0:
-            quality_indicators.append(f"{medical_sources} medical")
+            flavor.append("clinical or health-domain material")
         if government_sources > 0:
-            quality_indicators.append(f"{government_sources} government")
-        
-        if quality_indicators:
-            evidence_overview += f", including {', '.join(quality_indicators)} sources"
-        evidence_overview += "."
+            flavor.append("official or government material")
+        if flavor:
+            evidence_overview += ", including " + ", ".join(flavor) + "."
+        else:
+            evidence_overview += "."
         narrative_parts.append(evidence_overview)
     
     # 2. Core verification finding (preserve LLM reasoning)
@@ -324,206 +411,50 @@ def generate_enhanced_explanation(verification_result: dict, claim_text: str, cl
         return "Verification analysis completed with limited detail available."
 
 def optimize_explanation_format(explanation: str, claim_index: int = None, video_id: str = None) -> str:
-    """Legacy function maintained for compatibility - now calls enhanced explanation when possible."""
+    """Clean explanation for public reports — no extracted counts, percentages, or view totals."""
     if not explanation or explanation == "No explanation provided.":
         return "No verification details available."
-    
-    # Try to preserve more content while still cleaning
-    import re
-    
-    # Remove only HTML tags and excessive emoji
-    cleaned = re.sub(r'<[^>]+>', '', explanation)
-    cleaned = re.sub(r'[📺📰🔬🌐🎬📋🚫→🕵️]{2,}', '', cleaned)  # Only remove multiple emojis
-    
-    # 🎯 SHERLOCK: Extract and deduplicate counter-intelligence information
-    counter_intel_points = []
-    
-    # Extract YouTube counter-intelligence data
-    youtube_patterns = [
-        r'(\d+)\s*youtube\s*videos.*?(\d+)\s*total\s*views',
-        r'youtube\s*counter.*?(\d+)\s*sources',
-        r'(\d+)\s*youtube\s*videos.*?contradict',
-        r'youtube\s*reviews.*?reduced.*?(\d+)%',
-        r'(\d+)\s*youtube\s*videos.*?(\d+)\s*views'
-    ]
-    
-    for pattern in youtube_patterns:
-        matches = re.findall(pattern, cleaned, re.IGNORECASE)
-        for match in matches:
-            if len(match) == 2:
-                sources, views = match
-                counter_intel_points.append(f"• YouTube counter-evidence: {sources} videos ({views} views)")
-            elif len(match) == 1:
-                value = match[0]
-                if '%' in pattern:
-                    counter_intel_points.append(f"• YouTube credibility reduction: {value}%")
-                else:
-                    counter_intel_points.append(f"• YouTube counter-sources: {value} videos")
-    
-    # Extract press release counter-intelligence data
-    press_patterns = [
-        r'(\d+)\s*press\s*release.*?contradict',
-        r'press\s*release.*?(\d+)\s*sources',
-        r'press\s*release.*?reduced.*?(\d+)%'
-    ]
-    
-    for pattern in press_patterns:
-        matches = re.findall(pattern, cleaned, re.IGNORECASE)
-        for match in matches:
-            if '%' in pattern:
-                counter_intel_points.append(f"• Press release credibility reduction: {match[0]}%")
-            else:
-                counter_intel_points.append(f"• Press release counter-sources: {match[0]} releases")
-    
-    # 🎯 SHERLOCK: Extract scientific and independent evidence
-    evidence_points = []
-    
-    # Scientific evidence extraction
-    scientific_patterns = [
-        r'(\d+)\s*scientific\s*sources.*?(\d+)\s*supporting',
-        r'(\d+)\s*scientific\s*studies.*?support',
-        r'scientific\s*evidence.*?(\d+)\s*sources',
-        r'scientific\s*support:\s*(\d+)/(\d+)\s*sources',
-        r'(\d+)/(\d+)\s*sources\s*support'
-    ]
-    
-    for pattern in scientific_patterns:
-        matches = re.findall(pattern, cleaned, re.IGNORECASE)
-        for match in matches:
-            if len(match) == 2:
-                if 'support' in pattern.lower():
-                    supporting, total = match
-                else:
-                    total, supporting = match
-                evidence_points.append(f"• Scientific support: {supporting}/{total} sources")
-            elif len(match) == 1:
-                evidence_points.append(f"• Scientific evidence: {match[0]} sources")
-    
-    # Independent evidence extraction
-    independent_patterns = [
-        r'(\d+)\s*independent\s*sources',
-        r'independent\s*research.*?(\d+)\s*sources',
-        r'(\d+)\s*independent\s*studies',
-        r'independent\s*research:\s*(\d+)\s*sources'
-    ]
-    
-    for pattern in independent_patterns:
-        matches = re.findall(pattern, cleaned, re.IGNORECASE)
-        for match in matches:
-            if match[0].isdigit():
-                evidence_points.append(f"• Independent research: {match[0]} sources")
-    
-    # 🎯 SHERLOCK: Extract probability and verification data
-    probability_points = []
-    
-    prob_patterns = [
-        r'probability.*?(\d+\.?\d*)%',
-        r'(\d+\.?\d*)%\s*probability',
-        r'confidence.*?(\d+\.?\d*)%'
-    ]
-    
-    for pattern in prob_patterns:
-        matches = re.findall(pattern, cleaned, re.IGNORECASE)
-        for match in matches:
-            probability_points.append(f"• Confidence: {match[0]}%")
-    
-    # 🎯 SHERLOCK: Remove counter-intelligence blocks to clean remaining text
-    cleaned = re.sub(r'youtube counter-intelligence:.*?(?=\s*🔬|\s*📰|\s*🌐|\s*$)', '', cleaned, flags=re.IGNORECASE | re.DOTALL)
-    cleaned = re.sub(r'press release counter-intelligence:.*?(?=\s*🔬|\s*📰|\s*🌐|\s*$)', '', cleaned, flags=re.IGNORECASE | re.DOTALL)
-    
-    # Clean multiple spaces and line breaks
-    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-    
-    # Remove common redundant phrases
-    redundant_phrases = [
-        "This claim is", "The claim that", "Based on the evidence", "According to our analysis",
-        "The verification shows", "Our findings indicate", "The research suggests", "Evidence suggests that",
-        "Analysis reveals that", "It appears that", "It seems that", "No conclusion available",
-        "multiple youtube videos", "independent reviewers with", "total views provide", "contradictory evidence",
-        "verification analysis", "comprehensive review", "mixed evidence", "contradictory sources"
-    ]
-    
-    for phrase in redundant_phrases:
-        cleaned = cleaned.replace(phrase, "").strip()
-    
-    # 🎯 SHERLOCK: Combine all extracted points with deduplication
-    all_points = []
-    
-    # Add counter-intelligence points first (most important)
-    all_points.extend(counter_intel_points[:2])  # Limit to 2 counter-intel points
-    
-    # Add evidence points
-    all_points.extend(evidence_points[:2])  # Limit to 2 evidence points
-    
-    # Add probability points
-    all_points.extend(probability_points[:1])  # Limit to 1 probability point
-    
-    # Extract remaining meaningful content
-    if len(cleaned) > 30:
-        sentences = [s.strip() for s in cleaned.replace('. ', '.|').split('|') if s.strip()]
-        for sentence in sentences[:2]:  # Limit to 2 additional points
-            if len(sentence) > 20 and not any(kp in sentence.lower() for kp in ["scientific", "independent", "youtube", "press"]):
-                clean_sentence = sentence.strip(' .,').capitalize()
-                if not clean_sentence.endswith('.'):
-                    clean_sentence += '.'
-                all_points.append(f"• {clean_sentence}")
-    
-    # 🎯 SHERLOCK: Add counter-intelligence file links if available
+
+    cleaned = re.sub(r"<[^>]+>", "", explanation)
+    cleaned = re.sub(r"[📺📰🔬🌐🎬📋🚫→🕵️]{2,}", "", cleaned)
+    cleaned = re.sub(
+        r"youtube counter-intelligence:.*?(?=\s*🔬|\s*📰|\s*🌐|\s*$)",
+        "",
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    cleaned = re.sub(
+        r"press release counter-intelligence:.*?(?=\s*🔬|\s*📰|\s*🌐|\s*$)",
+        "",
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    core = extract_core_finding(cleaned)
+    if core:
+        core = re.sub(r"\b\d+\s*%\b", "", core)
+        core = re.sub(r"\b\d+\s+of\s+\d+\b", "", core, flags=re.I)
+        core = re.sub(r"\s+", " ", core).strip()
+
+    parts = []
+    if core:
+        parts.append(core)
+    el = explanation.lower()
+    if "counter" in el or "contradict" in el:
+        parts.append("Independent counter-evidence contributed to this assessment.")
+    elif "support" in el or "confirm" in el:
+        parts.append("Some cited material supports the claim’s factual basis.")
+    elif not parts:
+        parts.append("Verification analysis completed; see cited sources in Section 7.")
+
     ci_links = []
-    
-    # Check for counter-intelligence and add appropriate links
-    # Use relative paths for standalone viewing compatibility
-    if counter_intel_points and claim_index is not None and video_id:
-        ci_links.append(f"[🕵️ CI Analysis](claim/claim_{claim_index}/counter_intel.html)")
-    
-    # Add YouTube counter-intelligence link if detected
-    if any("youtube" in point.lower() for point in counter_intel_points):
-        if claim_index is not None and video_id:
-            ci_links.append(f"[📺 YouTube CI](claim/claim_{claim_index}/youtube_ci.html)")
-    
-    # Add press release counter-intelligence link if detected  
-    if any("press" in point.lower() for point in counter_intel_points):
-        if claim_index is not None and video_id:
-            ci_links.append(f"[Press CI](claim/claim_{claim_index}/press_ci.html)")
-    
-    # 🎯 SHERLOCK: Final fallback if no meaningful points extracted
-    if not all_points:
-        if "counter" in explanation.lower() or "contradict" in explanation.lower():
-            all_points.append("• Counter-evidence detected from multiple sources")
-        elif "support" in explanation.lower() or "confirm" in explanation.lower():
-            all_points.append("• Supporting evidence found from verification")
-        else:
-            all_points.append("• Verification analysis completed with mixed results")
-    
-    # 🎯 SHERLOCK: Deduplicate and limit to 4 bullet points maximum
-    seen_points = set()
-    final_points = []
-    counter_intel_added = 0
-    other_added = 0
-    
-    for point in all_points:
-        # Create a key for deduplication (remove numbers to avoid exact duplicates)
-        point_key = re.sub(r'\d+', 'N', point.lower())
-        
-        if point_key not in seen_points:
-            seen_points.add(point_key)
-            
-            if "counter" in point.lower() and counter_intel_added < 2:
-                final_points.append(point)
-                counter_intel_added += 1
-            elif other_added < 2:
-                final_points.append(point)
-                other_added += 1
-            
-            if len(final_points) >= 4:
-                break
-    
-    # 🎯 SHERLOCK: Add counter-intelligence links at the end if space allows
-    if ci_links and len(final_points) < 4:
-        for link in ci_links[:4-len(final_points)]:
-            final_points.append(f"• {link}")
-    
-    return "<br>".join(final_points)
+    if claim_index is not None and video_id and ("counter" in el or "youtube" in el):
+        ci_links.append(f"[Counter-intelligence detail](claim/claim_{claim_index}/counter_intel.html)")
+    if ci_links:
+        parts.append(ci_links[0])
+
+    return "<br>".join(parts)
 
 
 def create_counter_intelligence_claim_file(claim: Claim, counter_intel_data: Dict[str, Any], file_path: pathlib.Path) -> str:
@@ -538,106 +469,73 @@ def create_counter_intelligence_claim_file(claim: Claim, counter_intel_data: Dic
     Returns:
         str: Markdown content for the counter-intelligence analysis
     """
-    content = f"# 🕵️ Counter-Intelligence Analysis for Claim\n\n"
+    content = "# 🕵️ Counter-Intelligence Analysis for Claim\n\n"
     content += f"**Claim ID:** {getattr(claim, 'claim_id', 'N/A')}\n\n"
     content += f"**Timestamp:** {claim.timestamp}\n\n"
     content += f"**Speaker:** {claim.speaker}\n\n"
     content += f"**Claim:** {claim.claim_text}\n\n"
     content += f"**Initial Assessment:** {claim.initial_assessment}\n\n"
-    
-    # Extract counter-intelligence from explanation
+
     explanation = str(claim.explanation or "")
-    youtube_count = 0
-    press_count = 0
-    
-    # Count counter-intelligence references in explanation
-    if 'youtube counter' in explanation.lower():
-        import re
-        youtube_matches = re.findall(r'(\d+)\s*youtube', explanation.lower())
-        if youtube_matches:
-            youtube_count = int(youtube_matches[0])
-    
-    if 'press release' in explanation.lower():
-        import re
-        press_matches = re.findall(r'(\d+)\s*press\s*release', explanation.lower())
-        if press_matches:
-            press_count = int(press_matches[0])
-    
-    # YouTube Counter-Intelligence Section
+
+    # YouTube Counter-Intelligence Section (no view counts, confidence %, or “found N” tallies)
     content += "## 📺 YouTube Counter-Intelligence\n\n"
-    
-    youtube_videos = counter_intel_data.get('youtube_videos', [])
-    if youtube_videos and youtube_count > 0:
-        content += f"**Found:** {youtube_count} YouTube videos providing counter-evidence\n\n"
-        
-        for i, video in enumerate(youtube_videos[:youtube_count]):
+
+    youtube_videos = counter_intel_data.get("youtube_videos", [])
+    if youtube_videos:
+        for i, video in enumerate(youtube_videos):
             content += f"### Video {i+1}: {video.get('title', 'Unknown Title')}\n\n"
             content += f"**URL:** [{video.get('url', '#')}]({video.get('url', '#')})\n\n"
             content += f"**Channel:** {video.get('channel_title', 'Unknown Channel')}\n\n"
-            content += f"**Views:** {video.get('view_count', 'N/A'):,}\n\n"
             content += f"**Stance:** {video.get('stance', 'Unknown')}\n\n"
-            content += f"**Confidence:** {video.get('confidence', 0):.2%}\n\n"
-            
-            key_points = video.get('key_points', [])
+
+            key_points = video.get("key_points", [])
             if key_points:
                 content += "**Key Counter-Arguments:**\n\n"
-                for point in key_points[:3]:  # Limit to top 3 points
+                for point in key_points[:3]:
                     content += f"- {point}\n"
                 content += "\n"
-            
-            # Link to detailed analysis if available (use relative path)
-            video_id = video.get('id', '')
-            if video_id:
-                content += f"**Detailed Analysis:** [View {video_id}.summary.json](counter_intelligence/{video_id}/summary.json)\n\n"
-            
+
+            vid = video.get("id", "")
+            if vid:
+                content += f"**Detailed Analysis:** [View summary JSON](counter_intelligence/{vid}/summary.json)\n\n"
+
             content += "---\n\n"
     else:
-        content += "No YouTube counter-intelligence found for this claim.\n\n"
-    
-    # Press Release Counter-Intelligence Section
+        content += "No YouTube counter-intelligence linked for this claim.\n\n"
+
     content += "## Press Release Counter-Intelligence\n\n"
-    
-    press_releases = counter_intel_data.get('press_releases', [])
-    if press_releases and press_count > 0:
-        content += f"**Found:** {press_count} press releases providing counter-evidence\n\n"
-        
-        for i, release in enumerate(press_releases[:press_count]):
+
+    press_releases = counter_intel_data.get("press_releases", [])
+    if press_releases:
+        for i, release in enumerate(press_releases):
             content += f"### Press Release {i+1}: {release.get('title', 'Unknown Title')}\n\n"
             content += f"**URL:** [{release.get('url', '#')}]({release.get('url', '#')})\n\n"
             content += f"**Source:** {release.get('source', 'Unknown Source')}\n\n"
             content += f"**Date:** {release.get('date', 'Unknown Date')}\n\n"
-            content += f"**Credibility Impact:** {release.get('credibility_impact', 'Unknown')}\n\n"
-            
-            key_findings = release.get('key_findings', [])
+            cred_impact = release.get("credibility_impact", "Unknown")
+            if isinstance(cred_impact, str) and "%" not in cred_impact:
+                content += f"**Credibility Impact:** {cred_impact}\n\n"
+
+            key_findings = release.get("key_findings", [])
             if key_findings:
                 content += "**Key Findings:**\n\n"
-                for finding in key_findings[:3]:  # Limit to top 3 findings
+                for finding in key_findings[:3]:
                     content += f"- {finding}\n"
                 content += "\n"
-            
+
             content += "---\n\n"
     else:
-        content += "No press release counter-intelligence found for this claim.\n\n"
-    
-    # Summary Impact Section
+        content += "No press release counter-intelligence linked for this claim.\n\n"
+
     content += "## Counter-Intelligence Impact Summary\n\n"
-    
-    total_ci_sources = youtube_count + press_count
-    if total_ci_sources > 0:
-        content += f"**Total Counter-Intelligence Sources:** {total_ci_sources}\n\n"
-        content += f"- YouTube Videos: {youtube_count}\n"
-        content += f"- Press Releases: {press_count}\n\n"
-        
-        # Extract credibility impact from explanation
-        import re
-        credibility_matches = re.findall(r'reduced.*?(\d+)%', explanation.lower())
-        if credibility_matches:
-            reduction = credibility_matches[0]
-            content += f"**Estimated Credibility Reduction:** {reduction}%\n\n"
-        
-        content += "**Assessment:** This claim has significant counter-intelligence that challenges its reliability.\n\n"
+    if youtube_videos or press_releases:
+        content += (
+            "**Assessment:** Counter-intelligence material was reviewed and factored into the editorial "
+            "reliability judgment for this claim.\n\n"
+        )
     else:
-        content += "**Assessment:** No significant counter-intelligence found for this claim.\n\n"
+        content += "**Assessment:** No counter-intelligence package was associated with this claim.\n\n"
     
     content += f"\n---\n\n*Generated by VerityNgn Counter-Intelligence Analysis • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n"
     
@@ -700,15 +598,208 @@ def create_rolled_up_source_file(claim: Claim, evidence: List[Union[str, Dict]],
 
     return content
 
-def generate_markdown_report(report: VerityReport) -> Tuple[str, Dict[str, str], Dict[str, str]]:
+
+def _claim_source_items(claim) -> list:
+    """Normalized evidence list for a claim (safe URLs only)."""
+    claim_evidence = []
+    if claim.verification_result and isinstance(claim.verification_result, dict):
+        claim_evidence = claim.verification_result.get("sources", [])
+    if not claim_evidence and isinstance(claim.evidence, list):
+        claim_evidence = claim.evidence
+    return filter_safe_urls(claim_evidence)
+
+
+def _source_dict(source) -> tuple[str, str, str]:
+    """Return (url, title, text) from a source entry."""
+    if isinstance(source, str):
+        return source, source, ""
+    if isinstance(source, dict):
+        url = source.get("url", "")
+        title = source.get("title", source.get("source_name", url or "Source Detail"))
+        text = source.get("text", source.get("snippet", ""))
+        return url, title, text
+    url = getattr(source, "url", "") or ""
+    title = getattr(source, "title", "") or getattr(source, "source_name", "") or url or "Source Detail"
+    text = getattr(source, "text", "") or getattr(source, "snippet", "") or ""
+    return url, title, text
+
+
+def _build_sources_section_lines(report: VerityReport) -> List[str]:
+    """Section 7 accordion HTML for standard reports."""
+    lines: List[str] = ["## 7. Sources"]
+    if not report.claims_breakdown:
+        lines.append("No claims were analyzed, so no specific sources are listed.")
+        lines.append("")
+        return lines
+
+    for i, claim in enumerate(report.claims_breakdown):
+        claim_evidence = _claim_source_items(claim)
+        source_html = "<ul>"
+        if not claim_evidence:
+            source_html += "<li>No evidence sources were provided for this claim.</li>"
+        else:
+            for source in claim_evidence:
+                url, title, text = _source_dict(source)
+                if url and is_safe_url(url):
+                    item = _safe_source_link(url, title)
+                elif title:
+                    item = _esc(title)
+                else:
+                    continue
+                if text:
+                    item += f"<br><em>{_esc(text)}</em>"
+                source_html += f"<li>{item}</li>"
+        source_html += "</ul>"
+
+        details_style = "border: 1px solid #e1e4e8; border-radius: 6px; padding: 0; margin-bottom: 16px; background-color: #fff;"
+        summary_style = "cursor: pointer; padding: 12px 16px; background-color: #f6f8fa; border-radius: 6px; font-weight: 600; outline: none; list-style: none;"
+        content_style = "padding: 16px; border-top: 1px solid #e1e4e8;"
+        claim_text_esc = _esc(claim.claim_text)
+        ts_esc = _esc(claim.timestamp)
+
+        lines.append(f"""
+<details id="sources-for-claim-{i+1}" style="{details_style}">
+<summary style="{summary_style}">▶ Claim {i+1} Sources <span style="font-weight: normal; color: #586069;">({ts_esc})</span></summary>
+<div style="{content_style}">
+<p><strong>Claim:</strong> {claim_text_esc}</p>
+{source_html}
+</div>
+</details>
+""")
+    lines.append("")
+    return lines
+
+
+def generate_sources_appendix(report: VerityReport) -> str:
+    """
+    Markdown appendix of per-claim sources (for combined reports).
+    Uses anchor ids matching in-report #sources-for-claim-N links.
+    """
+    lines = ["## Appendix: Sources", ""]
+    if not report.claims_breakdown:
+        lines.append("_No claims were analyzed, so no sources are listed._")
+        return "\n".join(lines)
+
+    for i, claim in enumerate(report.claims_breakdown):
+        claim_evidence = _claim_source_items(claim)
+        ts = claim.timestamp or "—"
+        lines.append(f'<a id="sources-for-claim-{i+1}"></a>')
+        lines.append(f"### Claim {i+1} — {ts}")
+        lines.append("")
+        lines.append(f"**Claim:** {claim.claim_text}")
+        lines.append("")
+        if not claim_evidence:
+            lines.append("_No evidence sources were provided for this claim._")
+        else:
+            for source in claim_evidence:
+                url, title, text = _source_dict(source)
+                if url and is_safe_url(url):
+                    lines.append(f"- [{title}]({url})")
+                elif title:
+                    lines.append(f"- {title}")
+                else:
+                    continue
+                if text:
+                    lines.append(f"  - _{text}_")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _build_original_header(report: VerityReport) -> List[str]:
+    """Pre-compliance header: title, thumbnail embed, and YouTube description."""
+    media = report.media_embed
+    video_id = media.video_id if media else "unknown_id"
+    title = (media.title if media and media.title else None) or report.title or f"Video {video_id}"
+    video_url = (media.video_url if media and media.video_url else None) or f"https://www.youtube.com/watch?v={video_id}"
+    thumbnail = (
+        (media.thumbnail_url if media and media.thumbnail_url else None)
+        or f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+    )
+    description = (media.description if media and media.description else None) or report.description or ""
+    desc_html = html.escape(description).replace("\n", "<br>")
+
+    return [
+        f"# {title}",
+        "",
+        '<div class="video-embed">',
+        f'    <a href="{video_url}" target="_blank">',
+        f'        <img src="{thumbnail}" alt="Video thumbnail for {html.escape(title)}" width="560" style="max-width: 100%; height: auto;" />',
+        "    </a>",
+        f"    <p>Video ID: {video_id}</p>",
+        "</div><!-- VIDEO_CONTAINER_END -->",
+        "",
+        "## Internal YouTube Description",
+        "",
+        desc_html,
+        "",
+    ]
+
+
+def _build_original_executive_summary(report: VerityReport) -> List[str]:
+    """Numeric executive summary for user-controlled original reports."""
+    claims = report.claims_breakdown or []
+    total = len(claims)
+    vc = _verdict_counts(claims)
+    lines = ["## Executive Summary", "", f"Total Claims: {total}"]
+
+    for key, label in VERDICT_KEY_TO_LABEL.items():
+        if key == "UNVERIFIABLE":
+            continue
+        count = vc.get(key, 0)
+        lines.append(f"- {label}: {count}")
+
+    pr_count = getattr(report, "press_release_count", 0) or 0
+    yt_count = getattr(report, "youtube_response_count", 0) or 0
+    lines.extend(
+        [
+            "",
+            f"Claims with Press Release/Newswire Evidence: {pr_count}",
+            f"Claims with YouTube Counter-Intelligence Evidence: {yt_count}",
+            "",
+        ]
+    )
+    return lines
+
+
+def _build_verdict_percentage_table(claims: List[Claim]) -> List[str]:
+    """Overall truthfulness count/percentage table for original reports."""
+    total = len(claims)
+    if total == 0:
+        return ["| Category | Count | Percentage |", "|:---------|:-----:|:----------:|", "| Total Claims | 0 | 100% |", ""]
+
+    vc = _verdict_counts(claims)
+    lines = [
+        "| Category | Count | Percentage |",
+        "|:---------|:-----:|:----------:|",
+        f"| Total Claims | {total} | 100% |",
+    ]
+    for key, label in VERDICT_KEY_TO_LABEL.items():
+        if key == "UNVERIFIABLE":
+            continue
+        count = vc.get(key, 0)
+        pct = count / total * 100
+        lines.append(f"| {label} | {count} | {pct:.1f}% |")
+    lines.append("")
+    return lines
+
+
+def generate_markdown_report(
+    report: VerityReport,
+    *,
+    tier: ReportTier = "private",
+) -> Tuple[str, Dict[str, str], Dict[str, str]]:
     """
     Generate the complete markdown report with embedded claim sources and counter-intelligence.
     Returns main content. Separate file dictionaries are returned empty as content is now embedded.
+
+    tier=private: full CRAAP text, per-claim probability column (persisted user reports).
+    tier=public: scrubbed CRAAP and no probability column (legacy public markdown path).
     """
     logger = logging.getLogger(__name__)
     try:
         # Generate the main report content with embedded sources
-        main_content = generate_main_report_content(report)
+        main_content = generate_main_report_content(report, tier=tier)
 
         # Return empty dicts for separate files as they are now embedded
         # We keep the signature for compatibility
@@ -720,7 +811,7 @@ def generate_markdown_report(report: VerityReport) -> Tuple[str, Dict[str, str],
         error_content = f"# Report Generation Error\n\nAn error occurred: {e}\n\nGenerated by VerityNgn on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         return error_content, {}, {}
 
-def generate_main_report_content(report: VerityReport) -> str:
+def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "private", omit_video_header: bool = False, omit_sources: bool = False) -> str:
     """
     Generate the main report content in memory.
     
@@ -732,273 +823,94 @@ def generate_main_report_content(report: VerityReport) -> str:
     """
     logger = logging.getLogger(__name__)
     report_content = []
-    evidence_counts_by_type = defaultdict(int)
-    verdict_counts = defaultdict(int)
-    all_evidence_sources = [] # Collect all sources for summary
+    cm = ensure_category_mappings(report)
+    narrative = cm.get("narrative") or {}
+    overall_verdict = cm.get("overall_verdict_label") or "Undetermined (No Claims)"
+    disclaimer = cm.get("independent_research_disclaimer") or (
+        "This assessment is independent editorial research by HotChili Analytics, LLC. "
+        "It is not provided, endorsed, or calculated by YouTube or Google."
+    )
+    llm_notice = cm.get("llm_platform_visible_notice") or LLM_PLATFORM_VISIBLE_NOTICE
+    user_controlled_notice = None
+    if tier == "original":
+        from verityngn.services.report.notices import PRIVATE_IN_REPORT_NOTICE
 
-    # --- Pre-process data ---
-    total_claims = 0
-    if report.claims_breakdown:
-        total_claims = len(report.claims_breakdown)
-        for claim in report.claims_breakdown:
-            # Use the same probability-based calculation as Table 6 for consistency
-            verdict = "UNCERTAIN"
-            if isinstance(claim.verification_result, dict):
-                prob_dist = claim.verification_result.get("probability_distribution")
-                if isinstance(prob_dist, dict):
-                    # Use the same mapping function as Table 6
-                    from verityngn.models.report import map_probabilities_to_verification_result
-                    verdict = map_probabilities_to_verification_result(prob_dist)
-                else:
-                    # Fallback to stored result if no probability distribution
-                    verdict = claim.verification_result.get("result", "UNCERTAIN")
-            elif isinstance(claim.verification_result, str):
-                verdict = claim.verification_result
+        user_controlled_notice = PRIVATE_IN_REPORT_NOTICE
+    elif tier == "private":
+        from verityngn.services.report.notices import PRIVATE_IN_REPORT_NOTICE
 
-            # Normalize verdicts slightly if needed, e.g., map UNABLE_DETERMINE
-            if verdict == "UNABLE_DETERMINE": verdict = "UNCERTAIN"
-            verdict_counts[verdict] += 1
-
-            # Collect evidence sources from verification_result.sources (the actual location)
-            sources_to_process = []
-            
-            # First try to get sources from verification_result.sources
-            if claim.verification_result and isinstance(claim.verification_result, dict):
-                sources_from_verification = claim.verification_result.get("sources", [])
-                if sources_from_verification:
-                    sources_to_process.extend(sources_from_verification)
-            
-            # Also check claim.evidence if it exists (for compatibility)
-            if isinstance(claim.evidence, list) and claim.evidence:
-                sources_to_process.extend(claim.evidence)
-            
-            # Process all collected sources
-            if sources_to_process:
-                all_evidence_sources.extend(sources_to_process)
-                for item in sources_to_process:
-                    source_type = None
-                    url = None
-                    if isinstance(item, str): # Simple URL string
-                        url = item
-                    elif isinstance(item, dict): # Dictionary-like source
-                        url = item.get('url')
-                        source_type = item.get('source_type')
-
-                    # Standardize type based on URL if type is missing or generic
-                    if url:
-                         standardized_type = _map_source_type(source_type, url)
-                         evidence_counts_by_type[standardized_type] += 1
-                    elif source_type: # If no URL but type exists
-                         evidence_counts_by_type[source_type] += 1
-                    else:
-                         evidence_counts_by_type["Unknown/Other"] += 1 # Count sources without URL or type
-    else:
+        user_controlled_notice = PRIVATE_IN_REPORT_NOTICE
+    if not report.claims_breakdown:
         logger.warning("No claims found in the report for markdown generation.")
-
-    # Calculate overall truthfulness based on specific verdict keys
-    # Align these keys with the actual values used in your verification results
-    false_count = verdict_counts.get("LIKELY_FALSE", 0) + verdict_counts.get("HIGHLY_LIKELY_FALSE", 0)
-    true_count = verdict_counts.get("LIKELY_TRUE", 0) + verdict_counts.get("HIGHLY_LIKELY_TRUE", 0)
-    uncertain_count = verdict_counts.get("UNCERTAIN", 0) # Include UNCERTAIN
-
-    # Determine overall verdict string
-    if total_claims > 0:
-        if false_count / total_claims >= 0.6: # Threshold for highly likely false
-             overall_verdict = "Highly Likely False"
-        elif false_count > true_count:
-             overall_verdict = "Likely False"
-        elif true_count / total_claims >= 0.6: # Threshold for highly likely true
-             overall_verdict = "Highly Likely True"
-        elif true_count >= false_count:
-             overall_verdict = "Likely True"
-        else: # Default to mixed/uncertain if no clear majority
-             overall_verdict = "Mixed/Uncertain"
-    else:
-         overall_verdict = "Undetermined (No Claims)"
-
-
-    # Calculate percentages safely
-    verdict_percentages = {k: (v / total_claims * 100) if total_claims > 0 else 0 for k, v in verdict_counts.items()}
 
     # --- Build Report Sections ---
 
-    # --- Video Embed and Description (Not Numbered) ---
     media_embed = report.media_embed
-    video_title = media_embed.title if media_embed else "Video Title Unavailable"
-    thumbnail_url = media_embed.thumbnail_url if media_embed else ""
-    video_url = media_embed.video_url if media_embed else ""
     video_id = media_embed.video_id if media_embed else "unknown_id"
-    video_description = report.description or "No description provided."
+    source_info_hash = report.source_info_hash or "(unavailable)"
+    report_generated_at = report.report_generated_at or "(unavailable)"
+    claims_breakdown_list = report.claims_breakdown or []
 
-    # Escape potentially problematic characters in title/description for Markdown/HTML
-    safe_title = video_title.replace("<", "&lt;").replace(">", "&gt;")
-    # Correctly replace actual newlines \n with <br>
-    safe_description = video_description.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+    if tier == "original":
+        if not omit_video_header:
+            report_content.extend(_build_original_header(report))
+        if user_controlled_notice:
+            report_content.append(f"> **Notice:** {user_controlled_notice}")
+            report_content.append("")
+        report_content.extend(_build_original_executive_summary(report))
+        overall_verdict = compute_overall_verdict_label(claims_breakdown_list)
+        report_content.append(f"## 2. Overall Truthfulness Assessment: {overall_verdict}")
+        report_content.extend(_build_verdict_percentage_table(claims_breakdown_list))
+    else:
+        notice_block = f"> **Notice:** {llm_notice}\n\n"
+        if user_controlled_notice and tier == "private":
+            notice_block += f"> **Private report:** {user_controlled_notice}\n\n"
+        report_content.append(f"""# Verity Report
 
-    # Add video title at the very top
-    report_content.append(f"""# {safe_title}
-
-<div class="video-embed">
-    <a href="{video_url}" target="_blank">
-        <img src="{thumbnail_url}" alt="Video thumbnail for {safe_title}" width="560" style="max-width: 100%; height: auto;">
-    </a>
-    <p>Video ID: {video_id}</p>
-</div><!-- VIDEO_CONTAINER_END -->
-
-## Internal YouTube Description
-
-{safe_description}
+{notice_block}| Field | Value |
+|---|---|
+| Video ID | `{video_id}` |
+| Source Info Hash | `{source_info_hash}` |
+| Report Generated | `{report_generated_at}` |
 
 """)
 
-    # --- Section 1: Executive Summary ---
-    # Apply quantum mapping to all claims and collect verdicts
-    verdict_counts = {
-        "HIGHLY_LIKELY_TRUE": 0,
-        "LIKELY_TRUE": 0,
-        "LEANING_TRUE": 0,
-        "UNCERTAIN": 0,
-        "LEANING_FALSE": 0,
-        "LIKELY_FALSE": 0,
-        "HIGHLY_LIKELY_FALSE": 0
-    }
-    press_release_claims = 0
-    youtube_counter_claims = 0
-    
-    # Count Press Release and YouTube Review/Response sources
-    press_release_count = 0
-    youtube_response_count = 0
-    
-    for claim in report.claims_breakdown:
-        # Use consistent verdict calculation logic (same as Table 6)
-        verdict = "UNCERTAIN"
-        if isinstance(claim.verification_result, dict):
-            prob_dist = claim.verification_result.get("probability_distribution")
-            if isinstance(prob_dist, dict):
-                # Use the same mapping function as Table 6
-                from verityngn.models.report import map_probabilities_to_verification_result
-                verdict = map_probabilities_to_verification_result(prob_dist)
-            else:
-                # Fallback to stored result if no probability distribution
-                verdict = claim.verification_result.get("result", "UNCERTAIN")
-        elif isinstance(claim.verification_result, str):
-            verdict = claim.verification_result
-        
-        # Normalize verdicts slightly if needed
-        if verdict == "UNABLE_DETERMINE": 
-            verdict = "UNCERTAIN"
-        verdict_counts[verdict] += 1
-        
-        # Count press release and YouTube evidence using new separated fields
-        if hasattr(claim, 'pr_sources') and claim.pr_sources:
-            press_release_claims += 1
-            press_release_count += len(claim.pr_sources)
-            
-        if hasattr(claim, 'youtube_counter_sources') and claim.youtube_counter_sources:
-            youtube_counter_claims += 1
-            youtube_response_count += len(claim.youtube_counter_sources)
-    # Section 1: Add claim verdict summary
-    report_content.append("## Executive Summary")
-    report_content.append("")
-    report_content.append(f"Total Claims: {len(report.claims_breakdown)}")
-    for verdict, count in verdict_counts.items():
-        report_content.append(f"- {verdict.replace('_', ' ').title()}: {count}")
-    report_content.append("")
-    report_content.append(f"Claims with Press Release/Newswire Evidence: {press_release_claims}")
-    report_content.append(f"Claims with YouTube Counter-Intelligence Evidence: {youtube_counter_claims}")
-    report_content.append("")
+        # --- Section 1: Executive Summary (narrative only; numerics live in JSON) ---
+        report_content.append("## Executive Summary")
+        report_content.append("")
+        report_content.append(narrative.get("executive_paragraph") or "")
+        report_content.append("")
 
-    # --- 2. Overall Truthfulness Assessment ---
-    report_content.append(f"## 2. Overall Truthfulness Assessment: {overall_verdict}")
-    report_content.append("| Category | Count | Percentage |")
-    report_content.append("|:---------|:-----:|:----------:|")
-    report_content.append(f"| Total Claims | {total_claims} | 100% |")
-    for v_key, v_name in [
-        ("HIGHLY_LIKELY_TRUE", "Highly Likely True"),
-        ("LIKELY_TRUE", "Likely True"),
-        ("LEANING_TRUE", "Leaning True"),
-        ("UNCERTAIN", "Uncertain"),
-        ("LEANING_FALSE", "Leaning False"),
-        ("LIKELY_FALSE", "Likely False"),
-        ("HIGHLY_LIKELY_FALSE", "Highly Likely False")
-    ]: # Use the same display order as Executive Summary
-        count = verdict_counts.get(v_key, 0)
-        percent = verdict_percentages.get(v_key, 0)
-        report_content.append(f"| {v_name} | {count} | {percent:.1f}% |")
+        # --- 2. Overall Truthfulness Assessment ---
+        report_content.append(f"## 2. Overall Truthfulness Assessment: {overall_verdict}")
+        report_content.append(f"_{disclaimer}_")
+        report_content.append("")
+        report_content.append(narrative.get("overall_assessment_sentence") or "")
+        report_content.append("")
 
-    # Generate contextual summary based on the calculated overall_verdict
-    overall_assessment_summary = ""
-    if total_claims > 0:
-         if overall_verdict == "Highly Likely False":
-              summary_status = "significant credibility issues, with a strong majority of claims assessed as false."
-         elif overall_verdict == "Likely False":
-              summary_status = "credibility concerns, with more claims assessed as false than true."
-         elif overall_verdict == "Highly Likely True":
-              summary_status = "generally reliable content, with a strong majority of claims assessed as true."
-         elif overall_verdict == "Likely True":
-              summary_status = "mostly reliable content, with more claims assessed as true than false."
-         else: # Mixed/Uncertain
-              summary_status = "mixed reliability, containing a blend of verifiable and questionable claims, requiring viewer caution."
-         overall_assessment_summary = f"Based on the analysis of {total_claims} claims, this video demonstrates {summary_status}"
-    else:
-        overall_assessment_summary = "No claims were analyzed, so truthfulness could not be assessed."
-
-    report_content.append("")
-    report_content.append(overall_assessment_summary)
-    report_content.append("")
-
-    # --- 3. Summary of Key Findings --- (Meta-analysis of the report itself)
+    # --- 3. Summary of Key Findings --- (qualitative descriptors from category_mappings)
     report_content.append("## 3. Summary of Key Findings")
-    report_content.append("| Category | Description | Impact |")
-    report_content.append("|:---------|:------------|:-------|")
-
-    # --- Calculate metrics for this table using pre-calculated/derived values ---
-    high_quality_source_count_meta = 0
-    total_sources_meta = len(all_evidence_sources)
-    unique_source_types_meta = set()
-
-    for source in all_evidence_sources:
-        source_type = None
-        url = None
-        quality_flag = False
-
-        if isinstance(source, str):
-            url = source
-        elif isinstance(source, dict):
-            url = source.get('url')
-            source_type = source.get('source_type')
-        else:
-            # Handle Pydantic EvidenceSource objects
-            url = getattr(source, 'url', None)
-            source_type = getattr(source, 'source_type', None)
-
-        standardized_type = "Unknown/Other"
-        if url:
-            standardized_type = _map_source_type(source_type, url)
-        elif source_type:
-            standardized_type = source_type # Use provided type if no URL
-
-        unique_source_types_meta.add(standardized_type)
-
-        # Define high-quality types for this section
-        if standardized_type in ['Academic Research', 'Scientific Journals', 'Government Publications', 'Fact-checking Organizations']:
-            high_quality_source_count_meta += 1
-
-    quality_percentage_meta = (high_quality_source_count_meta / total_sources_meta * 100) if total_sources_meta > 0 else 0
-
-    # Use previously calculated counts for verification status
-    uncertain_claim_count = verdict_counts.get("UNCERTAIN", 0)
-    verified_claims_meta = total_claims - uncertain_claim_count
-    verification_percentage_meta = (verified_claims_meta / total_claims * 100) if total_claims > 0 else 0
-
-    distinct_timestamps_count = len(set(c.timestamp for c in report.claims_breakdown if c and c.timestamp)) if report.claims_breakdown else 0
-
-    # --- Append rows for Section 3 table ---
-    report_content.append(f"| Overall Assessment | {overall_verdict} | Provides context for the overall message reliability. |")
-    report_content.append(f"| Evidence Quality | {high_quality_source_count_meta} of {total_sources_meta} sources ({quality_percentage_meta:.1f}%) identified as high-quality. | Affects the confidence level of verification results. |")
-    report_content.append(f"| Verification Status | {verified_claims_meta} of {total_claims} claims ({verification_percentage_meta:.1f}%) received a True/False assessment. | Indicates the proportion of claims where a determination could be made. |")
-    report_content.append(f"| Source Diversity | Claims supported by sources from {len(unique_source_types_meta)} different categories. | Broader diversity can enhance reliability if sources are high-quality. |")
-    report_content.append(f"| Time Distribution | Claims analyzed across {distinct_timestamps_count} distinct timestamps. | Helps identify patterns or concentration of claims over time. |")
+    report_content.append("| Category | Description (qualitative) | Impact |")
+    report_content.append("|:---------|:--------------------------|:-------|")
+    report_content.append(
+        f"| Overall Assessment | {overall_verdict} | Provides context for the overall message reliability. |"
+    )
+    report_content.append(
+        f"| Evidence Quality | {narrative.get('evidence_quality', 'Mixed')} | "
+        f"Affects the confidence level of verification results. |"
+    )
+    report_content.append(
+        f"| Verification Status | {narrative.get('verification_status', 'Most claims assessed')} | "
+        f"Indicates whether a determinative assessment was reached for each claim. |"
+    )
+    report_content.append(
+        f"| Source Diversity | {narrative.get('source_diversity', 'Multiple categories')} | "
+        f"Broader diversity can enhance reliability. |"
+    )
+    report_content.append(
+        f"| Time Distribution | {narrative.get('time_distribution', 'Across the video runtime')} | "
+        f"Helps identify pattern and concentration of claims. |"
+    )
     report_content.append("")
 
     # --- 4. Key Findings Identified --- (Specific findings generated by agent/logic)
@@ -1009,273 +921,197 @@ def generate_main_report_content(report: VerityReport) -> str:
         for finding in report.key_findings:
             # Prepare cell content separately, escaping pipes and using <br> for newlines
             category_cell = str(finding.category or "N/A").replace("|", "\\|").replace("\n", "<br>")
-            description_cell = str(finding.description or "N/A").replace("|", "\\|").replace("\n", "<br>")
+            desc_raw = str(finding.description or "N/A")
+            if tier == "public":
+                desc_raw = _scrub_public_craap_explanation(desc_raw)
+            description_cell = desc_raw.replace("|", "\\|").replace("\n", "<br>")
             report_content.append(f"| {category_cell} | {description_cell} |")
         report_content.append("")
     else:
         report_content.append("No specific key findings were generated for this report.")
         report_content.append("")
 
-    # --- 5. Evidence Summary --- (Breakdown by source type counts) (Renumbered)
+    # --- 5. Evidence Summary --- (category list only; no counts)
     report_content.append("## 5. Evidence Summary")
-    report_content.append("### Evidence Types Used in Verification")
-    if not evidence_counts_by_type:
-        report_content.append("No evidence sources were categorized.")
+    report_content.append("### Source categories cited in this report")
+    cats = cm.get("evidence_categories_present") or []
+    if not cats:
+        report_content.append(
+            "No external source categories were cataloged for this run; see Section 7 for any cited references."
+        )
     else:
-        report_content.append("| Category                    | Count | Potential Reliability | Notes                                           |")
-        report_content.append("| :-------------------------- | :---: | :------------------ | :---------------------------------------------- |")
-        evidence_categories = {
-            "Academic Research": ("High", "Peer-reviewed studies and academic publications"),
-            "Government Publications": ("High", "Official government documents and reports"),
-            "Scientific Journals": ("High", "Professional scientific publications"),
-            "Expert Opinions": ("Medium", "Analysis from subject matter experts"),
-            "Fact-checking Organizations": ("High", "Professional fact-checking services"),
-            "News Articles": ("Medium", "Reputable news outlets"),
-            "Web Pages/Blogs": ("Low", "General web content, may vary in reliability"),
-        }
-        for category, (reliability, notes) in evidence_categories.items():
-            count = evidence_counts_by_type.get(category, 0)
-            report_content.append(f"| {category:<27} | {count:>5} | {reliability:<11} | {notes:<47} |")
+        if len(cats) == 1:
+            cat_line = cats[0]
+        elif len(cats) == 2:
+            cat_line = f"{cats[0]} and {cats[1]}"
+        else:
+            cat_line = ", ".join(cats[:-1]) + f", and {cats[-1]}"
+        report_content.append(
+            f"Evidence cited in this report draws from the following source categories: {cat_line}. "
+            "Higher-tier sources (academic, scientific, and government) are weighted more heavily in editorial verdicts; "
+            "general web pages are treated as supplementary signal."
+        )
     report_content.append("")
 
     # --- 6. Claims Breakdown with Verification Results --- (Renumbered)
+    # Fix 5: Split out unverifiable (pre-filtered) claims for a separate subsection
+    def _claim_result(c):
+        vr = getattr(c, "verification_result", None) if hasattr(c, "verification_result") else None
+        if vr is None and isinstance(c, dict):
+            vr = c.get("verification_result")
+        return (vr or {}).get("result") if isinstance(vr, dict) else None
+
+    claims_breakdown_list = report.claims_breakdown or []
+    unverifiable_claims = [c for c in claims_breakdown_list if _claim_result(c) == "UNVERIFIABLE"]
+
     report_content.append("## 6. Claims Breakdown with Verification Results")
-    report_content.append("*This section shows primary video analysis claims. Counter-intelligence claims are reported separately in Section 8.*")
+    report_content.append(
+        "*This section shows primary video analysis claims. Counter-intelligence context appears in Section 8.*"
+    )
     report_content.append("")
     if not report.claims_breakdown:
-         report_content.append("No claims were available for breakdown.")
+        report_content.append("No claims were available for breakdown.")
     else:
-        report_content.append("| Time | Speaker | Claim | Initial Assessment | Verification Result | Explanation | Odds & Sources |")
-        report_content.append("|:----:|:--------|:------|:------------------|:-------------------|:------------|:---------------|")
-        for i, claim in enumerate(report.claims_breakdown):
-            # Prepare cell content safely
+        # --- 6.0 Grouped narrative (verdict buckets) ---
+        report_content.append("### 6.0 Findings Grouped by Verdict")
+        report_content.append("")
+        buckets = cm.get("verdict_buckets") or {}
+        by_id = {c.claim_id: c for c in claims_breakdown_list}
+        for label in VERDICT_BUCKET_LABELS:
+            ids = buckets.get(label) or []
+            if not ids:
+                continue
+            report_content.append(f"#### {label}")
+            for cid in sorted(ids):
+                c = by_id.get(cid)
+                if not c:
+                    continue
+                ts = str(c.timestamp or "-").strip()
+                txt = str(c.claim_text or "").strip()
+                report_content.append(f"- ({ts}) {txt}")
+            report_content.append("")
+
+        # --- 6.1 Per-claim detail ---
+        report_content.append("### 6.1 Per-Claim Detail")
+        report_content.append("")
+        if tier in ("private", "original"):
+            report_content.append("| # | Time | Verdict | Probability | Claim | Sources |")
+            report_content.append("|:--:|:----:|:--------|:------------|:------|:--------|")
+        else:
+            report_content.append("| # | Time | Verdict | Claim | Sources |")
+            report_content.append("|:--:|:----:|:--------|:------|:--------|")
+        for orig_idx, claim in enumerate(claims_breakdown_list):
             time_cell = str(claim.timestamp or "-").replace("|", "\\|").replace("\n", " ")
-            speaker_cell = str(claim.speaker or "Unknown").replace("|", "\\|").replace("\n", " ")
             claim_text_cell = str(claim.claim_text or "N/A").replace("|", "\\|").replace("\n", " ")
-            initial_assessment_cell = str(claim.initial_assessment or "N/A").replace("|", "\\|").replace("\n", " ")
-
-            verification_result_data = claim.verification_result
-            explanation_str = str(claim.explanation or "No explanation provided.")
-            
-            # --- Use quantum/human mapping for Verification Result ---
-            probabilities = {'TRUE': 0.0, 'FALSE': 0.0, 'UNCERTAIN': 1.0}
-            if isinstance(verification_result_data, dict):
-                probs_raw = verification_result_data.get("probability_distribution")
-                if isinstance(probs_raw, dict):
-                    probs_normalized = {k.upper(): float(v) for k, v in probs_raw.items() if isinstance(v, (int, float))}
-                    probabilities['TRUE'] = probs_normalized.get('TRUE', 0.0)
-                    probabilities['FALSE'] = probs_normalized.get('FALSE', 0.0)
-                    uncertain_prob = probs_normalized.get('UNCERTAIN', 1.0 - probabilities['TRUE'] - probabilities['FALSE'])
-                    probabilities['UNCERTAIN'] = max(0.0, min(1.0, uncertain_prob))
-                    
-                # 🚀 ENHANCED: Extract explanation from verification result and optimize ALL sources
-                verification_explanation = verification_result_data.get("explanation", "")
-                if verification_explanation and verification_explanation != explanation_str:
-                    explanation_str = str(verification_explanation)
-                    
-            elif isinstance(verification_result_data, str):
-                if verification_result_data == "UNABLE_DETERMINE":
-                    result_str = "UNCERTAIN"
-                    
-            # Compute Verification Result using mapping
-            result_str = map_probabilities_to_verification_result(probabilities)
-            result_cell = result_str.replace("|", "\\|").replace("\n", " ")
-            
-            # 🚀 ENHANCED: Use enhanced explanation generation for better narrative format
-            if isinstance(verification_result_data, dict):
-                explanation_cell = generate_enhanced_explanation(verification_result_data, claim.claim_text, claim_index=i, video_id=video_id).replace("|", "\\|")
+            verdict_cell = claim_verdict_display_label(claim).replace("|", "\\|")
+            source_link = f"[Sources](#sources-for-claim-{orig_idx+1})"
+            vr = getattr(claim, "verification_result", None) or {}
+            if tier in ("private", "original"):
+                prob_cell = _format_probability_cell(vr if isinstance(vr, dict) else {}).replace("|", "\\|")
+                report_content.append(
+                    f"| {orig_idx + 1} | {time_cell} | {verdict_cell} | {prob_cell} | {claim_text_cell} | {source_link} |"
+                )
             else:
-                explanation_cell = optimize_explanation_format(explanation_str, claim_index=i, video_id=video_id).replace("|", "\\|")
+                report_content.append(
+                    f"| {orig_idx + 1} | {time_cell} | {verdict_cell} | {claim_text_cell} | {source_link} |"
+                )
+        report_content.append("")
+        report_content.append(
+            "*Each claim was assessed against external sources cited in Section 7.*"
+        )
+        report_content.append("")
 
-            # Enhanced odds and sources display with quality indicators
-            verification_sources = []
-            if isinstance(verification_result_data, dict):
-                verification_sources = verification_result_data.get("sources", [])
-            
-            # Fallback to claim evidence if verification sources not available
-            if not verification_sources and isinstance(claim.evidence, list):
-                verification_sources = claim.evidence
-            
-            num_sources = len(verification_sources)
-            prob_true_pct = probabilities.get('TRUE', 0.0) * 100
-            prob_false_pct = probabilities.get('FALSE', 0.0) * 100
-            prob_uncertain_pct = probabilities.get('UNCERTAIN', 0.0) * 100
-
-            # Generate quality indicators for sources
-            quality_indicators = generate_source_quality_indicators(verification_sources)
-            
-            claim_id_str_for_link = f"claim_{i}"
-            # Use anchor link to embedded sources
-            source_link = f"[{num_sources} sources](#sources-for-claim-{i+1})"
-            
-            # Enhanced display with quality indicators
-            odds_sources_raw = f"**True:** {prob_true_pct:.0f}%<br>**False:** {prob_false_pct:.0f}%<br>**Uncertain:** {prob_uncertain_pct:.0f}%<br><br>{quality_indicators}<br>{source_link}"
-            odds_sources_cell = odds_sources_raw.replace("|", "\\|")
-
-            report_content.append(
-                f"| {time_cell} | {speaker_cell} | {claim_text_cell} | {initial_assessment_cell} | {result_cell} | {explanation_cell} | {odds_sources_cell} |"
-            )
+        # Claims Noted But Not Independently Verifiable (pre-filtered; no web research)
+        if unverifiable_claims:
+            report_content.append("")
+            report_content.append("#### 6.2 Claims Noted But Not Independently Verifiable")
+            report_content.append("The following claims were not independently verified (promotional, anecdotal, or product-name type). They are listed for completeness only.")
+            report_content.append("")
+            report_content.append("| Time | Claim | Initial Assessment | Reason |")
+            report_content.append("|:----:|:------|:-------------------|:-------|")
+            for c in unverifiable_claims:
+                ts = getattr(c, "timestamp", None) or (c.get("timestamp") if isinstance(c, dict) else None)
+                text = getattr(c, "claim_text", None) or (c.get("claim_text") if isinstance(c, dict) else None)
+                assess = getattr(c, "initial_assessment", None) or (c.get("initial_assessment") if isinstance(c, dict) else None)
+                vr = getattr(c, "verification_result", None) or (c.get("verification_result") if isinstance(c, dict) else None)
+                reason = (vr.get("explanation", "Pre-filtered") if isinstance(vr, dict) else "Pre-filtered")[:80]
+                time_cell = str(ts or "-").replace("|", "\\|").replace("\n", " ")
+                claim_cell = str(text or "N/A")[:200].replace("|", "\\|").replace("\n", " ")
+                assess_cell = str(assess or "N/A")[:100].replace("|", "\\|").replace("\n", " ")
+                reason_cell = str(reason or "N/A").replace("|", "\\|").replace("\n", " ")
+                report_content.append(f"| {time_cell} | {claim_cell} | {assess_cell} | {reason_cell} |")
+            report_content.append("")
 
     report_content.append("")
 
-    # --- 7. Sources --- (Embedded details)
-    report_content.append("## 7. Sources")
-    if not report.claims_breakdown:
-         report_content.append("No claims were analyzed, so no specific sources are listed.")
-    else:
-        for i, claim in enumerate(report.claims_breakdown):
-            # Get evidence
-            claim_evidence = []
-            if claim.verification_result and isinstance(claim.verification_result, dict):
-                claim_evidence = claim.verification_result.get("sources", [])
-            if not claim_evidence and isinstance(claim.evidence, list):
-                claim_evidence = claim.evidence
+    # --- 7. Sources --- (Embedded details; skippable for combined-report appendix)
+    if not omit_sources:
+        report_content.extend(_build_sources_section_lines(report))
 
-            # Generate source content
-            source_html = "<ul>"
-            if not claim_evidence:
-                source_html += "<li>No evidence sources were provided for this claim.</li>"
-            else:
-                for src_idx, source in enumerate(claim_evidence):
-                    url = ''
-                    title = ''
-                    text = ''
-                    
-                    if isinstance(source, str):
-                        url = source
-                        title = source
-                    elif isinstance(source, dict):
-                        url = source.get('url', '')
-                        title = source.get('title', source.get('source_name', url or 'Source Detail'))
-                        text = source.get('text', source.get('snippet', ''))
-                    else:
-                        url = getattr(source, 'url', '') or ''
-                        title = getattr(source, 'title', '') or getattr(source, 'source_name', '') or url or 'Source Detail'
-                        text = getattr(source, 'text', '') or getattr(source, 'snippet', '') or ''
-
-                    if url:
-                        item = f'<a href="{url}" target="_blank">{title}</a>'
-                    else:
-                        item = f'{title}'
-                    
-                    if text:
-                        item += f'<br><em>{text}</em>'
-                    
-                    source_html += f"<li>{item}</li>"
-            source_html += "</ul>"
-
-            # Inline styles for better accordion appearance
-            details_style = "border: 1px solid #e1e4e8; border-radius: 6px; padding: 0; margin-bottom: 16px; background-color: #fff;"
-            summary_style = "cursor: pointer; padding: 12px 16px; background-color: #f6f8fa; border-radius: 6px; font-weight: 600; outline: none; list-style: none;"
-            content_style = "padding: 16px; border-top: 1px solid #e1e4e8;"
-            
-            report_content.append(f"""
-<details id="sources-for-claim-{i+1}" style="{details_style}">
-<summary style="{summary_style}">▶ Claim {i+1} Sources <span style="font-weight: normal; color: #586069;">({claim.timestamp})</span></summary>
-<div style="{content_style}">
-<p><strong>Claim:</strong> {claim.claim_text}</p>
-{source_html}
-</div>
-</details>
-""")
-
-    report_content.append("")
-
-    # --- 8. Counter-Intelligence Analysis --- (SHERLOCK ENHANCED - Embedded)
+    # --- 8. Counter-Intelligence Analysis (narrative; no view counts or tallies) ---
     report_content.append("## 8. Counter-Intelligence Analysis")
-    
-    # 🎯 SHERLOCK: Enhanced counter-intelligence data extraction
-    youtube_counter_intel = getattr(report, 'youtube_counter_intelligence', [])
-    press_release_counter = getattr(report, 'press_release_counter_intelligence', [])
-    
-    # Also check claims for counter-intelligence evidence and get enhanced statistics
-    claims = getattr(report, 'claims_breakdown', [])
+
+    youtube_counter_intel = getattr(report, "youtube_counter_intelligence", []) or []
+    press_release_counter = getattr(report, "press_release_counter_intelligence", []) or []
+    claims = getattr(report, "claims_breakdown", []) or []
+
     youtube_evidence_count = 0
     press_release_evidence_count = 0
-    youtube_total_views = 0
-    high_credibility_youtube = 0
-    
     for claim in claims:
-        if hasattr(claim, 'explanation') and claim.explanation:
+        if hasattr(claim, "explanation") and claim.explanation:
             explanation_text = str(claim.explanation).lower()
-            if 'youtube counter-intelligence' in explanation_text or 'youtube counter' in explanation_text:
+            if "youtube counter-intelligence" in explanation_text or "youtube counter" in explanation_text:
                 youtube_evidence_count += 1
-            if 'press release' in explanation_text or 'press release counter' in explanation_text:
+            if "press release" in explanation_text or "press release counter" in explanation_text:
                 press_release_evidence_count += 1
-    
-    # Extract YouTube statistics for analysis summary
-    youtube_total_views = 0
-    high_credibility_youtube = 0
-    total_yt = len(youtube_counter_intel)
-    total_pr = len(press_release_counter)
-    
-    for video in youtube_counter_intel:
-        if isinstance(video, dict):
-            view_count = video.get('view_count', 0) or video.get('detailed_stats', {}).get('view_count', 0)
-            youtube_total_views += view_count
-            if view_count > 10000:
-                high_credibility_youtube += 1
-    
+
     if youtube_counter_intel or press_release_counter or youtube_evidence_count > 0 or press_release_evidence_count > 0:
-        # 🎯 DEMO: Analysis Summary section
         report_content.append("### Analysis Summary")
         report_content.append("")
-        
-        if total_yt > 0:
-            avg_views = youtube_total_views // max(total_yt, 1) if youtube_total_views > 0 else 0
-            counter_strong = high_credibility_youtube
-            counter_limited = total_yt - high_credibility_youtube
-            
-            summary_text = f"**YouTube Counter-Intelligence**: {total_yt} independent YouTube videos were analyzed"
-            if counter_strong > 0 and counter_limited > 0:
-                summary_text += f", with {counter_strong} providing strong counter-evidence and {counter_limited} offering limited supporting evidence"
-            elif counter_strong > 0:
-                summary_text += f", with {counter_strong} providing strong counter-evidence"
-            
-            if avg_views > 0:
-                summary_text += f". Counter-intelligence videos had an average view count of {avg_views:,}"
-            
-            if counter_strong >= total_yt * 0.7:  # 70% or more negative
-                summary_text += " and consistently identified the content as misleading or fraudulent"
-            
-            summary_text += "."
-            report_content.append(summary_text)
+        ci_summary = cm.get("counter_intelligence_summary") or ""
+        if tier == "public":
+            ci_summary = _scrub_public_craap_explanation(ci_summary)
+        report_content.append(ci_summary)
+        report_content.append("")
+
+        if youtube_counter_intel:
+            report_content.append("#### Independent YouTube sources reviewed")
             report_content.append("")
-        
-        if total_pr > 0:
-            pr_summary = f"**Press Release Counter-Intelligence**: {total_pr} press releases were analyzed, "
-            if total_pr == 1:
-                pr_summary += "identified as self-referential promotional content with zero independent validation value."
-            else:
-                pr_summary += "both identified as self-referential promotional content with zero independent validation value."
-            report_content.append(pr_summary)
+            for video in youtube_counter_intel:
+                if not isinstance(video, dict):
+                    continue
+                title = video.get("title", "Video")
+                url = video.get("url", "")
+                if not url or not is_safe_url(url):
+                    continue
+                channel = video.get("channel_title", video.get("channel", ""))
+                ch = f" — *{_esc(channel)}*" if channel else ""
+                report_content.append(f"- [{_esc(title)}]({url}){ch}")
             report_content.append("")
-        
-        # Embed the details tables directly
-        
-        # YouTube Details
-        if total_yt > 0:
+
             yt_rows = ""
-            for i, video in enumerate(youtube_counter_intel):
+            for video in youtube_counter_intel:
                 if isinstance(video, dict):
-                    title = video.get('title', 'Unknown')
-                    url = video.get('url', '#')
-                    views = video.get('view_count', 0) or video.get('detailed_stats', {}).get('view_count', 0)
-                    channel = video.get('channel_title', video.get('channel', 'Unknown'))
-                    yt_rows += f"<tr><td><a href='{url}' target='_blank'>{title}</a></td><td>{channel}</td><td>{views:,}</td></tr>"
-            
+                    title = video.get("title", "Unknown")
+                    url = video.get("url", "")
+                    if not url or not is_safe_url(url):
+                        continue
+                    channel = video.get("channel_title", video.get("channel", "Unknown"))
+                    yt_rows += (
+                        f"<tr><td>{_safe_source_link(url, title)}</td>"
+                        f"<td>{_esc(channel)}</td></tr>"
+                    )
+
             if yt_rows:
-                # Inline styles for better accordion appearance
                 details_style = "border: 1px solid #e1e4e8; border-radius: 6px; padding: 0; margin-bottom: 16px; background-color: #fff;"
                 summary_style = "cursor: pointer; padding: 12px 16px; background-color: #f6f8fa; border-radius: 6px; font-weight: 600; outline: none; list-style: none;"
                 content_style = "padding: 16px; border-top: 1px solid #e1e4e8;"
-
                 report_content.append(f"""
 <details style="{details_style}">
-<summary style="{summary_style}">▶ YouTube Counter-Intelligence Details ({total_yt} Videos)</summary>
+<summary style="{summary_style}">▶ YouTube Counter-Intelligence — Details</summary>
 <div style="{content_style}">
 <table>
-<thead><tr><th>Video</th><th>Channel</th><th>Views</th></tr></thead>
+<thead><tr><th>Video</th><th>Channel</th></tr></thead>
 <tbody>
 {yt_rows}
 </tbody>
@@ -1284,25 +1120,39 @@ def generate_main_report_content(report: VerityReport) -> str:
 </details>
 """)
 
-        # Press Release Details
-        if total_pr > 0:
+        if press_release_counter:
+            report_content.append("#### Promotional or press-style documents reviewed")
+            report_content.append("")
+            for pr in press_release_counter:
+                if not isinstance(pr, dict):
+                    continue
+                title = pr.get("title", "Document")
+                url = pr.get("url", "")
+                if not url or not is_safe_url(url):
+                    continue
+                report_content.append(f"- [{_esc(title)}]({url})")
+            report_content.append("")
+
             pr_rows = ""
-            for i, pr in enumerate(press_release_counter):
+            for pr in press_release_counter:
                 if isinstance(pr, dict):
-                    title = pr.get('title', 'Unknown')
-                    url = pr.get('url', '#')
-                    source = pr.get('source', 'Unknown')
-                    pr_rows += f"<tr><td><a href='{url}' target='_blank'>{title}</a></td><td>{source}</td></tr>"
-            
+                    title = pr.get("title", "Unknown")
+                    url = pr.get("url", "")
+                    if not url or not is_safe_url(url):
+                        continue
+                    source = pr.get("source", "Unknown")
+                    pr_rows += (
+                        f"<tr><td>{_safe_source_link(url, title)}</td>"
+                        f"<td>{_esc(source)}</td></tr>"
+                    )
+
             if pr_rows:
-                # Reuse styles
                 details_style = "border: 1px solid #e1e4e8; border-radius: 6px; padding: 0; margin-bottom: 16px; background-color: #fff;"
                 summary_style = "cursor: pointer; padding: 12px 16px; background-color: #f6f8fa; border-radius: 6px; font-weight: 600; outline: none; list-style: none;"
                 content_style = "padding: 16px; border-top: 1px solid #e1e4e8;"
-
                 report_content.append(f"""
 <details style="{details_style}">
-<summary style="{summary_style}">▶ Press Release Counter-Intelligence Details ({total_pr} Releases)</summary>
+<summary style="{summary_style}">▶ Press Release Counter-Intelligence — Details</summary>
 <div style="{content_style}">
 <table>
 <thead><tr><th>Title</th><th>Source</th></tr></thead>
@@ -1316,6 +1166,40 @@ def generate_main_report_content(report: VerityReport) -> str:
 
     else:
         report_content.append("No counter-intelligence analysis data was available for this report.")
+        report_content.append("")
+
+    # --- AI & Authenticity Assessment ---
+    report_content.append("## 8.5 AI & Authenticity Assessment")
+    report_content.append("")
+    metadata = getattr(report, "metadata", None) or {}
+    ai_disclosure = metadata.get("ai_disclosure", False)
+    ai_indicators_detected = metadata.get("ai_indicators_detected", False)
+    ai_indicators = metadata.get("ai_indicators", []) or []
+    if ai_disclosure:
+        report_content.append("**Platform AI disclosure**: This content is labeled by the platform as altered or synthetic.")
+        report_content.append("")
+    if ai_indicators_detected and ai_indicators:
+        report_content.append("**AI artifacts observed**: " + "; ".join(str(x) for x in ai_indicators[:15]))
+        report_content.append("")
+    if not ai_disclosure and not ai_indicators_detected:
+        report_content.append("No AI indicators were detected for this video.")
+        report_content.append("")
+
+    # Unverifiable Authority (credential red flags)
+    credential_red_flag_claims = []
+    for c in getattr(report, "claims_breakdown", []) or []:
+        vr = getattr(c, "verification_result", None)
+        if isinstance(vr, dict) and vr.get("credential_red_flag"):
+            text = getattr(c, "claim_text", None) or (c.get("claim_text", "") if isinstance(c, dict) else "") or ""
+            speaker = (getattr(c, "speaker", None) or "") or ""
+            credential_red_flag_claims.append((speaker or "Unknown", text[:120] + ("..." if len(text) > 120 else "")))
+    if credential_red_flag_claims:
+        report_content.append("### Unverifiable Authority")
+        report_content.append("")
+        report_content.append("The following claims involve speakers who present as Dr./medical authorities but **could not be verified** in professional registries (e.g. healthgrades.com, doximity.com, or official .gov listings). This is a significant red flag for credibility.")
+        report_content.append("")
+        for speaker, snippet in credential_red_flag_claims:
+            report_content.append(f"- **{speaker}**: \"{snippet}\"")
         report_content.append("")
 
     # --- 9. CRAAP Analysis --- (Renumbered)
@@ -1333,8 +1217,12 @@ def generate_main_report_content(report: VerityReport) -> str:
                   explanation = analysis_data.get('explanation', 'N/A')
 
              criterion_cell = str(criterion or "N/A").capitalize().replace("|", "\\|").replace("\n", "<br>")
-             level_cell = str(level or "N/A").replace("|", "\\|").replace("\n", "<br>")
-             explanation_cell = str(explanation or "N/A").replace("|", "\\|").replace("\n", "<br>")
+             level_str = level.value if hasattr(level, "value") else (level or "N/A")
+             level_cell = str(level_str).replace("|", "\\|").replace("\n", "<br>")
+             raw_explanation = str(explanation or "N/A")
+             if tier == "public":
+                 raw_explanation = _scrub_public_craap_explanation(raw_explanation)
+             explanation_cell = raw_explanation.replace("|", "\\|").replace("\n", "<br>")
              report_content.append(f"| {criterion_cell} | {level_cell} | {explanation_cell} |")
     else:
          report_content.append("CRAAP analysis data is not available or in the expected format for this report.")
@@ -1342,7 +1230,7 @@ def generate_main_report_content(report: VerityReport) -> str:
     report_content.append("")
 
     # --- 9. Recommendations --- (Renumbered)
-    report_content.append("## 9. Recommendations")
+    report_content.append("## 10. Recommendations")
     
     # Handle both dictionary and object access patterns
     recommendations = None
@@ -1358,15 +1246,61 @@ def generate_main_report_content(report: VerityReport) -> str:
             report_content.append(f"{i}. {rec_text}")
         report_content.append("")
     else:
-        # Provide default recommendations based on truthfulness assessment
+        # Synthesize recommendations from verified claim verdicts when none provided
+        claims_breakdown = getattr(report, "claims_breakdown", None) or (report.get("claims_breakdown") if isinstance(report, dict) else None)
+        synthesized = []
+        if claims_breakdown:
+            any_false_leaning = False
+            any_uncertain = False
+            for c in claims_breakdown:
+                vr = getattr(c, "verification_result", None) if not isinstance(c, dict) else c.get("verification_result")
+                if not vr:
+                    continue
+                res = (getattr(vr, "result", None) or (vr.get("result") if isinstance(vr, dict) else "")) or ""
+                res = str(res).upper()
+                if res in ("LIKELY_FALSE", "HIGHLY_LIKELY_FALSE"):
+                    any_false_leaning = True
+                elif res == "UNCERTAIN":
+                    any_uncertain = True
+            if any_false_leaning:
+                synthesized.append(
+                    "Several statements in this video were rated likely or highly likely false under editorial review — "
+                    "cross-check key statistics and study citations with primary sources (e.g. published studies, official health bodies)."
+                )
+            if any_uncertain:
+                synthesized.append(
+                    "Some statements could not be sufficiently verified — seek independent expert or fact-checker coverage before relying on them."
+                )
+            synthesized.append("Verify information from reputable sources before making decisions.")
+            synthesized.append("Be cautious of claims that seem too good to be true.")
+            synthesized.append("Cross-reference information with multiple independent sources.")
+        else:
+            synthesized = [
+                "Verify information from reputable sources before making decisions",
+                "Consult experts in the field for professional advice",
+                "Be cautious of claims that seem too good to be true",
+                "Cross-reference information with multiple independent sources",
+            ]
         report_content.append("")
-        report_content.append("1. Verify information from reputable sources before making decisions")
-        report_content.append("2. Consult experts in the field for professional advice")  
-        report_content.append("3. Be cautious of claims that seem too good to be true")
-        report_content.append("4. Cross-reference information with multiple independent sources")
+        for i, rec in enumerate(synthesized[:5], 1):
+            rec_text = str(rec or "N/A").replace("|", "\\|").replace("\n", "<br>")
+            report_content.append(f"{i}. {rec_text}")
         report_content.append("")
 
     # NOTE: Removed end-of-report redundant evidence and verdict sections per product request.
+
+    # Reporting Guidance when content may warrant reporting (e.g. high PR count, scam indicators)
+    pr_count = getattr(report, "press_release_count", 0)
+    metadata = getattr(report, "metadata", None) or {}
+    ai_disclosure = metadata.get("ai_disclosure", False)
+    ai_indicators = metadata.get("ai_indicators_detected", False)
+    if pr_count > 2 or ai_disclosure or ai_indicators:
+        report_content.append("## How to Report This Content")
+        report_content.append("")
+        report_content.append("- **FTC** (false advertising, unsubstantiated health claims): https://reportfraud.ftc.gov/")
+        report_content.append("- **FDA** (unapproved medical products): https://www.fda.gov/safety/report-problem-fda/reporting-unlawful-sales-medical-products-internet")
+        report_content.append("- **YouTube**: Use the Report button on the video (e.g. Medical misinformation).")
+        report_content.append("")
 
     # Join all parts with single newlines
     return "\n".join(report_content)
