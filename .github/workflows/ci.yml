@@ -118,6 +118,19 @@ jobs:
           conda activate verityngn
           python test/unit/test_imports.py
 
+      - name: Open-core boundary scrub
+        shell: bash -l {0}
+        run: |
+          conda activate verityngn
+          python scripts/ci/open_core_boundary_scan.py
+
+      - name: Unit tests (engine boundary + deep research)
+        shell: bash -l {0}
+        run: |
+          conda activate verityngn
+          pip install -e ".[dev]" --quiet
+          python -m pytest test/unit/test_deepresearch.py test/unit/test_authenticity_and_vision.py tests/test_cli_and_boundary.py -q
+
   secret-scan:
     name: Secret scan (regex)
     runs-on: ubuntu-latest
@@ -130,5 +143,16 @@ jobs:
       - name: Scan for secrets
         run: |
           python scripts/ci/secret_scan.py
+
+  open-core-boundary:
+    name: Open-core boundary (no predictions/quant)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Boundary scrub
+        run: python scripts/ci/open_core_boundary_scan.py
 
 

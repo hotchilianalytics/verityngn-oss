@@ -2,8 +2,10 @@
 
 **Authors:** VerityNgn Research Team  
 **Affiliation:** VerityNgn Open Source Project  
-**Date:** October 28, 2025  
-**Version:** 2.0
+**Date:** August 29, 2026  
+**Version:** 3.0.0
+
+> **Release note (v3.0.0):** Deep Research, optional authenticity/spectral cues, and MediaPipe Face Landmarker are now part of the Apache OSS engine. Predictions and RiskFactor remain closed overlays. See companion release paper [`verityngn_oss_v3_release.md`](verityngn_oss_v3_release.md) and figures in [`figures/`](figures/).
 
 ---
 

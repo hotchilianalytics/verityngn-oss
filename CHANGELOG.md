@@ -5,6 +5,27 @@ All notable changes to VerityNgn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-08-29
+
+### Added
+- **Deep Research in OSS**: full `client` / `pipeline` / `renderer` + `dr_prompt_v1` (previously commercial-only)
+- **CLI `--deep` / `--deep-only`**: grounded forensic pass after standard report
+- **Authenticity gate** + stub adapters (C2PA / Corsound / visual) for optional media provenance
+- **Spectral AI-voice cues** (`services/video/ai_detection.py`, optional `librosa`)
+- **MediaPipe Face Landmarker** adapter (`services/vision/`, optional extra)
+- **Open-core docs**: `docs/OPEN_CORE.md`, `docs/DEPENDENCY_MODEL.md`
+- **Boundary tests**: fail CI if predictions/quant/Karp paths appear under `verityngn/`
+- **Release paper refresh** for v3 public announcement
+
+### Changed
+- Package version reconciled to **3.0.0** (was pyproject `0.3.0` vs historic tags)
+- Open-core boundary: Deep Research is OSS; predictions and riskfactor stay closed overlays
+- Commercial/predictions/riskfactor expected to **depend on OSS ≥3.0.0**
+
+### Security
+- Tightened `.gitignore` for analysis dumps and local noise
+- SECURITY.md supported versions updated for 3.0.x
+
 ## [2.1.0] - 2025-11-12
 
 ### Added
@@ -27,40 +48,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Gallery KeyError**: Fixed missing `youtube_url` and `submitted_at` field errors
 - **Permission Errors**: Fixed Streamlit Cloud filesystem permission issues
 - **Excessive Polling**: Reduced API load by 60-75% through exponential backoff
-
-### Security
-- Enhanced error handling prevents information leakage in cloud environments
-
-## [2.0.0] - 2025-10-28
-
-### Added
-- Intelligent video segmentation (86% reduction in API calls)
-- Enhanced multi-pass claim extraction with specificity scoring
-- Absence claim generation
-- Refined counter-intelligence weighting
-
-### Changed
-- Processing speed: 6-7x faster for typical videos
-- Context window utilization: 3% → 58% (19x improvement)
-
----
-
-## Migration Guide
-
-### For Users Upgrading to v2.1.0
-
-**Test Files:**
-- Old location: `test_*.py` in root directory
-- New location: `test/{unit,integration,debug}/*.py`
-- **Action**: Update any scripts that reference test files
-
-**Documentation:**
-- Development notes: Now in `docs/cursor_dev/`
-- Deployment guides: Now in `docs/deployment/`
-- **Action**: Update bookmarks and links
-
-**No Breaking Changes:**
-- API endpoints remain unchanged
-- Report formats remain unchanged
-- Configuration files remain unchanged
-

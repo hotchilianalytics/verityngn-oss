@@ -1,10 +1,16 @@
 """
-Counter-intelligence sanitizer for report JSON (OSS).
+Counter-intelligence sanitizer for the Deep Research pass.
 
-Strips self-referential evidence and unsafe citation URLs.
+Ported faithfully from the vetted ``platinum_pipeline.py`` ``sanitize_data``:
+strip self-referential evidence so the model never cites the subject's own
+PR/marketing as independent "proof". Operates on a deep copy; the original
+``{video_id}_report.json`` is never mutated.
+
+Also strips unsafe citation URLs so the grounded model cannot re-cite them.
 """
 from __future__ import annotations
 
+import copy
 import logging
 from typing import Any, Dict
 
@@ -17,6 +23,17 @@ logger = logging.getLogger(__name__)
 
 
 def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Apply the counter-intelligence filter and URL safety filter.
+
+    For every claim in ``claims_breakdown``, keep only evidence items whose
+    ``self_referential`` flag is explicitly ``False``. Items missing the flag,
+    or with a truthy/self-referential flag, are dropped.
+
+    Unsafe citation URLs are removed from sources lists and prose fields.
+
+    Returns a sanitized deep copy suitable for ``1_sanitized_input.json``.
+    """
     if not isinstance(raw_data, dict):
         raise TypeError(f"sanitize_report_data expects a dict, got {type(raw_data)!r}")
 
@@ -46,7 +63,7 @@ def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
             verification["evidence"] = sanitize_url_list_in_text(evidence_list)
 
     logger.info(
-        "counter-intel sanitize: kept=%d dropped=%d self-referential evidence items",
+        "[deep-research] counter-intel sanitize: kept=%d dropped=%d self-referential evidence items",
         kept,
         dropped,
     )
@@ -54,5 +71,6 @@ def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def count_claims(raw_data: Dict[str, Any]) -> int:
+    """Number of claims in the report (used by the min-claims cost guard)."""
     claims = (raw_data or {}).get("claims_breakdown", [])
     return len(claims) if isinstance(claims, list) else 0

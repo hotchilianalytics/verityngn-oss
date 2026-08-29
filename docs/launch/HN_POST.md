@@ -1,81 +1,37 @@
-# Hacker News "Show HN" Post
+# Hacker News "Show HN" Post — VerityNgn OSS 3.0
 
 ## Title
 
 ```
-Show HN: VerityNgn – Open-source AI that fact-checks YouTube videos with counter-intelligence
+Show HN: VerityNgn 3.0 – open-source multimodal video fact-checking with Deep Research
 ```
 
-## Body (Copy/paste this)
+## Body
 
 ---
 
-I built an open-source system that generates truthfulness reports for YouTube videos using multimodal AI and a counter-intelligence approach.
+I just shipped **VerityNgn OSS 3.0.0** — a standalone Apache-2.0 engine that turns a YouTube URL (or local video file) into a claim-level truthfulness report, now including the **Deep Research** grounded forensic pass that used to live only on our commercial fork.
 
-**Live demo:** https://verityngn.streamlit.app  
-**Repo:** https://github.com/hotchilianalytics/verityngn-oss
-**Substack Article:** https://ajjcop.substack.com/p/i-built-an-ai-that-fact-checks-youtube
-### The Problem
+**Install:** `pip install verityngn`  
+**CLI:** `verityngn analyze <url>` · `verityngn analyze <url> --deep` · `verityngn analyze --file clip.mp4`  
+**Repo:** https://github.com/hotchilianalytics/verityngn-oss  
+**Demo:** https://verityngn.streamlit.app  
+**Paper:** `papers/verityngn_oss_v3_release.md` (+ charts)
 
-Existing fact-checking tools only analyze text transcripts. They miss on-screen graphics, visual demonstrations, and the multimodal nature of video. Worse, when you search for evidence, you often get promotional press releases that *confirm* false claims because the misinformation ecosystem is SEO-optimized.
+### What it does
 
-### How VerityNgn Works
+1. Multimodal claim extraction (Gemini) over video frames + transcript  
+2. Counter-intelligence: seeks contradictory YouTube reviews and press-release bias  
+3. THREE-state probabilities (TRUE / FALSE / UNCERTAIN), not binary slogans  
+4. Optional Deep Research: grounded Gemini summary with citation audit trail  
+5. Optional authenticity stubs + spectral voice cues + MediaPipe Face Landmarker  
 
-1. **Multimodal analysis**: Uses Gemini 2.5 Flash (1M token context) to analyze video frames at 1 FPS — audio, OCR, visuals, and transcript together
-2. **Enhanced claim extraction**: Multi-pass extraction with specificity scoring (0-100), filters out vague claims
-3. **Counter-intelligence**: Actively searches for contradictory evidence — YouTube review videos from independent creators, press release detection (94% precision)
-4. **Probabilistic output**: THREE-state distribution (TRUE/FALSE/UNCERTAIN) with calibrated confidence, not binary verdicts
+### Open-core boundary (honest)
 
-### Results (200-claim test set)
+Hosted multi-tenant SaaS, **predictions**, and **RiskFactor** products stay closed and are expected to **depend on this OSS base**. This release does **not** include earnings prediction, allocation factors, or “lie detection.”
 
-- 75% accuracy vs. ground truth (95% CI: 61-85%)
-- +18% improvement from counter-intel on misleading content
-- Well-calibrated (Brier score = 0.12, ECE = 0.04)
-- Cost: $0.50–$2.00 per video
+### Ask
 
-### Tech Stack
-
-- Python 3.12, Gemini 2.5 Flash via Vertex AI
-- LangChain/LangGraph for orchestration
-- Streamlit UI, Cloud Run backend
-- yt-dlp for video download
-- Google Custom Search + YouTube Data API
-
-### Honest Limitations
-
-- English only
-- YouTube only (no TikTok/Instagram yet)
-- ~25% error rate (75% accuracy means 25% wrong)
-- Susceptible to coordinated fake review campaigns
-- No human-in-the-loop
-
-### Why Open Source
-
-Misinformation is too important to solve behind closed doors. The methodology needs to be transparent and auditable. Full research papers with step-by-step calculations are in the `papers/` directory.
-
-Looking for feedback on the approach and contributions (especially: multi-language support, additional platforms, expanded evidence sources).
+Stars, issues, and PRs welcome. Especially useful: hard negative examples and report-quality diffs vs human review.
 
 ---
-
-## Submission URL
-
-Submit to: https://news.ycombinator.com/submit
-
-- **Title**: Show HN: VerityNgn – Open-source AI that fact-checks YouTube videos with counter-intelligence
-- **URL**: https://github.com/hotchilianalytics/verityngn-oss
-- **Text**: (paste the body above)
-
-## Best Posting Times for HN
-
-- **Optimal**: Tuesday-Thursday, 9-11 AM ET (6-8 AM PT)
-- **Avoid**: Weekends, late evenings
-
-## Tips for HN Success
-
-1. Be in the first comment with additional context
-2. Respond quickly to questions
-3. Be honest about limitations (builds trust)
-4. Engage thoughtfully with criticism
-5. Don't ask for upvotes
-
-

@@ -107,9 +107,20 @@ tmp_container/
 test_downloads/
 test_service_downloads/
 
-# Sherlock analysis outputs
+# Sherlock analysis outputs / local dumps (never ship)
 sherlock_analysis_*/
 sb_local_analysis_*/
+.agent/
+.outputs/
+.outputs_debug/
+.downloads/
+hotchili_website/
+*.mp4
+*.webm
+*.wav
+*.mp3
+checkpoints/
+RiskFactor_*/
 
 # Complete markers and intermediate files
 *.complete_markers

@@ -7,7 +7,20 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Research](https://img.shields.io/badge/status-research-yellow.svg)]()
 
-> **Note:** This is a research project in active development. It is currently in soft launch for the academic and technical community.
+> **Note:** VerityNgn OSS **3.0.0** is the canonical public engine release (Deep Research included). Research-grade; commercial SaaS and predictions/RiskFactor are separate overlays.
+
+---
+
+## Quick start (v3)
+
+```bash
+pip install 'verityngn[deep]'
+verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
+verityngn analyze --file /path/to/video.mp4 --title "Local clip"
+```
+
+Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Release paper: [`papers/verityngn_oss_v3_release.md`](papers/verityngn_oss_v3_release.md)
 
 ---
 

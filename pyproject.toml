@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "verityngn"
-version = "0.3.0"
-description = "Open-source multimodal YouTube video claim verification engine"
+version = "3.0.0"
+description = "Open-source multimodal video claim verification engine with Deep Research"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 authors = [{ name = "HotChili Analytics, LLC" }]
-keywords = ["fact-checking", "youtube", "verification", "osint", "multimodal"]
+keywords = ["fact-checking", "youtube", "verification", "osint", "multimodal", "deep-research"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -34,13 +34,30 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0.0"]
+deep = ["google-genai>=1.0.0"]
+vision = ["mediapipe==0.10.18", "opencv-python-headless>=4.8.0"]
+audio = ["librosa>=0.10.0", "soundfile>=0.12.0", "numpy>=1.24.0"]
+all = ["verityngn[deep,vision,audio]"]
 
 [project.scripts]
 verityngn = "verityngn.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/hotchilianalytics/verityngn-oss"
+Documentation = "https://hotchilianalyticsllc.mintlify.app"
+Issues = "https://github.com/hotchilianalytics/verityngn-oss/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["verityngn*"]
 
 [tool.setuptools.package-data]
-verityngn = ["config/*.yaml", "config/*.json"]
+verityngn = [
+    "config/*.yaml",
+    "config/*.json",
+    "services/deepresearch/prompts/*.md",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test", "tests"]
+python_files = ["test_*.py"]

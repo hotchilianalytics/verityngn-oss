@@ -20,7 +20,11 @@ langchain>=0.3.17
 langchain-openai>=0.2.8
 langchain-anthropic>=0.2.4
 langchain-google-genai>=2.0.5
+google-genai>=1.0.0
 langgraph>=0.2.50
+# Optional authenticity / vision extras (also via pip install 'verityngn[vision,audio]')
+# librosa>=0.10.0
+# mediapipe==0.10.18
 
 # Storage and cloud
 google-cloud-storage>=2.18.0

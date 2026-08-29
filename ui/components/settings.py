@@ -200,6 +200,13 @@ def render_settings_tab():
         st.subheader("📊 Processing Configuration")
         
         st.markdown("Configure how videos are processed and analyzed.")
+
+        enable_deep_research = st.checkbox(
+            "Run Deep Research after standard report",
+            value=bool(st.session_state.config.get("deep_research.enabled", False)),
+            help="Grounded Gemini forensic pass (requires VERITY_GEMINI_KEY or Vertex). Same as CLI --deep.",
+        )
+        st.session_state.config["deep_research.enabled"] = enable_deep_research
         
         col_p1, col_p2 = st.columns(2)
         

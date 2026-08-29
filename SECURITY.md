@@ -4,9 +4,11 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 3.0.x   | :white_check_mark: |
+| 2.1.x   | :white_check_mark: (security fixes only) |
+| < 2.1   | :x: |
 
-**Note:** VerityNgn is currently in soft launch (v0.1.x alpha). Security updates will be released as needed.
+**Note:** VerityNgn OSS 3.0.0 is the canonical public engine release. Report vulnerabilities privately (see below).
 
 ---
 
