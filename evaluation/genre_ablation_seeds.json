@@ -1,0 +1,118 @@
+{
+  "trial_id": "T-ABL-006",
+  "description": "Genre-appropriate multimodal validation — NOT Lipozem-class VSL",
+  "gate": {
+    "visual_only_multimodal_share_min": 0.25,
+    "human_rubric_miss_on_transcript_min": 0.6,
+    "min_seeds_passing": 2,
+    "seed_count": 3
+  },
+  "seeds": [
+    {
+      "id": "G1_earnings_slide",
+      "genre": "earnings",
+      "genre_hint": "earnings",
+      "notes": "Visa quarterly earnings analysis with on-screen charts/disclaimers; digits and legal supers often unspoken",
+      "video_id": "p9nBtboU9KM",
+      "url": "https://www.youtube.com/watch?v=p9nBtboU9KM",
+      "title": "Visa Had the Best Quarterly Report Ever! | VISA Stock Analysis | Visa Earnings",
+      "channel": "Everything Money",
+      "duration_sec": 796,
+      "caption_source": "yt-dlp",
+      "sherlock_gates": {
+        "G-DUR": "PASS",
+        "G-SRC": "WEAK",
+        "G-CAP": "PASS",
+        "G-VIS": "PASS",
+        "G-NEW": "PASS"
+      },
+      "ablation": {
+        "visual_only_multimodal_share": 0.3333,
+        "sleeve_validated": true,
+        "decision_hint": "multimodal_adds_unique"
+      },
+      "status": "locked"
+    },
+    {
+      "id": "G2_ugc_supers",
+      "genre": "ad",
+      "genre_hint": "ad",
+      "notes": "Finfluencer stock-analysis walkthrough with on-screen charts/tickers (UGC-supers proxy). Primary AG1 review fizFbIQcvBA under-tagged visual modality (share 0.08).",
+      "video_id": "Exj5iK_K0Kk",
+      "url": "https://www.youtube.com/watch?v=Exj5iK_K0Kk",
+      "title": "5-Minute Stock Analysis for Beginners | How to Analyze Any Stock",
+      "channel": "Let's Talk Money! with Joseph Hogue, CFA",
+      "duration_sec": 755,
+      "caption_source": "cached_vtt",
+      "sherlock_gates": {
+        "G-DUR": "PASS",
+        "G-SRC": "PASS",
+        "G-CAP": "PASS",
+        "G-VIS": "PASS",
+        "G-NEW": "PASS"
+      },
+      "ablation": {
+        "visual_only_multimodal_share": 0.1714,
+        "sleeve_validated": false,
+        "decision_hint": "multimodal_adds_unique"
+      },
+      "status": "locked"
+    },
+    {
+      "id": "G3_deposition_exhibit",
+      "genre": "legal",
+      "genre_hint": "deposition",
+      "notes": "Jack Smith hearing exchange; on-screen 'enemies list' graphics / chyrons",
+      "video_id": "2RkQ7mGWMAA",
+      "url": "https://www.youtube.com/watch?v=2RkQ7mGWMAA",
+      "title": "Raskin, Issa trade blows in fiery exchange at Jack Smith hearing",
+      "channel": "The Economic Times",
+      "duration_sec": 605,
+      "caption_source": "yt-dlp",
+      "sherlock_gates": {
+        "G-DUR": "PASS",
+        "G-SRC": "PASS",
+        "G-CAP": "PASS",
+        "G-VIS": "WEAK",
+        "G-NEW": "PASS"
+      },
+      "ablation": {
+        "visual_only_multimodal_share": 0.2,
+        "sleeve_validated": false,
+        "decision_hint": "multimodal_adds_unique"
+      },
+      "status": "locked"
+    }
+  ],
+  "appendix": [
+    {
+      "id": "appendix_Basler_IR_slides",
+      "video_id": "YJULq4e2pZE",
+      "url": "https://www.youtube.com/watch?v=YJULq4e2pZE",
+      "duration_sec": 894,
+      "notes": "Official Basler AG Q1 2020 slide deck; no English captions; visual_share 0.2619 but TX empty → insufficient_pair (gate blocked)",
+      "visual_only_multimodal_share": 0.2619,
+      "n_multimodal": 42
+    }
+  ],
+  "do_not_use_as_primary_proof": [
+    {
+      "video_id": "tLJC8hkK-ao",
+      "reason": "50-min talky VSL; claims are spoken; understates visual sleeve"
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "video_id": "fizFbIQcvBA",
+      "reason": "AG1 product review; MM parse fail then retry visual_share 0.081 (spoken-tagged packaging claims)"
+    },
+    {
+      "video_id": "LzExSq9DU9w",
+      "reason": "Alphabet Q2 2026 IR webcast 3718s; no English captions"
+    },
+    {
+      "video_id": "xT26GxS5e-g",
+      "reason": "Scott Carney AG1 debunk — outreach FAIL pattern; not source material"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "source": "https://verityindex.com/gallery",
+  "scraped_at": "2026-08-29",
+  "engine_note": "Public gallery cards on verityindex.com (OSS/engine reports surfaced in gallery)",
+  "n_reports": 12,
+  "total_claims": 427,
+  "label_counts": {
+    "Likely to be True": 6,
+    "Mixed Truthfulness": 6
+  },
+  "reports": [
+    {
+      "label": "Likely to be True",
+      "claims": 40,
+      "video_id": "tSdWpsj1Cyo",
+      "thumbnail": "https://img.youtube.com/vi/tSdWpsj1Cyo/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=tSdWpsj1Cyo"
+    },
+    {
+      "label": "Mixed Truthfulness",
+      "claims": 40,
+      "video_id": "7MXE1kDCY-k",
+      "thumbnail": "https://img.youtube.com/vi/7MXE1kDCY-k/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=7MXE1kDCY-k"
+    },
+    {
+      "label": "Likely to be True",
+      "claims": 14,
+      "video_id": "cBtOIRV4uPE",
+      "thumbnail": "https://img.youtube.com/vi/cBtOIRV4uPE/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=cBtOIRV4uPE"
+    },
+    {
+      "label": "Likely to be True",
+      "claims": 15,
+      "video_id": "nvvw0oslqpE",
+      "thumbnail": "https://img.youtube.com/vi/nvvw0oslqpE/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=nvvw0oslqpE"
+    },
+    {
+      "label": "Mixed Truthfulness",
+      "claims": 40,
+      "video_id": "RuinHdlpXvE",
+      "thumbnail": "https://img.youtube.com/vi/RuinHdlpXvE/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=RuinHdlpXvE"
+    },
+    {
+      "label": "Likely to be True",
+      "claims": 40,
+      "video_id": "8QNBS-sadLE",
+      "thumbnail": "https://img.youtube.com/vi/8QNBS-sadLE/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=8QNBS-sadLE"
+    },
+    {
+      "label": "Likely to be True",
+      "claims": 40,
+      "video_id": "tLS6t3FVOTI",
+      "thumbnail": "https://img.youtube.com/vi/tLS6t3FVOTI/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=tLS6t3FVOTI"
+    },
+    {
+      "label": "Mixed Truthfulness",
+      "claims": 38,
+      "video_id": "zrPB5xoamvM",
+      "thumbnail": "https://img.youtube.com/vi/zrPB5xoamvM/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=zrPB5xoamvM"
+    },
+    {
+      "label": "Mixed Truthfulness",
+      "claims": 40,
+      "video_id": "l84V9olZN4A",
+      "thumbnail": "https://img.youtube.com/vi/l84V9olZN4A/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=l84V9olZN4A"
+    },
+    {
+      "label": "Likely to be True",
+      "claims": 40,
+      "video_id": "eWrZQBgpY7I",
+      "thumbnail": "https://img.youtube.com/vi/eWrZQBgpY7I/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=eWrZQBgpY7I"
+    },
+    {
+      "label": "Mixed Truthfulness",
+      "claims": 40,
+      "video_id": "AtoxkK7MeKc",
+      "thumbnail": "https://img.youtube.com/vi/AtoxkK7MeKc/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=AtoxkK7MeKc"
+    },
+    {
+      "label": "Mixed Truthfulness",
+      "claims": 40,
+      "video_id": "id8HGDNXB9g",
+      "thumbnail": "https://img.youtube.com/vi/id8HGDNXB9g/mqdefault.jpg",
+      "gallery_url": "https://verityindex.com/gallery",
+      "youtube_url": "https://youtube.com/watch?v=id8HGDNXB9g"
+    }
+  ]
+}

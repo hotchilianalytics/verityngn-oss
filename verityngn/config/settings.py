@@ -84,6 +84,13 @@ try:
     SEGMENT_FPS = float(os.getenv("SEGMENT_FPS", "1.0"))  # lower than 1 for long/static videos
 except Exception:
     SEGMENT_FPS = 1.0
+# When unset (0), adaptive sampler may override fps per scene class
+SEGMENT_FPS_OVERRIDE = float(os.getenv("SEGMENT_FPS_OVERRIDE", "0") or "0")
+ADAPTIVE_SAMPLING = os.getenv("ADAPTIVE_SAMPLING", "true").lower() in ("true", "1", "t")
+SEGMENT_MEDIA_RESOLUTION = os.getenv(
+    "SEGMENT_MEDIA_RESOLUTION", "MEDIA_RESOLUTION_LOW"
+)  # overridden by adaptive sampler when enabled
+VIDEO_GENRE_HINT = os.getenv("VIDEO_GENRE_HINT", "")  # lecture|ad|deposition|earnings
 try:
     DEFAULT_SEGMENTED_DURATION_SEC = int(os.getenv("DEFAULT_SEGMENTED_DURATION_SEC", "3600"))  # assume 1h if unknown
 except Exception:

@@ -17,6 +17,7 @@ CRITICAL STANDARDS:
 3. Every major deduction or verified metric MUST terminate in a strict citation format: [Reference: <Validated URL>].
 4. If a claim cannot be actively verified through your research tool or the sanitized dataset, you MUST rigidly label it: [Reference: Currently Claim is Unverified].
 5. Zero Tolerance for citation hallucination. Fall back to the unverified placeholder whenever hard data is absent.
+6. When the sanitized dataset includes `visual_only_claims` or claims with `source_type` of visual_text, graphic, chart, or demonstration, LEAD the report with those findings — they exist only because of on-screen video content, not transcript alone.
 
 ## USER_PROMPT_PREFIX
 

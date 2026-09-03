@@ -22,6 +22,10 @@ from verityngn.services.report.category_mappings import (
     _verdict_counts,
     compute_overall_verdict_label,
 )
+from verityngn.services.report.display_labels import (
+    claim_modality_display_label,
+    is_visual_only_claim,
+)
 
 from verityngn.config.settings import OUTPUTS_DIR, COMPARE_DIR, DOWNLOADS_DIR, DEBUG_OUTPUTS
 from verityngn.utils.third_party_logging import configure_third_party_loggers
@@ -763,7 +767,7 @@ def _build_original_executive_summary(report: VerityReport) -> List[str]:
 
 
 def _build_verdict_percentage_table(claims: List[Claim]) -> List[str]:
-    """Overall truthfulness count/percentage table for original reports."""
+    """Overall claim-risk count/percentage table for original reports."""
     total = len(claims)
     if total == 0:
         return ["| Category | Count | Percentage |", "|:---------|:-----:|:----------:|", "| Total Claims | 0 | 100% |", ""]
@@ -859,7 +863,7 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
             report_content.append("")
         report_content.extend(_build_original_executive_summary(report))
         overall_verdict = compute_overall_verdict_label(claims_breakdown_list)
-        report_content.append(f"## 2. Overall Truthfulness Assessment: {overall_verdict}")
+        report_content.append(f"## 2. Overall Claim Risk Assessment: {overall_verdict}")
         report_content.extend(_build_verdict_percentage_table(claims_breakdown_list))
     else:
         notice_block = f"> **Notice:** {llm_notice}\n\n"
@@ -881,8 +885,8 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
         report_content.append(narrative.get("executive_paragraph") or "")
         report_content.append("")
 
-        # --- 2. Overall Truthfulness Assessment ---
-        report_content.append(f"## 2. Overall Truthfulness Assessment: {overall_verdict}")
+        # --- 2. Overall Claim Risk Assessment ---
+        report_content.append(f"## 2. Overall Claim Risk Assessment: {overall_verdict}")
         report_content.append(f"_{disclaimer}_")
         report_content.append("")
         report_content.append(narrative.get("overall_assessment_sentence") or "")
@@ -994,26 +998,38 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
         # --- 6.1 Per-claim detail ---
         report_content.append("### 6.1 Per-Claim Detail")
         report_content.append("")
+        visual_only_n = sum(
+            1
+            for c in claims_breakdown_list
+            if is_visual_only_claim(getattr(c, "source_type", None))
+        )
+        if visual_only_n:
+            report_content.append(
+                f"*Multimodal: **{visual_only_n}** claim(s) sourced from on-screen text, charts, or demos "
+                f"(not spoken in transcript alone).*"
+            )
+            report_content.append("")
         if tier in ("private", "original"):
-            report_content.append("| # | Time | Verdict | Probability | Claim | Sources |")
-            report_content.append("|:--:|:----:|:--------|:------------|:------|:--------|")
+            report_content.append("| # | Time | Modality | Verdict | Probability | Claim | Sources |")
+            report_content.append("|:--:|:----:|:---------|:--------|:------------|:------|:--------|")
         else:
-            report_content.append("| # | Time | Verdict | Claim | Sources |")
-            report_content.append("|:--:|:----:|:--------|:------|:--------|")
+            report_content.append("| # | Time | Modality | Verdict | Claim | Sources |")
+            report_content.append("|:--:|:----:|:---------|:--------|:------|:--------|")
         for orig_idx, claim in enumerate(claims_breakdown_list):
             time_cell = str(claim.timestamp or "-").replace("|", "\\|").replace("\n", " ")
             claim_text_cell = str(claim.claim_text or "N/A").replace("|", "\\|").replace("\n", " ")
             verdict_cell = claim_verdict_display_label(claim).replace("|", "\\|")
+            modality_cell = claim_modality_display_label(getattr(claim, "source_type", None)).replace("|", "\\|")
             source_link = f"[Sources](#sources-for-claim-{orig_idx+1})"
             vr = getattr(claim, "verification_result", None) or {}
             if tier in ("private", "original"):
                 prob_cell = _format_probability_cell(vr if isinstance(vr, dict) else {}).replace("|", "\\|")
                 report_content.append(
-                    f"| {orig_idx + 1} | {time_cell} | {verdict_cell} | {prob_cell} | {claim_text_cell} | {source_link} |"
+                    f"| {orig_idx + 1} | {time_cell} | {modality_cell} | {verdict_cell} | {prob_cell} | {claim_text_cell} | {source_link} |"
                 )
             else:
                 report_content.append(
-                    f"| {orig_idx + 1} | {time_cell} | {verdict_cell} | {claim_text_cell} | {source_link} |"
+                    f"| {orig_idx + 1} | {time_cell} | {modality_cell} | {verdict_cell} | {claim_text_cell} | {source_link} |"
                 )
         report_content.append("")
         report_content.append(

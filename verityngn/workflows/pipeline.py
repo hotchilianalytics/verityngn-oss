@@ -133,7 +133,8 @@ def create_workflow() -> StateGraph:
     
     # Add workflow nodes (stages)
     workflow.add_node("initial_analysis", run_initial_analysis)
-    workflow.add_node("context_research", run_context_research)
+    # Node name must not collide with VerificationState key "context_research"
+    workflow.add_node("context_research_step", run_context_research)
     workflow.add_node("counter_intel_once", run_counter_intel_once)
     workflow.add_node("prepare_claims", run_prepare_claims)
     workflow.add_node("claim_verification", run_claim_verification)
@@ -150,8 +151,8 @@ def create_workflow() -> StateGraph:
             "initial_analysis": "initial_analysis",
         },
     )
-    workflow.add_edge("initial_analysis", "context_research")
-    workflow.add_edge("context_research", "counter_intel_once")
+    workflow.add_edge("initial_analysis", "context_research_step")
+    workflow.add_edge("context_research_step", "counter_intel_once")
     workflow.add_edge("counter_intel_once", "prepare_claims")
     workflow.add_edge("prepare_claims", "claim_verification")
     workflow.add_edge("claim_verification", "generate_report")

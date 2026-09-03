@@ -869,6 +869,7 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
                 timestamp=claim.get("timestamp", "00:00"),
                 speaker=claim.get("speaker", ""),
                 initial_assessment=initial_assessment,
+                source_type=claim.get("source_type", "spoken"),
                 verification_result=claim.get("verification_result", {}),
                 explanation=claim.get("explanation", ""),
                 evidence=None,
@@ -1123,6 +1124,28 @@ async def generate_claims_json_output(state: Dict[str, Any]) -> str:
     logger.info(f"📄 Generated claims JSON: {claims_json_path} with {len(claims_data)} claims")
     return claims_json_path
 
+
+def _persist_vertical_sleeve_artifacts(state: Dict[str, Any]) -> None:
+    """Write legal exhibit map + agency brand_safety_scores when claims exist."""
+    logger = logging.getLogger(__name__)
+    video_id = state.get("video_id", "unknown")
+    claims = state.get("claims", [])
+    out_dir_path = state.get("out_dir_path", "")
+    if not out_dir_path or not claims:
+        return
+    try:
+        from verityngn.services.vision.exhibit_tracker import persist_exhibit_map
+        from verityngn.services.report.brand_safety_scores import persist_brand_safety_scores
+
+        ex_path = persist_exhibit_map(video_id, claims, out_dir_path)
+        if ex_path:
+            logger.info("📎 Exhibit map: %s", ex_path)
+        bs_path = persist_brand_safety_scores(video_id, claims, out_dir_path)
+        logger.info("📊 Brand safety scores: %s", bs_path)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Vertical sleeve artifacts skipped: %s", exc)
+
+
 async def create_completion_marker(state: Dict[str, Any], claims_json_path: str) -> str:
     """Create completion marker file with all generated outputs."""
     logger = logging.getLogger(__name__)
@@ -1229,6 +1252,7 @@ async def run_generate_report(state: Dict[str, Any]) -> Dict[str, Any]:
         
         # Generate additional JSON output and completion marker
         claims_json_path = await generate_claims_json_output(state)
+        _persist_vertical_sleeve_artifacts(state)
         completion_marker_path = await create_completion_marker(state, claims_json_path)
         
         logger.info(f"✅ [UNIFIED] Reports generated successfully: {list(report_paths.keys())}")

@@ -126,13 +126,14 @@ def render_video_input_tab():
     
     # Introduction
     st.markdown("""
-    Enter a YouTube video URL to analyze its factual claims and assess truthfulness.
+    Enter a YouTube video URL to analyze factual claims and produce a **claim-level risk** assessment
+    (disclosure / delivery / sponsor-readiness — not a lie detector).
     The system will:
     
     1. **Download & Analyze** the video using multimodal AI
     2. **Extract Claims** from audio, visual text, and demonstrations
     3. **Search for Evidence** across the web
-    4. **Generate Report** with truthfulness assessment
+    4. **Generate Report** with claim-risk assessment (Supported / Contested / Unresolved)
     """)
     
     st.markdown("---")

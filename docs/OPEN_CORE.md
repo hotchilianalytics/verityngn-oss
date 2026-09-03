@@ -5,15 +5,18 @@
 
 ## OSS (`verityngn-oss`) — public Apache-2.0 engine
 
+User-facing product language: **claim-level risk abatement** (disclosure / delivery / sponsor-readiness). Internal model still uses TRUE/FALSE/UNCERTAIN probabilities (display: Supported / Contested / Unresolved).
+
 - Multimodal analysis + claim extraction
 - Counter-intelligence (YouTube + press-release + Sherlock CI)
 - Verification engine (grounded search, fact-check API, domain tiers, hard timeouts)
 - URL safety + report sanitization
-- Standard + **Deep Research** reports (JSON, MD, HTML, PDF when Playwright available)
+- Standard + **Deep Research** risk briefs (JSON, MD, HTML, PDF when Playwright available)
 - Combined TL;DR + DR + standard assembler
-- CLI: `verityngn analyze <url>` / `--file` / `--deep`
+- CLI: `verityngn analyze` / `local analyze` / `ablate` / `--deep`
 - Video pipeline + tutorial clips
-- Optional authenticity gate adapters + spectral AI-voice cues + MediaPipe Face Landmarker
+- Optional authenticity adapters, spectral AI-voice cues, MediaPipe Face Landmarker, story-arc continuity stub
+- DR-direct ablation module (`services/ablation/`) for pipeline vs direct comparison
 
 **Distribution:** GitHub, PyPI (`pip install verityngn`), Docker, Streamlit demo.
 

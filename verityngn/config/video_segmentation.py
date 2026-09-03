@@ -9,14 +9,16 @@ This module calculates optimal segment sizes for video analysis based on:
 """
 
 import os
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-# Token consumption rates (empirical data from Google Gemini docs)
-TOKENS_PER_FRAME = 258  # Average tokens per video frame
+# Token consumption rates (Gemini 3 docs: LOW/MEDIUM video = 70 tok/frame, HIGH = 280)
+TOKENS_PER_FRAME_LOW = 70
+TOKENS_PER_FRAME_HIGH = 280
+TOKENS_PER_FRAME = 258  # legacy default (pre-Gemini-3 pan-and-scan estimate)
 TOKENS_PER_SECOND_AUDIO = 32  # Average tokens per second of audio
 PROMPT_OVERHEAD_TOKENS = 5000  # System prompt + instructions
 THINKING_BUDGET_TOKENS = 100000  # Reserve tokens for LLM thinking/reasoning (reduces input budget)
@@ -48,17 +50,32 @@ MODEL_SPECS = {
 }
 
 
-def calculate_tokens_per_second(fps: float = 1.0) -> float:
+def tokens_per_frame_for_resolution(media_resolution: Optional[str] = None) -> float:
+    """Map Gemini media_resolution to tokens per video frame."""
+    res = (media_resolution or "").upper()
+    if "HIGH" in res:
+        return float(TOKENS_PER_FRAME_HIGH)
+    if "LOW" in res or "MEDIUM" in res:
+        return float(TOKENS_PER_FRAME_LOW)
+    return float(TOKENS_PER_FRAME)
+
+
+def calculate_tokens_per_second(
+    fps: float = 1.0,
+    media_resolution: Optional[str] = None,
+) -> float:
     """
     Calculate token consumption rate per second of video.
-    
+
     Args:
         fps: Frames per second to sample
-        
+        media_resolution: Gemini MEDIA_RESOLUTION_* string
+
     Returns:
         Tokens per second (video frames + audio)
     """
-    video_tokens = TOKENS_PER_FRAME * fps
+    tpf = tokens_per_frame_for_resolution(media_resolution)
+    video_tokens = tpf * fps
     audio_tokens = TOKENS_PER_SECOND_AUDIO
     return video_tokens + audio_tokens
 
@@ -66,6 +83,7 @@ def calculate_tokens_per_second(fps: float = 1.0) -> float:
 def calculate_optimal_segment_duration(
     model_name: str = "gemini-2.5-flash",
     fps: float = 1.0,
+    media_resolution: Optional[str] = None,
     custom_context_window: int = None,
     custom_output_tokens: int = None
 ) -> Dict[str, any]:
@@ -104,7 +122,7 @@ def calculate_optimal_segment_duration(
     )
     
     # Calculate token consumption rate
-    tokens_per_second = calculate_tokens_per_second(fps)
+    tokens_per_second = calculate_tokens_per_second(fps, media_resolution)
     
     # Calculate max segment duration
     max_segment_seconds = int(available_input_tokens / tokens_per_second)
@@ -122,6 +140,8 @@ def calculate_optimal_segment_duration(
         "context_window": context_window,
         "max_output_tokens": max_output_tokens,
         "fps": fps,
+        "media_resolution": media_resolution or "MEDIA_RESOLUTION_LOW",
+        "tokens_per_frame": tokens_per_frame_for_resolution(media_resolution),
         "tokens_per_second": tokens_per_second,
         "available_input_tokens": available_input_tokens,
         "max_segment_seconds": max_segment_seconds,

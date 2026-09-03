@@ -17,9 +17,37 @@
 
 ---
 
-## Script
+## Script (v3.1 — tier demo)
 
-### INTRO (0:00 - 0:30)
+### TIER DEMO: LIGHT vs FULL (0:45 - 2:30)
+
+**[SCREEN: Terminal with repo checked out]**
+
+**VOICEOVER:**
+
+"OSS 3.0 adds four analysis tiers. For a fast triage, use **light** — captions plus Deep Research in about a minute."
+
+**[ACTION: Run]**
+```bash
+verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
+```
+
+"That skips the full claim inventory and goes straight to a grounded risk brief.
+
+For diligence, use **full** — the complete multimodal pipeline plus optional Deep Research."
+
+**[ACTION: Run]**
+```bash
+verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
+```
+
+"Notice the Modality column in the full report — spoken vs on-screen claims.
+
+Operator tip: if captions fail, export browser cookies and run `verityngn captions <url>` first."
+
+---
+
+## Script (original gallery walkthrough)
 
 **[SCREEN: Title card with VerityNgn logo or text]**
 

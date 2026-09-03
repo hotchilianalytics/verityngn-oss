@@ -18,7 +18,7 @@ from mdit_py_plugins.attrs import attrs_plugin
 from verityngn.models.report import VerityReport
 from verityngn.models.workflow import InitialAnalysisState
 from verityngn.config.settings import OUTPUTS_DIR, COMPARE_DIR, DOWNLOADS_DIR, TEMPLATE_PATH, DEBUG_OUTPUTS
-from .markdown_generator import generate_markdown_report
+from .markdown_generator import generate_markdown_report, ReportTier
 from .report_utils import generate_html_from_markdown
 
 # Configure logger
@@ -161,7 +161,7 @@ def generate_simple_html_report(report_data: Dict[str, Any], video_id: str, outp
         logger.error(f"Error generating simple HTML report: {e}")
         raise Exception(f"Error generating simple HTML report: {e}")
 
-def generate_html_report(report: VerityReport) -> str:
+def generate_html_report(report: VerityReport, *, tier: ReportTier = "private") -> str:
     """Generate HTML report from VerityReport using Jinja2."""
     try:
         from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -190,7 +190,7 @@ def generate_html_report(report: VerityReport) -> str:
         template = env.from_string(template_string_content)
         
         # Generate markdown content
-        markdown_content, _, _ = generate_markdown_report(report)
+        markdown_content, _, _ = generate_markdown_report(report, tier=tier)
         
         # Convert markdown to HTML using MarkdownIt
         md = (
@@ -203,8 +203,18 @@ def generate_html_report(report: VerityReport) -> str:
         )
         html_content = md.render(markdown_content)
         
+        private_banner = None
+        if tier in ("private", "original"):
+            from verityngn.services.report.notices import PRIVATE_IN_REPORT_NOTICE
+
+            private_banner = PRIVATE_IN_REPORT_NOTICE
+
         # Render the template with both report and content
-        html_content = template.render(report=report, content=html_content)
+        html_content = template.render(
+            report=report,
+            content=html_content,
+            private_banner=private_banner,
+        )
         logger.debug(f"Generated HTML content length: {len(html_content)}")
         
         return html_content

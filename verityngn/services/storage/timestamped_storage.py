@@ -22,11 +22,19 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Any
 from pathlib import Path
 
-from verityngn.config.settings import STORAGE_BACKEND, StorageBackend, STORAGE_CONFIG
+from verityngn.config.settings import (
+    STORAGE_BACKEND,
+    StorageBackend,
+    STORAGE_CONFIG,
+    GCS_COMMERCIAL_BUCKET,
+)
 from verityngn.services.storage.unified_storage import unified_storage
 from verityngn.services.storage.gcs import GCSStorageService
 
 logger = logging.getLogger(__name__)
+
+USER_SCOPED_PREFIX = "vngn/accounts/"
+
 
 class TimestampedStorageService:
     """
@@ -40,33 +48,71 @@ class TimestampedStorageService:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.storage_backend = STORAGE_BACKEND
-        
-        if self.storage_backend == StorageBackend.GCS:
-            self.gcs_service = GCSStorageService(STORAGE_CONFIG["gcs"]["bucket_name"])
-        
+
+        gcs_bucket = STORAGE_CONFIG.get("gcs", {}).get("bucket_name")
+        if gcs_bucket and gcs_bucket != "your-bucket-name":
+            try:
+                self.gcs_service = GCSStorageService(gcs_bucket)
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize GCS service: {e}")
+                self.gcs_service = None
+        else:
+            self.gcs_service = None
+
+        self.gcs_service_commercial = None
+        if GCS_COMMERCIAL_BUCKET:
+            try:
+                self.gcs_service_commercial = GCSStorageService(GCS_COMMERCIAL_BUCKET)
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize GCS commercial service: {e}")
+
         self.logger.info(f"Initialized timestamped storage with {self.storage_backend.value} backend")
-    
-    def create_timestamped_directory(self, video_id: str) -> str:
+
+    def _gcs_service_for_path(self, gcs_path: str):
+        """Return the GCS service to use for this path (commercial when user-scoped)."""
+        if gcs_path.startswith(USER_SCOPED_PREFIX) and self.gcs_service_commercial:
+            return self.gcs_service_commercial
+        return self.gcs_service
+
+    def upload_file(self, local_file_path: str, gcs_path: str) -> Tuple[bool, Optional[str]]:
+        """Upload a file to GCS using the appropriate bucket (commercial when path is user-scoped)."""
+        gcs_svc = self._gcs_service_for_path(gcs_path)
+        if not gcs_svc:
+            self.logger.error("No GCS service available for upload")
+            return False, None
+        return gcs_svc.upload_file(local_file_path, gcs_path)
+
+    def create_timestamped_directory(self, video_id: str, user_id: Optional[str] = None) -> str:
         """
         Create a new timestamped directory for report generation.
-        
+
         Args:
             video_id: Video identifier
-        
+            user_id: Optional user ID for commercial user-scoped paths
+                     (vngn/accounts/{user_id}/videos/...). Ignored for plain local runs
+                     when unset.
+
         Returns:
-            str: Path to the timestamped directory. For GCS, this always includes the base path prefix (e.g. vngn_reports/...).
+            str: Path to the timestamped directory. For GCS, includes base path
+                 (e.g. vngn_reports/... or vngn/accounts/{user_id}/videos/...).
         """
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        
+
         if self.storage_backend == StorageBackend.LOCAL:
-            # For local storage, create actual directory
-            timestamped_dir = f"{video_id}/{timestamp}_processing"
+            if user_id:
+                timestamped_dir = f"{user_id}/{video_id}/{timestamp}_processing"
+            else:
+                timestamped_dir = f"{video_id}/{timestamp}_processing"
             local_path = Path(STORAGE_CONFIG["local"]["outputs_dir"]) / timestamped_dir
             local_path.mkdir(parents=True, exist_ok=True)
             self.logger.info(f"Created local timestamped directory: {local_path}")
             return str(local_path)
         else:
-            # For GCS, include the base path
+            uid = user_id or os.environ.get("USER_ID")
+            if uid and GCS_COMMERCIAL_BUCKET and self.gcs_service_commercial:
+                timestamped_dir = f"vngn/accounts/{uid}/videos/{video_id}/{timestamp}_complete"
+                self.logger.info(f"Prepared GCS user-scoped timestamped directory: {timestamped_dir}")
+                return timestamped_dir
             base_path = STORAGE_CONFIG["gcs"]["base_path"]
             timestamped_dir = f"{base_path}/{video_id}/{timestamp}_processing"
             self.logger.info(f"Prepared GCS timestamped directory: {timestamped_dir}")

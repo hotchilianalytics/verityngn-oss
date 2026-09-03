@@ -27,10 +27,13 @@ try:
     from sklearn.cluster import KMeans
     from sklearn.metrics.pairwise import cosine_similarity
     SKLEARN_AVAILABLE = True
-except ImportError:
+except ImportError as exc:
+    # ImportError (not only ModuleNotFoundError): broken transitive deps
+    # (e.g. pyarrow missing libutf8proc) also disable sklearn.
     SKLEARN_AVAILABLE = False
     logging.getLogger(__name__).warning(
-        "scikit-learn not available, using simple clustering fallback"
+        "scikit-learn unavailable (%s); using simple clustering fallback",
+        exc,
     )
 
 class ClaimProcessor:
@@ -115,12 +118,18 @@ class ClaimProcessor:
         
         integrated_claims = []
         
-        # Add video analysis claims
+        # Add video analysis claims — preserve modality source_type
+        # (spoken|visual_text|graphic|chart|demonstration); do not overwrite with
+        # pipeline origin (that lives on claim_origin).
         for i, claim in enumerate(self.video_analysis_claims):
             integrated_claim = claim.copy()
-            integrated_claim['source_type'] = 'video_analysis'
-            integrated_claim['source_priority'] = 3  # Highest priority
-            integrated_claim['global_id'] = f"video_{i}"
+            modality = (integrated_claim.get("source_type") or "spoken").strip().lower()
+            if modality in ("video_analysis", ""):
+                modality = "spoken"
+            integrated_claim["source_type"] = modality
+            integrated_claim["claim_origin"] = "video_analysis"
+            integrated_claim["source_priority"] = 3  # Highest priority
+            integrated_claim["global_id"] = f"video_{i}"
             integrated_claims.append(integrated_claim)
         
         # Add YouTube counter-intelligence claims

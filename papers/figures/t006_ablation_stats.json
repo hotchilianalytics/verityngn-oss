@@ -1,0 +1,61 @@
+{
+  "trial_id": "T-ABL-006",
+  "date": "2026-09-02",
+  "aggregate_gate_pass": false,
+  "n_sleeve_validated": 1,
+  "rows": [
+    {
+      "seed_id": "G1_earnings_slide",
+      "video_id": "p9nBtboU9KM",
+      "duration_sec": 796,
+      "n_transcript": 14,
+      "n_multimodal": 33,
+      "claim_jaccard": 0.0,
+      "only_multimodal_share_of_union": 0.7021,
+      "visual_only_multimodal_share": 0.3333,
+      "decision_hint": "multimodal_adds_unique",
+      "sleeve_validated": true,
+      "caption_source": "yt-dlp",
+      "multimodal_source_type_histogram": {
+        "visual_text": 11,
+        "spoken": 22
+      }
+    },
+    {
+      "seed_id": "G2_ugc_supers",
+      "video_id": "Exj5iK_K0Kk",
+      "duration_sec": 755,
+      "n_transcript": 17,
+      "n_multimodal": 35,
+      "claim_jaccard": 0.0196,
+      "only_multimodal_share_of_union": 0.6667,
+      "visual_only_multimodal_share": 0.1714,
+      "decision_hint": "multimodal_adds_unique",
+      "sleeve_validated": false,
+      "caption_source": "cached_vtt",
+      "multimodal_source_type_histogram": {
+        "spoken": 29,
+        "graphic": 1,
+        "visual_text": 4,
+        "chart": 1
+      }
+    },
+    {
+      "seed_id": "G3_deposition_exhibit",
+      "video_id": "2RkQ7mGWMAA",
+      "duration_sec": 605,
+      "n_transcript": 7,
+      "n_multimodal": 20,
+      "claim_jaccard": 0.0,
+      "only_multimodal_share_of_union": 0.7407,
+      "visual_only_multimodal_share": 0.2,
+      "decision_hint": "multimodal_adds_unique",
+      "sleeve_validated": false,
+      "caption_source": "yt-dlp",
+      "multimodal_source_type_histogram": {
+        "spoken": 16,
+        "visual_text": 4
+      }
+    }
+  ]
+}

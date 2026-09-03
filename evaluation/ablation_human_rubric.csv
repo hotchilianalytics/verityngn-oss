@@ -1,0 +1,15 @@
+video_id,arm,usefulness_1to5,actionability_1to5,hallucination_smell_1to5,missing_risks_1to5,notes,reviewer,date
+tLJC8hkK-ao,full,,,,,,T-ABL-005 json_dr arm — 40 claims 23 refs 20s,
+tLJC8hkK-ao,direct,,,,,,T-ABL-005 vtt_dr arm — 50k vtt 12 refs 15s,
+tLJC8hkK-ao,transcript,,,,,,
+tLJC8hkK-ao,multimodal,,,,,,
+G1_earnings_slide,transcript,2,2,2,5,T-ABL-006 p9nBtboU9KM — transcript misses on-screen disclaimers and valuation chart digits,operator,2026-09-02
+G1_earnings_slide,multimodal,4,4,2,2,T-ABL-006 — visual_share 0.33 sleeve PASS; only-MM includes Visual Text disclaimers,operator,2026-09-02
+G2_ugc_supers,transcript,2,2,2,4,T-ABL-006 Exj5iK_K0Kk — spoken analysis; chart labels/tickers under-represented in TX,operator,2026-09-02
+G2_ugc_supers,multimodal,4,4,2,2,T-ABL-006 — multimodal_adds_unique only-MM 0.67; visual_share 0.17 below 0.25 gate,operator,2026-09-02
+G3_deposition_exhibit,transcript,2,2,2,5,T-ABL-006 2RkQ7mGWMAA — transcript misses on-screen enemies-list names/graphics,operator,2026-09-02
+G3_deposition_exhibit,multimodal,4,4,2,2,T-ABL-006 — Visual Text enemies-list claims; visual_share 0.20 just under gate,operator,2026-09-02
+7MXE1kDCY-k,full,,,,,,
+7MXE1kDCY-k,direct,,,,,,
+RuinHdlpXvE,full,,,,,,
+RuinHdlpXvE,direct,,,,,,

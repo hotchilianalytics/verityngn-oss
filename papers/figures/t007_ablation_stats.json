@@ -1,0 +1,145 @@
+{
+  "t007": {
+    "trial_id": "T-ABL-007",
+    "n_seeds": 4,
+    "n_light_competitive": 0,
+    "mean_latency_speedup": 32.8347,
+    "mean_cost_speedup": 21.4133,
+    "mean_risk_recall": 0.15,
+    "truncation_violations": 2,
+    "suggested_thresholds": {
+      "TAU_COV": 0.7,
+      "TAU_VIS": 0.35,
+      "TAU_DUR": 900
+    },
+    "note": "Light briefs from live DR; full claims reused from T-ABL-006 multimodal inventories. Cap now default uncapped (0)."
+  },
+  "t002_paths": [
+    {
+      "path": "cached",
+      "n": 8,
+      "n_success": 3,
+      "n_skipped": 0,
+      "success_rate": 0.375,
+      "mean_latency_sec": 0.002736027662952741,
+      "mean_usd": 0.0
+    },
+    {
+      "path": "ytdlp",
+      "n": 8,
+      "n_success": 5,
+      "n_skipped": 0,
+      "success_rate": 0.625,
+      "mean_latency_sec": 1.6674675752030452,
+      "mean_usd": 0.0
+    },
+    {
+      "path": "api",
+      "n": 8,
+      "n_success": 0,
+      "n_skipped": 0,
+      "success_rate": 0.0,
+      "mean_latency_sec": null,
+      "mean_usd": null
+    },
+    {
+      "path": "supadata",
+      "n": 8,
+      "n_success": 0,
+      "n_skipped": 8,
+      "success_rate": null,
+      "mean_latency_sec": null,
+      "mean_usd": null
+    },
+    {
+      "path": "asr_groq",
+      "n": 8,
+      "n_success": 0,
+      "n_skipped": 8,
+      "success_rate": null,
+      "mean_latency_sec": null,
+      "mean_usd": null
+    }
+  ],
+  "t002": {
+    "headline": {
+      "supadata_native_success_rate": 0.6666666666666666,
+      "ytdlp_success_rate": 0.8333333333333334,
+      "cached_success_rate": 0.6666666666666666,
+      "api_success_rate": 0.0,
+      "c4_basler_unlocked": false,
+      "alphabet_supadata_chars": 53802,
+      "mean_supadata_latency_sec": 8.58
+    },
+    "paths": [
+      {
+        "path": "cached",
+        "n": 6,
+        "n_success": 4,
+        "n_skipped": 0,
+        "success_rate": 0.6666666666666666,
+        "mean_latency_sec": 0.003335583496664185,
+        "mean_usd": 0.0,
+        "mean_chars": 46021.75
+      },
+      {
+        "path": "ytdlp",
+        "n": 6,
+        "n_success": 5,
+        "n_skipped": 0,
+        "success_rate": 0.8333333333333334,
+        "mean_latency_sec": 1.7075215917953757,
+        "mean_usd": 0.0,
+        "mean_chars": 29301.0
+      },
+      {
+        "path": "api",
+        "n": 6,
+        "n_success": 0,
+        "n_skipped": 0,
+        "success_rate": 0.0,
+        "mean_latency_sec": null,
+        "mean_usd": null,
+        "mean_chars": null
+      },
+      {
+        "path": "supadata",
+        "n": 6,
+        "n_success": 4,
+        "n_skipped": 0,
+        "success_rate": 0.6666666666666666,
+        "mean_latency_sec": 8.58113776025857,
+        "mean_usd": 0.00157,
+        "mean_chars": 22896.25
+      },
+      {
+        "path": "supadata_generate",
+        "n": 6,
+        "n_success": 0,
+        "n_skipped": 4,
+        "success_rate": 0.0,
+        "mean_latency_sec": null,
+        "mean_usd": null,
+        "mean_chars": null
+      },
+      {
+        "path": "asr_groq",
+        "n": 6,
+        "n_success": 0,
+        "n_skipped": 6,
+        "success_rate": null,
+        "mean_latency_sec": null,
+        "mean_usd": null,
+        "mean_chars": null
+      }
+    ],
+    "notes": [
+      "SUPADATA_API_KEY live: native success on 4/6 seeds (p9n, Exj, 2Rk, LzEx); mean ~8.6s, ~$0.00157/call.",
+      "Alphabet LzExSq9DU9w unexpectedly has free yt-dlp captions (not pure C4 anymore) AND Supadata native OK (53802 chars).",
+      "Basler YJULq4e2pZE remains hard C4: free scrapers fail; native returned empty/error then 429; generate timed out then 429. Free-tier rate limit blocked retry.",
+      "youtube_transcript_api 0/6. Groq ASR still skipped (no GROQ_API_KEY).",
+      "supadata_generate not validated live under rate limit \u2014 leave TRANSCRIPT_ALLOW_GENERATE=0 by default."
+    ],
+    "version": "v2_live_supadata"
+  }
+}

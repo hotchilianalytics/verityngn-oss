@@ -1,0 +1,263 @@
+{
+  "trial_ids": [
+    "T-ABL-007",
+    "T-TX-002"
+  ],
+  "n": 16,
+  "per_stratum_target": 4,
+  "stratum_counts": {
+    "S": 4,
+    "M": 4,
+    "L": 4,
+    "XL": 4
+  },
+  "excluded_gallery_count": 16,
+  "seeds": [
+    {
+      "video_id": "g2jKyNrxpek",
+      "duration_sec": 37,
+      "title": "Dymo LabelManager 160P | Simple, Portable Label Maker for Office & Home | Mega Office Supplies",
+      "channel": "Mega Office Supplies",
+      "url": "https://www.youtube.com/watch?v=g2jKyNrxpek",
+      "genre": "ad",
+      "stratum": "S",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "none",
+        "has_subs": false,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=g2jKyNrxpek\n[youtube] g2jKyNrxpek: Downloading webpage\n[youtube] g2jKyNrxpek: Downloading visionos player API JSON\nWARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has b"
+      }
+    },
+    {
+      "video_id": "h5qWn0SfTXA",
+      "duration_sec": 80,
+      "title": "What the Best Pitch Decks Have in Common with Mike Vernal (Sequoia Capital)",
+      "channel": "NFX",
+      "url": "https://www.youtube.com/watch?v=h5qWn0SfTXA",
+      "genre": "earnings",
+      "stratum": "S",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=h5qWn0SfTXA\n[youtube] h5qWn0SfTXA: Downloading webpage\n[youtube] h5qWn0SfTXA: Downloading visionos player API JSON\n[youtube] h5qWn0SfTXA: Downloading m3u8 information\nh5qWn0SfTXA has no automatic captions\nh5qWn0SfTXA has no subtitles\nWARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use a"
+      }
+    },
+    {
+      "video_id": "2tOEqmG73AE",
+      "duration_sec": 107,
+      "title": "'You need to resign': Moments from Pete Hegseth's hours-long hearing",
+      "channel": "Associated Press",
+      "url": "https://www.youtube.com/watch?v=2tOEqmG73AE",
+      "genre": "legal",
+      "stratum": "S",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=2tOEqmG73AE\n[youtube] 2tOEqmG73AE: Downloading webpage\n[youtube] 2tOEqmG73AE: Downloading visionos player API JSON\n[youtube] 2tOEqmG73AE: Downloading m3u8 information\n[info] Available automatic captions for 2tOEqmG73AE:\nLanguage Name                  Formats\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\naa       Afa"
+      }
+    },
+    {
+      "video_id": "ul_iPk9bLQM",
+      "duration_sec": 111,
+      "title": "What financial slides go into your pitch deck?",
+      "channel": "Katie Bronnenkant",
+      "url": "https://www.youtube.com/watch?v=ul_iPk9bLQM",
+      "genre": "earnings",
+      "stratum": "S",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=ul_iPk9bLQM\n[youtube] ul_iPk9bLQM: Downloading webpage\n[youtube] ul_iPk9bLQM: Downloading visionos player API JSON\n[youtube] ul_iPk9bLQM: Downloading m3u8 information\n[info] Available automatic captions for ul_iPk9bLQM:\nLanguage Name                  Formats\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\naa       Afa"
+      }
+    },
+    {
+      "video_id": "2RkQ7mGWMAA",
+      "duration_sec": 605,
+      "title": "Jack Smith hearing exchange",
+      "channel": "The Economic Times",
+      "url": "https://www.youtube.com/watch?v=2RkQ7mGWMAA",
+      "genre": "legal",
+      "forced": true,
+      "notes": "T-ABL-006 G3 reuse",
+      "stratum": "M",
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "notes": "known captions"
+      }
+    },
+    {
+      "video_id": "Exj5iK_K0Kk",
+      "duration_sec": 755,
+      "title": "5-Minute Stock Analysis for Beginners",
+      "channel": "Let's Talk Money",
+      "url": "https://www.youtube.com/watch?v=Exj5iK_K0Kk",
+      "genre": "ad",
+      "forced": true,
+      "notes": "T-ABL-006 G2 reuse",
+      "stratum": "M",
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "notes": "known captions"
+      }
+    },
+    {
+      "video_id": "p9nBtboU9KM",
+      "duration_sec": 796,
+      "title": "Visa quarterly earnings analysis",
+      "channel": "Everything Money",
+      "url": "https://www.youtube.com/watch?v=p9nBtboU9KM",
+      "genre": "earnings",
+      "forced": true,
+      "notes": "T-ABL-006 G1 reuse",
+      "stratum": "M",
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "notes": "known captions"
+      }
+    },
+    {
+      "video_id": "YJULq4e2pZE",
+      "duration_sec": 894,
+      "title": "Basler AG Q1 2020 quarterly presentation",
+      "channel": "Basler AG",
+      "url": "https://www.youtube.com/watch?v=YJULq4e2pZE",
+      "genre": "earnings",
+      "forced": true,
+      "notes": "C4 caption-less official slides",
+      "stratum": "M",
+      "caption_probe": {
+        "caption_kind": "none",
+        "has_subs": false,
+        "notes": "known C4"
+      }
+    },
+    {
+      "video_id": "UrzWDs_X6mQ",
+      "duration_sec": 1217,
+      "title": "The BEST Creatine Supplements of 2023 \u2014 GROW Your Muscles!",
+      "channel": "BarBend",
+      "url": "https://www.youtube.com/watch?v=UrzWDs_X6mQ",
+      "genre": "ad",
+      "stratum": "L",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=UrzWDs_X6mQ\n[youtube] UrzWDs_X6mQ: Downloading webpage\n[youtube] UrzWDs_X6mQ: Downloading visionos player API JSON\n[youtube] UrzWDs_X6mQ: Downloading m3u8 information\n[info] Available automatic captions for UrzWDs_X6mQ:\nLanguage Name                  Formats\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\naa       Afa"
+      }
+    },
+    {
+      "video_id": "1F7oXLDu6X4",
+      "duration_sec": 1678,
+      "title": "TOP MOMENTS FROM MARCO RUBIO'S TESTIMONY TO CONGRESS ON VENEZUELA",
+      "channel": "ABC 7 News - WJLA",
+      "url": "https://www.youtube.com/watch?v=1F7oXLDu6X4",
+      "genre": "legal",
+      "stratum": "L",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=1F7oXLDu6X4\n[youtube] 1F7oXLDu6X4: Downloading webpage\n[youtube] 1F7oXLDu6X4: Downloading visionos player API JSON\n[youtube] 1F7oXLDu6X4: Downloading m3u8 information\n[info] Available automatic captions for 1F7oXLDu6X4:\nLanguage Name                  Formats\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\naa       Afa"
+      }
+    },
+    {
+      "video_id": "1RutO57KWZk",
+      "duration_sec": 2182,
+      "title": "What Happens to Stored Fat When You Walk 20 vs 45 Minutes? (Science Explained)",
+      "channel": "Physiology Explained",
+      "url": "https://www.youtube.com/watch?v=1RutO57KWZk",
+      "genre": "vsl",
+      "stratum": "L",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=1RutO57KWZk\n[youtube] 1RutO57KWZk: Downloading webpage\n[youtube] 1RutO57KWZk: Downloading visionos player API JSON\n[youtube] 1RutO57KWZk: Downloading m3u8 information\n[info] Available automatic captions for 1RutO57KWZk:\nLanguage Name                  Formats\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\naa       Afa"
+      }
+    },
+    {
+      "video_id": "tLJC8hkK-ao",
+      "duration_sec": 3029,
+      "title": "Lipozem VSL (known long talky)",
+      "channel": "",
+      "url": "https://www.youtube.com/watch?v=tLJC8hkK-ao",
+      "genre": "vsl",
+      "forced": true,
+      "notes": "XL stress; exclude as multimodal proof",
+      "stratum": "XL",
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "notes": "known captions"
+      }
+    },
+    {
+      "video_id": "LzExSq9DU9w",
+      "duration_sec": 3718,
+      "title": "Alphabet 2026 Q2 Earnings Call",
+      "channel": "Alphabet Investor Relations",
+      "url": "https://www.youtube.com/watch?v=LzExSq9DU9w",
+      "genre": "earnings",
+      "forced": true,
+      "notes": "XL caption-less IR stress (C4)",
+      "stratum": "XL",
+      "caption_probe": {
+        "caption_kind": "none",
+        "has_subs": false,
+        "notes": "known C4"
+      }
+    },
+    {
+      "video_id": "qNlOkVO70yg",
+      "duration_sec": 2523,
+      "title": "The Thing No One Tells You About Following Finfluencers | A Reality Check",
+      "channel": "A Digital Blogger",
+      "url": "https://www.youtube.com/watch?v=qNlOkVO70yg",
+      "genre": "ad",
+      "stratum": "XL",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=qNlOkVO70yg\n[youtube] qNlOkVO70yg: Downloading webpage\n[youtube] qNlOkVO70yg: Downloading visionos player API JSON\n[youtube] qNlOkVO70yg: Downloading m3u8 information\n[info] Available automatic captions for qNlOkVO70yg:\nLanguage Name                  Formats\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\naa       Afa"
+      }
+    },
+    {
+      "video_id": "jp3nBadU6ZA",
+      "duration_sec": 3328,
+      "title": "The Art of Zoom Depositions, Arbitrations and More: Mastering the Virtual Legal World",
+      "channel": "zoelittlepage",
+      "url": "https://www.youtube.com/watch?v=jp3nBadU6ZA",
+      "genre": "legal",
+      "stratum": "XL",
+      "forced": false,
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true,
+        "list_subs_snippet": "[youtube] Extracting URL: https://www.youtube.com/watch?v=jp3nBadU6ZA\n[youtube] jp3nBadU6ZA: Downloading webpage\n[youtube] jp3nBadU6ZA: Downloading visionos player API JSON\n[youtube] jp3nBadU6ZA: Downloading m3u8 information\n[info] Available automatic captions for jp3nBadU6ZA:\nLanguage Name                  Formats\nab       Abkhazian             vtt, srt, ttml, srv3, srv2, srv1, json3\naa       Afa"
+      }
+    },
+    {
+      "video_id": "fizFbIQcvBA",
+      "duration_sec": 1500,
+      "title": "Supplement / chart walkthrough (L fill)",
+      "channel": "",
+      "url": "https://www.youtube.com/watch?v=fizFbIQcvBA",
+      "genre": "ad",
+      "stratum": "L",
+      "forced": true,
+      "notes": "L stratum fill for n=16; probe if needed",
+      "caption_probe": {
+        "caption_kind": "asr_auto",
+        "has_subs": true
+      }
+    }
+  ]
+}

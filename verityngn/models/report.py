@@ -98,6 +98,7 @@ class Claim(BaseModel):
     timestamp: str
     speaker: str
     initial_assessment: str
+    source_type: Optional[str] = "spoken"
     verification_result: Optional[Dict[str, Any]] = None
     explanation: str = ""
     evidence: Optional[List[EvidenceSource]] = None

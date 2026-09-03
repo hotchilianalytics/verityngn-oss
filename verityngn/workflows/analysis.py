@@ -412,6 +412,14 @@ def extract_video_metadata_reliable(
                     or "how this content was made" in desc.lower()
                 )
                 logger.info(f"📄 Info JSON saved via YouTube API: {info_json_path}")
+
+                # YouTube Data API does not download .en.vtt — use unified caption fetch.
+                from verityngn.services.video.caption_fetch import fetch_and_cache_vtt
+
+                caption = fetch_and_cache_vtt(video_id, video_url, output_dir)
+                if caption.get("success") and caption.get("vtt_path"):
+                    metadata_result["subtitle_path"] = caption["vtt_path"]
+                    logger.info(f"📝 Subtitles via {caption.get('source')}: {caption['vtt_path']}")
                 return metadata_result
 
         except Exception as e:
@@ -464,42 +472,18 @@ def extract_video_metadata_reliable(
                 )
                 logger.info(f"📄 Info JSON saved: {info_json_path}")
 
-                # Try to download subtitles separately if they exist
-                if info_dict.get("subtitles") or info_dict.get("automatic_captions"):
-                    try:
-                        # Download subtitles only
-                        sub_ydl_opts = {
-                            "skip_download": True,
-                            "writesubtitles": True,
-                            "writeautomaticsub": True,
-                            "subtitleslangs": ["en"],
-                            "subtitlesformat": "vtt",
-                            "outtmpl": os.path.join(
-                                analysis_dir, f"{video_id}.%(ext)s"
-                            ),
-                            "ignoreerrors": True,
-                            "quiet": True,
-                        }
+                from verityngn.services.video.caption_fetch import fetch_and_cache_vtt
 
-                        with yt_dlp.YoutubeDL(sub_ydl_opts) as sub_ydl:
-                            sub_ydl.download([video_url])
-
-                        # Check for subtitle files
-                        possible_sub_files = [
-                            os.path.join(analysis_dir, f"{video_id}.en.vtt"),
-                            os.path.join(analysis_dir, f"{video_id}.vtt"),
-                            os.path.join(analysis_dir, f"{video_id}.en.srt"),
-                            os.path.join(analysis_dir, f"{video_id}.srt"),
-                        ]
-
-                        for sub_file in possible_sub_files:
-                            if os.path.exists(sub_file):
-                                metadata_result["subtitle_path"] = sub_file
-                                logger.info(f"📝 Subtitles saved: {sub_file}")
-                                break
-
-                    except Exception as e:
-                        logger.warning(f"⚠️ Subtitle extraction failed: {e}")
+                caption = fetch_and_cache_vtt(video_id, video_url, output_dir)
+                if caption.get("success") and caption.get("vtt_path"):
+                    metadata_result["subtitle_path"] = caption["vtt_path"]
+                    logger.info(
+                        f"📝 Subtitles via {caption.get('source')}: {caption['vtt_path']}"
+                    )
+                elif not caption.get("success"):
+                    logger.warning(
+                        f"⚠️ Subtitle extraction failed: {caption.get('error')}"
+                    )
 
                 metadata_result["success"] = True
                 logger.info("✅ METADATA EXTRACTION SUCCESS")
@@ -1789,11 +1773,44 @@ def validate_and_normalize_json_result(
                     logger.warning(f"⚠️ Skipping meta-label or too-short claim: '{claim_text_str[:50]}...'")
                     continue
 
+                raw_source = (
+                    claim.get("source_type")
+                    or claim.get("modality")
+                    or claim.get("claim_source")
+                    or ""
+                )
+                source_type = str(raw_source).strip().lower() or "unknown"
+                # Infer modality when LLM puts visual attribution in speaker only
+                speaker_l = str(speaker).strip().lower()
+                if source_type in ("", "unknown", "none", "null"):
+                    if any(
+                        tok in speaker_l
+                        for tok in (
+                            "visual text",
+                            "on-screen",
+                            "onscreen",
+                            "graphic",
+                            "chart",
+                            "slide",
+                            "exhibit",
+                            "ocr",
+                        )
+                    ):
+                        if "chart" in speaker_l or "slide" in speaker_l:
+                            source_type = "chart"
+                        elif "graphic" in speaker_l:
+                            source_type = "graphic"
+                        else:
+                            source_type = "visual_text"
+                    else:
+                        source_type = "spoken"
+
                 cleaned_claim = {
                     "claim_text": claim_text_str[:200],  # Enforce 200 char limit
                     "timestamp": str(timestamp),
                     "speaker": str(speaker),
                     "initial_assessment": initial_assessment_str,
+                    "source_type": source_type,
                 }
                 cleaned_claims.append(cleaned_claim)
 
@@ -4104,13 +4121,38 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_genai(
         SEGMENTED_URL_ANALYSIS,
         SEGMENT_DURATION_SECONDS,
         SEGMENT_FPS,
+        SEGMENT_FPS_OVERRIDE,
+        ADAPTIVE_SAMPLING,
+        VIDEO_GENRE_HINT,
         GENAI_VIDEO_MAX_OUTPUT_TOKENS,
         THINKING_BUDGET,
     )
+    from verityngn.services.vision.adaptive_sampler import effective_segment_fps
 
     logger = logging.getLogger(__name__)
     logger.info(
         f"🌐 [GENAI] Segmented YouTube URL analysis for {video_id} | segments={SEGMENTED_URL_ANALYSIS}"
+    )
+
+    # Adaptive fps/resolution (local file probe when video_path on video_info)
+    local_video = video_info.get("video_path") or video_info.get("local_video_path")
+    env_fps = SEGMENT_FPS_OVERRIDE if SEGMENT_FPS_OVERRIDE > 0 else None
+    if env_fps is None and SEGMENT_FPS != 1.0:
+        env_fps = SEGMENT_FPS
+    segment_fps, segment_media_res, probe = effective_segment_fps(
+        video_id,
+        video_path=local_video,
+        genre_hint=VIDEO_GENRE_HINT or None,
+        env_fps=env_fps,
+        adaptive_enabled=ADAPTIVE_SAMPLING,
+    )
+    logger.info(
+        "[GENAI] sampling video_id=%s fps=%s media_resolution=%s probe_status=%s scene=%s",
+        video_id,
+        segment_fps,
+        segment_media_res,
+        probe.status,
+        probe.dominant_scene,
     )
 
     # Initialize GenAI client explicitly with API key to avoid missing key error
@@ -4139,19 +4181,22 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_genai(
                 video_metadata=types.VideoMetadata(
                     **({"start_offset": f"{start_s}s"} if start_s is not None else {}),
                     **({"end_offset": f"{end_s}s"} if end_s is not None else {}),
-                    **({"fps": SEGMENT_FPS} if SEGMENT_FPS else {}),
+                    **({"fps": segment_fps} if segment_fps else {}),
                 ),
             ),
             types.Part(text=f"{prompt_text}\n{thinking_hint}"),
         ]
         contents = types.Content(parts=parts)
+        gen_cfg: dict[str, Any] = {
+            "max_output_tokens": GENAI_VIDEO_MAX_OUTPUT_TOKENS,
+            "thinking_config": types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
+        }
+        if segment_media_res:
+            gen_cfg["media_resolution"] = segment_media_res
         resp = client.models.generate_content(
             model=VERTEX_MODEL_NAME,
             contents=contents,
-            config=types.GenerateContentConfig(
-                max_output_tokens=GENAI_VIDEO_MAX_OUTPUT_TOKENS,
-                thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
-            ),
+            config=types.GenerateContentConfig(**gen_cfg),
         )
         txt = getattr(resp, "text", None) or ""
         logger.info(f"[GENAI] segment=({start_s},{end_s}) len={len(txt)}")

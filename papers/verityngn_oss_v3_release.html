@@ -1,129 +1,174 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'/><title>VerityNgn OSS 3.0 Release</title>
-<style>body{font-family:Georgia,serif;max-width:820px;margin:40px auto;line-height:1.5;padding:0 16px} pre{white-space:pre-wrap;background:#f6f8fa;padding:12px}</style>
-</head><body>
-<h1>VerityNgn OSS 3.0.0 — Public Engine Release Paper</h1>
-<p><em>2026-08-29 · Apache-2.0 engine · HotChili Analytics</em></p>
-<h3>open_core_architecture.png</h3><img src="figures/open_core_architecture.png" style="max-width:100%;"/><br/>
-<h3>claim_verdict_mix.png</h3><img src="figures/claim_verdict_mix.png" style="max-width:100%;"/><br/>
-<h3>accuracy_stages.png</h3><img src="figures/accuracy_stages.png" style="max-width:100%;"/><br/>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>VerityNgn OSS 3.0.0 — Release Paper</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    line-height: 1.55; color: #1f2933; max-width: 820px; margin: 0 auto;
+    padding: 28px 22px 64px; background: #fff;
+  }
+  h1,h2,h3 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #0f172a; line-height: 1.25; }
+  h1 { font-size: 1.85rem; margin-bottom: 0.2rem; }
+  .meta { color: #52606d; font-size: 0.95rem; margin-bottom: 1.4rem; }
+  .badge {
+    display: inline-block; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    background: #0f172a; color: #f8fafc; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px;
+  }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.86em; }
+  pre { background: #f5f7fa; border: 1px solid #e4e7eb; border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.92rem; }
+  th, td { border: 1px solid #d9e2ec; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f4f8; }
+  figure { margin: 1.4rem 0; }
+  figure img { max-width: 100%; height: auto; border: 1px solid #e4e7eb; border-radius: 6px; }
+  figcaption { font-size: 0.88rem; color: #486581; margin-top: 0.45rem; }
+  .callout {
+    border-left: 4px solid #0f766e; background: #f0fdfa; padding: 10px 14px; margin: 1.2rem 0;
+  }
+  .warn {
+    border-left: 4px solid #b45309; background: #fffbeb; padding: 10px 14px; margin: 1.2rem 0;
+  }
+  a { color: #1d4ed8; }
+  @media print {
+    body { padding: 0; max-width: none; }
+    a { color: inherit; text-decoration: none; }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+<span class="badge">VerityNgn OSS · v3.0.0</span>
+<h1>VerityNgn OSS 3.0.0 — Public Engine Release</h1>
+<p class="meta">HotChili Analytics / VerityNgn Research · 2026-08-29 · Apache-2.0 engine<br/>
+Companion to <a href="https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0">GitHub release v3.0.0</a>
+· Live gallery: <a href="https://verityindex.com/gallery">verityindex.com/gallery</a></p>
 
-<pre># VerityNgn OSS 3.0.0 — Public Engine Release Paper
+<div class="callout">
+<strong>Drop-in public engine.</strong> Deep Research, claim verification, and optional authenticity cues ship in Apache OSS.
+Predictions and RiskFactor stay closed overlays that depend on OSS — not the reverse.
+</div>
 
-**Authors:** HotChili Analytics / VerityNgn Research  
-**Date:** 2026-08-29  
-**Version:** 3.0.0  
-**License:** Apache-2.0 (engine); commercial overlays under separate terms  
+<h2>1. Abstract</h2>
+<p>We release <strong>VerityNgn OSS 3.0.0</strong>, a standalone multimodal engine for claim extraction and verification from video.
+This release restores <strong>Deep Research</strong> (grounded forensic summarization) to the public tree, adds optional authenticity and spectral voice cues,
+and documents the open-core boundary. We do <em>not</em> claim earnings prediction, allocation factors, or lie detection.</p>
 
----
 
-## Abstract
+<figure>
+  <img src="figures/open_core_architecture.png" alt="Open-core architecture"/>
+  <figcaption>Figure 1. OSS Apache engine vs closed commercial and predictions/RiskFactor overlays.</figcaption>
+</figure>
 
-We release **VerityNgn OSS 3.0.0**, a standalone open-source multimodal engine for claim extraction and verification from video. This release restores **Deep Research** (grounded forensic summarization) to the public Apache tree, adds optional **authenticity** and **spectral voice** cues, and documents a clear open-core boundary: predictions and RiskFactor products remain closed overlays that **depend on OSS**, not the reverse. We do not claim earnings prediction, allocation factors, or lie detection.
 
-**Keywords:** video verification, counter-intelligence, deep research, open-core, multimodal LLM
-
----
-
-## 1. Motivation
-
-Prior open-core practice left Deep Research and several authenticity cues on the commercial fork, while OSS drifted. Public distribution requires an impressive, drop-in engine (`pip install verityngn`) that communities can run without SaaS. Overlays for hosted multi-tenant delivery, predictions, and RiskFactor must build **on** OSS.
-
-![Open-core architecture](figures/open_core_architecture.png)
-
-*Figure 1. OSS Apache engine vs closed commercial and predictions/RiskFactor overlays.*
-
----
-
-## 2. System overview (v3)
-
-```
-Video URL or file
+<h2>2. System overview</h2>
+<pre>Video URL or file
   → multimodal analysis + claim extraction
   → counter-intelligence (YouTube / press-release / Sherlock CI)
   → probabilistic verification (TRUE / FALSE / UNCERTAIN)
   → standard report (MD / HTML / JSON / PDF)
   → optional Deep Research (Gemini grounded pass + combined report)
-  → optional authenticity / spectral / Face Landmarker cues
-```
+  → optional authenticity / spectral / Face Landmarker cues</pre>
 
-### 2.1 Deep Research (now in OSS)
+<p><code>verityngn analyze &lt;url&gt; --deep</code> runs after the standard report JSON exists.</p>
 
-`verityngn analyze &lt;url&gt; --deep` runs a counter-intel sanitize of `{video_id}_report.json`, then a grounded Gemini generation producing:
+<h2>3. Live gallery evidence (verityindex.com)</h2>
+<p>Scraped from the public gallery on <strong>2026-08-29</strong>:
+<strong>12 reports</strong>, <strong>427 claims</strong> analyzed,
+labels = {"Likely to be True": 6, "Mixed Truthfulness": 6}.</p>
 
-- `{video_id}_deep_private_report.{md,html,pdf}`
-- grounding audit JSON
-- combined TL;DR + DR + standard report when available
 
-### 2.2 Authenticity &amp; vision (optional extras)
+<figure>
+  <img src="figures/gallery_thumb_collage.png" alt="Gallery thumbnails"/>
+  <figcaption>Figure 2. Public gallery cards (YouTube thumbnails + claim counts). Source: verityindex.com/gallery.</figcaption>
+</figure>
 
-- Authenticity gate with stub adapters (C2PA / Corsound / visual) — fail-closed when checks fail
-- Spectral AI-voice indicators via optional `librosa`
-- MediaPipe Face Landmarker adapter for congruence / delivery-risk cues only (not employment use)
 
-### 2.3 Explicitly out of this release
+<figure>
+  <img src="figures/gallery_live_claims_per_video.png" alt="Claims per video"/>
+  <figcaption>Figure 3. Claims analyzed per public gallery report (teal = Likely to be True, amber = Mixed).</figcaption>
+</figure>
 
-Predictions signal engine, CAR/ICIR, Karp panels, RiskFactor S00–S15, hosted trial credits, full Gemini multisense fusion (deferred).
 
----
+<figure>
+  <img src="figures/gallery_live_label_mix.png" alt="Label mix"/>
+  <figcaption>Figure 4. Overall gallery labels across the public set.</figcaption>
+</figure>
 
-## 3. Evaluation narrative (illustrative)
 
-Reported evaluation on prior OSS corpora emphasized counter-intelligence lift and calibrated three-state verdicts. Illustrative charts (not predictions metrics):
+<table>
+  <thead><tr><th>Video ID</th><th>Claims</th><th>Gallery label</th><th>Source</th></tr></thead>
+  <tbody>
+  <tr><td><code>tSdWpsj1Cyo</code></td><td>40</td><td>Likely to be True</td><td><a href="https://youtube.com/watch?v=tSdWpsj1Cyo">source</a></td></tr>
+<tr><td><code>7MXE1kDCY-k</code></td><td>40</td><td>Mixed Truthfulness</td><td><a href="https://youtube.com/watch?v=7MXE1kDCY-k">source</a></td></tr>
+<tr><td><code>cBtOIRV4uPE</code></td><td>14</td><td>Likely to be True</td><td><a href="https://youtube.com/watch?v=cBtOIRV4uPE">source</a></td></tr>
+<tr><td><code>nvvw0oslqpE</code></td><td>15</td><td>Likely to be True</td><td><a href="https://youtube.com/watch?v=nvvw0oslqpE">source</a></td></tr>
+<tr><td><code>RuinHdlpXvE</code></td><td>40</td><td>Mixed Truthfulness</td><td><a href="https://youtube.com/watch?v=RuinHdlpXvE">source</a></td></tr>
+<tr><td><code>8QNBS-sadLE</code></td><td>40</td><td>Likely to be True</td><td><a href="https://youtube.com/watch?v=8QNBS-sadLE">source</a></td></tr>
+<tr><td><code>tLS6t3FVOTI</code></td><td>40</td><td>Likely to be True</td><td><a href="https://youtube.com/watch?v=tLS6t3FVOTI">source</a></td></tr>
+<tr><td><code>zrPB5xoamvM</code></td><td>38</td><td>Mixed Truthfulness</td><td><a href="https://youtube.com/watch?v=zrPB5xoamvM">source</a></td></tr>
+<tr><td><code>l84V9olZN4A</code></td><td>40</td><td>Mixed Truthfulness</td><td><a href="https://youtube.com/watch?v=l84V9olZN4A">source</a></td></tr>
+<tr><td><code>eWrZQBgpY7I</code></td><td>40</td><td>Likely to be True</td><td><a href="https://youtube.com/watch?v=eWrZQBgpY7I">source</a></td></tr>
+<tr><td><code>AtoxkK7MeKc</code></td><td>40</td><td>Mixed Truthfulness</td><td><a href="https://youtube.com/watch?v=AtoxkK7MeKc">source</a></td></tr>
+<tr><td><code>id8HGDNXB9g</code></td><td>40</td><td>Mixed Truthfulness</td><td><a href="https://youtube.com/watch?v=id8HGDNXB9g">source</a></td></tr>
 
-![Claim verdict mix](figures/claim_verdict_mix.png)
+  </tbody>
+</table>
+<p class="meta">Editorial labels on the gallery are HotChili Analytics LLM assessments — not YouTube data.</p>
 
-*Figure 2. Illustrative share of TRUE / FALSE / UNCERTAIN claims.*
+<h2>4. In-repo gallery claim mix (OSS report JSONs)</h2>
+<p>Claim-level TRUE/FALSE/UNCERTAIN from <code>ui/gallery/approved/</code>
+(11 videos, 75 claims with verification results):
+{"TRUE": 29, "FALSE": 39, "UNCERTAIN": 7}.</p>
 
-![Accuracy stages](figures/accuracy_stages.png)
 
-*Figure 3. Accuracy lift from baseline verification → counter-intel → Deep Research (reported eval narrative).*
+<figure>
+  <img src="figures/gallery_local_verdict_mix.png" alt="Local verdict mix"/>
+  <figcaption>Figure 5. Claim-level verdict mix from in-repo approved gallery JSONs.</figcaption>
+</figure>
 
-Live operator parity vs commercial core: see `PARITY_TEST_v3.md`.
 
----
+<figure>
+  <img src="figures/gallery_local_verdict_stack.png" alt="Local verdict stack"/>
+  <figcaption>Figure 6. Per-video stacked verdicts (in-repo gallery).</figcaption>
+</figure>
 
-## 4. Install &amp; CLI
 
-```bash
-pip install verityngn
-# or: pip install -e &quot;.[deep,vision,audio]&quot;
 
-verityngn analyze https://www.youtube.com/watch?v=VIDEO_ID
-verityngn analyze &lt;url&gt; --deep
-verityngn analyze --file deposition.mp4 --title &quot;Matter clip&quot;
-```
+<figure>
+  <img src="figures/accuracy_stages.png" alt="Accuracy stages"/>
+  <figcaption>Figure 7. Prior evaluation narrative: accuracy lift across verification stages (baseline → counter-intel → Deep Research).</figcaption>
+</figure>
 
-Credentials: Vertex ADC or `VERITY_GEMINI_KEY` / `GEMINI_API_KEY` (see `.env.example`).
 
----
+<h2>5. Install</h2>
+<pre>pip install 'verityngn[deep]'
+verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
+verityngn analyze --file deposition.mp4 --title "Matter clip"</pre>
 
-## 5. Open-core dependency model
+<h2>6. Open-core dependency model</h2>
+<p>Commercial, predictions, and RiskFactor pin <strong>OSS ≥3.0.0</strong>. Boundary CI fails if
+<code>services/predictions</code> or <code>services/quant</code> appear under the public package.
+See <code>docs/OPEN_CORE.md</code>.</p>
 
-Future commercial, predictions, and RiskFactor repositories pin **OSS ≥3.0.0** and keep overlay-only packages. Boundary CI fails if `services/predictions` or `services/quant` appear under the public package.
+<div class="warn">
+<strong>What we will not claim:</strong> earnings prediction / allocation alpha; “lie detector” branding; RiskFactor S00–S15 registry scores in this paper.
+</div>
 
-See `docs/OPEN_CORE.md` and `docs/DEPENDENCY_MODEL.md`.
+<h2>7. Links</h2>
+<ul>
+  <li>Release: <a href="https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0">v3.0.0</a></li>
+  <li>Repo: <a href="https://github.com/hotchilianalytics/verityngn-oss">verityngn-oss</a></li>
+  <li>Gallery: <a href="https://verityindex.com/gallery">verityindex.com/gallery</a></li>
+  <li>Demo: <a href="https://verityngn.streamlit.app">verityngn.streamlit.app</a></li>
+  <li>Stats snapshot: <code>papers/figures/gallery_live_stats.json</code></li>
+</ul>
 
----
-
-## 6. What we will not claim
-
-- No earnings prediction or allocation alpha
-- No “lie detector” branding
-- No RiskFactor registry scores in this paper
-
----
-
-## 7. Related documents
-
-- Full methodology paper: `papers/verityngn_research_paper.md` (v2 lineage; updated by this release note)
-- Counter-intelligence: `papers/counter_intelligence_methodology.md`
-- Probability model: `papers/probability_model_foundations.md`
-- Launch pack: `docs/launch/`
-
----
-
-## Changelog pointer
-
-See repository `CHANGELOG.md` → `[3.0.0] - 2026-08-29`.
-</pre>
-</body></html>
+<p class="no-print meta">Render PDF: <code>bash scripts/render_release_paper_pdf.sh</code></p>
+</body>
+</html>

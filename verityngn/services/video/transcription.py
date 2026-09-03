@@ -39,128 +39,67 @@ if not logger.handlers:
 
 def get_video_transcript(video_path: str, chunk_duration: int = DEFAULT_CHUNK_DURATION) -> str:
     """
-    Get the transcript of a video from YouTube metadata.
-    
-    Args:
-        video_path (str): Path to the video file
-        chunk_duration (int): Duration of each chunk in seconds
-        
-    Returns:
-        str: Transcript of the video
+    Get the transcript of a video from cached VTT or unified caption fetch.
     """
     logger.info(f"Getting transcript for video: {video_path}")
-    
+
     try:
-        # Extract video ID from the path
         video_id_match = re.search(r'([a-zA-Z0-9_-]{11})\.mp4$', video_path)
         if not video_id_match:
             logger.error(f"Could not extract video ID from path: {video_path}")
             return ""
-            
-        video_id = video_id_match.group(1)
-        
-        # Get the directory containing the video
-        video_dir = os.path.dirname(video_path)
-        
-        # Check if transcript JSON file exists
-        transcript_file_path = os.path.join(video_dir, f"{video_id}.transcript.json")
 
-        # Check if transcript en.vtt file exists
+        video_id = video_id_match.group(1)
+        video_dir = os.path.dirname(video_path)
+
+        from verityngn.services.video.caption_fetch import (
+            fetch_and_cache_vtt,
+            vtt_to_text,
+        )
+
         vtt_file_path = os.path.join(video_dir, f"{video_id}.en.vtt")
-        
         if os.path.exists(vtt_file_path):
             logger.info(f"Found vtt file: {vtt_file_path}")
             try:
                 with open(vtt_file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    # Remove VTT header and timestamps
-                    lines = content.split('\n')
-                    text_lines = []
-                    skip_next = False
-                    for line in lines:
-                        if skip_next:
-                            skip_next = False
-                            continue
-                        if '-->' in line:
-                            skip_next = True
-                            continue
-                        if line.strip() and not line.startswith('WEBVTT'):
-                            text_lines.append(line.strip())
-
-                    return ' '.join(text_lines)
+                    return vtt_to_text(f.read())
             except Exception as e:
                 logger.error(f"Error reading VTT file: {e}")
-        else:
-            logger.warning(f"No vtt file found at: {vtt_file_path}")
 
-        # Try youtube djson file of all transcripts.
+        output_dir = video_dir
+        if os.path.basename(video_dir) == "analysis":
+            output_dir = os.path.dirname(video_dir)
+
+        caption = fetch_and_cache_vtt(
+            video_id,
+            f"https://www.youtube.com/watch?v={video_id}",
+            output_dir,
+        )
+        if caption.get("success"):
+            return caption.get("text") or ""
+
+        transcript_file_path = os.path.join(video_dir, f"{video_id}.transcript.json")
         if os.path.exists(transcript_file_path):
             logger.info(f"Found transcript file: {transcript_file_path}")
             return extract_transcript_from_json(transcript_file_path)
-        else:
-            logger.warning(f"No transcript file found at: {transcript_file_path}")
-            
-            # Try to download transcript directly
-            video_url = f"https://www.youtube.com/watch?v={video_id}"
-            logger.info(f"Attempting to download transcript for: {video_url}")
-            
-            transcript_data = download_transcript(video_url, video_dir, video_id)
-            if transcript_data:
-                return extract_transcript_from_json(transcript_file_path)
-        
+
         logger.error("Failed to get transcript")
         return ""
-        
+
     except Exception as e:
-      logger.error(f"Error getting video transcript: {e}")
+        logger.error(f"Error getting video transcript: {e}")
     return ""
 
 def download_transcript(video_url: str, output_dir: str, video_id: str) -> Dict:
-    """
-    Download transcript data for a YouTube video.
-    
-    Args:
-        video_url (str): YouTube video URL
-        output_dir (str): Directory to save the transcript
-        video_id (str): YouTube video ID
-        
-    Returns:
-        Dict: Transcript data
-    """
+    """Download transcript via unified caption fetch (writes .en.vtt when possible)."""
     logger.info(f"Downloading transcript for video: {video_url}")
-    
-    ydl_opts = {
-        'skip_download': True,
-        'writesubtitles': True,
-        'subtitleslangs': ['en'],
-        'writeautomaticsub': True,
-        'allsubtitles': False,
-        'outtmpl': os.path.join(output_dir, f'{video_id}.%(ext)s'),
-    }
-    
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(video_url, download=False)
-            
-            transcript_data = {}
-            if 'subtitles' in info_dict and info_dict['subtitles']:
-                transcript_data['subtitles'] = info_dict['subtitles']
-            if 'automatic_captions' in info_dict and info_dict['automatic_captions']:
-                transcript_data['automatic_captions'] = info_dict['automatic_captions']
-            
-            if transcript_data:
-                transcript_file_path = os.path.join(output_dir, f"{video_id}.transcript.json")
-                with open(transcript_file_path, "w", encoding="utf-8") as f:
-                    json.dump(transcript_data, f, ensure_ascii=False, indent=4)
-                logger.info(f"Transcript data saved to: {transcript_file_path}")
-                return transcript_data
-            else:
-                logger.warning("No transcript data found")
-                return {}
-    
-    except Exception as e:
-        logger.error(f"Error downloading transcript: {e}")
-        return {}
+    from verityngn.services.video.caption_fetch import fetch_and_cache_vtt
+
+    result = fetch_and_cache_vtt(video_id, video_url, output_dir)
+    if result.get("success"):
+        return {"vtt_path": result.get("vtt_path"), "source": result.get("source")}
+    logger.warning("Caption fetch failed: %s", result.get("error"))
+    return {}
 
 def extract_transcript_from_json(transcript_file_path: str) -> str:
     """

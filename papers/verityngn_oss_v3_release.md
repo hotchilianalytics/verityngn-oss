@@ -4,6 +4,10 @@
 **Date:** 2026-08-29  
 **Version:** 3.0.0  
 **License:** Apache-2.0 (engine); commercial overlays under separate terms  
+**Live gallery:** https://verityindex.com/gallery  
+**GitHub release:** https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0  
+
+> Prefer the print HTML/PDF: build with `python scripts/build_release_paper_html.py`, then `bash scripts/render_release_paper_pdf.sh` (Chromium via Playwright — run outside Cursor).
 
 ---
 
@@ -17,7 +21,7 @@ We release **VerityNgn OSS 3.0.0**, a standalone open-source multimodal engine f
 
 ## 1. Motivation
 
-Prior open-core practice left Deep Research and several authenticity cues on the commercial fork, while OSS drifted. Public distribution requires an impressive, drop-in engine (`pip install verityngn`) that communities can run without SaaS. Overlays for hosted multi-tenant delivery, predictions, and RiskFactor must build **on** OSS.
+Prior open-core practice left Deep Research and several authenticity cues on the commercial fork, while OSS drifted. Public distribution requires an impressive, drop-in engine (`pip install verityngn`) that communities can run without SaaS.
 
 ![Open-core architecture](figures/open_core_architecture.png)
 
@@ -25,10 +29,60 @@ Prior open-core practice left Deep Research and several authenticity cues on the
 
 ---
 
-## 2. System overview (v3)
+## 2. System overview (v3 + v3.1 addendum)
+
+### Analysis tiers (v3.1)
+
+| Tier | Input | Pipeline | Typical latency |
+|------|-------|----------|-----------------|
+| `light` | YouTube URL | VTT → DR-direct | ~60s |
+| `full` | YouTube URL | VTT cache + full CI/verify + optional DR | minutes |
+| `local-light` | `.mp4` | sidecar transcript → DR-direct | ~60s |
+| `local-full` | `.mp4` | full pipeline + optional DR | minutes |
+
+```bash
+verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
+verityngn captions 'https://www.youtube.com/watch?v=VIDEO_ID'   # operator VTT debug
+```
+
+Caption reliability: cached `.en.vtt` / `.vendor.vtt` → yt-dlp (`player_client=android` + `cookies.txt`) → `youtube_transcript_api` → **Supadata** (opt-in `SUPADATA_API_KEY`) → Groq ASR (opt-in) → **Gemini YouTube URL** (`.gemini.vtt`). YouTube Data API metadata alone does **not** download third-party `.en.vtt`. See `docs/guides/YOUTUBE_CAPTIONS.md`. **T-TX-002 v2:** Supadata native **4/6** live (~8.6 s); yt-dlp **5/6**.
+
+#### Why `.en.vtt` is not a simple API call (Sherlock T-VTT-001)
+
+| Path | Works for public third-party videos? |
+|------|--------------------------------------|
+| YouTube Data API `videos.list` | Metadata only — no VTT |
+| `captions.download` (OAuth) | **Owner-only** — 403 for others |
+| `youtube_transcript_api` | Often **HTTP 200 + empty body** when PoToken (`&exp=xpe`) required |
+| yt-dlp + android + cookies | Works when cookies fresh; SABR otherwise |
+| Supadata (`SUPADATA_API_KEY`) | **Live (T-TX-002 v2):** native OK on captioned + Alphabet; free-tier 429 under burst; hard C4 generate pending |
+| Gemini YouTube URL | Synthetic transcript — not official captions |
+
+### §2.1 Ablation: VTT→DR vs report-JSON→DR (T-ABL-005)
+
+**Hypothesis:** Deep Research from cached `.en.vtt` + DR-direct (`--tier light`) is faster but misses the structured claim inventory that full pipeline + DR consumes.
+
+**Seed:** `tLJC8hkK-ao` (Lipozem VSL — spoken-heavy; cite as weak multimodal proof per T-ABL-004).
+
+| Arm | Input | DR elapsed | Claims in payload | `[Reference:]` count | Topic Jaccard vs other arm |
+|-----|-------|------------|-------------------|----------------------|----------------------------|
+| **VTT → DR** | 50,003-char cached `.en.vtt` | **15 s** | 0 | 12 | — |
+| **JSON → DR** | `{id}_report.json` (40 verified claims) | **20 s** | 40 | 23 | **0.22** |
+
+**Decision:** `keep_full_default` — DR-only on transcript is ~3× faster than full pipeline+DR (892 s in T-ABL-001) but lexical overlap with inventory-grounded DR remains low. Light tier is a **triage path**, not a replacement for audit/CI.
+
+Full pipeline + DR (T-ABL-001): topic Jaccard **0.058** between full standard report MD and DR-direct without transcript (v2 bug); with VTT loaded, VTT→DR vs JSON→DR Jaccard rises to **0.22** but still supports keeping full as default.
+
+Artefact: `outputs/ablation_vtt_json_dr_tL_v3/compare_vtt_json_dr.json` · script: `scripts/run_vtt_json_dr_ablation.py`.
+
+### Adaptive vision sleeve (v3.1)
+
+Genre-aware FPS/resolution sampling (`services/vision/adaptive_sampler.py`), exhibit maps for legal dossiers, and brand-safety visual flags. Validated on genre seeds (earnings slides, UGC supers) — not talk-heavy VSLs (T-ABL-004).
 
 ```
 Video URL or file
+  → (optional) VTT cache via caption_fetch
   → multimodal analysis + claim extraction
   → counter-intelligence (YouTube / press-release / Sherlock CI)
   → probabilistic verification (TRUE / FALSE / UNCERTAIN)
@@ -37,79 +91,94 @@ Video URL or file
   → optional authenticity / spectral / Face Landmarker cues
 ```
 
-### 2.1 Deep Research (now in OSS)
+### Deep Research (now in OSS)
 
-`verityngn analyze <url> --deep` runs a counter-intel sanitize of `{video_id}_report.json`, then a grounded Gemini generation producing:
+`verityngn analyze <url> --deep` produces `{video_id}_deep_private_report.{md,html,pdf}` plus grounding audit JSON.
 
-- `{video_id}_deep_private_report.{md,html,pdf}`
-- grounding audit JSON
-- combined TL;DR + DR + standard report when available
-
-### 2.2 Authenticity & vision (optional extras)
-
-- Authenticity gate with stub adapters (C2PA / Corsound / visual) — fail-closed when checks fail
-- Spectral AI-voice indicators via optional `librosa`
-- MediaPipe Face Landmarker adapter for congruence / delivery-risk cues only (not employment use)
-
-### 2.3 Explicitly out of this release
+### Explicitly out of this release
 
 Predictions signal engine, CAR/ICIR, Karp panels, RiskFactor S00–S15, hosted trial credits, full Gemini multisense fusion (deferred).
 
 ---
 
-## 3. Evaluation narrative (illustrative)
+## 3. Live gallery evidence (verityindex.com)
 
-Reported evaluation on prior OSS corpora emphasized counter-intelligence lift and calibrated three-state verdicts. Illustrative charts (not predictions metrics):
+Scraped **2026-08-29** from https://verityindex.com/gallery:
 
-![Claim verdict mix](figures/claim_verdict_mix.png)
+| Metric | Value |
+|--------|-------|
+| Public reports | **12** |
+| Claims analyzed | **427** |
+| Likely to be True | 6 reports |
+| Mixed Truthfulness | 6 reports |
 
-*Figure 2. Illustrative share of TRUE / FALSE / UNCERTAIN claims.*
+![Gallery collage](figures/gallery_thumb_collage.png)
+
+*Figure 2. Public gallery cards (YouTube thumbnails).*
+
+![Claims per video](figures/gallery_live_claims_per_video.png)
+
+*Figure 3. Claims analyzed per public gallery report.*
+
+![Label mix](figures/gallery_live_label_mix.png)
+
+*Figure 4. Overall gallery labels.*
+
+Machine-readable snapshot: [`figures/gallery_live_stats.json`](figures/gallery_live_stats.json).
+
+Editorial labels on the gallery are HotChili Analytics LLM assessments — **not** YouTube data.
+
+---
+
+## 4. In-repo gallery claim mix
+
+From `ui/gallery/approved/` report JSONs (claim-level verification fields):
+
+| Metric | Value |
+|--------|-------|
+| Videos | 11 |
+| Claims with verdicts | 75 |
+| TRUE / FALSE / UNCERTAIN | 29 / 39 / 7 |
+
+![Local verdict mix](figures/gallery_local_verdict_mix.png)
+
+*Figure 5. Claim-level verdict mix (in-repo approved gallery).*
+
+![Local verdict stack](figures/gallery_local_verdict_stack.png)
+
+*Figure 6. Per-video stacked verdicts.*
 
 ![Accuracy stages](figures/accuracy_stages.png)
 
-*Figure 3. Accuracy lift from baseline verification → counter-intel → Deep Research (reported eval narrative).*
-
-Live operator parity vs commercial core: see `PARITY_TEST_v3.md`.
+*Figure 7. Prior evaluation narrative: accuracy lift across stages.*
 
 ---
 
-## 4. Install & CLI
+## 5. Install & CLI
 
 ```bash
-pip install verityngn
-# or: pip install -e ".[deep,vision,audio]"
-
-verityngn analyze https://www.youtube.com/watch?v=VIDEO_ID
-verityngn analyze <url> --deep
-verityngn analyze --file deposition.mp4 --title "Matter clip"
+pip install 'verityngn[deep]'
+verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
+verityngn analyze --file deposition.mp4 --title "Matter clip" --tier local-full
 ```
 
-Credentials: Vertex ADC or `VERITY_GEMINI_KEY` / `GEMINI_API_KEY` (see `.env.example`).
+Credentials: Vertex ADC or `VERITY_GEMINI_KEY` / `GEMINI_API_KEY` (see `.env.example`). Captions: `YTDLP_COOKIES` or repo `cookies.txt`.
 
 ---
 
-## 5. Open-core dependency model
+## 6. Open-core dependency model
 
-Future commercial, predictions, and RiskFactor repositories pin **OSS ≥3.0.0** and keep overlay-only packages. Boundary CI fails if `services/predictions` or `services/quant` appear under the public package.
-
-See `docs/OPEN_CORE.md` and `docs/DEPENDENCY_MODEL.md`.
+Future commercial, predictions, and RiskFactor repositories pin **OSS ≥3.0.0**. Boundary CI fails if `services/predictions` or `services/quant` appear under the public package. See `docs/OPEN_CORE.md`.
 
 ---
 
-## 6. What we will not claim
+## 7. What we will not claim
 
 - No earnings prediction or allocation alpha
 - No “lie detector” branding
 - No RiskFactor registry scores in this paper
-
----
-
-## 7. Related documents
-
-- Full methodology paper: `papers/verityngn_research_paper.md` (v2 lineage; updated by this release note)
-- Counter-intelligence: `papers/counter_intelligence_methodology.md`
-- Probability model: `papers/probability_model_foundations.md`
-- Launch pack: `docs/launch/`
 
 ---
 

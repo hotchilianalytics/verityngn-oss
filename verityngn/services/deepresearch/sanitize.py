@@ -18,6 +18,7 @@ from verityngn.services.reputation.url_safety import (
     sanitize_report_dict_urls,
     sanitize_url_list_in_text,
 )
+from verityngn.services.report.display_labels import is_visual_only_claim
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,25 @@ def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         kept,
         dropped,
     )
+
+    visual_only: list[dict[str, Any]] = []
+    for claim in claims:
+        if not isinstance(claim, dict):
+            continue
+        st = claim.get("source_type")
+        if is_visual_only_claim(st):
+            visual_only.append(
+                {
+                    "claim_text": claim.get("claim_text"),
+                    "source_type": st,
+                    "timestamp": claim.get("timestamp"),
+                    "speaker": claim.get("speaker"),
+                }
+            )
+    if visual_only:
+        sanitized["visual_only_claims"] = visual_only
+        sanitized["visual_only_claim_count"] = len(visual_only)
+
     return sanitized
 
 

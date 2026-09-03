@@ -110,6 +110,9 @@ tmp_container/
 test_downloads/
 test_service_downloads/
 
+# Local caption dumps used during ablation (never ship)
+analysis/
+
 # Sherlock analysis outputs / local dumps (never ship)
 sherlock_analysis_*/
 sb_local_analysis_*/
@@ -182,3 +185,7 @@ CONFIG_SETUP.md
 QUICK_START_WITH_CREDENTIALS.md
 verityngn/config/verityindex-0-0-1-6a21e94ca0a3.json
 test_results/
+
+# Scraped live gallery HTML (stats live in gallery_live_stats.json)
+papers/figures/gallery_page.html
+papers/figures/gallery_list_snapshot.json

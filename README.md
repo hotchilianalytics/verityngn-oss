@@ -1,13 +1,13 @@
 # VerityNgn
 
-**AI-Powered YouTube Video Verification Engine**
+**Claim-level risk abatement for video**
 
 [![Documentation](https://img.shields.io/badge/docs-mintlify-blue.svg)](https://hotchilianalyticsllc.mintlify.app)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Research](https://img.shields.io/badge/status-research-yellow.svg)]()
 
-> **Note:** VerityNgn OSS **3.0.0** is the canonical public engine release (Deep Research included). Research-grade; commercial SaaS and predictions/RiskFactor are separate overlays.
+> **Note:** VerityNgn OSS **3.0.0** is the canonical public engine release (Deep Research included). Research-grade; commercial SaaS and predictions/RiskFactor are separate overlays. User-facing framing is **disclosure / delivery / sponsor-readiness risk** — not a lie detector.
 
 ---
 
@@ -15,29 +15,34 @@
 
 ```bash
 pip install 'verityngn[deep]'
-verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
+verityngn analyze --tier auto 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
 verityngn analyze --file /path/to/video.mp4 --title "Local clip"
+# Local test helpers
+verityngn local analyze --file clip.mp4 -o outputs/local --arm full
+verityngn local analyze --url 'https://www.youtube.com/watch?v=VIDEO_ID' --arm direct --offline
+verityngn ablate --video-id tLJC8hkK-ao --url '...' --arms direct --offline -o outputs/ablation_tL
 ```
 
-Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Release paper: [`papers/verityngn_oss_v3_release.md`](papers/verityngn_oss_v3_release.md)
+Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Release paper: [`papers/verityngn_oss_v3_release.md`](papers/verityngn_oss_v3_release.md) · Gemini gap: [`docs/research/GEMINI_2026_CAPABILITY_GAP.md`](docs/research/GEMINI_2026_CAPABILITY_GAP.md)
 
 ---
 
 ## What is VerityNgn?
 
-VerityNgn (Verity Engine) is an open-source system that analyzes YouTube videos to assess the truthfulness of claims using:
+VerityNgn is an open-source engine that analyzes YouTube or local video to produce **claim-level risk assessments** (disclosure risk, delivery risk, brand-safety / sponsor-readiness):
 
-- 🎥 **Multimodal Analysis**: Video, audio, OCR, motion, and transcript analysis
-- 🔍 **Evidence Verification**: Web search, scientific databases, and credible sources
-- 🕵️ **Counter-Intelligence**: YouTube reviews and press release detection
-- 📊 **Probabilistic Assessment**: TRUE/FALSE/UNCERTAIN distributions with confidence scores
-- 📄 **Comprehensive Reports**: HTML, Markdown, and JSON outputs
+- Multimodal analysis: video, audio, OCR, motion, and transcript
+- Evidence verification with web search and source reputation tiers
+- Counter-intelligence: YouTube reviews and press-release bias detection
+- Internal calibrated TRUE/FALSE/UNCERTAIN probabilities (display as Supported / Contested / Unresolved)
+- Reports: HTML, Markdown, JSON, optional Deep Research risk brief
 
 ### How It Works
 
 ```
-YouTube URL → Local/Cloud LLM Analysis → Enhanced Claims Extraction → Evidence Verification → Counter-Intel → Local-First Report
+YouTube URL or mp4 → Multimodal analysis → Claim extraction → Verification + Counter-Intel → Risk report → optional Deep Research
 ```
 
 1. **Intelligent Segmentation**: Optimizes video segments based on 1M token context window (86% fewer API calls)

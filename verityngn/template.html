@@ -138,6 +138,11 @@
 
 <body>
     <div class="container">
+        {% if private_banner %}
+        <div class="private-compliance-banner" role="note" aria-label="Private report compliance notice">
+            {{ private_banner }}
+        </div>
+        {% endif %}
         {{ content | safe }}
 
         <footer>
