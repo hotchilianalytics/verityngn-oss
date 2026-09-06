@@ -3,14 +3,22 @@
 **A Deep Dive into VerityNgn's Contradictory Evidence Detection System**
 
 **Authors:** VerityNgn Research Team  
-**Date:** October 28, 2025  
-**Version:** 2.0
+**Date:** September 5, 2026  
+**Version:** 3.0.0
 
 ---
 
 ## Abstract
 
-We present a novel counter-intelligence (CI) system for automated fact-checking that systematically identifies and weights contradictory evidence. Traditional fact-checking focuses on finding supporting evidence for claims; we introduce two complementary techniques: (1) **YouTube Review Analysis** - automated search and analysis of review/debunking videos, and (2) **Press Release Bias Detection** - identification and penalization of self-promotional content. Version 2.0 refines the impact weighting model from -0.35 to -0.20 for YouTube reviews, achieving better balance between skepticism and over-conservatism. Our system analyzes YouTube review transcripts using sentiment analysis with 94% precision in press release detection and achieves +18% accuracy improvement on misleading health/finance videos. The system integrates seamlessly with VerityNgn's intelligent video segmentation, maintaining counter-intelligence effectiveness while processing videos 6-7x faster. We provide complete transparency on probability adjustments and empirical justification for the refined weighting model.
+We present the counter-intelligence (CI) subsystem used in VerityNgn OSS v3.
+Traditional fact-checking focuses on supportive evidence; our system explicitly
+seeks contradictory material while also defending against self-referential
+source pollution. The current release couples YouTube review analysis, press
+release detection, Sherlock CI, cite-only sourcing, and evidence-derived source
+fallbacks so standard reports remain populated even when a claim is promotional
+or ultimately unverifiable. The CI layer is now paired with a shared
+Vertex/model/API fallback policy so report generation remains resilient across
+inconsistent Gemini availability.
 
 **Keywords:** counter-intelligence, contradictory evidence, bias detection, press releases, YouTube reviews, fact-checking, balanced weighting
 

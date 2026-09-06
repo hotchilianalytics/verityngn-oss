@@ -19,6 +19,7 @@ import logging
 from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
+from verityngn.utils.llm_utils import invoke_text_prompt_with_fallback
 
 # Import enhanced transcript analysis
 try:
@@ -363,26 +364,20 @@ def _generate_ci_search_queries_oss(search_context: Dict[str, Any]) -> List[str]
     initial = (search_context.get("initial_report") or "")[:2000]
     claims_preview = " ".join((search_context.get("claims") or [])[:5])[:500]
     try:
-        from langchain_google_vertexai import ChatVertexAI
-        from langchain_core.prompts import ChatPromptTemplate
-        from verityngn.config.settings import AGENT_MODEL_NAME, PROJECT_ID, VERTEX_LOCATION
+        from verityngn.config.settings import AGENT_MODEL_NAME, PROJECT_ID
 
-        llm = ChatVertexAI(
-            model_name=AGENT_MODEL_NAME,
+        text, meta, _response = invoke_text_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME,
+            prompt=(
+                "Generate exactly 3 to 5 short search queries to find counter-evidence, reviews, debunks, or fact-checks about this video. "
+                "Use only the video title and context below. Return one query per line, no numbering or bullets.\n\n"
+                f"Title: {title}\n\nContext: {(initial or '')} {(claims_preview or '')}\n\nQueries (one per line):"
+            ),
+            project_id=PROJECT_ID,
+            preferred_tokens=1024,
             temperature=0.2,
-            max_output_tokens=1024,
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
+            logger=logger,
         )
-        prompt = ChatPromptTemplate.from_template(
-            "Generate exactly 3 to 5 short search queries to find counter-evidence, reviews, debunks, or fact-checks about this video. "
-            "Use only the video title and context below. Return one query per line, no numbering or bullets.\n\n"
-            "Title: {title}\n\nContext: {context}\n\nQueries (one per line):"
-        )
-        response = llm.invoke(
-            prompt.format(title=title, context=(initial or "") + " " + (claims_preview or ""))
-        )
-        text = (response.content or "").strip()
         queries = [q.strip() for q in text.split("\n") if q.strip()][:5]
         if queries:
             return queries

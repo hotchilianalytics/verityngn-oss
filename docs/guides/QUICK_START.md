@@ -1,6 +1,6 @@
 # VerityNgn Quick Start Guide
 
-Get up and running with VerityNgn in 5 minutes.
+Get up and running with the current OSS runtime in a few minutes.
 
 ---
 
@@ -9,8 +9,8 @@ Get up and running with VerityNgn in 5 minutes.
 Before you begin, ensure you have:
 
 - ✅ Python 3.12+ installed
-- ✅ Google Cloud account
-- ✅ Completed [Setup Guide](SETUP.md) (authentication configured)
+- ✅ Google Cloud account or a Gemini Developer API key
+- ✅ Completed [Setup Guide](SETUP.md)
 
 ---
 
@@ -49,7 +49,8 @@ Then:
 **Using Command Line:**
 
 ```bash
-python -m verityngn.workflows.main_workflow --url "https://www.youtube.com/watch?v=VIDEO_ID"
+verityngn analyze --tier auto "https://www.youtube.com/watch?v=VIDEO_ID"
+verityngn analyze --tier full --modality video "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
 **Using Test Script:**
@@ -66,10 +67,11 @@ Reports are saved to:
 ```
 outputs/
 └── VIDEO_ID/
-    ├── report.html      # Interactive HTML report (open in browser)
-    ├── report.md        # Markdown summary
-    ├── report.json      # Machine-readable structured data
-    └── VIDEO_ID_claim_N_sources.html  # Evidence for each claim
+    ├── report.html
+    ├── deep.html
+    ├── VIDEO_ID_report.json
+    ├── VIDEO_ID_report.html
+    └── VIDEO_ID_deep_private_report.html
 ```
 
 **Open the HTML report:**

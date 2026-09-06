@@ -71,8 +71,8 @@ ENV PROJECT_ID=""
 ENV LOCATION=us-central1
 
 # AI Model Configuration
-ENV VERTEX_MODEL_NAME=gemini-2.5-flash
-ENV AGENT_MODEL_NAME=gemini-2.5-flash
+ENV VERTEX_MODEL_NAME=gemini-3.8-flash
+ENV AGENT_MODEL_NAME=gemini-3.8-flash
 
 # Multimodal analysis defaults (safe for extension by Batch/Cloud Run)
 ENV USE_VERTEX_YOUTUBE_URL=true

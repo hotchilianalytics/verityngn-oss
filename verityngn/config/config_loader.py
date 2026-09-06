@@ -134,7 +134,10 @@ class ConfigLoader:
             "GOOGLE_AI_STUDIO_KEY": "models.vertex.google_ai_studio_key",
             "STORAGE_BACKEND": "advanced.storage_backend",
             "DEPLOYMENT_MODE": "advanced.deployment_mode",
-            "LOCATION": "gcp.location"
+            "LOCATION": "gcp.location",
+            "VN_MAX_CLAIMS": "processing.max_claims",
+            "PROCESSING_MAX_CLAIMS": "processing.max_claims",
+            "MAX_CLAIMS": "processing.max_claims",
         }
         for env_name, config_path in standard_map.items():
             env_val = os.getenv(env_name)
@@ -228,14 +231,14 @@ class ConfigLoader:
             },
             'models': {
                 'vertex': {
-                    'model_name': 'gemini-2.5-flash',
+                    'model_name': 'gemini-3.8-flash',
                     'max_output_tokens': 65536,
                     'temperature': 0.1,
                     'top_p': 0.8,
                     'top_k': 10
                 },
                 'agent': {
-                    'model_name': 'gemini-2.5-flash',
+                    'model_name': 'gemini-3.8-flash',
                     'max_output_tokens': 32768,
                     'temperature': 0.7
                 }
@@ -246,7 +249,7 @@ class ConfigLoader:
                 'video_trim_duration': 2000,
                 'claims_per_minute': 1.8,
                 'min_claims': 15,
-                'max_claims': 40,
+                'max_claims': 100,
                 'min_claim_length': 10,
                 'deduplicate_claims': True
             },

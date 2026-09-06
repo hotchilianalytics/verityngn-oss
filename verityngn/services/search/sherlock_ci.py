@@ -4,6 +4,7 @@ Sherlock CI (Counter Intelligence) Module using Google Search Grounding.
 import logging
 import json
 from typing import Dict, Any
+from verityngn.utils.llm_utils import invoke_json_prompt_with_fallback
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def generate_sherlock_ci_report(
     logger.info("🕵️‍♂️ [SHERLOCK CI] Initiating Google Search Grounded CI analysis...")
     
     try:
-        from verityngn.config.settings import PROJECT_ID, LOCATION, AGENT_MODEL_NAME
+        from verityngn.config.settings import PROJECT_ID, AGENT_MODEL_NAME
         
         try:
             from google import genai
@@ -28,13 +29,6 @@ def generate_sherlock_ci_report(
             logger.warning(f"❌ [SHERLOCK CI] google.genai not available for grounding: {e}")
             return {}
 
-        # Initialize the new SDK client explicitly to avoid permission issues in Batch
-        client = genai.Client(
-            vertexai=True,
-            project=PROJECT_ID,
-            location=LOCATION,
-        )
-        
         # Construct the prompt
         claims_text = "\n".join([f"- {c}" for c in claims[:10]]) if claims else "None provided."
         
@@ -69,22 +63,30 @@ IMPORTANT: Ensure the output is valid JSON.
 """
         
         # We pass grounding natively via config tools
-        response = client.models.generate_content(
-            model=AGENT_MODEL_NAME or "gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                tools=[{"google_search": {}}],
-                response_mime_type="application/json",
-            )
+        ci_report, result_text, meta, response = invoke_json_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME or "gemini-3.8-flash",
+            prompt=prompt,
+            project_id=PROJECT_ID,
+            preferred_tokens=2048,
+            temperature=0.2,
+            tools=[{"google_search": {}}],
+            logger=logger,
         )
-        
-        result_text = response.text.strip()
+        result_text = result_text.strip()
+        logger.info(
+            "sherlock_ci backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+            meta.get("backend_selected"),
+            meta.get("model_selected"),
+            meta.get("location_selected"),
+            meta.get("fallback_hops"),
+        )
         
         # Strip markdown if model ignored the instruction
         if result_text.startswith("```json"):
             result_text = result_text.replace("```json", "").replace("```", "").strip()
             
-        ci_report = json.loads(result_text)
+        if not ci_report:
+            ci_report = json.loads(result_text)
         
         # Attempt to map Google Search sources if the LLM didn't format them,
         # using the raw grounding metadata from the response!

@@ -48,6 +48,17 @@ Sources:
 
 See `verityngn/services/ablation/`. If **DR-direct** ≥ full pipeline on human usefulness and ≥0.6 topic overlap on ≥2/3 seed videos → document DR-direct as **fast path**; keep full pipeline as **audit/CI path**. Else keep full as default; schedule Interactions agent as Phase-2 spike only.
 
+## Agentic video understanding (2026-09 spike)
+
+Google now exposes **agentic video** (`media_processing=AGENTIC` / Interactions `processing: agentic`) on Flash family including **gemini-3.8-flash**: the model dynamically searches frames/audio/transcript instead of static FPS ingest. Claimed token/cost cuts on long video; better moment retrieval for charts/OCR.
+
+| Keep | Spike behind `VN_AGENTIC_VIDEO=1` |
+|------|-----------------------------------|
+| Claim JSON schema, CI, cite-only, timeouts | Local/YouTube extract via REST GenerateContent + `mediaProcessing=AGENTIC` ([`agentic_video.py`](../../verityngn/services/vision/agentic_video.py)) |
+| Segmented LangGraph fusion as audit fallback | Optional `VN_VIDEO_MODEL=gemini-3.8-flash`; static path remains default |
+
+**Decision (this pass):** Ship flag + REST adapter (works with older `google-genai` without `Part.media_processing`). Do **not** flip default until dual-fixture ablation (sb1507 + longer seed) shows claim quality / token wins. **Non-goal:** Interactions Deep Research Agent (`deep-research-*-preview`) remains Phase 2.
+
 ## Phase-2 spike (not this PR)
 
 - Adapter `verityngn/services/deepresearch/agent_client.py` wrapping `client.interactions.create(..., agent="deep-research-preview-04-2026", background=True)`  

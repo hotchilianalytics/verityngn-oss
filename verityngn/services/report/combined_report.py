@@ -28,6 +28,7 @@ from verityngn.services.report.markdown_generator import (
     generate_sources_appendix,
 )
 from verityngn.services.report.notices import PRIVATE_IN_REPORT_NOTICE
+from verityngn.utils.llm_utils import invoke_text_prompt_with_fallback
 
 logger = logging.getLogger(__name__)
 
@@ -229,23 +230,20 @@ async def generate_tldr(report: VerityReport, deep_markdown: Optional[str] = Non
     deep_excerpt = (deep_markdown or "")[:1200]
 
     try:
-        llm = ChatVertexAI(
-            model_name=AGENT_MODEL_NAME,
-            temperature=0.4,
-            max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
-        )
-        response = await llm.ainvoke(
-            _TLDR_PROMPT.format(
+        text, meta, response = invoke_text_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME,
+            prompt=_TLDR_PROMPT.format(
                 title=_video_display_title(report, deep_markdown),
                 verdict=verdict,
                 key_issue=qs.key_issue if qs else "N/A",
                 concerns=concerns,
                 deep_excerpt=deep_excerpt,
-            )
+            ),
+            project_id=PROJECT_ID,
+            preferred_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+            temperature=0.4,
+            logger=logger,
         )
-        text = (response.content or "").strip()
         return sanitize_url_list_in_text(text)
     except Exception as exc:
         logger.error("TL;DR generation failed: %s", exc)

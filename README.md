@@ -7,7 +7,11 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Research](https://img.shields.io/badge/status-research-yellow.svg)]()
 
-> **Note:** VerityNgn OSS **3.0.0** is the canonical public engine release (Deep Research included). Research-grade; commercial SaaS and predictions/RiskFactor are separate overlays. User-facing framing is **disclosure / delivery / sponsor-readiness risk** — not a lie detector.
+> **Current OSS runtime:** `release/v3.0.0` is the canonical public engine.
+> The local-first path now defaults analysis, verification, and Deep Research to
+> `gemini-3.8-flash`, always emits both `report.html` and `deep.html`, and uses
+> a shared fallback policy when Vertex model/location availability differs across
+> `global` and `us-central1`.
 
 ---
 
@@ -18,6 +22,7 @@ pip install 'verityngn[deep]'
 verityngn analyze --tier auto 'https://www.youtube.com/watch?v=VIDEO_ID'
 verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
 verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
+verityngn analyze --tier full --modality video 'https://www.youtube.com/watch?v=VIDEO_ID'
 verityngn analyze --file /path/to/video.mp4 --title "Local clip"
 # Local test helpers
 verityngn local analyze --file clip.mp4 -o outputs/local --arm full
@@ -25,7 +30,7 @@ verityngn local analyze --url 'https://www.youtube.com/watch?v=VIDEO_ID' --arm d
 verityngn ablate --video-id tLJC8hkK-ao --url '...' --arms direct --offline -o outputs/ablation_tL
 ```
 
-Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Release paper: [`papers/verityngn_oss_v3_release.md`](papers/verityngn_oss_v3_release.md) · Gemini gap: [`docs/research/GEMINI_2026_CAPABILITY_GAP.md`](docs/research/GEMINI_2026_CAPABILITY_GAP.md)
+Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Dependency model: [`docs/DEPENDENCY_MODEL.md`](docs/DEPENDENCY_MODEL.md) · Promotion checklist: [`docs/launch/OSS_BATCH_COMMERCIAL_PROMOTION.md`](docs/launch/OSS_BATCH_COMMERCIAL_PROMOTION.md) · Gemini gap: [`docs/research/GEMINI_2026_CAPABILITY_GAP.md`](docs/research/GEMINI_2026_CAPABILITY_GAP.md)
 
 ---
 
@@ -37,21 +42,20 @@ VerityNgn is an open-source engine that analyzes YouTube or local video to produ
 - Evidence verification with web search and source reputation tiers
 - Counter-intelligence: YouTube reviews and press-release bias detection
 - Internal calibrated TRUE/FALSE/UNCERTAIN probabilities (display as Supported / Contested / Unresolved)
-- Reports: HTML, Markdown, JSON, optional Deep Research risk brief
+- Reports: JSON-first standard report + Deep Research brief with stable aliases
+  `report.html` and `deep.html`
 
 ### How It Works
 
 ```
-YouTube URL or mp4 → Multimodal analysis → Claim extraction → Verification + Counter-Intel → Risk report → optional Deep Research
+YouTube URL or mp4 -> JSON-first analysis -> claim extraction -> verification + counter-intel -> `report.html` + `deep.html`
 ```
 
-1. **Intelligent Segmentation**: Optimizes video segments based on 1M token context window (86% fewer API calls)
-2. **Download & Analyze**: Extracts video, audio, transcript, and metadata
-3. **Enhanced Claims Extraction**: Multi-pass extraction with specificity scoring and absence claim generation
-4. **Gather Evidence**: Searches web, scientific sources, and press releases
-5. **Counter-Intelligence**: Finds YouTube reviews and contradictory evidence
-6. **Calculate Probabilities**: Bayesian aggregation with validation power weighting
-7. **Generate Report**: Creates detailed HTML report with sources and confidence
+1. **Tiered routing**: `auto` selects transcript-first vs full multimodal based on caption and visual sufficiency.
+2. **Modality control**: `--modality auto|transcript|video` lets operators force the extraction path.
+3. **Fallback-aware LLM routing**: Vertex `global` -> lower Vertex models -> `us-central1` -> Developer API.
+4. **Source finding**: verification now keeps light-search sources for previously skipped promotional claims and falls back to evidence-derived URLs when needed.
+5. **Dual outputs**: standard + Deep Research artifacts are synchronized into the requested output directory.
 
 ---
 

@@ -5,19 +5,24 @@ description: "The science behind multimodal verification and probabilistic scori
 
 # VerityNgn Methodology Documentation
 
-**Version 1.0** | **Last Updated:** October 23, 2025
+**Version 3.0.0** | **Last Updated:** September 5, 2026
 
 ---
 
 ## Executive Summary
 
-VerityNgn is a multimodal AI-powered video verification system that analyzes YouTube videos to assess the truthfulness of claims made within them. The system combines cutting-edge multimodal LLM analysis, counter-intelligence techniques, and probabilistic reasoning to generate comprehensive truthfulness reports.
+VerityNgn is a multimodal video verification engine that analyzes YouTube videos
+or local files to produce claim-level risk reports. The current OSS path is
+JSON-first: it extracts claims, verifies them against external evidence, and
+materializes both a standard report and a Deep Research brief into the selected
+output directory.
 
-**Core Innovation:** VerityNgn is the first system to combine:
-1. Frame-by-frame multimodal video analysis (1 FPS sampling)
-2. YouTube counter-intelligence (analyzing review videos for contradictory evidence)
-3. Press release bias detection and penalty system
-4. Probabilistic truthfulness assessment with evidence weighting
+**Current core features:**
+1. Tiered routing between transcript-first and full multimodal analysis
+2. `--modality auto|transcript|video` control for operators
+3. Shared Vertex/model/API fallback for `gemini-3.8-flash` quality-critical paths
+4. Source-finding with cite-only safeguards plus evidence-derived source fallback
+5. Dual outputs: `report.html` and `deep.html`
 
 ---
 
@@ -95,8 +100,8 @@ VerityNgn follows a pipeline architecture with six main stages:
 
 ### Technology Stack
 
-- **Multimodal LLM:** Google Gemini 2.5 Flash (via Vertex AI)
-- **Context Window:** 64K tokens for comprehensive analysis
+- **Multimodal LLM default:** Google Gemini 3.8 Flash
+- **Fallback policy:** Vertex `global` -> lower Vertex models -> `us-central1` -> Developer API
 - **Video Processing:** yt-dlp for video download and metadata
 - **Web Search:** Google Custom Search API
 - **Framework:** LangGraph for workflow orchestration

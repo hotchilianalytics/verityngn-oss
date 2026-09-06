@@ -93,16 +93,30 @@ def analyze_local(
     meta["video_id"] = vid
     meta["video_path"] = video_path or None
 
+    # Sync standard report HTML/JSON from outputs_debug into -o (dual-output contract).
+    if vid:
+        from verityngn.services.report.artifact_sync import (
+            checklist_artifacts,
+            sync_standard_report_artifacts,
+        )
+
+        meta["artifacts"] = sync_standard_report_artifacts(out, vid)
+
     if deep and vid:
         import asyncio
 
         from verityngn.services.deepresearch.pipeline import generate_deep_research_report
+        from verityngn.services.report.artifact_sync import checklist_artifacts
 
         report_json = Path(out) / f"{vid}_report.json"
         if report_json.is_file():
             meta["deep"] = asyncio.run(
                 generate_deep_research_report(str(report_json), out, video_id=vid, title=title or None)
             )
+            meta["artifacts"] = {
+                **(meta.get("artifacts") or {}),
+                **checklist_artifacts(out, vid),
+            }
         else:
             meta["deep"] = {"status": "skipped", "reason": "no_report_json"}
     return meta

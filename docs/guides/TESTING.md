@@ -1,6 +1,6 @@
 # VerityNgn Testing Guide
 
-Comprehensive guide to testing VerityNgn functionality.
+Comprehensive guide to validating the current OSS runtime.
 
 ---
 
@@ -25,19 +25,33 @@ Expected output:
 ### Test Workflow
 
 ```bash
-./run_test_tl.sh
+verityngn analyze --tier full --modality video "https://www.youtube.com/watch?v=tLJC8hkK-ao"
 ```
 
-This tests the complete workflow on the LIPOZEM video (tLJC8hkK-ao, 33 minutes).
+This exercises the standard report path on the LIPOZEM video
+(`tLJC8hkK-ao`, 33 minutes).
 
 **Expected:**
-- Duration: ~10 minutes
-- Claims extracted: 15-25
-- Report generated in `outputs/tLJC8hkK-ao/`
+- Duration: variable by backend and quota
+- Report aliases present: `report.html` and `deep.html`
+- JSON artifact present: `{video_id}_report.json`
 
 ---
 
 ## Test Scripts
+
+### Release-v3 validation ladder
+
+```bash
+pytest -q test/unit/test_llm_fallback.py
+pytest -q test/unit/test_deepresearch.py
+pytest -q test/unit/test_sufficiency.py
+verityngn analyze --tier full --modality video "https://www.youtube.com/watch?v=tLJC8hkK-ao"
+verityngn analyze --file /path/to/sb1507.mp4 --title "SB1507 Oregon QSBS" --tier local-full
+```
+
+Confirm logs show `backend_selected`, `model_selected`, `location_selected`,
+and `fallback_hops` for fallback-aware calls.
 
 ### 1. Credential Validation
 

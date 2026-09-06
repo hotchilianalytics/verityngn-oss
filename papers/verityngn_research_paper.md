@@ -1,8 +1,8 @@
-# VerityNgn: A Multimodal Counter-Intelligence System for YouTube Video Verification
+# VerityNgn: A Multimodal Counter-Intelligence System for Video Verification
 
 **Authors:** VerityNgn Research Team  
 **Affiliation:** VerityNgn Open Source Project  
-**Date:** August 29, 2026  
+**Date:** September 5, 2026  
 **Version:** 3.0.0
 
 > **Release note (v3.0.0):** Deep Research, optional authenticity/spectral cues, and MediaPipe Face Landmarker are now part of the Apache OSS engine. Predictions and RiskFactor remain closed overlays. See companion release paper [`verityngn_oss_v3_release.md`](verityngn_oss_v3_release.md) and figures in [`figures/`](figures/).
@@ -11,7 +11,17 @@
 
 ## Abstract
 
-We present VerityNgn v2.0, a novel automated system for assessing the truthfulness of claims made in YouTube videos through multimodal AI analysis combined with counter-intelligence techniques. The system introduces **intelligent video segmentation** that dynamically calculates optimal segment sizes based on model context windows, reducing API calls by 86% while maintaining analysis quality. Claims are extracted through frame-by-frame video analysis at 1 FPS sampling rate using Google's Gemini 2.5 Flash multimodal LLM (1M token context window), with a new **multi-pass extraction pipeline** that scores claim specificity and generates absence claims. The system verifies claims against external sources and employs a unique counter-intelligence subsystem that analyzes YouTube review videos and detects press release bias. Our probabilistic framework combines evidence quality weighting, source credibility assessment, and counter-intelligence adjustments to generate nuanced truthfulness scores. In evaluation across 50+ videos spanning health, finance, and technology domains, VerityNgn v2.0 achieved 78% accuracy in identifying misleading claims when compared to manual expert review, with 6-7x faster processing time than v1.0.
+We present VerityNgn OSS v3, a local-first automated system for assessing the
+truthfulness and disclosure risk of claims made in YouTube videos and local
+video files through multimodal AI analysis combined with counter-intelligence
+techniques. The current release adds JSON-first reporting, always-on dual HTML
+artifacts (`report.html` and `deep.html`), transcript-vs-video modality
+control, improved source preservation, and a shared Vertex/model/API fallback
+policy centered on `gemini-3.8-flash`. Claims are extracted through
+multimodal analysis or transcript-first routing depending on sufficiency, then
+verified against external sources with source reputation, cite-only safeguards,
+and contradictory evidence search. The result is a more resilient research
+engine that preserves report quality across uneven Vertex model availability.
 
 **Keywords:** video verification, multimodal analysis, fact-checking, counter-intelligence, probability distribution, truthfulness assessment, LLM, context-aware segmentation, claim extraction
 

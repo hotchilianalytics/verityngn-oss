@@ -13,7 +13,11 @@ from langchain_google_vertexai import VertexAI
 import yt_dlp
 
 from verityngn.models.workflow import InitialAnalysisState, ClaimVerificationState
-from verityngn.models.report import EvidenceSource
+from verityngn.models.report import (
+    EvidenceSource,
+    canonicalize_probability_distribution,
+    map_probabilities_to_verification_result,
+)
 from verityngn.config.prompts import CLAIM_VERIFICATION_PROMPT
 from verityngn.config.settings import (
     AGENT_MODEL_NAME,
@@ -43,6 +47,10 @@ from verityngn.services.report.evidence_utils import (
 )
 from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
 from verityngn.config.config_loader import get_config
+from verityngn.utils.llm_utils import (
+    build_langchain_vertex_kwargs,
+    invoke_json_prompt_with_fallback,
+)
 
 try:
     from verityngn.services.reputation.domain_reputation import (
@@ -271,11 +279,54 @@ def _invoke_verification_agent_worker(queue, agent_input):
     Puts (True, result) or (False, error_message) into queue.
     """
     try:
-        agent = get_agent(None)
-        result = agent.invoke(agent_input)
+        result = _invoke_verification_agent_json(agent_input)
         queue.put(("ok", result))
     except Exception as e:
         queue.put(("err", str(e)))
+
+
+def _invoke_verification_agent_json(agent_input: Dict[str, Any]) -> Dict[str, Any]:
+    """Fallback-aware JSON verifier used by the timeout worker."""
+    prompt_text = (
+        f"""You are an expert fact-checker with a focus on debunking misinformation.
+
+{get_date_context_prompt_section()}
+
+Context:
+Video Title: {agent_input.get('video_title', '')}
+Video URL: {agent_input.get('video_url', '')}
+Claim to Verify: {agent_input.get('claim', '')}
+{agent_input.get('context_research_section', '')}
+
+Evidence Found:
+{agent_input.get('evidence', 'No relevant evidence found.')}
+
+Guidelines:
+- Review the evidence carefully
+- Analyze source credibility and relevance
+- Provide JSON only
+- Cite ONLY URLs present verbatim in Evidence Found
+- If there are no usable URLs, set sources to [] and treat the claim as UNVERIFIABLE/high-UNCERTAIN
+
+JSON keys: evidence_summary, conclusion_summary, probability_distribution, sources
+"""
+    )
+    parsed, text, meta, _response = invoke_json_prompt_with_fallback(
+        primary_model=AGENT_MODEL_NAME,
+        prompt=prompt_text,
+        project_id=PROJECT_ID,
+        preferred_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+        temperature=0.7,
+        logger=logging.getLogger(__name__),
+    )
+    if isinstance(parsed, dict) and parsed:
+        parsed["_llm_fallback_meta"] = meta
+        return parsed
+    recovered = _try_parse_fenced_json(text)
+    if isinstance(recovered, dict):
+        recovered["_llm_fallback_meta"] = meta
+        return recovered
+    raise ValueError(f"Invalid verifier JSON output: {text[:200]}")
 
 
 def run_verification_agent_with_timeout(
@@ -492,11 +543,6 @@ def classify_claims_by_tier(
             c["tier_reason"] = "tiering unavailable"
         return claims
 
-    client = genai.Client(
-        vertexai=True,
-        project=PROJECT_ID,
-        location=VERTEX_LOCATION,
-    )
     claims_text = "\n".join(
         f"{i+1}. {c.get('claim_text', '')[:200]}"
         for i, c in enumerate(claims)
@@ -518,15 +564,22 @@ Output ONLY a comma-separated list of tier numbers, one per claim in order. Exam
 Your output (no other text):"""
 
     try:
-        response = client.models.generate_content(
-            model=VERIFICATION_MODEL_NAME,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.2,
-                max_output_tokens=1024,
-            ),
+        _parsed, text, meta, _response = invoke_json_prompt_with_fallback(
+            primary_model=VERIFICATION_MODEL_NAME,
+            prompt=prompt,
+            project_id=PROJECT_ID,
+            preferred_tokens=1024,
+            temperature=0.2,
+            logger=logger,
         )
-        text = (getattr(response, "text", None) or "").strip()
+        logger.info(
+            "claim_tiering backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+            meta.get("backend_selected"),
+            meta.get("model_selected"),
+            meta.get("location_selected"),
+            meta.get("fallback_hops"),
+        )
+        text = text.strip()
         if not text:
             raise ValueError("Empty response from tiering model")
         # Parse comma-separated list; allow trailing/leading whitespace and newlines
@@ -639,25 +692,25 @@ Probabilities must sum to 1.0. Use UNVERIFIABLE when no external evidence could 
         prompt = "[Circuit breaker: full verification timed out. Give a quick verdict from claim text only.]\n\n" + prompt
 
     try:
-        client = genai.Client(
-            vertexai=True,
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
+        parsed, text, meta, _response = invoke_json_prompt_with_fallback(
+            primary_model=VERIFICATION_MODEL_NAME,
+            prompt=prompt,
+            project_id=PROJECT_ID,
+            preferred_tokens=2048,
+            temperature=0.2,
+            logger=logger,
         )
-        response = client.models.generate_content(
-            model=VERIFICATION_MODEL_NAME,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.2,
-                max_output_tokens=2048,
-            ),
+        logger.info(
+            "fast_fail backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+            meta.get("backend_selected"),
+            meta.get("model_selected"),
+            meta.get("location_selected"),
+            meta.get("fallback_hops"),
         )
-        text = getattr(response, "text", None) or ""
+        text = text or ""
         if not text.strip():
             raise ValueError("Empty response")
 
-        parsed = json.loads(text)
         if isinstance(parsed, dict):
             result = parsed.get("result", "UNCERTAIN")
             explanation = parsed.get("explanation", "No explanation.")
@@ -729,9 +782,11 @@ def get_agent(state):
     # SHERLOCK FIX: Add timeout protection to prevent indefinite hangs
     # Reduced timeout from 120s to 60s and disabled retries to prevent 2202s hangs
     llm = VertexAI(
-        model_name=AGENT_MODEL_NAME,
-        temperature=0.7,
-        max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+        **build_langchain_vertex_kwargs(
+            AGENT_MODEL_NAME,
+            preferred_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+            temperature=0.7,
+        ),
         request_timeout=60.0,  # Reduced from 120s to 60s
         max_retries=1,  # Limit retries to 1 (was: default unlimited)
         project=PROJECT_ID,
@@ -761,6 +816,9 @@ Guidelines for verification:
 2. Analyze the credibility and relevance of sources
 3. Determine a probability distribution over possible outcomes
 4. Provide concise summaries of evidence and conclusions
+5. Cite ONLY URLs that appear verbatim in the Evidence Found block above. Never invent URLs.
+6. If Evidence Found is empty or has no usable URLs, set sources to [] and treat the claim as UNVERIFIABLE (high UNCERTAIN).
+7. Creator self-posts (LinkedIn, personal channel) may inform context but must not be the sole support for TRUE.
 
 Key Principles:
 - Lack of supporting evidence for extraordinary claims should be treated as a strong indicator that the claim is likely false
@@ -773,14 +831,14 @@ Focus on:
 - Factual information from credible sources
 - Both supporting and contradicting evidence
 - Source credibility in assessment
-- Specific source citations in evidence summary
+- Specific source citations in evidence summary (Evidence-block URLs only)
 
 Provide a JSON response with the following structure:
 {{{{
     "evidence_summary": "A single sentence summarizing the key evidence found",
     "conclusion_summary": "A single sentence summarizing the conclusion about the claim's veracity",
     "probability_distribution": {{{{"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}}}},
-    "sources": ["list of source URLs or references that support the verification"]
+    "sources": ["ONLY URLs copied verbatim from Evidence Found; empty list if none"]
 }}}}
 
 Example probability distributions:
@@ -841,27 +899,30 @@ def _invoke_grounded_verification_agent(
         f"{agent_input.get('context_research_section', '')}\n\n"
         "Evidence Found:\n"
         f"{agent_input.get('evidence', 'No relevant evidence found.')}\n\n"
-        "Guidelines: Review evidence carefully; determine a probability distribution; provide JSON only.\n\n"
+        "Guidelines: Review evidence carefully; determine a probability distribution; provide JSON only.\n"
+        "Cite ONLY URLs that appear verbatim in Evidence Found. If none, sources=[] and lean UNVERIFIABLE.\n"
+        "Creator self-posts are not sole TRUE support.\n\n"
         "Respond with JSON only (no markdown) with keys: evidence_summary, conclusion_summary, "
-        "probability_distribution (TRUE, FALSE, UNCERTAIN summing to 1.0), sources (list of URLs)."
+        "probability_distribution (TRUE, FALSE, UNCERTAIN summing to 1.0), sources (Evidence-block URLs only)."
     )
     try:
-        client = genai.Client(
-            vertexai=True,
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
+        result, text, meta, response = invoke_json_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME,
+            prompt=prompt_text,
+            project_id=PROJECT_ID,
+            preferred_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+            temperature=0.7,
+            tools=[types.Tool(google_search=types.GoogleSearch())],
+            logger=logger,
         )
-        response = client.models.generate_content(
-            model=AGENT_MODEL_NAME,
-            contents=prompt_text,
-            config=types.GenerateContentConfig(
-                temperature=0.7,
-                max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
-                tools=[types.Tool(google_search=types.GoogleSearch())],
-            ),
+        logger.info(
+            "grounded_verifier backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+            meta.get("backend_selected"),
+            meta.get("model_selected"),
+            meta.get("location_selected"),
+            meta.get("fallback_hops"),
         )
-        text = (getattr(response, "text", None) or "").strip()
-        result = _try_parse_fenced_json(text)
+        text = text.strip()
         if not isinstance(result, dict):
             result = {}
         grounding_evidence = []
@@ -971,6 +1032,52 @@ def search_youtube_counter_intel_standalone(
 
     # YouTube CI now runs once after initial analysis in the workflow; keep this noop to preserve API
     return []
+
+
+def _url_host_is_edu(url: str) -> bool:
+    """True when the URL *host* is an .edu domain (not a path ending in .edu)."""
+    try:
+        from urllib.parse import urlparse
+
+        host = (urlparse(url or "").hostname or "").lower()
+        return host.endswith(".edu") or host.endswith(".edu.")
+    except Exception:
+        return False
+
+
+def _rank_evidence_items(items: List[Dict[str, Any]], claim_text: str) -> List[Dict[str, Any]]:
+    """Rank evidence by relevance_score × light domain-tier boost."""
+    try:
+        from verityngn.services.search.web_search import evidence_relevance_score
+    except Exception:
+        evidence_relevance_score = None  # type: ignore
+
+    def _key(item: Dict[str, Any]) -> float:
+        score = item.get("relevance_score")
+        if score is None and evidence_relevance_score:
+            score = evidence_relevance_score(item, claim_text)
+        score = float(score or 0.0)
+        url = (item.get("url") or "").lower()
+        # Light boost for primary-class hosts (resolver-driven + generic .gov)
+        primary_boost_hosts = (
+            "olis.oregonlegislature.gov",
+            "oregonlegislature.gov",
+            "ballotpedia.org",
+            "nih.gov",
+            "fda.gov",
+            "cdc.gov",
+            "sec.gov",
+            "federalreserve.gov",
+            "factcheck.org",
+            "snopes.com",
+            "politifact.com",
+            ".gov/",
+        )
+        if any(h in url for h in primary_boost_hosts):
+            score += 0.15
+        return score
+
+    return sorted(items, key=_key, reverse=True)
 
 
 def collect_and_group_evidence(
@@ -1120,7 +1227,7 @@ def collect_and_group_evidence(
         is_scientific = (
             source_type in ("scientific journal", "academic research", "peer-reviewed")
             or any(domain in url for domain in scientific_domains)
-            or url.endswith(".edu")
+            or _url_host_is_edu(url)
         )
 
         # Check for self-referential content
@@ -1598,7 +1705,11 @@ def apply_evidence_quality_boost(
     press_total_reach = len(press_release_evidence) if press_release_evidence else 0
 
     # If counter-intelligence has very low reach, boost confidence in primary evidence
-    if youtube_total_views < 1000 and press_total_reach < 3:
+    if (
+        youtube_total_views < 1000
+        and press_total_reach < 3
+        and boosted_dist.get("UNCERTAIN", 0.0) < 0.40
+    ):
         confidence_boost = 0.10  # 10% boost when CI has minimal impact
 
         # Apply boost to the dominant probability
@@ -1726,15 +1837,16 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
     independent_evidence_found = len(main_evidence) > 0
 
     # Format evidence for LLM (use only main evidence, not press releases)
-    # SHERLOCK FIX: Further limit evidence to prevent rate limiting from large payloads
+    # Rank by relevance × domain boost, then take top 8
     evidence_text = ""
     if main_evidence:
-        # Prioritize evidence by relevance/quality, limit to top 8 items
-        evidence_items = main_evidence[:8]  # Reduced from 10 to 8
+        ranked = _rank_evidence_items(main_evidence, claim_text)
+        evidence_items = ranked[:8]
+        main_evidence = ranked  # keep ranked order for cite-only downstream
         evidence_text = "\n".join(
             [
                 f"Source: {item.get('source_name', 'Unknown')}\nURL: {item.get('url', 'N/A')}\nText: {item.get('text', '')[:400]}\n"
-                for item in evidence_items  # Also reduced text snippet from 500 to 400 chars
+                for item in evidence_items
             ]
         )
         logger.info(
@@ -1742,9 +1854,6 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         )
 
     try:
-        agent = get_agent(state)
-        # Use simple JSON output parser without Pydantic dependency
-        output_parser = JsonOutputParser()
         context_research_section = (
             "Background (video subject research):\n" + context_research
             if context_research else ""
@@ -1852,8 +1961,7 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         prob_dist = result.get(
             "probability_distribution", {"TRUE": 0.15, "FALSE": 0.50, "UNCERTAIN": 0.35}
         )
-        if not isinstance(prob_dist, dict):
-            prob_dist = {"TRUE": 0.15, "FALSE": 0.50, "UNCERTAIN": 0.35}
+        prob_dist = canonicalize_probability_distribution(prob_dist)
 
         # UNVERIFIABLE gate: no evidence => do not assign LIKELY_TRUE/LIKELY_FALSE
         total_sources = len(main_evidence) + len(scientific_evidence) + len(press_release_evidence)
@@ -1924,6 +2032,13 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                 youtube_counter_power += power
                 total_validation_power += power
 
+            independent_support_power = sum(
+                _evidence_power(e) for e in evidence_groups["independent"] if e.get("supports_claim", False)
+            )
+            scientific_support_power = sum(
+                _evidence_power(e) for e in evidence_groups["scientific"] if e.get("supports_claim", False)
+            )
+
             modifications.append(
                 f"Validation power totals: Independent={independent_power:.1f}, Press={press_release_power:.1f}, Scientific={scientific_power:.1f}, YouTube={youtube_counter_power:.1f}"
             )
@@ -1956,7 +2071,7 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                     modifications.append(
                         f"High promotional power ratio ({promotional_power_ratio:.1%}) increases FALSE by {false_boost:.2f}"
                     )
-                elif independent_power_ratio > 0.7:  # Majority independent power
+                elif independent_power_ratio > 0.7 and independent_support_power > 0:
                     true_boost = min(0.3, independent_power_ratio * 0.3)
                     enhanced_dist["TRUE"] = min(
                         0.85, enhanced_dist.get("TRUE", 0.3) + true_boost
@@ -1966,13 +2081,13 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                     )
 
             # Factor 3: Scientific evidence weighting
-            if scientific_power > 0:
-                science_weight = min(0.4, scientific_power * 0.2)
+            if scientific_support_power > 0:
+                science_weight = min(0.4, scientific_support_power * 0.2)
                 enhanced_dist["TRUE"] = min(
                     0.85, enhanced_dist.get("TRUE", 0.3) + science_weight
                 )
                 modifications.append(
-                    f"Scientific evidence (power={scientific_power:.1f}) increases TRUE by {science_weight:.2f}"
+                    f"Supporting scientific evidence (power={scientific_support_power:.1f}) increases TRUE by {science_weight:.2f}"
                 )
 
             # Factor 4: YouTube counter-intelligence impact (ENHANCED - Research Path)
@@ -2099,7 +2214,7 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         )
 
         # Use final distribution after counter-intelligence
-        prob_dist = final_prob_dist
+        prob_dist = canonicalize_probability_distribution(final_prob_dist)
         logger.info(f"🎯 Final probability distribution: {prob_dist}")
         for mod in prob_modifications:
             logger.info(f"   📊 {mod}")
@@ -2195,37 +2310,11 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
                 f"INDEPENDENT EVIDENCE: {len(main_evidence)} independent sources (validation power={independent_power:.1f}) provide unbiased perspective."
             )
 
-        # --- Quantum/human-like mapping for verdict ---
+        # Shared verdict mapping: keep report and verification thresholds aligned.
         t = prob_dist.get("TRUE", 0.0) * 100
         f = prob_dist.get("FALSE", 0.0) * 100
         u = prob_dist.get("UNCERTAIN", 0.0) * 100
-
-        # Enhanced probability mapping with 65% thresholds (from August 22nd analysis)
-        false_uncertain_combined = f + u
-        true_uncertain_combined = t + u
-
-        if t > 70 and f < 10:
-            assessment_level = "HIGHLY_LIKELY_TRUE"
-        elif true_uncertain_combined > 65 and f < 35:
-            assessment_level = "LIKELY_TRUE"
-        elif false_uncertain_combined > 65 and t < 35:
-            assessment_level = "LIKELY_FALSE"
-        elif f > 75:
-            assessment_level = "HIGHLY_LIKELY_FALSE"
-        elif t > 50 and f < 20:
-            assessment_level = "LIKELY_TRUE"
-        elif f > 45 and t < 25:
-            assessment_level = "LIKELY_FALSE"
-        elif t > 40 and f < 35:
-            assessment_level = "LEANING_TRUE"
-        elif f > 35 and t < 30:
-            assessment_level = "LEANING_FALSE"
-        elif abs(t - f) < 10:
-            assessment_level = "UNCERTAIN"
-        elif t > f:
-            assessment_level = "LEANING_TRUE"
-        else:
-            assessment_level = "LEANING_FALSE"
+        assessment_level = map_probabilities_to_verification_result(prob_dist)
 
         # Evidence floor: strong verdicts require at least one effective source
         if total_validation_power == 0:
@@ -2243,6 +2332,26 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         explanation = result.get("conclusion_summary", "No conclusion available")
         if explanation_add:
             explanation += "\n\n" + " ".join(explanation_add)
+        unsupported_markers = (
+            "cannot be verified",
+            "unverifiable",
+            "cannot be independently confirmed",
+            "insufficient evidence",
+            "no available evidence",
+            "not be independently confirmed",
+        )
+        evidence_summary_text = result.get("evidence_summary", "") or ""
+        combined_support_text = f"{explanation}\n{evidence_summary_text}".lower()
+        explicit_support_count = sum(
+            1 for item in (main_evidence or []) if isinstance(item, dict) and item.get("supports_claim", False)
+        )
+        if any(marker in combined_support_text for marker in unsupported_markers):
+            if assessment_level in ("HIGHLY_LIKELY_TRUE", "LIKELY_TRUE") and explicit_support_count == 0:
+                assessment_level = "UNCERTAIN"
+                logger.info("Support cap: unverifiable language without supporting sources — downgrading positive verdict to UNCERTAIN")
+            elif assessment_level == "LEANING_TRUE" and explicit_support_count == 0:
+                assessment_level = "UNCERTAIN"
+                logger.info("Support cap: unverifiable language without supporting sources — downgrading LEANING_TRUE to UNCERTAIN")
         claim_obj = getattr(state, "claim", None)
         if claim_obj and isinstance(claim_obj, dict) and claim_obj.get("credential_red_flag"):
             explanation += "\n\n⚠️ RED FLAG: Speaker claims Dr./medical credentials but no verifiable records found in professional registries."
@@ -2273,19 +2382,68 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
             sanitize_url_list_in_text,
         )
 
+        # Cite-only: intersect LLM-cited URLs with gathered hits (do not dump all independent URLs).
+        gathered_urls = {
+            (item.get("url") or "").strip()
+            for item in (main_evidence or [])
+            if item.get("url")
+        }
+        llm_sources = [
+            (u or "").strip()
+            for u in (result.get("sources") or [])
+            if isinstance(u, str) and u.strip()
+        ]
+        cited = [u for u in llm_sources if u in gathered_urls]
+        if not cited and gathered_urls and llm_sources:
+            # Soft match: allow LLM URL if host+path prefix matches a gathered hit
+            from urllib.parse import urlparse
+
+            def _norm(u: str) -> str:
+                p = urlparse(u)
+                return f"{(p.netloc or '').lower()}{(p.path or '').rstrip('/')}"
+
+            gathered_norm = {_norm(u): u for u in gathered_urls}
+            for u in llm_sources:
+                n = _norm(u)
+                if n in gathered_norm:
+                    cited.append(gathered_norm[n])
+        if not cited:
+            # Soft cite-only: keep top gathered URLs rather than wiping to [].
+            # Quality/cost tradeoff: prefer evidence links in Section 7 over empty sources;
+            # still cap strong TRUE/FALSE when the LLM cited nothing on-topic.
+            if gathered_urls:
+                top_n = sorted(gathered_urls)[:5]
+                cited = top_n
+                logger.info(
+                    "Cite-only empty intersection — retaining %d gathered URL(s) as sources",
+                    len(cited),
+                )
+            if assessment_level in (
+                "HIGHLY_LIKELY_TRUE",
+                "LIKELY_TRUE",
+                "HIGHLY_LIKELY_FALSE",
+                "LIKELY_FALSE",
+            ) and not llm_sources:
+                logger.info(
+                    "Cite-only empty LLM cites — capping %s to UNCERTAIN/UNVERIFIABLE",
+                    assessment_level,
+                )
+                if "TRUE" in assessment_level:
+                    assessment_level = "UNCERTAIN"
+                else:
+                    assessment_level = "UNVERIFIABLE"
+                explanation = (
+                    (explanation or "")
+                    + "\n\nInsufficient on-topic citations after cite-only filtering; "
+                    "verdict capped (gathered URLs retained as sources)."
+                ).strip()
+
         verification_result = {
             "result": assessment_level,
             "explanation": explanation,
             "evidence": sanitize_url_list_in_text(evidence_summary),
             "probability_distribution": prob_dist,
-            "sources": filter_safe_urls(
-                list(
-                    set(
-                        result.get("sources", [])
-                        + [item.get("url", "") for item in main_evidence if item.get("url")]
-                    )
-                )
-            ),
+            "sources": filter_safe_urls(list(dict.fromkeys(cited))),
             "pr_sources": filter_safe_evidence(press_release_evidence),
             "youtube_counter_sources": filter_safe_evidence(youtube_review_evidence),
             "counter_intelligence_boosts": counter_intel_boosts,  # Add counter-intelligence information
@@ -2364,6 +2522,8 @@ def gather_evidence(claim_text: str, tier: int = 1) -> List[Dict[str, Any]]:
     """
     Gather evidence for a claim. Tier controls search budget (1=3 searches, 2=2, 3=no search).
 
+    Uses type-aware query rewriting (legislative / generic) instead of only the raw claim.
+
     Args:
         claim_text (str): The claim text
         tier (int): Verification tier 1, 2, or 3 (3 returns [])
@@ -2375,9 +2535,41 @@ def gather_evidence(claim_text: str, tier: int = 1) -> List[Dict[str, Any]]:
     logger.info(f"Gathering evidence for claim: {claim_text}")
 
     try:
-        evidence = search_for_evidence(claim_text, tier=tier)
-        logger.info(f"Found {len(evidence)} pieces of evidence")
-        return evidence
+        claim_type = "generic"
+        try:
+            from verityngn.workflows.verification_query_enhancement import (
+                is_legislative_claim,
+            )
+
+            if is_legislative_claim(claim_text):
+                claim_type = "legislative"
+        except Exception:
+            pass
+
+        queries = generate_verification_queries(claim_text, claim_type, max_queries=3)
+        if not queries:
+            queries = [claim_text[:160]]
+
+        merged: List[Dict[str, Any]] = []
+        seen = set()
+        for q in queries:
+            batch = search_for_evidence(q, tier=tier)
+            for item in batch:
+                url = (item.get("url") or "").strip()
+                if url and url not in seen:
+                    seen.add(url)
+                    merged.append(item)
+        # Keep a light pass on the short claim prefix if queries were heavily rewritten
+        if claim_text and claim_text[:120] not in queries:
+            for item in search_for_evidence(claim_text[:160], tier=tier):
+                url = (item.get("url") or "").strip()
+                if url and url not in seen:
+                    seen.add(url)
+                    merged.append(item)
+
+        merged = _rank_evidence_items(merged, claim_text)
+        logger.info(f"Found {len(merged)} pieces of evidence across {len(queries)} queries")
+        return merged
 
     except Exception as e:
         logger.error(f"Error gathering evidence: {e}")
@@ -2804,50 +2996,39 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
             context_snippet=context_snippet,
         )
 
-        # Fix 2: Pre-filter claims that cannot be independently verified (promotional/anecdotal/product name)
+        # Soft promotional pre-filter: do NOT skip web research.
+        # Tag borderline claims for Tier-2 (light) search so sources still populate;
+        # verdict may remain UNVERIFIABLE after the agent if content is promotional.
         _UNVERIFIABLE_PATTERNS = (
             "difficult", "unprovable", "unverifiable", "personal", "anecdotal",
             "testimonial", "subjective", "product name", "factual claim",
             "promotional", "personal story", "factual.", "factual,",
         )
-        to_process = []
-        unverifiable_claims = []
+        light_tagged = 0
         for c in claims_to_process:
             if not isinstance(c, dict):
-                to_process.append(c)
                 continue
             assess = (c.get("initial_assessment") or "").lower().strip()
             if not assess:
-                to_process.append(c)
                 continue
             if any(p in assess for p in _UNVERIFIABLE_PATTERNS):
-                reason = "promotional/personal/anecdotal"
-                if "product name" in assess or "factual" in assess:
-                    reason = "product name or non-disputable factual"
-                unverifiable_claims.append({
-                    **c,
-                    "verification_result": {
-                        "result": "UNVERIFIABLE",
-                        "explanation": (
-                            "Claim pre-filtered: initial assessment indicates this cannot be "
-                            "independently verified (promotional/personal/anecdotal)."
-                        ),
-                        "initial_assessment": c.get("initial_assessment", ""),
-                        "probability_distribution": {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34},
-                        "sources": [],
-                    },
-                    "evidence": [],
-                })
-                logger.info(
-                    f"⏭️ Pre-filtered (unverifiable): {c.get('claim_text', '')[:80]}... — {assess[:60]}"
+                # Force Tier-2 search (never skip research with empty sources).
+                c["verification_tier"] = 2
+                c["unverifiable_candidate"] = True
+                c["tier_reason"] = (
+                    (c.get("tier_reason") or "") + "|soft_prefilter_light_search"
                 )
-            else:
-                to_process.append(c)
-        claims_to_process = to_process
-        if unverifiable_claims:
+                light_tagged += 1
+                logger.info(
+                    "claims_prefilter_light_search: %s... — %s",
+                    (c.get("claim_text") or "")[:80],
+                    assess[:60],
+                )
+        if light_tagged:
             logger.info(
-                f"📋 Pre-filter: {len(unverifiable_claims)} claims moved to unverifiable (no web research); "
-                f"{len(claims_to_process)} claims to verify"
+                "📋 Soft pre-filter: %d claims tagged for light search "
+                "(sources will still be gathered; was hard-skip before)",
+                light_tagged,
             )
 
         # Track Google searches made during verification (tier-dependent)
@@ -3244,11 +3425,24 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
         )
         logger.info(f"📊 Google searches made this run: {_google_searches_this_run}")
 
-        # Include pre-filtered unverifiable claims in output for report section
+        # Soft pre-filter no longer drops claims; keep key for report compatibility.
+        unverifiable_claims = [
+            c
+            for c in verified_claims
+            if isinstance(c, dict)
+            and (
+                c.get("unverifiable_candidate")
+                or (c.get("verification_result") or {}).get("result") == "UNVERIFIABLE"
+            )
+        ]
+
+        # Include all verified claims (soft-prefilter candidates already verified with sources)
         all_claims_for_report = list(verified_claims)
         if unverifiable_claims:
-            all_claims_for_report.extend(unverifiable_claims)
-            logger.info(f"📋 Report will include {len(unverifiable_claims)} unverifiable claims in separate section")
+            logger.info(
+                "📋 Report includes %d UNVERIFIABLE/soft-prefilter claims (with search)",
+                len(unverifiable_claims),
+            )
 
         return {
             **state,
@@ -3356,26 +3550,9 @@ async def verify_claim_with_evidence(
     claim: Dict[str, Any], evidence: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
     """Verify a claim using the collected evidence."""
-    import logging
-
     logger = logging.getLogger(__name__)
 
     try:
-        from langchain_google_vertexai import ChatVertexAI
-        from langchain_core.prompts import ChatPromptTemplate
-        from verityngn.config.settings import AGENT_MODEL_NAME
-
-        # SHERLOCK FIX: Add timeout protection
-        llm = ChatVertexAI(
-            model_name=AGENT_MODEL_NAME,
-            temperature=0.1,
-            request_timeout=120.0,  # 120 second timeout
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
-        )
-
-        # SHERLOCK FIX: Inject current date context to prevent LLM from treating 2025 sources as "future-dated"
-        current_date = get_current_date_context()
         date_context = get_date_context_prompt_section()
 
         # Format evidence for prompt
@@ -3386,62 +3563,64 @@ async def verify_claim_with_evidence(
             ]
         )
 
-        prompt = ChatPromptTemplate.from_template(
-            f"""
+        prompt = f"""
         {date_context}
         
         Verify this claim using the provided evidence:
         
-        Claim: {{claim_text}}
+        Claim: {claim.get("claim_text", "")}
         
         Evidence:
-        {{evidence_text}}
+        {evidence_text or "No evidence found"}
         
         Analyze the evidence and determine:
         1. Is the claim TRUE, FALSE, or UNCERTAIN?
         2. Provide a clear explanation
         3. What probability distribution would you assign?
         
+        Cite ONLY URLs that appear verbatim in the Evidence block. If Evidence is empty,
+        use sources=[] and result UNCERTAIN/UNVERIFIABLE. Never invent URLs.
+        
         Respond in JSON format:
-        {{{{
+        {{
             "result": "TRUE|FALSE|UNCERTAIN",
             "explanation": "Clear explanation based on evidence",
-            "probability_distribution": {{{{"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}}}},
-            "sources": ["url1", "url2"]
-        }}}}
+            "probability_distribution": {{"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}},
+            "sources": ["Evidence-block URLs only"]
+        }}
         """
-        )
 
         start_time = time.time()
         call_id = log_llm_call(
             operation="verify_claim_with_llm",
-            prompt=str(prompt.format(
-                claim_text=claim.get("claim_text", ""),
-                evidence_text=evidence_text or "No evidence found",
-            )),
+            prompt=prompt,
             model=AGENT_MODEL_NAME,
             video_id=claim.get("video_id") or "unknown"
         )
 
-        response = await llm.ainvoke(
-            prompt.format(
-                claim_text=claim.get("claim_text", ""),
-                evidence_text=evidence_text or "No evidence found",
-            )
+        result, response_text, meta, response = invoke_json_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME,
+            prompt=prompt,
+            project_id=PROJECT_ID,
+            preferred_tokens=2048,
+            temperature=0.1,
+            logger=logger,
         )
         duration = time.time() - start_time
         log_llm_response(call_id, response, duration=duration)
+        logger.info(
+            "verify_claim_with_evidence backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+            meta.get("backend_selected"),
+            meta.get("model_selected"),
+            meta.get("location_selected"),
+            meta.get("fallback_hops"),
+        )
 
         # Parse response - handle different formats
         import json
         import re
 
         try:
-            # Get response content
-            response_text = (
-                response.content if hasattr(response, "content") else str(response)
-            )
-
             # Try direct JSON parsing first
             try:
                 result = json.loads(response_text)
@@ -3553,10 +3732,13 @@ def process_claims_with_advanced_ranking(
     logger.info(f"🚀 Starting advanced claim processing for video {video_id}")
 
     # Load configuration
+    from verityngn.config.settings import PROCESSING_MAX_CLAIMS
+
     config = get_config()
-    max_claims = config.get('processing.max_claims', 40)
-    # Scale with video duration: at least 0.75 claims per minute, cap at 90
-    duration_based = min(90, max(max_claims, int(video_duration_minutes * 0.75)))
+    ceiling = int(PROCESSING_MAX_CLAIMS or 100)
+    max_claims = config.get('processing.max_claims', ceiling)
+    # Scale with video duration: at least 0.75 claims per minute, ceiling aligns with global max
+    duration_based = min(ceiling, max(max_claims, int(video_duration_minutes * 0.75)))
     max_claims = duration_based
 
     # Initialize the ClaimProcessor

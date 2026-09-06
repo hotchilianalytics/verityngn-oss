@@ -44,14 +44,38 @@ def _run_deep_research(out_dir: str, video_id: str) -> int:
     report_json = Path(out_dir) / f"{video_id}_report.json"
     if not report_json.is_file():
         candidates = list(Path(out_dir).glob("*_report.json"))
+        # Prefer timestamped complete dir under outputs_debug
+        debug_root = Path("outputs_debug") / video_id
+        if debug_root.is_dir():
+            candidates.extend(debug_root.glob(f"*complete/{video_id}_report.json"))
+            candidates.extend(debug_root.rglob(f"{video_id}_report.json"))
+        candidates = [c for c in candidates if c.is_file() and not c.name.endswith("_deep_sanitized_input.json")]
+        # Exclude deep/private naming collisions: keep *report.json that is the standard report
+        candidates = [
+            c
+            for c in candidates
+            if c.name == f"{video_id}_report.json"
+            or (c.name.endswith("_report.json") and "deep" not in c.name and "private" not in c.name)
+        ]
         if not candidates:
             print(
                 f"Error: no report JSON found in {out_dir} for Deep Research",
                 file=sys.stderr,
             )
             return 1
+        candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
         report_json = candidates[0]
         video_id = report_json.name.split("_report.json")[0]
+        # Materialize into out_dir so artefacts land together
+        try:
+            dest = Path(out_dir) / f"{video_id}_report.json"
+            if not dest.is_file():
+                import shutil
+
+                shutil.copy2(report_json, dest)
+                report_json = dest
+        except Exception:
+            pass
 
     from verityngn.services.deepresearch.pipeline import (
         DeepResearchGateError,
@@ -105,14 +129,17 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             return 1
 
         try:
+            # full / auto / local-full always run Deep Research so -o gets
+            # report.html + deep.html (JSON-first dual-output contract).
             meta = run_tier(
                 tier,
                 youtube_url=args.url or "",
                 video_file=args.file or "",
                 out_dir=args.output or "outputs",
                 title=args.title or "",
-                deep=deep or tier in ("full", "auto"),
+                deep=deep or tier in ("full", "auto", "local-full"),
                 video_id=args.video_id or "",
+                modality=getattr(args, "modality", "auto") or "auto",
             )
         except Exception as exc:  # noqa: BLE001
             print(f"analyze failed: {exc}", file=sys.stderr)
@@ -123,6 +150,11 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             print(f"\nReport: {md}")
         elif meta.get("out_dir"):
             print(f"\nOutput directory: {meta['out_dir']}")
+        arts = meta.get("artifacts") or {}
+        if arts.get("report_html"):
+            print(f"report.html: {arts['report_html']}")
+        if arts.get("deep_html"):
+            print(f"deep.html: {arts['deep_html']}")
         status = meta.get("status")
         return 0 if status in (None, "completed") else 1
 
@@ -360,7 +392,14 @@ def main(argv: list[str] | None = None) -> None:
     analyze.add_argument(
         "--deep",
         action="store_true",
-        help="After full tier / standard report, run Deep Research (grounded risk brief)",
+        help="After full tier / standard report, run Deep Research (grounded risk brief). "
+        "Also implied by --tier full|auto|local-full.",
+    )
+    analyze.add_argument(
+        "--modality",
+        choices=("auto", "transcript", "video"),
+        default="auto",
+        help="Claim extract modality: auto (caption+optical density), transcript-only, or video multimodal",
     )
     analyze.add_argument(
         "--deep-only",

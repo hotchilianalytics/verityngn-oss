@@ -27,6 +27,16 @@ SAFETY_MARGIN_PERCENT = 10  # Reserve 10% for variability
 
 # Model specifications
 MODEL_SPECS = {
+    "gemini-3.8-flash": {
+        "context_window": 1_000_000,
+        "max_output_tokens": 65_536,
+        "recommended_fps": 1.0,
+    },
+    "gemini-3.6-flash": {
+        "context_window": 1_000_000,
+        "max_output_tokens": 65_536,
+        "recommended_fps": 1.0,
+    },
     "gemini-2.5-flash": {
         "context_window": 1_000_000,  # 1M tokens
         "max_output_tokens": 32_768,   # 32K tokens (conservative limit to prevent truncation)
@@ -103,8 +113,8 @@ def calculate_optimal_segment_duration(
     if model_name in MODEL_SPECS:
         specs = MODEL_SPECS[model_name]
     else:
-        logger.warning(f"Unknown model {model_name}, using gemini-2.5-flash defaults")
-        specs = MODEL_SPECS["gemini-2.5-flash"]
+        logger.warning(f"Unknown model {model_name}, using gemini-3.8-flash defaults")
+        specs = MODEL_SPECS.get("gemini-3.8-flash") or MODEL_SPECS["gemini-2.5-flash"]
     
     # Apply overrides if provided
     context_window = custom_context_window or specs["context_window"]
@@ -255,7 +265,7 @@ def get_segment_duration_from_env_or_optimal(
     
     # Calculate optimal
     if not model_name:
-        model_name = os.getenv("VERTEX_MODEL_NAME", "gemini-2.5-flash")
+        model_name = os.getenv("VERTEX_MODEL_NAME", "gemini-3.8-flash")
     
     fps = float(os.getenv("SEGMENT_FPS", "1.0"))
     segment_duration, _ = get_segmentation_for_video(

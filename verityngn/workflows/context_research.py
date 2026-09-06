@@ -7,6 +7,7 @@ import logging
 from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
+from verityngn.utils.llm_utils import invoke_text_prompt_with_fallback
 
 
 def run_context_research(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -21,12 +22,20 @@ def run_context_research(state: Dict[str, Any]) -> Dict[str, Any]:
         
     video_id = state.get("video_id", "")
     video_info = state.get("video_info") or {}
-    title = (video_info.get("title") or "").strip()
+    title = (
+        (video_info.get("title") or "").strip()
+        or (state.get("upload_title") or "").strip()
+    )
     description = (video_info.get("description") or "")[:3000]
     initial = state.get("initial_report") or {}
-    initial_text = (
-        initial.get("initial_report") or initial.get("summary") or ""
-    )[:2000]
+    if isinstance(initial, str):
+        initial_text = initial[:2000]
+    elif isinstance(initial, dict):
+        initial_text = (
+            initial.get("initial_report") or initial.get("summary") or ""
+        )[:2000]
+    else:
+        initial_text = ""
 
     logger.info("📚 Running context research for video: %s", video_id)
 
@@ -87,27 +96,23 @@ def _generate_context_queries(
         f"Summary: {initial_text[:1000]}"
     )
     try:
-        from langchain_google_vertexai import ChatVertexAI
-        from langchain_core.prompts import ChatPromptTemplate
-        from verityngn.config.settings import AGENT_MODEL_NAME, PROJECT_ID, VERTEX_LOCATION
+        from verityngn.config.settings import AGENT_MODEL_NAME, PROJECT_ID
 
-        llm = ChatVertexAI(
-            model_name=AGENT_MODEL_NAME,
+        text, meta, _response = invoke_text_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME,
+            prompt=(
+                "Generate 3 to 5 short search queries to find authoritative "
+                "background on the SUBJECT of this video (e.g. person, company, "
+                "event, topic). Goal: find factual context (legal outcomes, "
+                "official actions, reputable reporting) to help verify claims. "
+                "One query per line, no numbering.\n\n"
+                f"{context}\n\nQueries (one per line):"
+            ),
+            project_id=PROJECT_ID,
+            preferred_tokens=1024,
             temperature=0.2,
-            max_output_tokens=1024,
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
+            logger=logger,
         )
-        prompt = ChatPromptTemplate.from_template(
-            "Generate 3 to 5 short search queries to find authoritative "
-            "background on the SUBJECT of this video (e.g. person, company, "
-            "event, topic). Goal: find factual context (legal outcomes, "
-            "official actions, reputable reporting) to help verify claims. "
-            "One query per line, no numbering.\n\n{context}\n\n"
-            "Queries (one per line):"
-        )
-        response = llm.invoke(prompt.format(context=context))
-        text = (response.content or "").strip()
         queries = [q.strip() for q in text.split("\n") if q.strip()][:5]
         if queries:
             return queries
@@ -148,26 +153,23 @@ def _summarize_context(
     combined = "\n\n".join(blocks)[:8000]
 
     try:
-        from langchain_google_vertexai import ChatVertexAI
-        from langchain_core.prompts import ChatPromptTemplate
-        from verityngn.config.settings import AGENT_MODEL_NAME, PROJECT_ID, VERTEX_LOCATION
+        from verityngn.config.settings import AGENT_MODEL_NAME, PROJECT_ID
 
-        llm = ChatVertexAI(
-            model_name=AGENT_MODEL_NAME,
+        text, meta, _response = invoke_text_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME,
+            prompt=(
+                "Summarize the following search results into a concise background "
+                f'note (2-4 short paragraphs) about the video subject: "{title}". '
+                "Include only factual, verifiable information that would help a "
+                "fact-checker assess claims made in the video. No speculation.\n\n"
+                f"Search results:\n{combined}"
+            ),
+            project_id=PROJECT_ID,
+            preferred_tokens=2048,
             temperature=0.2,
-            max_output_tokens=2048,
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
+            logger=logger,
         )
-        prompt = ChatPromptTemplate.from_template(
-            "Summarize the following search results into a concise background "
-            "note (2-4 short paragraphs) about the video subject: \"{title}\". "
-            "Include only factual, verifiable information that would help a "
-            "fact-checker assess claims made in the video. No speculation.\n\n"  # noqa: E501
-            "Search results:\n{combined}"
-        )
-        response = llm.invoke(prompt.format(title=title, combined=combined))
-        return (response.content or "").strip()
+        return text
     except Exception as e:
         logger.warning("Context summary LLM failed: %s", e)
         return combined[:3000]

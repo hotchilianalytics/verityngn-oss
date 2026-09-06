@@ -27,7 +27,7 @@ from verityngn.config.settings import (
 
 logger = logging.getLogger(__name__)
 
-_PROMPT_PATH = Path(__file__).parent / "prompts" / "dr_prompt_v1.md"
+_PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
 class DeepResearchConfigError(RuntimeError):
@@ -43,20 +43,36 @@ class DeepResearchResult:
     model_id: str
     prompt_version: str
     queries: List[str] = field(default_factory=list)
+    grounding_uris: List[str] = field(default_factory=list)
 
     @property
     def output_bytes(self) -> int:
         return len((self.markdown or "").encode("utf-8"))
 
 
-def _load_prompt() -> Tuple[str, str]:
+def _prompt_path(version: Optional[str] = None) -> Path:
+    ver = (version or DEEP_RESEARCH_PROMPT_VERSION or "dr_prompt_v2").strip()
+    # Accept bare ids like dr_prompt_v2 or filenames
+    name = ver if ver.endswith(".md") else f"{ver}.md"
+    path = _PROMPTS_DIR / name
+    if not path.is_file():
+        fallback = _PROMPTS_DIR / "dr_prompt_v1.md"
+        logger.warning(
+            "[deep-research] prompt %s missing; falling back to %s", path.name, fallback.name
+        )
+        return fallback
+    return path
+
+
+def _load_prompt(version: Optional[str] = None) -> Tuple[str, str]:
     """Return (system_instruction, user_prompt_prefix) from the versioned prompt file."""
-    text = _PROMPT_PATH.read_text(encoding="utf-8")
+    prompt_file = _prompt_path(version)
+    text = prompt_file.read_text(encoding="utf-8")
     system_marker = "## SYSTEM_INSTRUCTION"
     user_marker = "## USER_PROMPT_PREFIX"
     if system_marker not in text or user_marker not in text:
         raise DeepResearchConfigError(
-            f"Prompt file {_PROMPT_PATH} missing required headers"
+            f"Prompt file {prompt_file} missing required headers"
         )
     after_system = text.split(system_marker, 1)[1]
     system_part, user_part = after_system.split(user_marker, 1)
@@ -89,10 +105,11 @@ def _build_client():
     return genai.Client(api_key=DEEP_RESEARCH_API_KEY)
 
 
-def _extract_grounding(response: Any) -> Tuple[str, List[str]]:
-    """Pull grounding metadata string + best-effort search queries from a response."""
+def _extract_grounding(response: Any) -> Tuple[str, List[str], List[str]]:
+    """Pull grounding metadata string, search queries, and grounding URIs."""
     grounding_str = "No grounding metadata returned."
     queries: List[str] = []
+    uris: List[str] = []
     try:
         candidates = getattr(response, "candidates", None) or []
         if candidates:
@@ -102,9 +119,29 @@ def _extract_grounding(response: Any) -> Tuple[str, List[str]]:
                 wq = getattr(gm, "web_search_queries", None)
                 if isinstance(wq, (list, tuple)):
                     queries = [str(q) for q in wq]
+                chunks = getattr(gm, "grounding_chunks", None) or []
+                for ch in chunks:
+                    web = getattr(ch, "web", None)
+                    if web is None and isinstance(ch, dict):
+                        web = ch.get("web")
+                    if web is None:
+                        continue
+                    uri = getattr(web, "uri", None)
+                    if uri is None and isinstance(web, dict):
+                        uri = web.get("uri") or web.get("url")
+                    if uri:
+                        uris.append(str(uri))
+                # de-dupe preserving order
+                seen = set()
+                uniq = []
+                for u in uris:
+                    if u not in seen:
+                        seen.add(u)
+                        uniq.append(u)
+                uris = uniq
     except Exception as exc:  # pragma: no cover - defensive
         logger.warning("[deep-research] grounding metadata extraction failed: %s", exc)
-    return grounding_str, queries
+    return grounding_str, queries, uris
 
 
 def run_deep_research(sanitized_data: Dict[str, Any]) -> DeepResearchResult:
@@ -118,13 +155,25 @@ def run_deep_research(sanitized_data: Dict[str, Any]) -> DeepResearchResult:
     from google.genai import types  # type: ignore
 
     system_instruction, user_prefix = _load_prompt()
+    # Reinforce current date so Search tool queries use the correct year (Gemini 3 guidance).
+    try:
+        from verityngn.utils.date_utils import get_current_date_context
+
+        pack_hint = (
+            "Prefer DATA.primary_pack / DATA.primary_urls when present "
+            "(domain-class official hosts)."
+            if (sanitized_data.get("primary_pack") or sanitized_data.get("legislature_primary_pack"))
+            else "Prefer official agency / primary sources matching the claim domain."
+        )
+        system_instruction = (
+            f"{system_instruction}\n\nFor time-sensitive research, today's date is "
+            f"{get_current_date_context()}. {pack_hint}"
+        )
+    except Exception:
+        pass
+
     client = _build_client()
 
-    config = types.GenerateContentConfig(
-        temperature=DEEP_RESEARCH_TEMPERATURE,
-        tools=[{"google_search": {}}],
-        system_instruction=system_instruction,
-    )
     prompt = f"{user_prefix}\n\nDATA:\n{json.dumps(sanitized_data, indent=2)}"
 
     models_to_try = [DEEP_RESEARCH_MODEL]
@@ -135,19 +184,35 @@ def run_deep_research(sanitized_data: Dict[str, Any]) -> DeepResearchResult:
     for model_id in models_to_try:
         try:
             logger.info("[deep-research] dispatching to model=%s", model_id)
+            # Gemini 3.8+: prefer thinking_level; avoid deprecated temperature on 3.8-only paths.
+            cfg_kwargs: Dict[str, Any] = {
+                "tools": [{"google_search": {}}],
+                "system_instruction": system_instruction,
+            }
+            if "3.8" in (model_id or ""):
+                try:
+                    cfg_kwargs["thinking_config"] = types.ThinkingConfig(
+                        thinking_level="MEDIUM"
+                    )
+                except Exception:
+                    cfg_kwargs["temperature"] = DEEP_RESEARCH_TEMPERATURE
+            else:
+                cfg_kwargs["temperature"] = DEEP_RESEARCH_TEMPERATURE
+            config = types.GenerateContentConfig(**cfg_kwargs)
             response = client.models.generate_content(
                 model=model_id,
                 contents=prompt,
                 config=config,
             )
             markdown = getattr(response, "text", "") or ""
-            grounding_str, queries = _extract_grounding(response)
+            grounding_str, queries, uris = _extract_grounding(response)
             return DeepResearchResult(
                 markdown=markdown,
                 grounding_metadata=grounding_str,
                 model_id=model_id,
                 prompt_version=DEEP_RESEARCH_PROMPT_VERSION,
                 queries=queries,
+                grounding_uris=uris,
             )
         except Exception as exc:  # noqa: BLE001 - fall through to fallback model
             last_exc = exc

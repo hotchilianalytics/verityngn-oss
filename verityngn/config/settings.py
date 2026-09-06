@@ -54,16 +54,20 @@ USE_TIMESTAMPED_STORAGE = os.getenv("USE_TIMESTAMPED_STORAGE", "true").lower() i
 # Batch/Cloud Run ADC usually has no private key; signing fails and spams logs. Set true only with a SA JSON key.
 GCS_TRY_SIGNED_URL_ON_UPLOAD = os.getenv("GCS_TRY_SIGNED_URL_ON_UPLOAD", "false").lower() in ("true", "1", "t")
 
-# AI Model settings
-VERTEX_MODEL_NAME = os.getenv("VERTEX_MODEL_NAME") or os.getenv("LLM_MODEL") or _config.get("models.vertex.model_name", "gemini-2.5-flash")
+# AI Model settings — default to Gemini 3.8 Flash (aligned with Deep Research).
+VERTEX_MODEL_NAME = os.getenv("VERTEX_MODEL_NAME") or os.getenv("LLM_MODEL") or _config.get("models.vertex.model_name", "gemini-3.8-flash")
 # Single source of truth for verification (agent + fast-fail); default to newest price-performant model
 VERIFICATION_MODEL_NAME = (
     os.getenv("VERIFICATION_MODEL_NAME")
     or os.getenv("AGENT_MODEL_NAME")
     or os.getenv("LLM_MODEL")
-    or _config.get("models.agent.model_name", "gemini-2.5-flash")
+    or _config.get("models.agent.model_name", "gemini-3.8-flash")
 )
 AGENT_MODEL_NAME = VERIFICATION_MODEL_NAME
+# Ordered fallback policy for Vertex/model/API availability.
+VERTEX_FALLBACK_MODELS = os.getenv("VERTEX_FALLBACK_MODELS", "gemini-3.6-flash,gemini-2.5-flash")
+VERTEX_FALLBACK_LOCATIONS = os.getenv("VERTEX_FALLBACK_LOCATIONS", "global,us-central1")
+ALLOW_DEVELOPER_API_FALLBACK = os.getenv("ALLOW_DEVELOPER_API_FALLBACK", "true").lower() in ("true", "1", "t")
 # AI Parameter settings
 MAX_OUTPUT_TOKENS_2_5_FLASH = int(_config.get("models.vertex.max_output_tokens", 32768))
 MAX_OUTPUT_TOKENS_2_0_FLASH = int(_config.get("models.agent.max_output_tokens", 8192))
@@ -117,10 +121,11 @@ DEEP_RESEARCH_API_KEY = (
 ).strip()
 # Use Vertex AI (project+location, ADC) instead of an API key when true.
 DEEP_RESEARCH_USE_VERTEX = os.getenv("DEEP_RESEARCH_USE_VERTEX", "false").lower() in ("true", "1", "t")
-# Flagship reasoning model. Vetted run used gemini-pro-latest; Gemini 3 target is gemini-3-pro-preview.
-DEEP_RESEARCH_MODEL = os.getenv("DEEP_RESEARCH_MODEL", "gemini-3-pro-preview")
+# Flagship reasoning model. Prefer GA 3.8 Flash (agentic + interactive video focus).
+# Fallback: gemini-3.6-flash (prior DR default from sb1507 A/B).
+DEEP_RESEARCH_MODEL = os.getenv("DEEP_RESEARCH_MODEL", "gemini-3.8-flash")
 # Fallback model if the primary is unavailable on the credentialed project/key.
-DEEP_RESEARCH_FALLBACK_MODEL = os.getenv("DEEP_RESEARCH_FALLBACK_MODEL", "gemini-pro-latest")
+DEEP_RESEARCH_FALLBACK_MODEL = os.getenv("DEEP_RESEARCH_FALLBACK_MODEL", "gemini-3.6-flash")
 try:
     DEEP_RESEARCH_TEMPERATURE = float(os.getenv("DEEP_RESEARCH_TEMPERATURE", "0.1"))
 except Exception:
@@ -136,7 +141,21 @@ try:
 except Exception:
     DEEP_RESEARCH_MIN_OUTPUT_BYTES = 1024
 # Versioned prompt id recorded on every run for reproducibility/comparison.
-DEEP_RESEARCH_PROMPT_VERSION = os.getenv("DEEP_RESEARCH_PROMPT_VERSION", "dr_prompt_v1")
+DEEP_RESEARCH_PROMPT_VERSION = os.getenv("DEEP_RESEARCH_PROMPT_VERSION", "dr_prompt_v2")
+# Multi-hop source expansion after L1 DR (0=off, 2=default, max 3).
+try:
+    DEEP_SOURCE_HOPS = int(os.getenv("DEEP_SOURCE_HOPS", "2"))
+except Exception:
+    DEEP_SOURCE_HOPS = 2
+# Agentic video understanding spike (media_processing=AGENTIC on 3.8-flash).
+VN_AGENTIC_VIDEO = os.getenv("VN_AGENTIC_VIDEO", "0").lower() in ("1", "true", "t", "yes")
+# Optional override for multimodal extract when agentic path is on.
+VN_VIDEO_MODEL = os.getenv("VN_VIDEO_MODEL", "").strip()
+# Global claims ceiling (dynamic targeting stays below this).
+try:
+    PROCESSING_MAX_CLAIMS = int(os.getenv("VN_MAX_CLAIMS", os.getenv("PROCESSING_MAX_CLAIMS", "100")))
+except Exception:
+    PROCESSING_MAX_CLAIMS = 100
 
 # --- QUICK MODE: Faster verification with reduced thoroughness ---
 # When enabled, reduces search depth, uses shorter timeouts, and skips some analysis

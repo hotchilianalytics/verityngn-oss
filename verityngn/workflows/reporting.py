@@ -397,12 +397,18 @@ def generate_sophisticated_assessment(claims: List[Claim]) -> Tuple[AssessmentLe
                     main_concerns.append(concern)
     
     # Calculate percentages
-    false_count = (result_counts.get("FALSE", 0) + 
-                   result_counts.get("HIGHLY_LIKELY_FALSE", 0) + 
-                   result_counts.get("LIKELY_FALSE", 0))
-    true_count = (result_counts.get("TRUE", 0) + 
-                  result_counts.get("HIGHLY_LIKELY_TRUE", 0) + 
-                  result_counts.get("LIKELY_TRUE", 0))
+    false_count = (
+        result_counts.get("FALSE", 0)
+        + result_counts.get("HIGHLY_LIKELY_FALSE", 0)
+        + result_counts.get("LIKELY_FALSE", 0)
+        + result_counts.get("LEANING_FALSE", 0)
+    )
+    true_count = (
+        result_counts.get("TRUE", 0)
+        + result_counts.get("HIGHLY_LIKELY_TRUE", 0)
+        + result_counts.get("LIKELY_TRUE", 0)
+        + result_counts.get("LEANING_TRUE", 0)
+    )
     uncertain_count = result_counts.get("UNCERTAIN", 0) + result_counts.get("UNVERIFIABLE", 0)
     
     false_percentage = (false_count / total_claims) * 100

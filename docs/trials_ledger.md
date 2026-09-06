@@ -12,3 +12,30 @@ Register trials **before** peeking promotion metrics.
 | T-ABL-006 | 2026-09-02 | Genre-appropriate 10–15 min seeds (earnings / UGC supers / deposition) yield visual_only_share ≥ 0.25 + multimodal-unique claims on ≥2/3; validates T-ABL-004 sleeve for archive paper | `evaluation/genre_ablation_seeds.json`; `verityngn ablate --mode claims --arms both` ×3; summary.json; human rubric; paper `verityngn_v3_ablation_archive.md` | **v1 (2026-09-02):** G1 Visa `p9nBtboU9KM` visual **0.33** PASS; G2 charts `Exj5iK_K0Kk` **0.17** FAIL; G3 hearing `2RkQ7mGWMAA` **0.20** FAIL → **1/3** auto gate (aggregate FAIL). All 3 captioned seeds `multimodal_adds_unique` (only-MM share 0.67–0.74). Fixed source_type drop in `validate_and_normalize_json_result`. Appendix Basler slides visual 0.26 but TX=0. | NO — need ≥2/3 auto gate |
 | T-ABL-007 | 2026-09-02 | For duration > 15 min with sufficient captions, light (transcript+DR, untruncated) achieves risk_recall@10 ≥ 0.80 at ≥5× lower latency and ≥5× lower $ vs full multimodal | `sufficiency.py` preflight + post-hoc; light vs full per duration stratum (S/M/L/XL); `--tier auto` calibration | **v1 (2026-09-02):** untruncated light + cost telemetry shipped. On 3 captioned M seeds: mean latency **32.8×**, cost **21.4×**, risk_recall@10 **0.15–0.20** (token-set; no 0.80 hit) → light = triage, not full replace. Defaults TAU_COV=0.70 TAU_VIS=0.35 TAU_DUR=900. Artefact `outputs/ablation_T007/summary.json` | NO — recall target unmet; promote auto as triage router only |
 | T-TX-002 | 2026-09-02 | Paid transcript path (Supadata native/generate + Groq ASR) raises success on C3/C4 (PoToken/caption-less) vs free scrapers alone | `transcript_providers` chain; success/latency/$ per path across C0–C6 | **v2 (2026-09-02, live SUPADATA_API_KEY):** n=6 — yt-dlp **0.83**, cached 0.67, Supadata native **4/6 (~8.6s, ~$0.0016)**; Alphabet free+paid OK; Basler hard C4 still locked (empty/timeout/429). Groq skipped. Artefact `outputs/transcript_supply_T002/matrix.json` | PARTIAL — native promote for captioned/blocked; C4 generate NO until RL cleared + Groq |
+| T-SRC-001 | 2026-09-03 | Relevance + cite-only + DR binder raise on-topic sources / cut CSE junk on sb1507 | local-full + deep; matrix vs OLIS/DOR/yex | **v1:** baseline noise-dominated; rerun on-topic **0.41**, noise **0.01**; DR `gemini-3.6-flash` (17/17 URL refs on-topic via allowlist bind). Prompt pack proposal pending approval | PARTIAL — code shipped; prompt wholesale await approval |
+| T-QUAL-001 | 2026-09-03 | Domain-general primary packs + dr_prompt_v2 + 3.8-flash + hops + claims ceiling 100 raise DR/source quality without Oregon-always bias | Dual fixture: sb1507 + non-leg; medical synth pack; A/B 3.6 vs 3.8; agentic spike | **v1:** sb1507 OR pack ✓; nonleg oregon_in_primary=false; medical pack FDA/NIH/CDC no OR; 3.8 on-topic 12 vs 3.6 9; hops L2=8 on sb1507 rerun; agentic YT spike HTTP 200 | PARTIAL — promote 3.8+v2 defaults; agentic stays flag-off until longer ablation |
+| T-FALL-001 | 2026-09-05 | Shared Vertex/model/API fallback keeps quality-critical OSS paths alive when `gemini-3.8-flash` is missing on one Vertex location | Unit: `pytest -q test/unit/test_llm_fallback.py test/unit/test_deepresearch.py test/unit/test_sufficiency.py`; live smokes: `tLJC8hkK-ao` full + `sb1507.mp4` local-full; forced-bad-location smoke | **v2:** unit suite **13 passed**. Refreshed live smokes completed on patched code with fallback-aware dispatch in analysis / verification / Sherlock CI paths and both `report.html` + `deep.html` present for `tL` and `sb1507`. Forced-bad-location smoke exposed stale local ADC refresh (`gcloud auth application-default login` needed), so one explicit live hop-proof remains pending outside the completed end-to-end smokes. | YES for OSS local path; batch cutover waits on post-reauth forced-hop smoke |
+
+## T-QUAL-001 — Deep Quality Uplift (2026-09-03)
+
+- **Changes:** `dr_prompt_v2`, `primary_pack` resolver, `source_expander` L2–L3, `DEEP_RESEARCH_MODEL=gemini-3.8-flash`, `VN_MAX_CLAIMS=100`, `VN_AGENTIC_VIDEO` REST spike
+- **A/B:** `outputs/sb1507/model_ab38/ab_summary.json` — 3.8-flash 12 on-topic / 27s vs 3.6-flash 9 / 29s
+- **Eval:** `outputs/t_qual_001/eval_summary.json`
+- **Sherlock:** `~/proj/history/verityngn-oss/sherlock-sessions/SHERLOCK_DEEP_QUALITY_UPLIFT_2026-09-03.md`
+
+## T-FALL-001 — Vertex fallback + dual-output promote gate (2026-09-05)
+
+- **Changes:** shared fallback router in `verityngn/utils/llm_utils.py`; hot-path wiring in analysis, verification, Sherlock CI, context research, counter-intel, and report summarizers
+- **Defaults:** `gemini-3.8-flash`, `VERTEX_LOCATION=global`, lower-model / regional fallback, optional Developer API fallback
+- **Unit validation:** `test_llm_fallback.py`, `test_deepresearch.py`, `test_sufficiency.py` -> **13 passed**
+- **Live validation:** refreshed `tL` and `sb1507` smokes completed under `outputs/fallback_smoke_*_v2`; both emitted `report.html`, `deep.html`, and canonical report artifacts
+- **Operator note:** failure-path live proof is still blocked locally by ADC reauthentication, not by the fallback code itself
+- **Promote status:** OSS local path is green on `release/v3.0.0`; gate batch cutover on one clean post-reauth forced-hop smoke
+
+## T-SRC-001 — SB1507 source integrity uplift (2026-09-03)
+
+- **Fixture:** local `sb1507.mp4` → `3f70063ddbd`
+- **Changes:** CSE relevance gate, cite-only sources, legislative query rewrite, `.edu` host fix, DR citation binder + legislature pack, DR default `gemini-3.6-flash`
+- **Baseline (`outputs/sb1507`):** 10 claims, 4 zero-source, noise-dominated URLs; DR grounding empty on flash-preview
+- **Rerun (`outputs/sb1507_rerun`):** 25 claims; on-topic source rate ~0.41 (35/86), noise ~0.01 (1/86); DR completed on 3.6-flash with allowlist bind (structured grounding still None on Developer API)
+- **Artifacts:** Sherlock `SHERLOCK_SB1507_SOURCE_INTEGRITY_2026-09-03.md`; prompt proposal `~/proj/plans/verityngn-oss/prompt_refresh_proposal_2026-09-03.md` (**APPROVED** domain-general → shipped as `dr_prompt_v2` in T-QUAL-001)

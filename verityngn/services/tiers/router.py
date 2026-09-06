@@ -58,6 +58,7 @@ def run_tier(
     video_id: str = "",
     use_live_llm: bool = True,
     download_youtube: bool = True,
+    modality: str = "auto",
 ) -> Dict[str, Any]:
     """
     Route to the appropriate analysis pipeline.
@@ -67,9 +68,28 @@ def run_tier(
     - **auto**: preflight sufficiency → light or full (+ quality-floor escalation)
     - **local-light**: local file transcript → DR-direct
     - **local-full**: local file full pipeline (+ optional DR)
+
+    modality: auto|transcript|video — claim extract path (persisted on meta).
     """
     os.makedirs(out_dir, exist_ok=True)
-    meta: Dict[str, Any] = {"tier": tier, "status": "completed"}
+    # Resolve modality before routing (may flip full → transcript extract).
+    modality_meta = _resolve_modality(
+        modality,
+        youtube_url=youtube_url,
+        video_file=video_file,
+        video_id=video_id,
+    )
+    os.environ["VN_CLAIM_MODALITY"] = modality_meta["modality_chosen"]
+    meta: Dict[str, Any] = {
+        "tier": tier,
+        "status": "completed",
+        "modality": modality_meta,
+    }
+    logger.info(
+        "modality_chosen=%s reason=%s",
+        modality_meta.get("modality_chosen"),
+        modality_meta.get("reason"),
+    )
 
     if tier == "auto":
         return _run_auto(
@@ -117,6 +137,7 @@ def run_tier(
             use_live_llm=use_live_llm,
         )
         result["tier"] = tier
+        result["modality"] = modality_meta
         return result
 
     if tier == "local-full":
@@ -134,9 +155,73 @@ def run_tier(
             use_live_llm=use_live_llm,
         )
         result["tier"] = tier
+        result["modality"] = modality_meta
         return result
 
     raise ValueError(f"Unknown tier: {tier}")
+
+
+def _resolve_modality(
+    modality: str,
+    *,
+    youtube_url: str = "",
+    video_file: str = "",
+    video_id: str = "",
+) -> Dict[str, Any]:
+    """
+    Choose transcript vs video claim extract.
+
+    auto: good captions + low visual density → transcript (cheaper);
+    optically dense or weak captions → video multimodal.
+    """
+    requested = (modality or "auto").strip().lower()
+    if requested in ("transcript", "video"):
+        return {
+            "modality_requested": requested,
+            "modality_chosen": requested,
+            "reason": "explicit_flag",
+        }
+    # auto
+    try:
+        from verityngn.services.ablation.sufficiency import preflight_features, route_decision
+
+        vid = video_id or _resolve_video_id(youtube_url, video_file)
+        duration = _probe_duration(youtube_url) if youtube_url else 0.0
+        # Enable optical probe when possible (VN_PROBE_DOWNLOAD / visual_probe).
+        feats = preflight_features(
+            youtube_url=youtube_url or "",
+            video_path=video_file or "",
+            duration_sec=duration,
+            visual_probe=True,
+        )
+        decision = route_decision(feats)
+        # High visual density → video; else if captions look sufficient → transcript.
+        vis = float(feats.get("visual_text_density") or 0.0)
+        cap = float(feats.get("caption_coverage") or 0.0)
+        route = str(decision.get("route") or "")
+        if vis >= 0.35:
+            chosen, reason = "video", f"optical_dense vis={vis:.2f}"
+        elif cap >= 0.55 and route == "light":
+            chosen, reason = "transcript", f"caption_sufficient cov={cap:.2f}"
+        else:
+            chosen, reason = "video", f"default_video cov={cap:.2f} vis={vis:.2f}"
+        return {
+            "modality_requested": "auto",
+            "modality_chosen": chosen,
+            "reason": reason,
+            "features": {
+                "visual_text_density": vis,
+                "caption_coverage": cap,
+                "duration_sec": duration,
+            },
+        }
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("modality auto failed (%s); defaulting to video", exc)
+        return {
+            "modality_requested": "auto",
+            "modality_chosen": "video",
+            "reason": f"auto_fallback:{exc}",
+        }
 
 
 def _run_auto(
@@ -348,6 +433,16 @@ def _run_full(
     meta["video_id"] = vid
     meta["tier"] = "full"
 
+    # Dual-output: copy report.json/html from timestamped debug dir into -o
+    if vid:
+        from verityngn.services.report.artifact_sync import (
+            checklist_artifacts,
+            sync_standard_report_artifacts,
+        )
+
+        arts = sync_standard_report_artifacts(out, vid)
+        meta["artifacts"] = arts
+
     if deep and vid:
         from verityngn.services.deepresearch.pipeline import generate_deep_research_report
 
@@ -356,6 +451,12 @@ def _run_full(
             meta["deep"] = asyncio.run(
                 generate_deep_research_report(str(report_json), out, video_id=vid, title=title or None)
             )
+            meta["artifacts"] = {
+                **(meta.get("artifacts") or {}),
+                **checklist_artifacts(out, vid),
+            }
+            if meta.get("deep", {}).get("deep_html"):
+                meta["artifacts"]["deep_html"] = meta["deep"]["deep_html"]
         else:
             meta["deep"] = {"status": "skipped", "reason": "no_report_json"}
     return meta

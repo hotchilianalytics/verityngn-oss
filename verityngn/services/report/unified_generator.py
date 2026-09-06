@@ -33,6 +33,7 @@ from verityngn.models.report import VerityReport
 from verityngn.services.report.markdown_generator import generate_markdown_report
 from verityngn.services.report.html_generator import generate_html_report
 from verityngn.services.report.fast_html_generator import generate_fast_html_report
+from verityngn.utils.llm_utils import invoke_text_prompt_with_fallback
 from verityngn.services.storage.timestamped_storage import timestamped_storage
 from verityngn.utils.html_to_pdf import async_convert_html_content_to_pdf
 from verityngn.services.report.evidence_utils import (
@@ -103,25 +104,25 @@ class UnifiedReportGenerator:
             return "No description available to review."
             
         try:
-            llm = ChatVertexAI(
-                model_name=AGENT_MODEL_NAME,
-                temperature=0.3,
-                max_output_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
-                project=PROJECT_ID,
-                location=VERTEX_LOCATION,
-            )
-            prompt = ChatPromptTemplate.from_template("""
-            You are VerityNgn, a video verification AI. 
-            Review the following YouTube video description. 
+            prompt = """
+            You are VerityNgn, a video verification AI.
+            Review the following YouTube video description.
             Write a concise (~200 words) assessment of the description's claims, tone, and potential flags.
             Focus on whether it makes sensational claims, provides sources, or uses manipulative language.
-            
+
             Description:
             {description}
-            """)
-            
-            response = await llm.ainvoke(prompt.format(description=description[:5000])) # Limit context
-            return response.content.strip()
+            """
+
+            text, meta, _response = invoke_text_prompt_with_fallback(
+                primary_model=AGENT_MODEL_NAME,
+                prompt=prompt.format(description=description[:5000]),
+                project_id=PROJECT_ID,
+                preferred_tokens=MAX_OUTPUT_TOKENS_2_0_FLASH,
+                temperature=0.3,
+                logger=self.logger,
+            )
+            return text
         except Exception as e:
             self.logger.error(f"Error generating description review: {e}")
             return "Review generation failed."

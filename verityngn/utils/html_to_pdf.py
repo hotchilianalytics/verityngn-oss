@@ -28,9 +28,11 @@ import logging
 import tempfile
 import asyncio
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 
 logger = logging.getLogger(__name__)
+
+_PLAYWRIGHT_CHANNEL_FALLBACKS = ("chrome", "msedge")
 
 # CSS injected to optimize for print (accordions are opened via JS)
 PRINT_OPTIMIZATION_CSS = """
@@ -112,6 +114,53 @@ DEFAULT_MARGIN = {
 }
 
 
+def _is_missing_browser_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return "executable doesn't exist" in msg or "browserType.launch" in msg
+
+
+async def _launch_async_browser_with_fallback(playwright_obj: Any):
+    """Prefer bundled Chromium, then fall back to installed browser channels."""
+    try:
+        return await playwright_obj.chromium.launch(headless=True)
+    except Exception as exc:
+        if not _is_missing_browser_error(exc):
+            raise
+        logger.warning(
+            "Playwright bundled Chromium unavailable; trying local browser channels: %s",
+            ", ".join(_PLAYWRIGHT_CHANNEL_FALLBACKS),
+        )
+        for channel in _PLAYWRIGHT_CHANNEL_FALLBACKS:
+            try:
+                browser = await playwright_obj.chromium.launch(headless=True, channel=channel)
+                logger.info("Using Playwright channel fallback: %s", channel)
+                return browser
+            except Exception as channel_exc:
+                logger.warning("Playwright channel %s unavailable: %s", channel, channel_exc)
+        raise
+
+
+def _launch_sync_browser_with_fallback(playwright_obj: Any):
+    """Prefer bundled Chromium, then fall back to installed browser channels."""
+    try:
+        return playwright_obj.chromium.launch(headless=True)
+    except Exception as exc:
+        if not _is_missing_browser_error(exc):
+            raise
+        logger.warning(
+            "Playwright bundled Chromium unavailable; trying local browser channels: %s",
+            ", ".join(_PLAYWRIGHT_CHANNEL_FALLBACKS),
+        )
+        for channel in _PLAYWRIGHT_CHANNEL_FALLBACKS:
+            try:
+                browser = playwright_obj.chromium.launch(headless=True, channel=channel)
+                logger.info("Using Playwright channel fallback: %s", channel)
+                return browser
+            except Exception as channel_exc:
+                logger.warning("Playwright channel %s unavailable: %s", channel, channel_exc)
+        raise
+
+
 async def async_convert_html_file_to_pdf(
     html_path: str,
     output_path: str,
@@ -157,7 +206,7 @@ async def async_convert_html_file_to_pdf(
         
         async with async_playwright() as p:
             # Launch headless Chrome
-            browser = await p.chromium.launch(headless=True)
+            browser = await _launch_async_browser_with_fallback(p)
             page = await browser.new_page()
             
             # Navigate to the HTML file
@@ -263,7 +312,7 @@ def convert_html_file_to_pdf(
         logger.info(f"Converting HTML to PDF (Sync): {html_path} -> {output_path}")
         
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = _launch_sync_browser_with_fallback(p)
             page = browser.new_page()
             page.goto(f"file://{html_path}", wait_until="networkidle")
             page.evaluate(EXPAND_ACCORDIONS_JS)

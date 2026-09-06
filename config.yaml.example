@@ -24,7 +24,7 @@ authentication:
 
 gcp:
   project_id: your-project-id  # Replace with your GCP project ID
-  location: us-central1         # GCP region for Vertex AI
+  location: us-central1         # Base GCP region; set env VERTEX_LOCATION=global for Gemini 3.x
   bucket_name: your-bucket-name # GCS bucket for storing reports
   
   # Optional: Vertex AI endpoint override
@@ -37,15 +37,15 @@ gcp:
 models:
   # Vertex AI / Gemini Models
   vertex:
-    model_name: gemini-2.5-flash  # Options: gemini-2.5-flash, gemini-2.0-flash, gemini-pro
-    max_output_tokens: 65536      # Maximum tokens per response (65K for 2.5 Flash)
+    model_name: gemini-3.8-flash  # Options: gemini-3.8-flash, gemini-3.6-flash, gemini-2.5-flash
+    max_output_tokens: 65536      # Maximum tokens per response
     temperature: 0.1              # Lower = more deterministic (0.0-1.0)
     top_p: 0.8                    # Nucleus sampling parameter
     top_k: 10                     # Top-k sampling parameter
   
   # Agent/Orchestration Model
   agent:
-    model_name: gemini-2.5-flash
+    model_name: gemini-3.8-flash
     max_output_tokens: 32768
     temperature: 0.7
 
@@ -62,7 +62,7 @@ processing:
   # Claim Extraction
   claims_per_minute: 1.8          # Target claims to extract per minute
   min_claims: 15                  # Minimum claims to extract
-  max_claims: 40                  # Maximum claims to extract
+  max_claims: 100                 # Ceiling for dynamic claim targeting (VN_MAX_CLAIMS overrides)
   
   # Claim Filtering
   min_claim_length: 10            # Minimum characters for a valid claim

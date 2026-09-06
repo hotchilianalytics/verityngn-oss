@@ -39,6 +39,11 @@ from verityngn.config.settings import (
 )
 from verityngn.services.video.transcription import get_video_transcript
 from verityngn.llm_logging.logger import log_llm_call, log_llm_response
+from verityngn.utils.llm_utils import (
+    build_langchain_vertex_kwargs,
+    generate_content_with_fallback,
+    invoke_json_prompt_with_fallback,
+)
 
 # Initialize logger for this module
 logger = logging.getLogger(__name__)
@@ -1266,6 +1271,31 @@ FRAME-BY-FRAME ANALYSIS FOCUS:
                             end_offset=f"{limit_seconds}s"
                         )
                     )
+
+                    # Optional agentic override when VN_AGENTIC_VIDEO=1
+                    try:
+                        from verityngn.services.vision.agentic_video import (
+                            agentic_video_enabled,
+                            generate_agentic_claims,
+                        )
+
+                        if agentic_video_enabled():
+                            logger.info(
+                                "🎬 VN_AGENTIC_VIDEO — YouTube URL agentic GenerateContent"
+                            )
+                            atext, ameta = generate_agentic_claims(
+                                prompt_text=prompt_text,
+                                youtube_url=video_url,
+                                duration_sec=float(limit_seconds),
+                            )
+                            logger.info("agentic_video meta=%s", ameta)
+                            if atext:
+                                return parse_llm_response(atext, video_id, logger)
+                    except Exception as _av_exc:  # noqa: BLE001
+                        logger.warning(
+                            "agentic YouTube path failed (%s); continuing static genai",
+                            _av_exc,
+                        )
                     
                     # Use a ThreadPoolExecutor to enforce a hard timeout on the API call
                     # This prevents the job from hanging indefinitely on massive YouTube live streams
@@ -2020,7 +2050,13 @@ def fuse_segmented_json_responses(
     fused_reports = []
     fused_summaries = []
 
-    MAX_CLAIMS_PER_SEGMENT = 50  # FIX: Prevent LLM repetition bug from creating 215+ claims
+    # Ceiling aligns with PROCESSING_MAX_CLAIMS so fusion/global limiter can retain dense extracts
+    try:
+        from verityngn.config.settings import PROCESSING_MAX_CLAIMS
+
+        MAX_CLAIMS_PER_SEGMENT = int(PROCESSING_MAX_CLAIMS or 100)
+    except Exception:
+        MAX_CLAIMS_PER_SEGMENT = 100
     
     for i, text in enumerate(texts):
         if not text.strip():
@@ -2506,7 +2542,7 @@ def apply_craap_analysis_filtering(
     claims: List[Dict[str, Any]],
     initial_analysis: Dict[str, Any],
     min_claims: int = 15,
-    max_claims: int = 40,
+    max_claims: int = 100,
 ) -> List[Dict[str, Any]]:
     """
     Apply CRAAP (Currency, Relevance, Authority, Accuracy, Purpose) analysis to filter claims.
@@ -3055,14 +3091,44 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
             upload_title = (state.get("upload_title") or video_id).strip()
             logger.info("📋 File upload — skipping YouTube metadata extraction")
             print(f"📋 Using upload title: {upload_title}")
+            duration_sec = 0
+            # Prefer staged path / config for duration probe
+            probe_path = (
+                state.get("video_path")
+                or (state.get("config_overrides") or {}).get("video_path")
+                or ""
+            )
+            if probe_path and os.path.isfile(probe_path):
+                try:
+                    import subprocess
+
+                    out = subprocess.check_output(
+                        [
+                            "ffprobe",
+                            "-v",
+                            "error",
+                            "-show_entries",
+                            "format=duration",
+                            "-of",
+                            "default=noprint_wrappers=1:nokey=1",
+                            probe_path,
+                        ],
+                        text=True,
+                        timeout=30,
+                    ).strip()
+                    duration_sec = int(float(out)) if out else 0
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("ffprobe duration failed: %s", exc)
             video_info_extracted = {
                 "id": video_id,
                 "title": upload_title,
                 "description": "",
                 "tags": [],
-                "duration": 0,
+                "duration": duration_sec,
             }
             state["video_info"] = video_info_extracted
+            if duration_sec:
+                logger.info("⏱️ Local upload duration: %ss", duration_sec)
         else:
             # ===== EXTRACT METADATA (YouTube URL path) =====
             logger.info("📋 EXTRACTING RELIABLE METADATA AND SUBTITLES")
@@ -3094,20 +3160,46 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
                 video_info_extracted = {}
 
         # ===== CHECK FOR DOWNLOADED .MP4 FILE FIRST =====
-        # Check for downloaded .mp4 file from sherlock analysis or previous download
-        possible_video_paths = [
-            os.path.join(out_dir_path, "analysis", f"{video_id}.mp4"),
-            os.path.join(out_dir_path, f"{video_id}.mp4"),
-            f"sherlock_analysis_{video_id}/{video_id}.mp4",
-            f"sherlock_analysis_{video_id}/vngn_reports/{video_id}/analysis/{video_id}.mp4",
-        ]
+        # Prefer explicit state.video_path (file-upload staging), then known locations.
+        possible_video_paths = []
+        state_vp = state.get("video_path")
+        if state_vp:
+            possible_video_paths.append(state_vp)
+        cfg_vp = (state.get("config_overrides") or {}).get("video_path")
+        if cfg_vp and cfg_vp not in possible_video_paths:
+            possible_video_paths.append(cfg_vp)
+        possible_video_paths.extend(
+            [
+                os.path.join(out_dir_path, "analysis", f"{video_id}.mp4"),
+                os.path.join(out_dir_path, f"{video_id}.mp4"),
+                f"sherlock_analysis_{video_id}/{video_id}.mp4",
+                f"sherlock_analysis_{video_id}/vngn_reports/{video_id}/analysis/{video_id}.mp4",
+            ]
+        )
 
         video_file_path = None
         for path in possible_video_paths:
-            if os.path.exists(path):
+            if path and os.path.exists(path):
                 video_file_path = path
                 logger.info(f"✅ Found existing video file: {video_file_path}")
                 break
+
+        # File uploads must never fall through to YouTube URL multimodal (upload:// is invalid).
+        if is_file_upload and not video_file_path:
+            err = (
+                "File-upload analysis requires a local .mp4 under analysis/ or "
+                "state.video_path; refusing YouTube URL fallback for upload://"
+            )
+            logger.error("❌ %s", err)
+            return {
+                **state,
+                "video_path": None,
+                "transcription": None,
+                "video_info": video_info_extracted or {},
+                "claims": [],
+                "video_availability": "Not Processed",
+                "error_reason": err,
+            }
 
         # ===== USE LOCAL .MP4 FILE IF AVAILABLE =====
         if (
@@ -3128,6 +3220,85 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
                     f"🎬 Using trimmed video for analysis: {trimmed_video_path}"
                 )
                 video_file_path = trimmed_video_path
+
+            # --- Agentic video spike (VN_AGENTIC_VIDEO=1) ---
+            try:
+                from verityngn.services.vision.agentic_video import (
+                    agentic_video_enabled,
+                    generate_agentic_claims,
+                    parse_claims_json,
+                )
+
+                if agentic_video_enabled():
+                    logger.info("🎬 VN_AGENTIC_VIDEO=1 — attempting AGENTIC media_processing")
+                    dur = float((video_info_extracted or {}).get("duration") or 0)
+                    try:
+                        from verityngn.config.settings import PROCESSING_MAX_CLAIMS
+
+                        _tcap = int(PROCESSING_MAX_CLAIMS or 100)
+                    except Exception:
+                        _tcap = 100
+                    target = max(8, min(_tcap, int(max(dur, 60) / 60 * 1.8)))
+                    agentic_prompt = (
+                        "Extract verifiable factual claims from this video (spoken + on-screen).\n"
+                        f"Target approximately {target} high-quality claims spanning the full timeline.\n"
+                        "Return JSON only with keys: initial_report, claims "
+                        "(claim_text, timestamp, speaker, source_type, initial_assessment), "
+                        "video_analysis_summary.\n"
+                        "Distinguish spoken vs visual_text/graphic/chart. Do not invent claims."
+                    )
+                    text, ameta = generate_agentic_claims(
+                        prompt_text=agentic_prompt,
+                        local_path=video_file_path,
+                        duration_sec=dur,
+                    )
+                    state["agentic_video_meta"] = ameta
+                    logger.info("agentic_video meta=%s", ameta)
+                    if text:
+                        claims = parse_claims_json(text)
+                        if claims:
+                            logger.info(
+                                "✅ Agentic extract: %d claims (model=%s)",
+                                len(claims),
+                                ameta.get("model"),
+                            )
+                            # Match normal analysis state shape: initial_report is a dict
+                            try:
+                                import json as _json
+
+                                parsed = _json.loads(text) if text.strip().startswith("{") else {}
+                            except Exception:
+                                parsed = {}
+                            if not isinstance(parsed, dict):
+                                parsed = {}
+                            initial_report = {
+                                "initial_report": parsed.get("initial_report")
+                                or parsed.get("video_analysis_summary")
+                                or (text[:2000] if isinstance(text, str) else ""),
+                                "video_analysis_summary": parsed.get("video_analysis_summary")
+                                or "",
+                                "claims": claims,
+                            }
+                            return {
+                                **state,
+                                "video_path": video_file_path,
+                                "transcription": None,
+                                "video_info": video_info_extracted or {},
+                                "claims": claims,
+                                "initial_report": initial_report,
+                                "video_availability": "Available",
+                                "analysis_mode": "agentic_video",
+                            }
+                        logger.warning(
+                            "agentic_video: response OK but no claims parsed — falling back to static"
+                        )
+                    else:
+                        logger.warning(
+                            "agentic_video: failed (%s) — falling back to static",
+                            ameta.get("error"),
+                        )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("agentic_video branch error: %s — static fallback", exc)
 
             # Use the working local file approach
             from langchain_google_vertexai import ChatVertexAI
@@ -3516,20 +3687,116 @@ OUTPUT FORMAT: Provide detailed JSON with:
                     }
 
             # Use YouTube URL fallback (with corrected format)
-            try:
-                from verityngn.config.settings import USE_VERTEX_SEGMENTED_YOUTUBE
-            except Exception:
-                USE_VERTEX_SEGMENTED_YOUTUBE = True
-            if USE_VERTEX_SEGMENTED_YOUTUBE:
-                analysis_result = await extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
-                    video_url, video_id, video_info
-                )
-            else:
-                analysis_result = (
-                    await extract_claims_with_gemini_multimodal_youtube_url(
-                        video_url, video_id, video_info
+            # Routing: VN_CLAIM_MODALITY=transcript → caption/transcript extract;
+            # VN_AGENTIC_VIDEO=1 → try agentic REST before Vertex segmented;
+            # else Vertex segmented on VERTEX_MODEL_NAME (default 3.8).
+            claim_modality = (os.getenv("VN_CLAIM_MODALITY") or "video").strip().lower()
+            logger.info(
+                "model_extract path: modality=%s VERTEX_MODEL=%s VN_VIDEO_MODEL=%s",
+                claim_modality,
+                os.getenv("VERTEX_MODEL_NAME") or "",
+                os.getenv("VN_VIDEO_MODEL") or "",
+            )
+            analysis_result = None
+            if claim_modality == "transcript":
+                try:
+                    from verityngn.services.ablation.transcript_arm import (
+                        extract_claims_from_transcript,
+                        fetch_youtube_transcript,
                     )
-                )
+
+                    logger.info(
+                        "🎬 VN_CLAIM_MODALITY=transcript — caption/transcript claim extract"
+                    )
+                    fetched = fetch_youtube_transcript(video_id)
+                    claims_tx = extract_claims_from_transcript(
+                        fetched.get("text") or "",
+                        video_id=video_id,
+                        title=(video_info or {}).get("title") or "",
+                        use_live_llm=True,
+                    )
+                    if claims_tx:
+                        analysis_result = {
+                            "claims": claims_tx,
+                            "initial_report": {
+                                "summary": "Transcript-modality claim extract",
+                                "modality": "transcript",
+                            },
+                            "analysis_mode": "transcript",
+                        }
+                    else:
+                        logger.warning(
+                            "transcript modality returned 0 claims — falling back to video"
+                        )
+                        claim_modality = "video"
+                except Exception as _tx_exc:  # noqa: BLE001
+                    logger.warning(
+                        "transcript modality failed (%s); falling back to video multimodal",
+                        _tx_exc,
+                    )
+                    claim_modality = "video"
+
+            if analysis_result is None and claim_modality != "transcript":
+                agentic_ok = False
+                try:
+                    from verityngn.services.vision.agentic_video import (
+                        agentic_video_enabled,
+                        generate_agentic_claims,
+                    )
+
+                    if agentic_video_enabled():
+                        logger.info(
+                            "🎬 VN_AGENTIC_VIDEO=1 — agentic before Vertex segmented YouTube"
+                        )
+                        prompt_text = (
+                            "Extract factual claims from this YouTube video. "
+                            "Return JSON with a 'claims' array; each claim needs "
+                            "claim_text, timestamp, source_type, context. "
+                            f"Video id: {video_id}. "
+                            f"Title: {(video_info or {}).get('title') or ''}."
+                        )
+                        atext, ameta = generate_agentic_claims(
+                            prompt_text=prompt_text,
+                            youtube_url=video_url,
+                            duration_sec=float(
+                                (video_info or {}).get("duration") or 3600
+                            ),
+                        )
+                        logger.info("agentic_video meta=%s", ameta)
+                        if atext:
+                            analysis_result = parse_llm_response(atext, video_id, logger)
+                            if isinstance(analysis_result, dict):
+                                analysis_result["agentic_video_meta"] = ameta
+                                analysis_result["analysis_mode"] = "agentic_video"
+                            agentic_ok = bool(
+                                isinstance(analysis_result, dict)
+                                and analysis_result.get("claims")
+                            )
+                except Exception as _av_exc:  # noqa: BLE001
+                    logger.warning(
+                        "agentic YouTube path failed (%s); continuing Vertex segmented",
+                        _av_exc,
+                    )
+                if not agentic_ok:
+                    try:
+                        from verityngn.config.settings import USE_VERTEX_SEGMENTED_YOUTUBE
+                    except Exception:
+                        USE_VERTEX_SEGMENTED_YOUTUBE = True
+                    if os.getenv("USE_VERTEX_SEGMENTED_YOUTUBE", "true").lower() in (
+                        "0",
+                        "false",
+                        "f",
+                        "no",
+                    ):
+                        USE_VERTEX_SEGMENTED_YOUTUBE = False
+                    if USE_VERTEX_SEGMENTED_YOUTUBE:
+                        analysis_result = await extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
+                            video_url, video_id, video_info
+                        )
+                    else:
+                        analysis_result = await extract_claims_with_gemini_multimodal_youtube_url(
+                            video_url, video_id, video_info
+                        )
 
         # ===== PROCESS RESULTS =====
         if not isinstance(analysis_result, dict) or analysis_result.get("error"):
@@ -3595,19 +3862,26 @@ OUTPUT FORMAT: Provide detailed JSON with:
 
         # Return updated state as simple dict with extracted metadata
         ai_indicators = analysis_result.get("ai_indicators") or []
+        meta_ok = False
+        ai_disclosure = False
+        if "metadata_result" in locals() and isinstance(metadata_result, dict):
+            meta_ok = bool(metadata_result.get("success"))
+            ai_disclosure = bool(metadata_result.get("ai_disclosure", False))
+        elif is_file_upload:
+            meta_ok = True  # local upload uses ffprobe / upload title, not yt-dlp metadata
         return {
             **state,
-            "video_path": None,  # No downloaded file
+            "video_path": video_file_path if video_file_path else state.get("video_path"),
             "transcription": None,  # Multimodal analysis doesn't need separate transcription
             "video_info": video_info,  # Use extracted metadata
             "media_embed": media_embed,  # Use enhanced media embed
             "claims": claims,
             "initial_report": analysis_result,
             "current_claim_index": 0,
-            "metadata_extraction_success": metadata_result["success"],
+            "metadata_extraction_success": meta_ok,
             "info_json_path": info_json_path if "info_json_path" in locals() else None,
             "subtitle_path": subtitle_path if "subtitle_path" in locals() else None,
-            "ai_disclosure": metadata_result.get("ai_disclosure", False),
+            "ai_disclosure": ai_disclosure,
             "ai_indicators_detected": bool(ai_indicators),
         }
 
@@ -3670,19 +3944,27 @@ Claims:
 """
 
     try:
-        llm = ChatVertexAI(
-            model_name=AGENT_MODEL_NAME,
+        data, text, meta, _response = invoke_json_prompt_with_fallback(
+            primary_model=AGENT_MODEL_NAME,
+            prompt=prompt,
+            project_id=PROJECT_ID,
+            preferred_tokens=8192,
             temperature=0.2,
-            max_output_tokens=8192,
-            project=PROJECT_ID,
-            location=VERTEX_LOCATION,
+            logger=logging.getLogger(__name__),
         )
-        resp = llm.invoke(prompt)
-        text = (resp.content or "").strip()
+        logger = __import__("logging").getLogger(__name__)
+        logger.info(
+            "claim_ranking backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+            meta.get("backend_selected"),
+            meta.get("model_selected"),
+            meta.get("location_selected"),
+            meta.get("fallback_hops"),
+        )
         # Strip markdown code fence if present
         if text.startswith("```"):
             text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
-        data = json.loads(text)
+        if not data:
+            data = json.loads(text)
         items = data.get("ranked_claims") or []
         # Build index -> total score
         scores = {}
@@ -3720,7 +4002,13 @@ async def run_prepare_claims(state: Dict[str, Any]) -> Dict[str, Any]:
             video_duration_minutes = float(dur_sec) / 60.0
     if not video_duration_minutes:
         video_duration_minutes = 30.0
-    target_total = min(90, max(40, int(video_duration_minutes * 0.75)))
+    try:
+        from verityngn.config.settings import PROCESSING_MAX_CLAIMS
+
+        _ceil = int(PROCESSING_MAX_CLAIMS or 100)
+    except Exception:
+        _ceil = 100
+    target_total = min(_ceil, max(40, int(video_duration_minutes * 0.75)))
     duration_sec = video_duration_minutes * 60.0
 
     if not claims:
@@ -4193,10 +4481,19 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_genai(
         }
         if segment_media_res:
             gen_cfg["media_resolution"] = segment_media_res
-        resp = client.models.generate_content(
-            model=VERTEX_MODEL_NAME,
+        resp, meta = generate_content_with_fallback(
+            primary_model=VERTEX_MODEL_NAME,
             contents=contents,
             config=types.GenerateContentConfig(**gen_cfg),
+            project_id=PROJECT_ID,
+            logger=logger,
+        )
+        logger.info(
+            "[GENAI] backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+            meta.get("backend_selected"),
+            meta.get("model_selected"),
+            meta.get("location_selected"),
+            meta.get("fallback_hops"),
         )
         txt = getattr(resp, "text", None) or ""
         logger.info(f"[GENAI] segment=({start_s},{end_s}) len={len(txt)}")
@@ -4316,7 +4613,13 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
     log_segmentation_plan(duration_sec, VERTEX_MODEL_NAME, SEGMENT_FPS)
     duration_min = max(1, duration_sec // 60 or 1)
     # Aim for rich coverage: ~3 claims/minute; keep within 45–90
-    target_claims = min(90, max(45, int(duration_min * 3)))
+    try:
+        from verityngn.config.settings import PROCESSING_MAX_CLAIMS
+
+        _ceil = int(PROCESSING_MAX_CLAIMS or 100)
+    except Exception:
+        _ceil = 100
+    target_claims = min(_ceil, max(45, int(duration_min * 3)))
 
     #   base_prompt = (
     #         f"Extract {target_claims} high-quality, verifiable claims from the video content (audio+visual). "
@@ -4501,10 +4804,19 @@ OUTPUT FORMAT: Provide detailed JSON with:
         for attempt in range(max_retries + 1):
             try:
                 cfg = _genai_cfg_normal if attempt % 2 == 0 else _genai_cfg_relaxed
-                resp = _genai_client.models.generate_content(
-                    model=VERTEX_MODEL_NAME,
+                resp, meta = generate_content_with_fallback(
+                    primary_model=VERTEX_MODEL_NAME,
                     contents=contents,
                     config=cfg,
+                    project_id=PROJECT_ID,
+                    logger=logger,
+                )
+                logger.info(
+                    "[VERTEX] backend_selected=%s model_selected=%s location_selected=%s fallback_hops=%s",
+                    meta.get("backend_selected"),
+                    meta.get("model_selected"),
+                    meta.get("location_selected"),
+                    meta.get("fallback_hops"),
                 )
                 duration = time.time() - start_time
                 log_llm_response(call_id, resp, duration=duration)

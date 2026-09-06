@@ -65,18 +65,18 @@ class ClaimProcessor:
             # Adjusted for quality: Allow more claims as requested by user
             calculated_claims = int(video_duration_minutes * target_claims_per_minute)
             
-            # Get min_claims from config if available
-            from verityngn.config.settings import get_config
+            from verityngn.config.settings import PROCESSING_MAX_CLAIMS, get_config
             config = get_config()
             config_min_claims = config.get("processing.min_claims", 20)
-            
-            # Heuristics for max_claims
+            ceiling = int(PROCESSING_MAX_CLAIMS or 100)
+            # Dynamic targeting (claims/min × duration) with hard ceiling
             if video_duration_minutes > 30:
-                self.max_claims = max(config_min_claims, min(40, calculated_claims))
+                target = max(config_min_claims, calculated_claims)
             elif video_duration_minutes > 15:
-                self.max_claims = max(max(15, config_min_claims), min(30, calculated_claims))
+                target = max(max(15, config_min_claims), calculated_claims)
             else:
-                self.max_claims = max(config_min_claims, min(20, calculated_claims))
+                target = max(config_min_claims, calculated_claims)
+            self.max_claims = min(ceiling, target)
         
         # Claim sources
         self.video_analysis_claims = []

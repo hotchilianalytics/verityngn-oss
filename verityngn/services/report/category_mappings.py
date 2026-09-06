@@ -101,15 +101,13 @@ def map_source_type_category(source_type: Optional[str], url: Optional[str]) -> 
 
 
 def _claim_internal_verdict_key(claim: Claim) -> str:
-    """Match markdown_generator pre-process: honor UNVERIFIABLE, else map probabilities."""
+    """Prefer stored verdicts; fall back to probability remap only if needed."""
     stored_result = ""
     if isinstance(claim.verification_result, dict):
         stored_result = (claim.verification_result.get("result", "") or "").upper()
     elif isinstance(claim.verification_result, str):
         stored_result = claim.verification_result.upper()
 
-    if stored_result == "UNVERIFIABLE":
-        return "UNVERIFIABLE"
     if stored_result in VERDICT_KEY_TO_LABEL:
         return stored_result
 
@@ -150,16 +148,26 @@ def compute_overall_verdict_label(claims: List[Claim]) -> str:
     if total == 0:
         return "Undetermined (No Claims)"
     vc = _verdict_counts(claims)
-    false_count = vc.get("LIKELY_FALSE", 0) + vc.get("HIGHLY_LIKELY_FALSE", 0)
-    true_count = vc.get("LIKELY_TRUE", 0) + vc.get("HIGHLY_LIKELY_TRUE", 0)
-    if false_count / total >= 0.6:
+    false_strong = vc.get("LIKELY_FALSE", 0) + vc.get("HIGHLY_LIKELY_FALSE", 0)
+    true_strong = vc.get("LIKELY_TRUE", 0) + vc.get("HIGHLY_LIKELY_TRUE", 0)
+    false_soft = vc.get("LEANING_FALSE", 0)
+    true_soft = vc.get("LEANING_TRUE", 0)
+    uncertain = vc.get("UNCERTAIN", 0) + vc.get("UNVERIFIABLE", 0)
+
+    if uncertain / total >= 0.4:
+        return "Mixed/Uncertain"
+    if false_strong / total >= 0.6:
         return "Highly Likely False"
-    if false_count > true_count:
-        return "Likely False"
-    if true_count / total >= 0.6:
+    if true_strong / total >= 0.6:
         return "Highly Likely True"
-    if true_count >= false_count:
+    true_score = (2 * true_strong) + true_soft
+    false_score = (2 * false_strong) + false_soft
+    if abs(true_score - false_score) <= max(1, total // 10):
+        return "Mixed/Uncertain"
+    if true_score > false_score:
         return "Likely True"
+    if false_score > true_score:
+        return "Likely False"
     return "Mixed/Uncertain"
 
 

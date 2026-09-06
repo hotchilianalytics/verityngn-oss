@@ -30,6 +30,88 @@ if ENABLE_GOOGLE_SEARCH and (not GOOGLE_SEARCH_API_KEY or not CSE_ID):
     )
 
 
+_STOPWORDS = {
+    "that", "this", "with", "from", "were", "was", "are", "the", "and", "for",
+    "but", "over", "only", "after", "before", "about", "into", "than", "then",
+    "when", "where", "which", "while", "their", "there", "these", "those",
+    "have", "has", "had", "been", "being", "will", "would", "could", "should",
+    "million", "billion", "approximately", "resulting", "including",
+}
+
+
+def claim_relevance_keywords(claim_query: str) -> set:
+    """Extract topical keywords from a claim/query for relevance gating."""
+    claim_lower = (claim_query or "").lower()
+    keywords = set(re.findall(r"\b(?:sb|hb|ors)\s*\d{2,5}\b", claim_lower))
+    keywords.update(
+        w for w in re.findall(r"\b[a-z]{4,}\b", claim_lower) if w not in _STOPWORDS
+    )
+    # Prefer denser set but keep enough signal for short claims
+    if len(keywords) > 12:
+        # Keep bill entities + first 10 alpha tokens by appearance order
+        ordered = [
+            w for w in re.findall(r"\b[a-z]{4,}\b", claim_lower) if w not in _STOPWORDS
+        ]
+        keep = set(re.findall(r"\b(?:sb|hb|ors)\s*\d{2,5}\b", claim_lower))
+        keep.update(ordered[:10])
+        return keep
+    return keywords
+
+
+def evidence_relevance_score(item: Dict[str, Any], claim_query: str) -> float:
+    """
+    Score claim–snippet topical overlap in [0, 1].
+    Also boosts known legislative primary domains for SB/HB/ORS claims.
+    """
+    title = (item.get("title") or item.get("source_name") or "").lower()
+    snippet = (item.get("snippet") or item.get("text") or "").lower()
+    url = (item.get("link") or item.get("url") or "").lower()
+    combined = f"{title} {snippet} {url}"
+    keywords = claim_relevance_keywords(claim_query)
+    if not keywords:
+        return 0.0
+    hits = sum(1 for k in keywords if k in combined)
+    score = hits / max(3, min(len(keywords), 8))
+    score = min(1.0, score)
+    # Domain-class primary hosts (legislative / medical / finance / fact-check)
+    cq = (claim_query or "").lower()
+    primary_hosts: tuple = ()
+    if re.search(r"\b(?:sb|hb|ors)\s*\d", cq):
+        # Oregon bias only when Oregon/ORS/OLIS hinted; else Ballotpedia / .gov
+        if re.search(r"\boregon\b|\bors\b|\bolis\b|\blro\b", cq):
+            primary_hosts = (
+                "olis.oregonlegislature.gov",
+                "oregonlegislature.gov",
+                "oregon.gov",
+                "ballotpedia.org",
+                "capitolchronicle",
+                "statesmanjournal.com",
+                "oregonlive.com",
+            )
+        else:
+            primary_hosts = ("ballotpedia.org", "congress.gov", ".gov")
+    elif re.search(r"\b(?:fda|nih|cdc|clinical|vaccine|pharmaceutical)\b", cq):
+        primary_hosts = ("nih.gov", "fda.gov", "cdc.gov", "cochranelibrary.com", "pubmed")
+    elif re.search(r"\b(?:sec|edgar|earnings|eps|gaap|federal reserve)\b", cq):
+        primary_hosts = ("sec.gov", "federalreserve.gov", "investor.gov")
+    if primary_hosts and any(h in url for h in primary_hosts):
+        score = max(score, 0.75)
+    # Hard-penalty classic CSE junk for entity-heavy claims
+    if primary_hosts:
+        junk = (
+            "vocab", "word_list", "frequency_list", "embeddings", "huggingface.co",
+            "mlm_vocab", "randpermdic", "glove_vocab",
+        )
+        if any(j in url or j in title for j in junk):
+            score = min(score, 0.05)
+    return score
+
+
+def is_result_relevant_to_claim(result: Dict[str, Any], claim_query: str, min_score: float = 0.25) -> bool:
+    """Topical relevance gate for any CSE / news hit (not PR-only)."""
+    return evidence_relevance_score(result, claim_query) >= min_score
+
+
 def search_for_evidence(
     query: str,
     num_results: int = 10,
@@ -56,62 +138,11 @@ def search_for_evidence(
     if tier == 3:
         logger.debug("📡 [SEARCH] Tier 3: skipping web search")
         return []
-    
+
     def is_press_release_relevant_to_claim(press_release_result: Dict[str, Any], claim_query: str) -> bool:
         """Filter out irrelevant press releases that don't relate to the claim topic."""
-        title = (press_release_result.get("title", "") or "").lower()
-        snippet = (press_release_result.get("snippet", "") or press_release_result.get("text", "") or "").lower()
-        url = (press_release_result.get("link", "") or press_release_result.get("url", "") or "").lower()
-        
-        # Extract key topics from claim query
-        claim_lower = claim_query.lower()
-        claim_keywords = set()
-        
-        # Health/medical/supplement related keywords
-        health_keywords = ["health", "medical", "weight", "loss", "diet", "supplement", "nutrition", "turmeric", "curcumin", 
-                          "doctor", "study", "research", "clinical", "trial", "treatment", "therapy", "drug", "medicine"]
-        
-        # Extract relevant keywords from claim
-        for keyword in health_keywords:
-            if keyword in claim_lower:
-                claim_keywords.add(keyword)
-        
-        # If no health keywords found, extract first few significant words
-        if not claim_keywords:
-            import re
-            words = re.findall(r'\b\w{4,}\b', claim_lower)[:5]  # Get first 5 significant words
-            claim_keywords.update(words)
-        
-        # Check if any claim keywords appear in press release
-        combined_text = f"{title} {snippet}".lower()
-        keyword_matches = sum(1 for keyword in claim_keywords if keyword in combined_text)
-        
-        # High relevance: multiple keyword matches or direct mentions
-        if keyword_matches >= 2:
-            return True
-        
-        # Medium relevance: some keyword overlap + legitimate PR domains
-        legitimate_pr_domains = ["globenewswire.com", "prnewswire.com", "businesswire.com", "marketwatch.com"]
-        if keyword_matches >= 1 and any(domain in url for domain in legitimate_pr_domains):
-            return True
-        
-        # Low relevance filters - exclude completely unrelated topics
-        irrelevant_topics = [
-            "nuclear", "defense", "military", "semiconductor", "banking", "finance", "insurance",
-            "real estate", "automotive", "airline", "transportation", "energy", "oil", "gas",
-            "mining", "agriculture", "retail", "fashion", "telecommunications", "software",
-            "technology infrastructure", "government policy", "education system", "climate",
-            "environmental regulations", "tourism", "hospitality", "entertainment industry"
-        ]
-        
-        # Reject if clearly unrelated
-        for irrelevant in irrelevant_topics:
-            if irrelevant in combined_text and keyword_matches == 0:
-                return False
-        
-        # Default: keep if there's any reasonable connection
-        return keyword_matches > 0
-    
+        return is_result_relevant_to_claim(press_release_result, claim_query, min_score=0.25)
+
     try:
         if not ENABLE_GOOGLE_SEARCH:
             logger.warning("ENABLE_GOOGLE_SEARCH is false; skipping web search")
@@ -131,10 +162,34 @@ def search_for_evidence(
             re.I,
         )
         do_recent_product = tier == 1 and bool(product_tech_pattern.search(query))
+        is_leg = bool(re.search(r"\b(?:sb|hb|ors)\s*\d", query or "", re.I))
+        do_legislature = is_leg and (tier is None or tier in (1, 2))
+        # Resolver-supplied primary hosts when available; else Oregon only if OR-hinted
+        primary_sitesearch = ""
+        try:
+            from verityngn.services.deepresearch.primary_pack import (
+                detect_domain_classes,
+                primary_hosts_for_cse,
+            )
+
+            _classes = detect_domain_classes(query or "")
+            primary_sitesearch = primary_hosts_for_cse(_classes, query or "")
+        except Exception:
+            primary_sitesearch = ""
+        if do_legislature and not primary_sitesearch:
+            if re.search(r"\bOregon\b|\bORS\b|\bOLIS\b|\bLRO\b", query or "", re.I):
+                primary_sitesearch = (
+                    "olis.oregonlegislature.gov,oregonlegislature.gov,"
+                    "oregon.gov,ballotpedia.org"
+                )
+            else:
+                primary_sitesearch = "ballotpedia.org,congress.gov"
+        do_primary_pack = bool(primary_sitesearch) and (tier is None or tier in (1, 2))
         num_concurrent = (
             do_regular + do_scientific + do_wiki_fact + do_medical + do_press_release
             + (1 if do_news_recent else 0)
             + (1 if do_recent_product else 0)
+            + (1 if do_primary_pack else 0)
         )
         logger.info("🔍 [SHERLOCK] Starting parallel evidence searches (%d concurrent)", num_concurrent)
 
@@ -147,6 +202,8 @@ def search_for_evidence(
         from datetime import datetime
         current_year = str(datetime.utcnow().year)
         recent_product_query = f"{query} {current_year}" if do_recent_product else None
+        # Prefer short legislative query for site-restricted search
+        leg_query = re.sub(r"\s+", " ", (query or "")[:140]).strip()
 
         import time
         with ThreadPoolExecutor(max_workers=8) as executor:
@@ -159,6 +216,16 @@ def search_for_evidence(
             recent_product_future = (
                 executor.submit(google_search, recent_product_query, num_results, {"dateRestrict": "w2"})
                 if do_recent_product and recent_product_query
+                else None
+            )
+            legislature_future = (
+                executor.submit(
+                    google_search,
+                    leg_query,
+                    num_results,
+                    {"as_sitesearch": primary_sitesearch},
+                )
+                if do_primary_pack
                 else None
             )
 
@@ -182,136 +249,86 @@ def search_for_evidence(
             press_release_results = _get(press_release_future)
             news_recent_results = _get(news_recent_future)
             recent_product_results = _get(recent_product_future)
+            legislature_results = _get(legislature_future)
 
             logger.info("✅ [SHERLOCK] All evidence searches completed")
-        
+
+        def _append_if_relevant(result_like: Dict[str, Any], source_type: str, extra: Optional[Dict[str, Any]] = None):
+            score = evidence_relevance_score(result_like, query)
+            if score < 0.25:
+                logger.debug(
+                    "Culled low-relevance hit (%.2f): %s",
+                    score,
+                    (result_like.get("title") or result_like.get("link") or "")[:80],
+                )
+                return
+            url_link = result_like.get("link") or result_like.get("url") or ""
+            item = {
+                "source_name": result_like.get("title") or result_like.get("source_name") or "Unknown Source",
+                "source_type": source_type,
+                "url": url_link,
+                "title": result_like.get("title", ""),
+                "text": result_like.get("snippet") or result_like.get("text") or "",
+                "relevance": "high" if score >= 0.5 else "medium",
+                "relevance_score": round(score, 3),
+                "claim": query,
+            }
+            if extra:
+                item.update(extra)
+            evidence.append(item)
+
         # Format and combine results, adding source type metadata
-        # Regular search results
         for result in regular_results:
             url_link = result.get("link", "")
             source_type = "Web"
-            if "wikipedia.org" in result.get("link", ""):
+            if "wikipedia.org" in url_link:
                 source_type = "Encyclopedia"
             elif any(domain in url_link for domain in ["nih.gov", "nature.com", "sciencedirect.com", "ncbi.nlm.nih.gov"]):
                 source_type = "Scientific Journal"
             elif any(domain in url_link for domain in pr_domains.split(",")):
                 source_type = "Press Release"
-            
-            evidence_item = {
-                "source_name": result.get("title", "Unknown Source"),
-                "source_type": source_type,
-                "url": url_link,
-                "title": result.get("title", ""),
-                "text": result.get("snippet", ""),
-                "relevance": "high",
-                "claim": query
-            }
-            evidence.append(evidence_item)
-        
-        # Scientific search results
+            _append_if_relevant(result, source_type)
+
         for result in scientific_results:
-            source_type = "Scientific Journal"
-            evidence_item = {
-                "source_name": result.get("title", "Unknown Source"),
-                "source_type": source_type,
-                "url": result.get("link", ""),
-                "title": result.get("title", ""),
-                "text": result.get("snippet", ""),
-                "relevance": "high",
-                "claim": query
-            }
-            evidence.append(evidence_item)
-        
-        # Wikipedia and fact-check results
+            _append_if_relevant(result, "Scientific Journal")
+
         for result in wiki_fact_results:
             source_type = "Fact Check"
             if "wikipedia.org" in result.get("link", ""):
                 source_type = "Encyclopedia"
-            
-            evidence_item = {
-                "source_name": result.get("title", "Unknown Source"),
-                "source_type": source_type,
-                "url": result.get("link", ""),
-                "title": result.get("title", ""),
-                "text": result.get("snippet", ""),
-                "relevance": "high",
-                "claim": query
-            }
-            evidence.append(evidence_item)
-        
-        # Medical/health results
+            _append_if_relevant(result, source_type)
+
         for result in medical_results:
             source_type = "Medical/Health"
-            if "cdc.gov" in result.get("link", "") or "nih.gov" in result.get("link", ""):
+            link = result.get("link", "")
+            if "cdc.gov" in link or "nih.gov" in link:
                 source_type = "Government"
-            elif "who.int" in result.get("link", ""):
+            elif "who.int" in link:
                 source_type = "International Organization"
-            
-            evidence_item = {
-                "source_name": result.get("title", "Unknown Source"),
-                "source_type": source_type,
-                "url": result.get("link", ""),
-                "title": result.get("title", ""),
-                "text": result.get("snippet", ""),
-                "relevance": "high",
-                "claim": query
-            }
-            evidence.append(evidence_item)
+            _append_if_relevant(result, source_type)
 
-        # News (recency-aware) results for Tier 1
         for item in (news_recent_results or []):
-            evidence_item = {
-                "source_name": item.get("source_name", "News"),
-                "source_type": "News",
-                "url": item.get("url", ""),
-                "title": item.get("title", ""),
-                "text": item.get("text", ""),
-                "relevance": "high",
-                "claim": query,
-                "recency": "recent",
-            }
-            evidence.append(evidence_item)
+            _append_if_relevant(item, "News", {"recency": "recent"})
 
-        # Recent product/tech (dateRestrict=w2) results for Tier 1
         for result in (recent_product_results or []):
-            url_link = result.get("link", "")
-            evidence_item = {
-                "source_name": result.get("title", "Unknown Source"),
-                "source_type": "Web",
-                "url": url_link,
-                "title": result.get("title", ""),
-                "text": result.get("snippet", ""),
-                "relevance": "high",
-                "claim": query,
-                "recency": "recent",
-            }
-            evidence.append(evidence_item)
+            _append_if_relevant(result, "Web", {"recency": "recent"})
 
-        # Press release/newswire results (explicit)
-        # Process press release results with relevance filtering  
+        for result in (legislature_results or []):
+            _append_if_relevant(result, "Legislature / Agency")
+
+        # Press release/newswire results (explicit) — still relevance-gated
         relevant_pr_count = 0
         for result in press_release_results:
-            url_link = result.get("link", "")
-            
-            # Apply relevance filter to cull weak/irrelevant press releases
             if not is_press_release_relevant_to_claim(result, query):
                 logger.debug(f"Culled irrelevant press release: {result.get('title', '')}")
                 continue
-                
-            evidence_item = {
-                "source_name": result.get("title", "Press Release"),
-                "source_type": "Press Release",
-                "url": url_link,
-                "title": result.get("title", ""),
-                "text": result.get("snippet", ""),
-                "relevance": "high",
-                "claim": query
-            }
-            evidence.append(evidence_item)
-            relevant_pr_count += 1
-            
+            before = len(evidence)
+            _append_if_relevant(result, "Press Release")
+            if len(evidence) > before:
+                relevant_pr_count += 1
+
         logger.info(f"Kept {relevant_pr_count}/{len(press_release_results)} relevant press releases for query: {query}")
-        
+
         # Deduplicate results
         from verityngn.services.reputation.url_safety import is_safe_url
 
@@ -324,10 +341,13 @@ def search_for_evidence(
                 unique_evidence.append(item)
             elif url and not is_safe_url(url):
                 logger.debug("Dropped unsafe search result URL: %s", url[:120])
-        
+
+        # Rank by relevance score
+        unique_evidence.sort(key=lambda x: float(x.get("relevance_score") or 0), reverse=True)
+
         logger.info(f"Found {len(unique_evidence)} unique pieces of evidence across multiple sources")
         return unique_evidence
-        
+
     except Exception as e:
         logger.error(f"Error searching for evidence: {e}")
         return []

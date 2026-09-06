@@ -5,7 +5,8 @@ description: "Complete installation and configuration walkthrough"
 
 # VerityNgn Setup Guide
 
-Complete guide to setting up VerityNgn with Google Cloud authentication.
+Complete guide to setting up VerityNgn with Vertex AI and optional Developer
+API fallback.
 
 ---
 
@@ -45,7 +46,9 @@ pip install -r requirements.txt
 
 ## Authentication Setup
 
-VerityNgn requires Google Cloud authentication for Vertex AI (Gemini). Choose **one** of the following methods:
+VerityNgn prefers Vertex AI for the local quality-critical path. You can also
+configure a Gemini Developer API key as the final fallback in the shared model
+router. Choose one or both of the following methods:
 
 ### Method 1: Service Account (Recommended for Automation)
 
@@ -120,6 +123,7 @@ Add your project ID:
 GOOGLE_CLOUD_PROJECT=your-project-id
 PROJECT_ID=your-project-id
 LOCATION=us-central1
+VERTEX_LOCATION=global
 ```
 
 ### Method 2: Application Default Credentials (Recommended for Development)
@@ -162,6 +166,7 @@ Create `.env` file:
 GOOGLE_CLOUD_PROJECT=your-project-id
 PROJECT_ID=your-project-id
 LOCATION=us-central1
+VERTEX_LOCATION=global
 ```
 
 ---
@@ -188,6 +193,19 @@ GOOGLE_CSE_ID=your-cse-id
 ```
 
 **Without this:** System works but has limited verification capabilities.
+
+### Gemini Developer API key (optional fallback)
+
+Add one of these to `.env` if you want the shared fallback router to continue
+after a Vertex model/location miss:
+
+```bash
+VERITY_GEMINI_KEY=...
+# or GEMINI_API_KEY / GOOGLE_API_KEY
+ALLOW_DEVELOPER_API_FALLBACK=true
+VERTEX_FALLBACK_LOCATIONS=global,us-central1
+VERTEX_FALLBACK_MODELS=gemini-3.6-flash,gemini-2.5-flash
+```
 
 ### YouTube Data API v3 (for enhanced counter-intelligence)
 

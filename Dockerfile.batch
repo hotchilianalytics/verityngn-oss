@@ -75,8 +75,8 @@ ENV PROJECT_ID=""
 ENV LOCATION=us-central1
 
 # AI Model Configuration
-ENV VERTEX_MODEL_NAME=gemini-2.5-flash
-ENV AGENT_MODEL_NAME=gemini-2.5-flash
+ENV VERTEX_MODEL_NAME=gemini-3.8-flash
+ENV AGENT_MODEL_NAME=gemini-3.8-flash
 
 # Research Quality Settings (higher token limits for batch processing)
 ENV MAX_OUTPUT_TOKENS_2_5_FLASH=65536

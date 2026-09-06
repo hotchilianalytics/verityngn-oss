@@ -5,7 +5,8 @@ description: "How VerityNgn optimizes the 1M token context window"
 
 # VerityNgn Technical Architecture
 
-> **Version 2.0** - Updated with Intelligent Segmentation and Enhanced Claims Extraction
+> **Version 3.0.0** - Updated with dual outputs, modality routing, and shared
+> Vertex fallback
 
 ---
 
@@ -23,16 +24,19 @@ description: "How VerityNgn optimizes the 1M token context window"
 
 ## Overview
 
-VerityNgn v2.0 introduces a context-aware video segmentation system that optimizes API calls by maximizing utilization of the 1M token context window available in Gemini 2.5 Flash. This architectural improvement reduces API calls by up to 86% for typical videos while maintaining full analysis quality.
+VerityNgn uses a local-first pipeline with context-aware segmentation, optional
+transcript-first routing, and a shared fallback matrix for quality-critical
+Gemini calls. The operational goal is to keep the standard report path resilient
+even when `gemini-3.8-flash` is unavailable on a specific Vertex location.
 
-### Key Architecture Improvements in v2.0
+### Key Architecture Improvements in v3
 
 | Component | v1.0 | v2.0 | Improvement |
 |-----------|------|------|-------------|
-| Segmentation | Fixed 5-minute segments | Intelligent context-aware | 86% fewer API calls |
-| Context Usage | ~3% utilization | ~58% utilization | 19x improvement |
-| Claims Extraction | Single-pass | Multi-pass with scoring | Higher quality claims |
-| Processing Time (33-min video) | 56-84 minutes | 8-12 minutes | 6-7x faster |
+| Segmentation | Fixed short windows | Intelligent context-aware | Fewer long-video calls |
+| Routing | Full-only | `light` / `full` / `auto` + `--modality` | Better cost-quality control |
+| Runtime resilience | Ad hoc retries | Shared Vertex/model/API fallback | Fewer model/location failures |
+| Artifacts | Split outputs | JSON-first + `report.html` + `deep.html` | Stable operator contract |
 
 ---
 

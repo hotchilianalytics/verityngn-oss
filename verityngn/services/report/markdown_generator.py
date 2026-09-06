@@ -604,10 +604,25 @@ def create_rolled_up_source_file(claim: Claim, evidence: List[Union[str, Dict]],
 
 
 def _claim_source_items(claim) -> list:
-    """Normalized evidence list for a claim (safe URLs only)."""
+    """Normalized evidence list for a claim (safe URLs only).
+
+    Prefer verification_result.sources; fall back to claim.evidence and
+    nested evidence blobs so Section 7 is not empty when cite-only was soft.
+    """
     claim_evidence = []
-    if claim.verification_result and isinstance(claim.verification_result, dict):
-        claim_evidence = claim.verification_result.get("sources", [])
+    vr = claim.verification_result if claim.verification_result else None
+    if isinstance(vr, dict):
+        claim_evidence = list(vr.get("sources") or [])
+        if not claim_evidence:
+            # Nested evidence list (dicts with url) from verification_result
+            nested = vr.get("evidence")
+            if isinstance(nested, list):
+                claim_evidence = nested
+            elif isinstance(nested, str) and "http" in nested:
+                # Pull bare URLs out of the evidence summary text as last resort
+                import re
+
+                claim_evidence = re.findall(r"https?://[^\s\\)\"]+", nested)[:8]
     if not claim_evidence and isinstance(claim.evidence, list):
         claim_evidence = claim.evidence
     return filter_safe_urls(claim_evidence)

@@ -12,9 +12,21 @@ verityngn-oss (Apache-2.0) ──► PyPI verityngn==3.0.0
 
 ## How overlays consume OSS
 
-1. **Preferred:** `pip install verityngn==3.0.0` (or git ref `v3.0.0`) inside commercial/batch images.
+1. **Preferred:** pin a promoted OSS release/ref inside commercial and batch images.
+   - stable: `pip install verityngn==3.0.0`
+   - pre-cutover smoke: git ref `release/v3.0.0`
 2. **Legacy:** Docker `COPY` / git submodule of `verityngn-oss` (still used by some Cloud Run builds).
 3. **Predictions / riskfactor:** keep overlay packages only (`services/predictions`, `services/quant`, Karp scripts, S-factor registries). Do **not** fork the entire engine.
+
+## Commercial reintegration rule
+
+Do not broadly merge old commercial branches back into OSS or vice versa.
+Commercial repos should:
+
+1. pin the promoted OSS engine
+2. run `PARITY_TEST_v3.md`
+3. reapply overlay-only features
+4. document deliberate divergences
 
 ## Sync checklist after an OSS release
 

@@ -8,43 +8,74 @@ import logging
 # Configure logger
 logger = logging.getLogger(__name__)
 
+
+def canonicalize_probability_distribution(prob_dist: Optional[dict]) -> Dict[str, float]:
+    """Collapse mixed casing/synonyms into TRUE/FALSE/UNCERTAIN and renormalize."""
+    if not isinstance(prob_dist, dict):
+        return {"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 1.0}
+
+    buckets = {"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 0.0}
+    alias_map = {
+        "true": "TRUE",
+        "likely_true": "TRUE",
+        "highly_likely_true": "TRUE",
+        "mostly_true": "TRUE",
+        "supported": "TRUE",
+        "false": "FALSE",
+        "likely_false": "FALSE",
+        "highly_likely_false": "FALSE",
+        "refuted": "FALSE",
+        "misleading": "FALSE",
+        "uncertain": "UNCERTAIN",
+        "unknown": "UNCERTAIN",
+        "mixed": "UNCERTAIN",
+        "half_true": "UNCERTAIN",
+        "partly_true": "UNCERTAIN",
+        "unverifiable": "UNCERTAIN",
+    }
+
+    for raw_key, raw_value in prob_dist.items():
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError):
+            continue
+        key = alias_map.get(str(raw_key).strip().lower())
+        if key:
+            buckets[key] += max(0.0, value)
+
+    total = sum(buckets.values())
+    if total <= 0:
+        return {"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 1.0}
+    return {k: round(v / total, 3) for k, v in buckets.items()}
+
 # Utility: Quantum/human mapping for verification result
 def map_probabilities_to_verification_result(prob_dist: dict) -> str:
-    """Map probability distribution to verification result using enhanced, less conservative thresholds."""
-    # Handle None probability distribution
-    if prob_dist is None:
+    """Map a canonical 3-way probability distribution to a verdict label."""
+    canon = canonicalize_probability_distribution(prob_dist)
+    t = canon.get("TRUE", 0.0) * 100
+    f = canon.get("FALSE", 0.0) * 100
+    u = canon.get("UNCERTAIN", 0.0) * 100
+
+    if u >= 55:
         return "UNCERTAIN"
-    
-    t = prob_dist.get("TRUE", 0.0) * 100
-    f = prob_dist.get("FALSE", 0.0) * 100
-    u = prob_dist.get("UNCERTAIN", 0.0) * 100
-    
-    # Enhanced probability mapping with 65% thresholds (from August 22nd analysis)
-    false_uncertain_combined = f + u
-    true_uncertain_combined = t + u
-    
-    if t > 70 and f < 10:
+    if t >= 80 and f <= 10 and u <= 20:
         return "HIGHLY_LIKELY_TRUE"
-    elif true_uncertain_combined > 65 and f < 35:
+    elif t >= 60 and f <= 20 and u <= 35:
         return "LIKELY_TRUE"
-    elif f > 75 and t < 10:
+    elif f >= 80 and t <= 10 and u <= 20:
         return "HIGHLY_LIKELY_FALSE"
-    elif false_uncertain_combined > 65 and t < 35:
+    elif f >= 60 and t <= 20 and u <= 35:
         return "LIKELY_FALSE"
-    elif t > 50 and f < 20:
-        return "LIKELY_TRUE"
-    elif f > 45 and t < 25:
-        return "LIKELY_FALSE"
-    elif t > 40 and f < 35:
+    elif t >= 45 and t > f and u < 50:
         return "LEANING_TRUE"
-    elif f > 35 and t < 30:
+    elif f >= 45 and f > t and u < 50:
         return "LEANING_FALSE"
     elif abs(t - f) < 10:
         return "UNCERTAIN"
     elif t > f:
-        return "LEANING_TRUE"
+        return "LEANING_TRUE" if u < 50 else "UNCERTAIN"
     else:
-        return "LEANING_FALSE"
+        return "LEANING_FALSE" if u < 50 else "UNCERTAIN"
 
 class AssessmentLevel(str, Enum):
     HIGHLY_LIKELY_TRUE = "Highly Likely to be True"

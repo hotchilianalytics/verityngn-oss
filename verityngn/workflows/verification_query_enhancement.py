@@ -12,6 +12,17 @@ import re
 logger = logging.getLogger(__name__)
 
 
+_LEGISLATIVE_RE = re.compile(
+    r"\b(?:SB|HB|ORS)\s*\d{2,5}\b|\bLegislative Revenue Office\b|\bLRO\b",
+    re.IGNORECASE,
+)
+
+
+def is_legislative_claim(claim_text: str) -> bool:
+    """True when claim mentions bill/statute entities (SB/HB/ORS/LRO)."""
+    return bool(_LEGISLATIVE_RE.search(claim_text or ""))
+
+
 def generate_verification_queries(
     claim_text: str, claim_type: str, max_queries: int = 3
 ) -> List[str]:
@@ -28,7 +39,9 @@ def generate_verification_queries(
     """
     queries = []
 
-    if claim_type == "credential":
+    if is_legislative_claim(claim_text):
+        queries = _generate_legislative_queries(claim_text)
+    elif claim_type == "credential":
         queries = _generate_credential_queries(claim_text)
     elif claim_type == "publication":
         queries = _generate_publication_queries(claim_text)
@@ -43,6 +56,34 @@ def generate_verification_queries(
 
     # Limit to max_queries
     return queries[:max_queries]
+
+
+def _generate_legislative_queries(claim_text: str) -> List[str]:
+    """Short queries biased toward official legislative / agency sources."""
+    entities = _LEGISLATIVE_RE.findall(claim_text or "")
+    bill = (entities[0] if entities else "").strip() or "bill"
+    # Normalize spacing: "SB 1507"
+    bill_norm = re.sub(r"\s+", " ", bill.upper().replace("ORS", "ORS "))
+    bill_norm = re.sub(r"(SB|HB)\s*(\d+)", r"\1 \2", bill_norm, flags=re.I)
+    short = re.sub(r"\s+", " ", (claim_text or "")[:120]).strip()
+    text = claim_text or ""
+    oregonish = bool(
+        re.search(r"\bOregon\b|\bORS\b|\bOLIS\b|\bLegislative Revenue Office\b|\bLRO\b", text, re.I)
+    )
+    if oregonish:
+        queries = [
+            f"{bill_norm} Oregon Legislative Revenue Office",
+            f"{bill_norm} site:olis.oregonlegislature.gov",
+            f"{bill_norm} site:oregon.gov revenue",
+            f"{short} fact check OR hearing",
+        ]
+    else:
+        queries = [
+            f"{bill_norm} site:ballotpedia.org",
+            f"{bill_norm} site:.gov bill OR statute",
+            f"{short} fact check OR hearing",
+        ]
+    return [q for q in queries if q.strip()]
 
 
 def _generate_credential_queries(claim_text: str) -> List[str]:
@@ -257,23 +298,30 @@ def _generate_efficacy_queries(claim_text: str) -> List[str]:
 
 def _generate_generic_queries(claim_text: str) -> List[str]:
     """Generate generic queries for other claim types."""
-    # Extract key entities and numbers
-    entities = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", claim_text)
-    numbers = re.findall(r"\b\d+(?:\.\d+)?%?\b", claim_text)
+    # Prefer short entity+number queries over dumping the full claim (CSE noise).
+    stop = {
+        "that", "this", "with", "from", "were", "was", "are", "the", "and",
+        "for", "but", "over", "only", "after", "before", "about",
+    }
+    entities = [
+        e for e in re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", claim_text or "")
+        if e.lower() not in stop
+    ]
+    numbers = re.findall(r"\b\d+(?:\.\d+)?%?\b", claim_text or "")
+    significant = re.findall(r"\b[a-zA-Z]{4,}\b", claim_text or "")
+    significant = [w for w in significant if w.lower() not in stop][:6]
 
-    # Build query from entities and numbers
-    query_parts = []
-    if entities[:2]:  # Top 2 entities
-        query_parts.extend(entities[:2])
-    if numbers[:1]:  # First number
-        query_parts.append(numbers[0])
+    query_parts: List[str] = []
+    if entities[:3]:
+        query_parts.extend(entities[:3])
+    if numbers[:2]:
+        query_parts.extend(numbers[:2])
+    if not query_parts and significant:
+        query_parts.extend(significant[:5])
 
     if query_parts:
-        queries = [" ".join(query_parts)]
-    else:
-        queries = [claim_text[:100]]
-
-    return queries
+        return [" ".join(query_parts), (claim_text or "")[:100].strip()]
+    return [(claim_text or "")[:100]]
 
 
 def generate_multi_query_strategy(

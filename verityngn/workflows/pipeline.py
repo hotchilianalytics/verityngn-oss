@@ -267,6 +267,12 @@ def run_verification(
                     from verityngn.utils.upload_id import video_id_from_file_path
 
                     video_id = video_id_from_file_path(str(src))
+
+                # Always stage a local analysis copy for non-GCS uploads — even when
+                # video_id is pre-set by the CLI (previously skipped the copy).
+                if not upload_path.startswith("gs://"):
+                    if not src.is_file():
+                        raise ValueError(f"Upload file not found: {upload_path}")
                     if not out_dir_path:
                         from verityngn.config.settings import OUTPUTS_DIR
                         out_dir_path = os.path.join(str(OUTPUTS_DIR), video_id)
@@ -276,6 +282,10 @@ def run_verification(
                     local_copy = os.path.join(analysis_dir, f"{video_id}.mp4")
                     if not os.path.exists(local_copy):
                         shutil.copy2(str(src), local_copy)
+                        logger.info(f"📁 Staged local upload → {local_copy}")
+                    else:
+                        logger.info(f"📁 Reusing staged upload: {local_copy}")
+
                 video_url = video_url or f"upload://{video_id}"
                 logger.info(f"🚀 Starting file-upload verification: {upload_path}")
                 logger.info(f"📹 Synthetic video ID: {video_id}")
