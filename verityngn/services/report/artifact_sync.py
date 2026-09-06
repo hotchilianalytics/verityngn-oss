@@ -48,6 +48,7 @@ def sync_standard_report_artifacts(
         f"{video_id}_report.html",
         f"{video_id}_report.md",
         f"{video_id}_report.pdf",
+        f"{video_id}_private_report.pdf",
         f"{video_id}_private_report.html",
         f"{video_id}_fast_report.html",
     ]
@@ -137,8 +138,10 @@ def checklist_artifacts(out_dir: str | Path, video_id: str) -> Dict[str, Any]:
         "report_json": (dest / f"{video_id}_report.json").is_file(),
         "report_html_canonical": (dest / f"{video_id}_report.html").is_file(),
         "report_html_alias": (dest / ALIAS_REPORT_HTML).is_file(),
+        "report_pdf": (dest / f"{video_id}_report.pdf").is_file(),
         "deep_html_canonical": (dest / f"{video_id}_deep_private_report.html").is_file(),
         "deep_html_alias": (dest / ALIAS_DEEP_HTML).is_file(),
+        "deep_pdf_canonical": (dest / f"{video_id}_private_report.pdf").is_file(),
     }
     logger.info(
         "artifacts_in_out_dir video_id=%s %s",
