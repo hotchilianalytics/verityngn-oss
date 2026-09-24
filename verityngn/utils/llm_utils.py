@@ -40,8 +40,12 @@ def get_preferred_output_tokens(model_name: str, preferred_tokens: int = 32768) 
 
 def build_langchain_vertex_kwargs(model_name: str, *, preferred_tokens: int = 32768, temperature: Optional[float] = None, top_p: Optional[float] = None) -> Dict[str, Any]:
     """Return keyword args for ChatVertexAI/VertexAI constructors with sane token limits."""
+    from verityngn.config.settings import PROJECT_ID, VERTEX_LOCATION
+
     kwargs: Dict[str, Any] = {
         "model_name": model_name,
+        "project": PROJECT_ID,
+        "location": VERTEX_LOCATION or "global",
         "max_output_tokens": get_preferred_output_tokens(model_name, preferred_tokens),
     }
     if temperature is not None:
