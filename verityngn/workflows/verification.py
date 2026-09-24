@@ -2348,10 +2348,8 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         if any(marker in combined_support_text for marker in unsupported_markers):
             if assessment_level in ("HIGHLY_LIKELY_TRUE", "LIKELY_TRUE") and explicit_support_count == 0:
                 assessment_level = "UNCERTAIN"
-                logger.info("Support cap: unverifiable language without supporting sources — downgrading positive verdict to UNCERTAIN")
             elif assessment_level == "LEANING_TRUE" and explicit_support_count == 0:
                 assessment_level = "UNCERTAIN"
-                logger.info("Support cap: unverifiable language without supporting sources — downgrading LEANING_TRUE to UNCERTAIN")
         claim_obj = getattr(state, "claim", None)
         if claim_obj and isinstance(claim_obj, dict) and claim_obj.get("credential_red_flag"):
             explanation += "\n\n⚠️ RED FLAG: Speaker claims Dr./medical credentials but no verifiable records found in professional registries."
