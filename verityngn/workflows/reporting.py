@@ -376,13 +376,20 @@ def generate_sophisticated_assessment(claims: List[Claim]) -> Tuple[AssessmentLe
     """Generate sophisticated assessment with verdict, key issue, and main concerns."""
     if not claims:
         return AssessmentLevel.MIXED, "No claims to analyze", []
+
+    from verityngn.workflows.claim_kind import is_core_factual_claim
+
+    # Core factual lane only — opinion / report-synthesis stay out of the histogram.
+    core_claims = [c for c in claims if is_core_factual_claim(c)]
+    if not core_claims:
+        return AssessmentLevel.MIXED, "No source-backed factual claims to score", []
     
     # Count verification results
     result_counts = {}
-    total_claims = len(claims)
+    total_claims = len(core_claims)
     main_concerns = []
     
-    for claim in claims:
+    for claim in core_claims:
         result = claim.verification_result
         if result:
             verification_result = result.get("result", "UNCERTAIN")
@@ -879,6 +886,18 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
                 verification_result=claim.get("verification_result", {}),
                 explanation=claim.get("explanation", ""),
                 evidence=None,
+                claim_kind=claim.get("claim_kind")
+                or (claim.get("verification_result") or {}).get("claim_kind")
+                or "factual_sourceable",
+                verification_lane=claim.get("verification_lane")
+                or (claim.get("verification_result") or {}).get("verification_lane")
+                or "factual",
+                needs_deeper_research=bool(
+                    claim.get("needs_deeper_research")
+                    or (claim.get("verification_result") or {}).get("needs_deeper_research")
+                ),
+                source_path_status=claim.get("source_path_status")
+                or (claim.get("verification_result") or {}).get("source_path_status"),
             )
             claims_typed.append(c)
         logger.info(f"📋 [FINAL_REPORT] Created {len(claims_typed)} typed claims")

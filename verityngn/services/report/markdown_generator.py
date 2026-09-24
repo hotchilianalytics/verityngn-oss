@@ -26,6 +26,11 @@ from verityngn.services.report.display_labels import (
     claim_modality_display_label,
     is_visual_only_claim,
 )
+from verityngn.workflows.claim_kind import (
+    ClaimKind,
+    get_claim_kind,
+    needs_deeper_research,
+)
 
 from verityngn.config.settings import OUTPUTS_DIR, COMPARE_DIR, DOWNLOADS_DIR, DEBUG_OUTPUTS
 from verityngn.utils.third_party_logging import configure_third_party_loggers
@@ -1071,6 +1076,59 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
                 assess_cell = str(assess or "N/A")[:100].replace("|", "\\|").replace("\n", " ")
                 reason_cell = str(reason or "N/A").replace("|", "\\|").replace("\n", " ")
                 report_content.append(f"| {time_cell} | {claim_cell} | {assess_cell} | {reason_cell} |")
+            report_content.append("")
+
+        # 6.3 / 6.4 — author-proof and interpretive sleeves (not in core histogram)
+        deeper = []
+        interpretive = []
+        for c in claims_breakdown_list:
+            kind = get_claim_kind(c)
+            if kind == ClaimKind.OPINION_OR_SYNTHESIS.value or kind == ClaimKind.NEW_REPORT_CONCLUSION.value:
+                interpretive.append(c)
+            elif needs_deeper_research(c) or kind == ClaimKind.AUTHOR_PROOF_CANDIDATE.value:
+                deeper.append(c)
+
+        if deeper:
+            report_content.append("")
+            report_content.append("#### 6.3 Claims Requiring Deeper Research")
+            report_content.append(
+                "These claims may be valid, but the current source path is incomplete "
+                "(author-proof logic or missing primary sources). They are listed for follow-up, "
+                "not scored as hard true/false in the executive summary."
+            )
+            report_content.append("")
+            report_content.append("| Time | Claim | Lane | Note |")
+            report_content.append("|:----:|:------|:-----|:-----|")
+            for c in deeper:
+                ts = getattr(c, "timestamp", None) or (c.get("timestamp") if isinstance(c, dict) else None)
+                text = getattr(c, "claim_text", None) or (c.get("claim_text") if isinstance(c, dict) else None)
+                kind = get_claim_kind(c)
+                note = "Source path incomplete — see Deep Research for expansion."
+                time_cell = str(ts or "-").replace("|", "\\|").replace("\n", " ")
+                claim_cell = str(text or "N/A")[:200].replace("|", "\\|").replace("\n", " ")
+                report_content.append(
+                    f"| {time_cell} | {claim_cell} | {kind} | {note} |"
+                )
+            report_content.append("")
+
+        if interpretive:
+            report_content.append("")
+            report_content.append("#### 6.4 Interpretive Or Opinionated Claims")
+            report_content.append(
+                "These statements are interpretive analysis or report-generated conclusions. "
+                "Review them as analysis, not as directly verified facts. They are excluded "
+                "from the core truthfulness histogram."
+            )
+            report_content.append("")
+            report_content.append("| Time | Claim | Kind |")
+            report_content.append("|:----:|:------|:-----|")
+            for c in interpretive:
+                ts = getattr(c, "timestamp", None) or (c.get("timestamp") if isinstance(c, dict) else None)
+                text = getattr(c, "claim_text", None) or (c.get("claim_text") if isinstance(c, dict) else None)
+                kind = get_claim_kind(c)
+                time_cell = str(ts or "-").replace("|", "\\|").replace("\n", " ")
+                claim_cell = str(text or "N/A")[:200].replace("|", "\\|").replace("\n", " ")
+                report_content.append(f"| {time_cell} | {claim_cell} | {kind} |")
             report_content.append("")
 
     report_content.append("")

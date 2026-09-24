@@ -47,6 +47,7 @@ from verityngn.services.report.evidence_utils import (
 )
 from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
 from verityngn.config.config_loader import get_config
+from verityngn.workflows.claim_kind import annotate_claim_kind, ClaimKind
 from verityngn.utils.llm_utils import (
     build_langchain_vertex_kwargs,
     invoke_json_prompt_with_fallback,
@@ -83,6 +84,53 @@ def _serialize_claim(c: Dict[str, Any]) -> Dict[str, Any]:
             for e in out["evidence"]
         ]
     return out
+
+
+def _stamp_lane_on_verified_claim(
+    claim: Dict[str, Any], verification_result: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Attach claim_kind / deeper-research metadata to claim + verification_result."""
+    claim = annotate_claim_kind(dict(claim or {}))
+    vr = dict(verification_result or {})
+    kind = claim.get("claim_kind") or ClaimKind.FACTUAL_SOURCEABLE.value
+    sources = vr.get("sources") or []
+    has_sources = bool(sources)
+    result = (vr.get("result") or "").upper()
+
+    needs_deeper = bool(claim.get("needs_deeper_research"))
+    if kind == ClaimKind.AUTHOR_PROOF_CANDIDATE.value:
+        needs_deeper = True
+        if not has_sources and result in {
+            "LIKELY_FALSE",
+            "HIGHLY_LIKELY_FALSE",
+            "LEANING_FALSE",
+        }:
+            # Incomplete source path should not look like a hard false.
+            vr["result"] = "UNCERTAIN"
+            result = "UNCERTAIN"
+    if kind in {
+        ClaimKind.OPINION_OR_SYNTHESIS.value,
+        ClaimKind.NEW_REPORT_CONCLUSION.value,
+    }:
+        needs_deeper = kind == ClaimKind.NEW_REPORT_CONCLUSION.value
+    if kind == ClaimKind.FACTUAL_SOURCEABLE.value and (
+        not has_sources or result in {"UNCERTAIN", "UNVERIFIABLE"}
+    ):
+        needs_deeper = True
+        claim["source_path_status"] = "incomplete" if not has_sources else "uncertain"
+
+    claim["needs_deeper_research"] = needs_deeper
+    vr["claim_kind"] = kind
+    vr["verification_lane"] = claim.get("verification_lane")
+    vr["needs_deeper_research"] = needs_deeper
+    vr["source_path_status"] = claim.get("source_path_status")
+    if claim.get("author_logic_detected"):
+        vr["author_logic_detected"] = True
+    if claim.get("report_generated_inference"):
+        vr["report_generated_inference"] = True
+
+    claim["verification_result"] = vr
+    return claim
 
 
 def save_verification_checkpoint(
@@ -3029,6 +3077,11 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                 light_tagged,
             )
 
+        # Ensure claim_kind lane metadata exists even if prepare_claims was skipped.
+        claims_to_process = [
+            annotate_claim_kind(c) if isinstance(c, dict) else c for c in claims_to_process
+        ]
+
         # Track Google searches made during verification (tier-dependent)
         _google_searches_this_run = 0
 
@@ -3062,11 +3115,13 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                                     title="Verification Source",
                                 )
                             )
-                    verified_claims.append({
-                        **claim,
-                        "verification_result": fast_result,
-                        "evidence": evidence_list_t3,
-                    })
+                    verified_claims.append(
+                        _stamp_lane_on_verified_claim(
+                            claim,
+                            fast_result,
+                        )
+                        | {"evidence": evidence_list_t3}
+                    )
                     result_t3 = fast_result.get("result", "UNCERTAIN")
                     logger.info(f"✅ Claim {i+1} verified with FAST-FAIL (Tier 3): {result_t3}")
                     out_dir = state.get("out_dir_path", "")
@@ -3084,16 +3139,21 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                         await asyncio.sleep(2)
                 except Exception as e:
                     logger.warning("Tier 3 fast-fail error for claim %s: %s", i + 1, e)
-                    verified_claims.append({
-                        **claim,
-                        "verification_result": {
+                    err_claim = _stamp_lane_on_verified_claim(
+                        claim,
+                        {
                             "result": "UNCERTAIN",
                             "explanation": f"Fast-fail failed: {e}",
-                            "probability_distribution": {"TRUE": 0.33, "FALSE": 0.33, "UNCERTAIN": 0.34},
+                            "probability_distribution": {
+                                "TRUE": 0.33,
+                                "FALSE": 0.33,
+                                "UNCERTAIN": 0.34,
+                            },
                             "sources": [],
                         },
-                        "evidence": [],
-                    })
+                    )
+                    err_claim["evidence"] = []
+                    verified_claims.append(err_claim)
                 continue
 
             try:
@@ -3223,13 +3283,11 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                                             title="Verification Source",
                                         )
                                     )
-                            verified_claims.append(
-                                {
-                                    **remaining_claim,
-                                    "verification_result": fast_result,
-                                    "evidence": evidence_list_cb,
-                                }
+                            stamped = _stamp_lane_on_verified_claim(
+                                remaining_claim, fast_result
                             )
+                            stamped["evidence"] = evidence_list_cb
+                            verified_claims.append(stamped)
                             if remaining_idx < len(claims_to_process) - 1:
                                 await asyncio.sleep(2)
                         logger.info(
@@ -3335,12 +3393,9 @@ async def run_claim_verification(state: Dict[str, Any]) -> Dict[str, Any]:
                 else:
                     evidence_list = []
 
-                # Update claim with verification result
-                verified_claim = {
-                    **claim,
-                    "verification_result": verification_result,
-                    "evidence": evidence_list,
-                }
+                # Update claim with verification result + author-proof lane metadata
+                verified_claim = _stamp_lane_on_verified_claim(claim, verification_result)
+                verified_claim["evidence"] = evidence_list
 
                 verified_claims.append(verified_claim)
 

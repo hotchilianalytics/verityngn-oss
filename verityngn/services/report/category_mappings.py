@@ -8,6 +8,9 @@ from typing import Any, Dict, List, Optional, Set
 from urllib.parse import urlparse
 
 from verityngn.models.report import Claim, EvidenceSource, map_probabilities_to_verification_result
+from verityngn.workflows.claim_kind import (
+    is_core_factual_claim,
+)
 
 INDEPENDENT_RESEARCH_DISCLAIMER = (
     "This assessment is independent editorial research by HotChili Analytics, LLC. "
@@ -133,21 +136,29 @@ def _claim_internal_verdict_key(claim: Claim) -> str:
 
 
 def _verdict_counts(claims: List[Claim]) -> Dict[str, int]:
+    """Count verdicts for core factual claims only (exclude opinion/synthesis lanes)."""
     keys = list(VERDICT_KEY_TO_LABEL.keys())
     counts = {k: 0 for k in keys}
     for c in claims:
+        if not is_core_factual_claim(c):
+            continue
         vk = _claim_internal_verdict_key(c)
         if vk in counts:
             counts[vk] = counts.get(vk, 0) + 1
     return counts
 
 
+def _core_claims(claims: List[Claim]) -> List[Claim]:
+    return [c for c in (claims or []) if is_core_factual_claim(c)]
+
+
 def compute_overall_verdict_label(claims: List[Claim]) -> str:
     """Same qualitative headline as legacy markdown (no counts in output)."""
-    total = len(claims)
+    core = _core_claims(claims)
+    total = len(core)
     if total == 0:
         return "Undetermined (No Claims)"
-    vc = _verdict_counts(claims)
+    vc = _verdict_counts(core)
     false_strong = vc.get("LIKELY_FALSE", 0) + vc.get("HIGHLY_LIKELY_FALSE", 0)
     true_strong = vc.get("LIKELY_TRUE", 0) + vc.get("HIGHLY_LIKELY_TRUE", 0)
     false_soft = vc.get("LEANING_FALSE", 0)

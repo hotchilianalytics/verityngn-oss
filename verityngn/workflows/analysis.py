@@ -4082,7 +4082,11 @@ async def run_prepare_claims(state: Dict[str, Any]) -> Dict[str, Any]:
             deduped.append(c)
 
     logger.info("✅ Selected %s claims for verification (LLM-ranked, temporal-enforced)", len(deduped))
-    return {**state, "claims": deduped, "aggregated_evidence": []}
+    # Author-proof / opinion taxonomy before verification (histogram + report sleeves).
+    from verityngn.workflows.claim_kind import annotate_claims_kind
+
+    annotated = annotate_claims_kind(deduped)
+    return {**state, "claims": annotated, "aggregated_evidence": []}
 
 
 async def extract_claims_with_llm(

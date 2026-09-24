@@ -87,6 +87,36 @@ def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         sanitized["visual_only_claims"] = visual_only
         sanitized["visual_only_claim_count"] = len(visual_only)
 
+    # Author-proof / opinion sleeves for Deep Research to prioritize (report.html §6.3/6.4).
+    deeper_research_claims = []
+    interpretive_claims = []
+    for claim in claims:
+        if not isinstance(claim, dict):
+            continue
+        kind = (claim.get("claim_kind")
+                or (claim.get("verification_result") or {}).get("claim_kind")
+                or "")
+        needs = bool(
+            claim.get("needs_deeper_research")
+            or (claim.get("verification_result") or {}).get("needs_deeper_research")
+        )
+        entry = {
+            "claim_text": claim.get("claim_text"),
+            "claim_kind": kind or None,
+            "timestamp": claim.get("timestamp"),
+            "needs_deeper_research": needs,
+        }
+        if kind in {"opinion_or_synthesis", "new_report_conclusion"}:
+            interpretive_claims.append(entry)
+        elif needs or kind == "author_proof_candidate":
+            deeper_research_claims.append(entry)
+    if deeper_research_claims:
+        sanitized["deeper_research_claims"] = deeper_research_claims
+        sanitized["deeper_research_claim_count"] = len(deeper_research_claims)
+    if interpretive_claims:
+        sanitized["interpretive_claims"] = interpretive_claims
+        sanitized["interpretive_claim_count"] = len(interpretive_claims)
+
     return sanitized
 
 
