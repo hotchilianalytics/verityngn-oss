@@ -888,7 +888,7 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
                 evidence=None,
                 claim_kind=claim.get("claim_kind")
                 or (claim.get("verification_result") or {}).get("claim_kind")
-                or "factual_sourceable",
+                or "source_backed_fact",
                 verification_lane=claim.get("verification_lane")
                 or (claim.get("verification_result") or {}).get("verification_lane")
                 or "factual",
@@ -898,6 +898,14 @@ async def state_to_report(state: Dict[str, Any]) -> 'VerityReport':
                 ),
                 source_path_status=claim.get("source_path_status")
                 or (claim.get("verification_result") or {}).get("source_path_status"),
+                evidence_confidence=claim.get("evidence_confidence")
+                or (claim.get("verification_result") or {}).get("evidence_confidence"),
+                residual_reliance_risk=claim.get("residual_reliance_risk")
+                or (claim.get("verification_result") or {}).get("residual_reliance_risk"),
+                risk_chip=claim.get("risk_chip")
+                or (claim.get("verification_result") or {}).get("risk_chip"),
+                inherent_reliance_risk=claim.get("inherent_reliance_risk")
+                or (claim.get("verification_result") or {}).get("inherent_reliance_risk"),
             )
             claims_typed.append(c)
         logger.info(f"📋 [FINAL_REPORT] Created {len(claims_typed)} typed claims")

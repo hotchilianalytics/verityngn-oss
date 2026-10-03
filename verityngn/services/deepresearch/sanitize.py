@@ -87,15 +87,21 @@ def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         sanitized["visual_only_claims"] = visual_only
         sanitized["visual_only_claim_count"] = len(visual_only)
 
-    # Author-proof / opinion sleeves for Deep Research to prioritize (report.html §6.3/6.4).
+    # Typed sleeves for Deep Research to prioritize (report.html §6.3–6.8).
+    from verityngn.workflows.claim_kind import normalize_claim_kind
+
     deeper_research_claims = []
     interpretive_claims = []
+    inference_claims = []
+    prediction_claims = []
     for claim in claims:
         if not isinstance(claim, dict):
             continue
-        kind = (claim.get("claim_kind")
-                or (claim.get("verification_result") or {}).get("claim_kind")
-                or "")
+        kind = normalize_claim_kind(
+            claim.get("claim_kind")
+            or (claim.get("verification_result") or {}).get("claim_kind")
+            or ""
+        )
         needs = bool(
             claim.get("needs_deeper_research")
             or (claim.get("verification_result") or {}).get("needs_deeper_research")
@@ -105,10 +111,26 @@ def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
             "claim_kind": kind or None,
             "timestamp": claim.get("timestamp"),
             "needs_deeper_research": needs,
+            "evidence_confidence": (
+                claim.get("evidence_confidence")
+                or (claim.get("verification_result") or {}).get("evidence_confidence")
+            ),
+            "residual_reliance_risk": (
+                claim.get("residual_reliance_risk")
+                or (claim.get("verification_result") or {}).get("residual_reliance_risk")
+            ),
+            "risk_chip": (
+                claim.get("risk_chip")
+                or (claim.get("verification_result") or {}).get("risk_chip")
+            ),
         }
-        if kind in {"opinion_or_synthesis", "new_report_conclusion"}:
+        if kind == "reasoned_opinion":
             interpretive_claims.append(entry)
-        elif needs or kind == "author_proof_candidate":
+        elif kind == "data_derived_inference":
+            inference_claims.append(entry)
+        elif kind == "prediction":
+            prediction_claims.append(entry)
+        elif needs or kind in {"causal_analytical", "unverified_assertion"}:
             deeper_research_claims.append(entry)
     if deeper_research_claims:
         sanitized["deeper_research_claims"] = deeper_research_claims
@@ -116,6 +138,12 @@ def sanitize_report_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     if interpretive_claims:
         sanitized["interpretive_claims"] = interpretive_claims
         sanitized["interpretive_claim_count"] = len(interpretive_claims)
+    if inference_claims:
+        sanitized["data_derived_inference_claims"] = inference_claims
+        sanitized["data_derived_inference_claim_count"] = len(inference_claims)
+    if prediction_claims:
+        sanitized["prediction_claims"] = prediction_claims
+        sanitized["prediction_claim_count"] = len(prediction_claims)
 
     return sanitized
 

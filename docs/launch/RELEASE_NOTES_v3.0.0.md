@@ -2,6 +2,18 @@
 
 Standalone Apache-2.0 multimodal video claim verification engine with Deep Research.
 
+## Release candidate
+
+| Field | Value |
+|-------|-------|
+| Branch | `release/v3.0.0` |
+| Package version | **3.0.0** (`pyproject.toml`) |
+| Candidate SHA | `CANDIDATE_SHA_PLACEHOLDER` (replace after freeze commit) |
+| Git tag `v3.0.0` | Still at `131ac87` (2026-08-29) until matrix green + explicit retag |
+| Test matrix | [`docs/launch/RELEASE_TEST_MATRIX_v3.md`](RELEASE_TEST_MATRIX_v3.md) |
+
+Do **not** merge to `main` or publish PyPI until the matrix is all pass and an operator explicitly asks.
+
 ## Highlights
 
 - **Analysis tiers**: `light` (VTT + DR-direct), `full` (pipeline + optional DR), `auto` (sufficiency routing), `local-light`, `local-full`
@@ -10,9 +22,13 @@ Standalone Apache-2.0 multimodal video claim verification engine with Deep Resea
 - Deep Research (`verityngn analyze --deep`) in OSS
 - Adaptive vision sleeve: genre FPS, exhibit maps, brand-safety visual flags, Modality column
 - Authenticity gate stubs + spectral AI-voice cues + MediaPipe Face Landmarker
+- **Analyst claim taxonomy (RC):** six Full Fact / ICD-aligned kinds (`source_backed_fact`, `data_derived_inference`, `causal_analytical`, `reasoned_opinion`, `prediction`, `unverified_assertion`) with dual metrics (likelihood · evidence confidence · residual reliance risk) and one-line risk chips
+- **Genre-aware §9:** consumer videos keep CRAAP; analyst / deep-data videos use Method & Reliance Review (SIFT)
+- **§6.1 facts-only** histogram; typed §§6.3–6.8 for non-fact lanes
 - Open-core docs: `docs/OPEN_CORE.md`, `docs/DEPENDENCY_MODEL.md`
 - Boundary CI scrub (no predictions/quant in package)
 - Release paper + charts: `papers/verityngn_oss_v3_release.{md,pdf}`
+- Blog series: `docs/blog/series/`
 
 ## Install
 

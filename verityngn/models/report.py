@@ -137,10 +137,14 @@ class Claim(BaseModel):
     pr_sources: Optional[List[EvidenceSource]] = None
     youtube_counter_sources: Optional[List[EvidenceSource]] = None
     # Author-proof / opinion lane metadata (optional; defaults keep legacy reports working)
-    claim_kind: Optional[str] = "factual_sourceable"
+    claim_kind: Optional[str] = "source_backed_fact"
     verification_lane: Optional[str] = "factual"
     needs_deeper_research: Optional[bool] = False
     source_path_status: Optional[str] = None
+    evidence_confidence: Optional[str] = None
+    residual_reliance_risk: Optional[str] = None
+    risk_chip: Optional[str] = None
+    inherent_reliance_risk: Optional[str] = None
 
     def get_verification_result(self):
         if hasattr(self, 'probability_distribution') and self.probability_distribution:

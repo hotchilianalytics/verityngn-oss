@@ -28,7 +28,9 @@ from verityngn.services.report.display_labels import (
 )
 from verityngn.workflows.claim_kind import (
     ClaimKind,
+    claim_kind_display_label,
     get_claim_kind,
+    is_core_factual_claim,
     needs_deeper_research,
 )
 
@@ -762,16 +764,53 @@ def _build_original_header(report: VerityReport) -> List[str]:
 
 def _build_original_executive_summary(report: VerityReport) -> List[str]:
     """Numeric executive summary for user-controlled original reports."""
+    from verityngn.workflows.claim_kind import (
+        ClaimKind,
+        claim_kind_display_label,
+        get_claim_kind,
+        is_core_factual_claim,
+    )
+
     claims = report.claims_breakdown or []
+    core = [c for c in claims if is_core_factual_claim(c)]
     total = len(claims)
+    core_n = len(core)
     vc = _verdict_counts(claims)
-    lines = ["## Executive Summary", "", f"Total Claims: {total}"]
+    lines = [
+        "## Executive Summary",
+        "",
+        f"Total Claims: {total} (source-backed facts scored: {core_n})",
+    ]
 
     for key, label in VERDICT_KEY_TO_LABEL.items():
         if key == "UNVERIFIABLE":
             continue
         count = vc.get(key, 0)
         lines.append(f"- {label}: {count}")
+
+    # Typed section counts + residual-risk headline
+    kind_counts: Dict[str, int] = {}
+    high_residual = 0
+    for c in claims:
+        k = get_claim_kind(c)
+        kind_counts[k] = kind_counts.get(k, 0) + 1
+        vr = getattr(c, "verification_result", None) or {}
+        residual = (
+            getattr(c, "residual_reliance_risk", None)
+            or (vr.get("residual_reliance_risk") if isinstance(vr, dict) else None)
+        )
+        if str(residual or "").lower() == "high":
+            high_residual += 1
+    lines.append("")
+    lines.append("Claim-type mix:")
+    for k, n in sorted(kind_counts.items(), key=lambda x: -x[1]):
+        lines.append(f"- {claim_kind_display_label(k)}: {n}")
+    if high_residual:
+        lines.append(
+            f"Residual reliance risk headline: **{high_residual}** claim(s) still high after verification."
+        )
+    else:
+        lines.append("Residual reliance risk headline: no high residual-risk claims remaining.")
 
     pr_count = getattr(report, "press_release_count", 0) or 0
     yt_count = getattr(report, "youtube_response_count", 0) or 0
@@ -787,16 +826,31 @@ def _build_original_executive_summary(report: VerityReport) -> List[str]:
 
 
 def _build_verdict_percentage_table(claims: List[Claim]) -> List[str]:
-    """Overall claim-risk count/percentage table for original reports."""
-    total = len(claims)
+    """Overall claim-risk count/percentage table (core facts only) + type mix."""
+    from verityngn.workflows.claim_kind import (
+        claim_kind_display_label,
+        get_claim_kind,
+        is_core_factual_claim,
+    )
+
+    core = [c for c in claims if is_core_factual_claim(c)]
+    total = len(core)
+    all_n = len(claims)
     if total == 0:
-        return ["| Category | Count | Percentage |", "|:---------|:-----:|:----------:|", "| Total Claims | 0 | 100% |", ""]
+        return [
+            "| Category | Count | Percentage |",
+            "|:---------|:-----:|:----------:|",
+            "| Source-backed facts | 0 | — |",
+            f"| All claim types | {all_n} | — |",
+            "",
+        ]
 
     vc = _verdict_counts(claims)
     lines = [
         "| Category | Count | Percentage |",
         "|:---------|:-----:|:----------:|",
-        f"| Total Claims | {total} | 100% |",
+        f"| Source-backed facts (scored) | {total} | 100% |",
+        f"| All claim types | {all_n} | — |",
     ]
     for key, label in VERDICT_KEY_TO_LABEL.items():
         if key == "UNVERIFIABLE":
@@ -804,6 +858,17 @@ def _build_verdict_percentage_table(claims: List[Claim]) -> List[str]:
         count = vc.get(key, 0)
         pct = count / total * 100
         lines.append(f"| {label} | {count} | {pct:.1f}% |")
+    lines.append("")
+    lines.append("### Claim-type mix (not one true/false % over everything)")
+    lines.append("")
+    kind_counts: Dict[str, int] = {}
+    for c in claims:
+        k = get_claim_kind(c)
+        kind_counts[k] = kind_counts.get(k, 0) + 1
+    lines.append("| Type | Count |")
+    lines.append("|:-----|:-----:|")
+    for k, n in sorted(kind_counts.items(), key=lambda x: -x[1]):
+        lines.append(f"| {claim_kind_display_label(k)} | {n} |")
     lines.append("")
     return lines
 
@@ -1015,12 +1080,19 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
                 report_content.append(f"- ({ts}) {txt}")
             report_content.append("")
 
-        # --- 6.1 Per-claim detail ---
-        report_content.append("### 6.1 Per-Claim Detail")
+        # --- 6.1 Per-claim detail (source-backed facts only) ---
+        factual_claims = [c for c in claims_breakdown_list if is_core_factual_claim(c)]
+        report_content.append("### 6.1 Per-Claim Detail (Source-Backed Facts)")
+        report_content.append("")
+        report_content.append(
+            f"*Core truthfulness ladder: **{len(factual_claims)}** of "
+            f"**{len(claims_breakdown_list)}** claims. Other claim types appear in "
+            f"typed sections below (likelihood + evidence confidence + residual risk).*"
+        )
         report_content.append("")
         visual_only_n = sum(
             1
-            for c in claims_breakdown_list
+            for c in factual_claims
             if is_visual_only_claim(getattr(c, "source_type", None))
         )
         if visual_only_n:
@@ -1036,6 +1108,8 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
             report_content.append("| # | Time | Modality | Verdict | Claim | Sources |")
             report_content.append("|:--:|:----:|:---------|:--------|:------|:--------|")
         for orig_idx, claim in enumerate(claims_breakdown_list):
+            if not is_core_factual_claim(claim):
+                continue
             time_cell = str(claim.timestamp or "-").replace("|", "\\|").replace("\n", " ")
             claim_text_cell = str(claim.claim_text or "N/A").replace("|", "\\|").replace("\n", " ")
             verdict_cell = claim_verdict_display_label(claim).replace("|", "\\|")
@@ -1051,9 +1125,11 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
                 report_content.append(
                     f"| {orig_idx + 1} | {time_cell} | {modality_cell} | {verdict_cell} | {claim_text_cell} | {source_link} |"
                 )
+        if not factual_claims:
+            report_content.append("*No source-backed factual claims in this report.*")
         report_content.append("")
         report_content.append(
-            "*Each claim was assessed against external sources cited in Section 7.*"
+            "*Each factual claim was assessed against external sources cited in Section 7.*"
         )
         report_content.append("")
 
@@ -1078,57 +1154,117 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
                 report_content.append(f"| {time_cell} | {claim_cell} | {assess_cell} | {reason_cell} |")
             report_content.append("")
 
-        # 6.3 / 6.4 — author-proof and interpretive sleeves (not in core histogram)
-        deeper = []
-        interpretive = []
+        # Typed compact sections (one job each) — analyst / ICD dual-metric display
+        def _claim_ts_text(c):
+            ts = getattr(c, "timestamp", None) or (c.get("timestamp") if isinstance(c, dict) else None)
+            text = getattr(c, "claim_text", None) or (c.get("claim_text") if isinstance(c, dict) else None)
+            return (
+                str(ts or "-").replace("|", "\\|").replace("\n", " "),
+                str(text or "N/A")[:200].replace("|", "\\|").replace("\n", " "),
+            )
+
+        def _risk_chip_for(c) -> str:
+            vr = getattr(c, "verification_result", None) or {}
+            if isinstance(c, dict) and not vr:
+                vr = c.get("verification_result") or {}
+            if isinstance(vr, dict) and vr.get("risk_chip"):
+                return str(vr["risk_chip"]).replace("|", "\\|")
+            chip = getattr(c, "risk_chip", None) if not isinstance(c, dict) else c.get("risk_chip")
+            if chip:
+                return str(chip).replace("|", "\\|")
+            kind = get_claim_kind(c)
+            conf = (vr.get("evidence_confidence") if isinstance(vr, dict) else None) or "—"
+            residual = (vr.get("residual_reliance_risk") if isinstance(vr, dict) else None) or "—"
+            result = (vr.get("result") if isinstance(vr, dict) else None) or "—"
+            return (
+                f"{claim_kind_display_label(kind)} · {str(result).replace('_', ' ').title()}"
+                f" · Evidence: {conf} · Residual reliance risk: {str(residual).title()}"
+            ).replace("|", "\\|")
+
+        by_kind = {
+            ClaimKind.DATA_DERIVED_INFERENCE.value: [],
+            ClaimKind.CAUSAL_ANALYTICAL.value: [],
+            ClaimKind.REASONED_OPINION.value: [],
+            ClaimKind.PREDICTION.value: [],
+            ClaimKind.UNVERIFIED_ASSERTION.value: [],
+        }
+        deeper_path = []
         for c in claims_breakdown_list:
             kind = get_claim_kind(c)
-            if kind == ClaimKind.OPINION_OR_SYNTHESIS.value or kind == ClaimKind.NEW_REPORT_CONCLUSION.value:
-                interpretive.append(c)
-            elif needs_deeper_research(c) or kind == ClaimKind.AUTHOR_PROOF_CANDIDATE.value:
-                deeper.append(c)
+            if kind in by_kind:
+                by_kind[kind].append(c)
+            if needs_deeper_research(c) and kind not in {
+                ClaimKind.REASONED_OPINION.value,
+                ClaimKind.PREDICTION.value,
+            }:
+                deeper_path.append(c)
 
-        if deeper:
+        typed_sections = [
+            (
+                "6.3",
+                "Data-Derived Inferences",
+                ClaimKind.DATA_DERIVED_INFERENCE.value,
+                "Method-backed quantitative analysis. Scored with likelihood + evidence confidence; "
+                "not discounted solely for missing academic cites.",
+            ),
+            (
+                "6.4",
+                "Causal / Analytical Claims",
+                ClaimKind.CAUSAL_ANALYTICAL.value,
+                "Assumption-sensitive causal chains. Review assumptions; confidence capped unless strong data.",
+            ),
+            (
+                "6.5",
+                "Predictions",
+                ClaimKind.PREDICTION.value,
+                "Forward-looking claims scored for plausibility, not truth of an unrealized future.",
+            ),
+            (
+                "6.6",
+                "Reasoned Opinions",
+                ClaimKind.REASONED_OPINION.value,
+                "Value judgments and synthesis. Review premises; not scored as true/false facts.",
+            ),
+            (
+                "6.7",
+                "Unverified Assertions",
+                ClaimKind.UNVERIFIED_ASSERTION.value,
+                "Check-worthy claims with insufficient public evidence. Residual reliance risk highlighted.",
+            ),
+        ]
+        for sec_num, title, kind_key, blurb in typed_sections:
+            items = by_kind.get(kind_key) or []
+            if not items:
+                continue
             report_content.append("")
-            report_content.append("#### 6.3 Claims Requiring Deeper Research")
-            report_content.append(
-                "These claims may be valid, but the current source path is incomplete "
-                "(author-proof logic or missing primary sources). They are listed for follow-up, "
-                "not scored as hard true/false in the executive summary."
-            )
+            report_content.append(f"#### {sec_num} {title}")
+            report_content.append(blurb)
             report_content.append("")
-            report_content.append("| Time | Claim | Lane | Note |")
-            report_content.append("|:----:|:------|:-----|:-----|")
-            for c in deeper:
-                ts = getattr(c, "timestamp", None) or (c.get("timestamp") if isinstance(c, dict) else None)
-                text = getattr(c, "claim_text", None) or (c.get("claim_text") if isinstance(c, dict) else None)
-                kind = get_claim_kind(c)
-                note = "Source path incomplete — see Deep Research for expansion."
-                time_cell = str(ts or "-").replace("|", "\\|").replace("\n", " ")
-                claim_cell = str(text or "N/A")[:200].replace("|", "\\|").replace("\n", " ")
+            report_content.append("| Time | Claim | Risk chip |")
+            report_content.append("|:----:|:------|:----------|")
+            for c in items:
+                time_cell, claim_cell = _claim_ts_text(c)
                 report_content.append(
-                    f"| {time_cell} | {claim_cell} | {kind} | {note} |"
+                    f"| {time_cell} | {claim_cell} | {_risk_chip_for(c)} |"
                 )
             report_content.append("")
 
-        if interpretive:
+        # Author-proof / incomplete source path (subset of causal + incomplete)
+        if deeper_path:
             report_content.append("")
-            report_content.append("#### 6.4 Interpretive Or Opinionated Claims")
+            report_content.append("#### 6.8 Author Proofs / Incomplete Source Path")
             report_content.append(
-                "These statements are interpretive analysis or report-generated conclusions. "
-                "Review them as analysis, not as directly verified facts. They are excluded "
-                "from the core truthfulness histogram."
+                "Claims whose verification path is incomplete or assumption-sensitive. "
+                "Follow up via Deep Research; not hard-false in the executive summary."
             )
             report_content.append("")
-            report_content.append("| Time | Claim | Kind |")
-            report_content.append("|:----:|:------|:-----|")
-            for c in interpretive:
-                ts = getattr(c, "timestamp", None) or (c.get("timestamp") if isinstance(c, dict) else None)
-                text = getattr(c, "claim_text", None) or (c.get("claim_text") if isinstance(c, dict) else None)
-                kind = get_claim_kind(c)
-                time_cell = str(ts or "-").replace("|", "\\|").replace("\n", " ")
-                claim_cell = str(text or "N/A")[:200].replace("|", "\\|").replace("\n", " ")
-                report_content.append(f"| {time_cell} | {claim_cell} | {kind} |")
+            report_content.append("| Time | Claim | Risk chip |")
+            report_content.append("|:----:|:------|:----------|")
+            for c in deeper_path:
+                time_cell, claim_cell = _claim_ts_text(c)
+                report_content.append(
+                    f"| {time_cell} | {claim_cell} | {_risk_chip_for(c)} |"
+                )
             report_content.append("")
 
     report_content.append("")
@@ -1291,32 +1427,41 @@ def generate_main_report_content(report: VerityReport, *, tier: ReportTier = "pr
             report_content.append(f"- **{speaker}**: \"{snippet}\"")
         report_content.append("")
 
-    # --- 9. CRAAP Analysis --- (Renumbered)
-    report_content.append("## 9. CRAAP Analysis")
-    if report.craap_analysis and isinstance(report.craap_analysis, dict):
-        report_content.append("| Criterion | Score | Explanation |")
-        report_content.append("|:----------|:------|:------------|")
-        for criterion, analysis_data in report.craap_analysis.items():
-             level = "N/A"
-             explanation = "N/A"
-             if isinstance(analysis_data, (list, tuple)) and len(analysis_data) == 2:
-                  level, explanation = analysis_data
-             elif isinstance(analysis_data, dict):
-                  level = analysis_data.get('level', 'N/A')
-                  explanation = analysis_data.get('explanation', 'N/A')
+    # --- 9. Source-evaluation section ---
+    # Analyst / deep-data videos: SIFT + residual reliance. Consumer videos: CRAAP.
+    from verityngn.services.report.analyst_genre import (
+        build_sift_method_section,
+        infer_report_genre,
+    )
 
-             criterion_cell = str(criterion or "N/A").capitalize().replace("|", "\\|").replace("\n", "<br>")
-             level_str = level.value if hasattr(level, "value") else (level or "N/A")
-             level_cell = str(level_str).replace("|", "\\|").replace("\n", "<br>")
-             raw_explanation = str(explanation or "N/A")
-             if tier == "public":
-                 raw_explanation = _scrub_public_craap_explanation(raw_explanation)
-             explanation_cell = raw_explanation.replace("|", "\\|").replace("\n", "<br>")
-             report_content.append(f"| {criterion_cell} | {level_cell} | {explanation_cell} |")
+    genre = infer_report_genre(getattr(report, "claims_breakdown", None) or [])
+    if genre == "analyst":
+        report_content.extend(build_sift_method_section(report.claims_breakdown or []))
     else:
-         report_content.append("CRAAP analysis data is not available or in the expected format for this report.")
+        report_content.append("## 9. CRAAP Analysis")
+        if report.craap_analysis and isinstance(report.craap_analysis, dict):
+            report_content.append("| Criterion | Score | Explanation |")
+            report_content.append("|:----------|:------|:------------|")
+            for criterion, analysis_data in report.craap_analysis.items():
+                 level = "N/A"
+                 explanation = "N/A"
+                 if isinstance(analysis_data, (list, tuple)) and len(analysis_data) == 2:
+                      level, explanation = analysis_data
+                 elif isinstance(analysis_data, dict):
+                      level = analysis_data.get('level', 'N/A')
+                      explanation = analysis_data.get('explanation', 'N/A')
 
-    report_content.append("")
+                 criterion_cell = str(criterion or "N/A").capitalize().replace("|", "\\|").replace("\n", "<br>")
+                 level_str = level.value if hasattr(level, "value") else (level or "N/A")
+                 level_cell = str(level_str).replace("|", "\\|").replace("\n", "<br>")
+                 raw_explanation = str(explanation or "N/A")
+                 if tier == "public":
+                     raw_explanation = _scrub_public_craap_explanation(raw_explanation)
+                 explanation_cell = raw_explanation.replace("|", "\\|").replace("\n", "<br>")
+                 report_content.append(f"| {criterion_cell} | {level_cell} | {explanation_cell} |")
+        else:
+             report_content.append("CRAAP analysis data is not available or in the expected format for this report.")
+        report_content.append("")
 
     # --- 9. Recommendations --- (Renumbered)
     report_content.append("## 10. Recommendations")

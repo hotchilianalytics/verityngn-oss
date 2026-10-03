@@ -47,7 +47,14 @@ from verityngn.services.report.evidence_utils import (
 )
 from verityngn.utils.date_utils import get_current_date_context, get_date_context_prompt_section
 from verityngn.config.config_loader import get_config
-from verityngn.workflows.claim_kind import annotate_claim_kind, ClaimKind
+from verityngn.workflows.claim_kind import (
+    ClaimKind,
+    annotate_claim_kind,
+    claim_kind_display_label,
+    estimate_evidence_confidence,
+    estimate_residual_reliance_risk,
+    normalize_claim_kind,
+)
 from verityngn.utils.llm_utils import (
     build_langchain_vertex_kwargs,
     invoke_json_prompt_with_fallback,
@@ -89,41 +96,130 @@ def _serialize_claim(c: Dict[str, Any]) -> Dict[str, Any]:
 def _stamp_lane_on_verified_claim(
     claim: Dict[str, Any], verification_result: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Attach claim_kind / deeper-research metadata to claim + verification_result."""
+    """Attach claim_kind + dual ICD-style risk metrics to claim + verification_result."""
     claim = annotate_claim_kind(dict(claim or {}))
     vr = dict(verification_result or {})
-    kind = claim.get("claim_kind") or ClaimKind.FACTUAL_SOURCEABLE.value
+    kind = normalize_claim_kind(
+        claim.get("claim_kind") or ClaimKind.SOURCE_BACKED_FACT.value
+    )
+    claim["claim_kind"] = kind
     sources = vr.get("sources") or []
     has_sources = bool(sources)
     result = (vr.get("result") or "").upper()
+    supports_count = sum(
+        1
+        for s in sources
+        if isinstance(s, dict) and s.get("supports_claim")
+    )
+    if supports_count == 0 and has_sources:
+        supports_count = len(sources)
 
-    needs_deeper = bool(claim.get("needs_deeper_research"))
-    if kind == ClaimKind.AUTHOR_PROOF_CANDIDATE.value:
-        needs_deeper = True
+    method_transparent = kind == ClaimKind.DATA_DERIVED_INFERENCE.value or bool(
+        claim.get("author_logic_detected")
+    ) or "method" in (claim.get("source_path_status") or "")
+
+    # Causal / incomplete path: don't score hard false on empty sources
+    if kind == ClaimKind.CAUSAL_ANALYTICAL.value:
+        claim["needs_deeper_research"] = True
         if not has_sources and result in {
             "LIKELY_FALSE",
             "HIGHLY_LIKELY_FALSE",
             "LEANING_FALSE",
         }:
-            # Incomplete source path should not look like a hard false.
             vr["result"] = "UNCERTAIN"
             result = "UNCERTAIN"
-    if kind in {
-        ClaimKind.OPINION_OR_SYNTHESIS.value,
-        ClaimKind.NEW_REPORT_CONCLUSION.value,
-    }:
-        needs_deeper = kind == ClaimKind.NEW_REPORT_CONCLUSION.value
-    if kind == ClaimKind.FACTUAL_SOURCEABLE.value and (
-        not has_sources or result in {"UNCERTAIN", "UNVERIFIABLE"}
-    ):
-        needs_deeper = True
-        claim["source_path_status"] = "incomplete" if not has_sources else "uncertain"
 
-    claim["needs_deeper_research"] = needs_deeper
+    # Predictions: plausibility labels, never LIKELY_FALSE solely for futures
+    if kind == ClaimKind.PREDICTION.value:
+        if result in {"LIKELY_FALSE", "HIGHLY_LIKELY_FALSE", "LEANING_FALSE"}:
+            vr["result"] = "UNCERTAIN"
+            result = "UNCERTAIN"
+            vr["plausibility"] = "Unsupported"
+        elif result in {"HIGHLY_LIKELY_TRUE", "LIKELY_TRUE", "LEANING_TRUE"}:
+            vr["plausibility"] = "Plausible"
+        else:
+            vr["plausibility"] = "Contested"
+        claim["needs_deeper_research"] = False
+
+    # Reasoned opinions: never true/false the value judgment
+    if kind == ClaimKind.REASONED_OPINION.value:
+        vr["result"] = "OPINION"
+        result = "OPINION"
+        vr["plausibility"] = None
+        claim["needs_deeper_research"] = False
+
+    # Unverified assertions
+    if kind == ClaimKind.UNVERIFIED_ASSERTION.value:
+        claim["needs_deeper_research"] = True
+        if not has_sources:
+            vr["result"] = "UNVERIFIABLE"
+            result = "UNVERIFIABLE"
+
+    # Data-derived: do not force incomplete/deeper solely for missing academic URL
+    if kind == ClaimKind.DATA_DERIVED_INFERENCE.value:
+        claim["needs_deeper_research"] = False
+        if not has_sources and result in {
+            "LIKELY_FALSE",
+            "HIGHLY_LIKELY_FALSE",
+        }:
+            # Missing cites ≠ false for method-backed analysis
+            vr["result"] = "UNCERTAIN"
+            result = "UNCERTAIN"
+
+    # Source-backed facts with no sources stay incomplete for author-proof sleeve
+    # but do NOT flood § deeper research (needs_deeper only if analytical path)
+    if kind == ClaimKind.SOURCE_BACKED_FACT.value:
+        if not has_sources:
+            claim["source_path_status"] = "incomplete"
+        elif result in {"UNCERTAIN", "UNVERIFIABLE"}:
+            claim["source_path_status"] = "uncertain"
+        claim["needs_deeper_research"] = False
+
+    evidence_confidence = estimate_evidence_confidence(
+        kind=kind,
+        has_sources=has_sources,
+        supports_count=supports_count,
+        method_transparent=method_transparent,
+    )
+    inherent = claim.get("inherent_reliance_risk") or "medium"
+    residual = estimate_residual_reliance_risk(
+        kind=kind,
+        result=result,
+        evidence_confidence=evidence_confidence,
+        inherent=inherent,
+    )
+    abatement: List[str] = []
+    if has_sources:
+        abatement.append("external_source_match")
+    if method_transparent:
+        abatement.append("method_transparency")
+    if result in {"HIGHLY_LIKELY_FALSE", "LIKELY_FALSE"}:
+        abatement.append("contradiction_found")
+    if kind == ClaimKind.REASONED_OPINION.value:
+        abatement.append("scored_as_opinion_not_fact")
+
+    likelihood_label = result or "UNCERTAIN"
+    risk_chip = (
+        f"{claim_kind_display_label(kind)} · {likelihood_label.replace('_', ' ').title()}"
+        f" · Evidence: {evidence_confidence}"
+        f" · Residual reliance risk: {str(residual).title()}"
+    )
+
+    claim["needs_deeper_research"] = bool(claim.get("needs_deeper_research"))
+    claim["evidence_confidence"] = evidence_confidence
+    claim["residual_reliance_risk"] = residual
+    claim["risk_chip"] = risk_chip
+
     vr["claim_kind"] = kind
+    vr["claim_kind_label"] = claim_kind_display_label(kind)
     vr["verification_lane"] = claim.get("verification_lane")
-    vr["needs_deeper_research"] = needs_deeper
+    vr["needs_deeper_research"] = claim["needs_deeper_research"]
     vr["source_path_status"] = claim.get("source_path_status")
+    vr["evidence_confidence"] = evidence_confidence
+    vr["inherent_reliance_risk"] = inherent
+    vr["residual_reliance_risk"] = residual
+    vr["abatement_notes"] = abatement
+    vr["risk_chip"] = risk_chip
     if claim.get("author_logic_detected"):
         vr["author_logic_detected"] = True
     if claim.get("report_generated_inference"):
@@ -1830,6 +1926,10 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
             "youtube_counter_sources": [],
         }
 
+    # Ensure claim_kind is stamped before evidence-floor routing
+    if isinstance(state.claim, dict):
+        state.claim = annotate_claim_kind(state.claim)
+
     claim_text = get_value(state.claim, "claim_text", "")
     video_url = get_value(state, "video_url", "")
     video_title = get_value(state, "video_title", "")
@@ -2364,18 +2464,35 @@ def verify_claim(state: ClaimVerificationState) -> Dict[str, Any]:
         u = prob_dist.get("UNCERTAIN", 0.0) * 100
         assessment_level = map_probabilities_to_verification_result(prob_dist)
 
+        # Claim-kind exemptions (analyst genre): do not discount data-derived
+        # inferences solely for thin academic / validation_power floor.
+        _claim_kind = normalize_claim_kind(
+            (state.claim or {}).get("claim_kind")
+            if isinstance(state.claim, dict)
+            else None
+        )
+        _skip_academic_floor = _claim_kind in {
+            ClaimKind.DATA_DERIVED_INFERENCE.value,
+            ClaimKind.PREDICTION.value,
+        }
+
         # Evidence floor: strong verdicts require at least one effective source
-        if total_validation_power == 0:
+        if total_validation_power == 0 and not _skip_academic_floor:
             assessment_level = "UNVERIFIABLE"
             prob_dist = {"TRUE": 0.0, "FALSE": 0.0, "UNCERTAIN": 1.0}
             logger.info("Evidence floor: validation_power=0 — forcing UNVERIFIABLE")
-        elif total_validation_power < 1.0:
+        elif total_validation_power < 1.0 and not _skip_academic_floor:
             if assessment_level in ("HIGHLY_LIKELY_TRUE", "LIKELY_TRUE"):
                 assessment_level = "LEANING_TRUE"
                 logger.info("Evidence floor: validation_power=%.2f < 1.0 — capping LIKELY_TRUE to LEANING_TRUE", total_validation_power)
             elif assessment_level in ("HIGHLY_LIKELY_FALSE", "LIKELY_FALSE"):
                 assessment_level = "LEANING_FALSE"
                 logger.info("Evidence floor: validation_power=%.2f < 1.0 — capping LIKELY_FALSE to LEANING_FALSE", total_validation_power)
+        elif _skip_academic_floor and total_validation_power == 0:
+            logger.info(
+                "Evidence floor skipped for claim_kind=%s (method/prediction path)",
+                _claim_kind,
+            )
 
         explanation = result.get("conclusion_summary", "No conclusion available")
         if explanation_add:
