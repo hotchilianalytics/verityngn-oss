@@ -3300,30 +3300,11 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
             except Exception as exc:  # noqa: BLE001
                 logger.warning("agentic_video branch error: %s — static fallback", exc)
 
-            # Use the working local file approach
-            from langchain_google_vertexai import ChatVertexAI
-            from langchain_core.messages import HumanMessage
-
+            # Local file path: google.genai Client (ChatVertexAI returns 501/404 on
+            # location=global for gemini-3.8-flash). Same fallback matrix as YouTube URL.
             try:
-                # 🚀 SHERLOCK: Create Gemini LLM with robust token handling
-                def create_llm_with_token_limit(max_tokens: int = 32768):
-                    """Create LLM with hardened JSON-specific configuration."""
-                    from verityngn.utils.llm_utils import build_langchain_vertex_kwargs
-
-                    return ChatVertexAI(
-                        **build_langchain_vertex_kwargs(
-                            AGENT_MODEL_NAME,
-                            preferred_tokens=max_tokens,
-                            temperature=0.1,
-                            top_p=0.8,
-                        ),
-                        top_k=10,
-                        verbose=True,
-                        streaming=False,
-                    )
-
-                # Start with optimal token limit
-                llm = create_llm_with_token_limit(32768)
+                from google.genai import types as _genai_types
+                from verityngn.utils.llm_utils import generate_content_with_fallback
 
                 # Get video info for prompt
                 if video_info_extracted:
@@ -3502,113 +3483,62 @@ OUTPUT FORMAT: Provide detailed JSON with:
                     "Respond with valid JSON only."
                 )
 
-                # Read video file for multimodal analysis
+                # Read video file for multimodal analysis via google.genai
                 logger.info(f"📖 Reading video file: {video_file_path}")
                 with open(video_file_path, "rb") as f:
-                    video_data = base64.b64encode(f.read()).decode("utf-8")
+                    video_bytes = f.read()
 
-                # Prepare content with downloaded video for Vertex AI
-                file_message = HumanMessage(
-                    content=[
-                        {"type": "text", "text": prompt_text},
-                        {"type": "media", "data": video_data, "mime_type": "video/mp4"},
-                    ]
-                )
-
-                logger.info("🎬 STARTING LOCAL VIDEO FILE ANALYSIS")
-
-                # 🚀 SHERLOCK: Simplified, sane retry strategy
-                # Attempt #1: use 32k output tokens
-                response = None
+                logger.info("🎬 STARTING LOCAL VIDEO FILE ANALYSIS (google.genai)")
                 primary_tokens = 32768
-                llm = create_llm_with_token_limit(primary_tokens)
-                try:
-                    logger.info(
-                        f"🚀 Attempting analysis with {primary_tokens} max tokens (attempt 1/2)..."
-                    )
-                    start_time = time.time()
-                    call_id = log_llm_call(
-                        operation="run_initial_analysis_attempt1",
-                        prompt=str(file_message.content[0]["text"]),
-                        model=AGENT_MODEL_NAME,
-                        video_id=video_id
-                    )
-                    response = await llm.ainvoke([file_message])
-                    duration = time.time() - start_time
-                    log_llm_response(call_id, response, duration=duration)
-                    if not (
-                        response and hasattr(response, "content") and response.content
-                    ):
-                        raise RuntimeError("Empty generation from LLM")
-                except Exception as e:
-                    error_msg = str(e).lower()
-                    transient = any(
-                        x in error_msg
-                        for x in [
-                            "no generations",
-                            "stream",
-                            "deadline",
-                            "temporar",
-                            "unavailable",
-                            "retry",
-                        ]
-                    )  # transient/transport
-                    logger.warning(
-                        f"⚠️ First attempt failed: {e}. Retrying once with same params..."
-                    )
-                    # Attempt #2: same params with brief backoff (avoid reducing tokens)
+                start_time = time.time()
+                call_id = log_llm_call(
+                    operation="run_initial_analysis_local_genai",
+                    prompt=prompt_text[:2000],
+                    model=AGENT_MODEL_NAME,
+                    video_id=video_id,
+                )
+                contents = _genai_types.Content(
+                    role="user",
+                    parts=[
+                        _genai_types.Part.from_bytes(
+                            data=video_bytes, mime_type="video/mp4"
+                        ),
+                        _genai_types.Part.from_text(text=prompt_text),
+                    ],
+                )
+                response, fb_meta = generate_content_with_fallback(
+                    primary_model=AGENT_MODEL_NAME,
+                    contents=contents,
+                    config=_genai_types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        max_output_tokens=primary_tokens,
+                        temperature=0.1,
+                    ),
+                    project_id=PROJECT_ID,
+                    logger=logger,
+                )
+                duration = time.time() - start_time
+                content_text = (getattr(response, "text", None) or "").strip()
+                if not content_text and response is not None:
                     try:
-                        import asyncio
-
-                        await asyncio.sleep(0.5)
+                        # Fallback: concatenate candidate parts
+                        parts_out = []
+                        for cand in getattr(response, "candidates", None) or []:
+                            content = getattr(cand, "content", None)
+                            for part in getattr(content, "parts", None) or []:
+                                t = getattr(part, "text", None)
+                                if t:
+                                    parts_out.append(t)
+                        content_text = "\n".join(parts_out).strip()
                     except Exception:
                         pass
-                    try:
-                        start_time = time.time()
-                        call_id = log_llm_call(
-                            operation="run_initial_analysis_attempt2",
-                            prompt=str(file_message.content[0]["text"]),
-                            model=AGENT_MODEL_NAME,
-                            video_id=video_id
-                        )
-                        response = await llm.ainvoke([file_message])
-                        duration = time.time() - start_time
-                        log_llm_response(call_id, response, duration=duration)
-                        if not (
-                            response
-                            and hasattr(response, "content")
-                            and response.content
-                        ):
-                            raise RuntimeError("Empty generation from LLM on retry")
-                    except Exception as e2:
-                        logger.error(f"❌ Second attempt failed: {e2}")
-                        raise
-
-                # Normalize response content into a single string
-                content_text = ""
-                try:
-                    raw_content = (
-                        response.content
-                        if (response and hasattr(response, "content"))
-                        else ""
-                    )
-                    if isinstance(raw_content, (list, tuple)):
-                        # Join string parts; extract 'text' from dict parts if present
-                        parts = []
-                        for part in raw_content:
-                            if isinstance(part, str):
-                                parts.append(part)
-                            elif isinstance(part, dict) and "text" in part:
-                                parts.append(str(part.get("text") or ""))
-                            else:
-                                parts.append(str(part))
-                        content_text = "\n".join(parts)
-                    else:
-                        content_text = (
-                            str(raw_content) if raw_content is not None else ""
-                        )
-                except Exception:
-                    content_text = ""
+                log_llm_response(call_id, content_text[:4000], duration=duration)
+                logger.info(
+                    "local_file genai backend=%s model=%s location=%s",
+                    fb_meta.get("backend_selected"),
+                    fb_meta.get("model_selected"),
+                    fb_meta.get("location_selected"),
+                )
 
                 # Save LLM response for debugging if DEBUG_OUTPUTS is enabled
                 if os.getenv("DEBUG_OUTPUTS", "False").lower() == "true":
@@ -3626,20 +3556,12 @@ OUTPUT FORMAT: Provide detailed JSON with:
                         "timestamp": datetime.now().isoformat(),
                         "video_id": video_id,
                         "llm_model": AGENT_MODEL_NAME,
-                        "analysis_type": "local_video_file",
-                        "prompt_text": (
-                            str(file_message.content[0]["text"])
-                            if file_message.content
-                            else ""
-                        ),
-                        "prompt_length": len(
-                            str(file_message.content[0]["text"])
-                            if file_message.content
-                            else ""
-                        ),
+                        "analysis_type": "local_video_file_genai",
+                        "prompt_text": prompt_text,
+                        "prompt_length": len(prompt_text),
                         "response_content": content_text,
                         "response_length": len(content_text),
-                        "response_type": str(type(response)),
+                        "fallback_meta": fb_meta,
                         "success": bool(content_text),
                     }
 

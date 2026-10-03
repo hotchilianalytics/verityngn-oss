@@ -1,12 +1,12 @@
 # LinkedIn — VerityNgn OSS 3.0
 
-We just released **VerityNgn OSS 3.0.0**: an Apache-2.0 multimodal engine that verifies claims in video — now with **Deep Research** in the public CLI.
+We are freezing a **VerityNgn OSS 3.0.0** candidate on `release/v3.0.0`: an Apache-2.0 multimodal engine for claim-level **risk abatement** on video — Deep Research in the public CLI, plus a new analyst-video path (six claim kinds, dual metrics, SIFT method review when CRAAP is the wrong bar).
 
-`pip install verityngn`  
-`verityngn analyze <url> --deep`
+Open-core, on purpose: hosted SaaS, predictions, and RiskFactor stay overlays that depend on OSS. No earnings-alpha or lie-detector marketing.
 
-Open-core, on purpose: hosted SaaS, predictions, and RiskFactor stay overlays that depend on OSS. No earnings-alpha or lie-detector marketing in this release.
+Public demo angle: Lipozem-class consumer ladder. Analyst charts in `docs/blog/series/assets/`. Full creator reports stay private until approved.
 
-Paper + charts in the repo (`papers/verityngn_oss_v3_release.md`). Demo: verityngn.streamlit.app
+Repo: https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0  
+Demo: https://verityngn.streamlit.app
 
-#OpenSource #OSINT #FactChecking #AI #Video
+#OpenSource #OSINT #ClaimRisk #AI #Video

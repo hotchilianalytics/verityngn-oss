@@ -3,35 +3,36 @@
 ## Title
 
 ```
-Show HN: VerityNgn 3.0 – open-source multimodal video fact-checking with Deep Research
+Show HN: VerityNgn 3.0 – open-source multimodal video claim-risk analysis + Deep Research
 ```
 
 ## Body
 
 ---
 
-I just shipped **VerityNgn OSS 3.0.0** — a standalone Apache-2.0 engine that turns a YouTube URL (or local video file) into a claim-level truthfulness report, now including the **Deep Research** grounded forensic pass that used to live only on our commercial fork.
+I am preparing **VerityNgn OSS 3.0.0** on branch `release/v3.0.0` (candidate `5258292`) — a standalone Apache-2.0 engine that turns a YouTube URL or local file into a claim-level **risk** report (not a lie detector). Deep Research ships in OSS. This candidate also adds **analyst-video claim kinds** (facts vs data-derived inferences vs predictions) with dual metrics and a SIFT method review instead of CRAAP when the mix is deep-data analysis.
 
-**Install:** `pip install verityngn`  
-**CLI:** `verityngn analyze <url>` · `verityngn analyze <url> --deep` · `verityngn analyze --file clip.mp4`  
-**Repo:** https://github.com/hotchilianalytics/verityngn-oss  
+**Repo:** https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0  
 **Demo:** https://verityngn.streamlit.app  
-**Paper:** `papers/verityngn_oss_v3_release.md` (+ charts)
+**Gallery:** https://verityindex.com/gallery  
+**Series:** `docs/blog/series/` (history, features, release status, two demos)
 
 ### What it does
 
-1. Multimodal claim extraction (Gemini) over video frames + transcript  
-2. Counter-intelligence: seeks contradictory YouTube reviews and press-release bias  
-3. THREE-state probabilities (TRUE / FALSE / UNCERTAIN), not binary slogans  
-4. Optional Deep Research: grounded Gemini summary with citation audit trail  
-5. Optional authenticity stubs + spectral voice cues + MediaPipe Face Landmarker  
+1. Multimodal claim extraction over video + transcript  
+2. Counter-intelligence: seeks contradiction and press-release bias  
+3. Ordinal likelihoods (TRUE / FALSE / UNCERTAIN) plus evidence confidence / residual reliance risk for analyst genres  
+4. Optional Deep Research with citation audit trail  
+5. Genre-aware §9: CRAAP for consumer; SIFT for analyst  
 
 ### Open-core boundary (honest)
 
-Hosted multi-tenant SaaS, **predictions**, and **RiskFactor** products stay closed and are expected to **depend on this OSS base**. This release does **not** include earnings prediction, allocation factors, or “lie detection.”
+Predictions and RiskFactor stay closed. Pin OSS ≥3.0.0 underneath.
 
 ### Ask
 
-Stars, issues, and PRs welcome. Especially useful: hard negative examples and report-quality diffs vs human review.
+Stars, issues, and hard questions welcome. Public demo video: Lipozem `tLJC8hkK-ao`. Analyst charts are in the series assets; full SB1507 report stays private until the creator approves.
 
 ---
+
+**Post only after** [`RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md) live gates are green. Prefer “Show HN” after Reddit ML has had a day.

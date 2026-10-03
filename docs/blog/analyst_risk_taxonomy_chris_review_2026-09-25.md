@@ -1,7 +1,9 @@
 # When Truth Isn’t Just True/False: Categorical–Probabilistic Risk Measures for Analyst Videos
 
-**VerityNgn OSS enhancement · September 2026**  
-**Fixture:** Chris Schuermyer — Oregon SB 1507 deep-data analysis (`finish_smoke_sb1507`)  
+**VerityNgn OSS enhancement · September–October 2026**  
+**Fixture:** Chris Schuermyer — Oregon SB 1507 deep-data analysis  
+**Live release dir:** `outputs/release_v3_sb1507` (after local-full run) · offline smoke: `finish_smoke_sb1507`  
+**Candidate SHA:** `5258292` on `release/v3.0.0`  
 **Audience:** Creators like Chris, product reviewers, and readers of the VerityNgn OSS engine
 
 ---
@@ -82,12 +84,13 @@ What you should open for this review:
 
 | Artifact | Purpose |
 |---|---|
-| [`chris_review_typed_sections.md`](../../outputs/sb1507_risk_taxonomy_loop/chris_review_typed_sections.md) | **What the new report sections look like** (offline re-stamp) |
+| `outputs/release_v3_sb1507/*_report.html` | **Live** local-full report with chips + SIFT §9 (preferred for joint review) |
+| [`chris_review_typed_sections.md`](../../outputs/sb1507_risk_taxonomy_loop/chris_review_typed_sections.md) | Offline re-stamp preview of typed sections |
 | [`scorecard.json`](../../outputs/sb1507_risk_taxonomy_loop/scorecard.json) | Acceptance metadata + every claim’s chip |
-| [`chris_review_restamped_report.json`](../../outputs/sb1507_risk_taxonomy_loop/chris_review_restamped_report.json) | Full claim objects with new fields |
-| Original `finish_smoke_sb1507/report.html` | Prior full narrative / sources (pre-taxonomy layout) |
+| Zip | `outputs/chris_sb1507_review_package.zip` |
+| Original `finish_smoke_sb1507/report.html` | Sep 23 narrative (pre-taxonomy layout) |
 
-A future `verityngn analyze` (or report regenerate) writes chips into `report.md` / `report.html` automatically via the path above. No separate “chip exporter” is required.
+Live `verityngn analyze --tier local-full` writes chips into `report.md` / `report.html` via the path above.
 
 ---
 

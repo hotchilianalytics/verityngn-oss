@@ -1,15 +1,18 @@
 # X / Twitter thread — VerityNgn OSS 3.0
 
-1/ Shipping **VerityNgn OSS 3.0.0** — open-source multimodal video claim verification. Deep Research is now in the Apache CLI, not locked behind the commercial fork.
+Post only after live matrix green. Prefer branch link until retag/PyPI.
 
-2/ Install: `pip install verityngn`  
-Run: `verityngn analyze <youtube-url> --deep`  
-Also supports local files: `verityngn analyze --file clip.mp4`
+1/ VerityNgn OSS **3.0.0 candidate** — open-source multimodal video claim-risk analysis. Deep Research in the Apache CLI. New: analyst claim kinds + dual risk metrics (likelihood · evidence · residual risk).
 
-3/ Stack: Gemini multimodal claims → counter-intel (YouTube reviews + press-release bias) → TRUE/FALSE/UNCERTAIN probabilities → optional grounded Deep Research report.
+2/ Consumer videos: classic TRUE/FALSE ladder + CRAAP.  
+Analyst / deep-data videos: typed sections + risk chips + SIFT instead of CRAAP.
 
-4/ Open-core honesty: predictions & RiskFactor stay closed overlays that depend on OSS. No earnings prediction. No “lie detector.”
+3/ Run from branch until retag:  
+`verityngn analyze --tier full <url> --deep`  
+Local: `verityngn analyze --tier local-full -f clip.mp4`
 
-5/ Paper + charts: github.com/hotchilianalytics/verityngn-oss → `papers/verityngn_oss_v3_release.md`  
-Demo: verityngn.streamlit.app  
-Stars/issues welcome.
+4/ Open-core honesty: predictions & RiskFactor stay closed. No earnings prediction. No lie detector. Lipozem demo is a weak vision proof — charts show the method.
+
+5/ Repo: github.com/hotchilianalytics/verityngn-oss (branch `release/v3.0.0`)  
+Series + charts: `docs/blog/series/`  
+Gallery: verityindex.com/gallery

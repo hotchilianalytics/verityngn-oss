@@ -1,7 +1,7 @@
 # Part 2 — Features and value: three reports, six claim kinds
 
-**Series:** VerityNgn OSS, three parts  
-**Part 2 of 3 · Features and value**
+**Series:** VerityNgn OSS  
+**Part 2 of 4 · Features and value**
 
 ---
 
