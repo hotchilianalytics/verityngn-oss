@@ -1,6 +1,6 @@
 # RELEASE_TEST_MATRIX v3.0.0
 
-**Candidate SHA:** `e12a55b` (includes analyst freeze `5258292` + local-file Vertex genai fix)  
+**Candidate SHA:** `46b9656` (includes analyst freeze `5258292` + Vertex genai fix `e12a55b` + this matrix)  
 **Branch:** `release/v3.0.0`  
 **Date:** 2026-10-03  
 **Package version:** 3.0.0

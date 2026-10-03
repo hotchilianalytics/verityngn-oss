@@ -8,7 +8,7 @@ Standalone Apache-2.0 multimodal video claim verification engine with Deep Resea
 |-------|-------|
 | Branch | `release/v3.0.0` |
 | Package version | **3.0.0** (`pyproject.toml`) |
-| Candidate SHA | `e12a55b` (analyst freeze `5258292` + local-file Vertex genai fix) |
+| Candidate SHA | `46b9656` (docs/matrix after live gates; includes `5258292` + `e12a55b`) |
 | Git tag `v3.0.0` | Still at `131ac87` (2026-08-29) until matrix green + explicit retag |
 | Test matrix | [`docs/launch/RELEASE_TEST_MATRIX_v3.md`](RELEASE_TEST_MATRIX_v3.md) |
 
