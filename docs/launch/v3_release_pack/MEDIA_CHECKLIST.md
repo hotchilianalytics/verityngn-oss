@@ -2,7 +2,7 @@
 
 Use this list before HN / Reddit / LinkedIn / X posts.  
 **Do not post on the same day as the live test run.**  
-**Candidate:** `5258292` · matrix: [`../RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md)
+**Candidate:** `e12a55b` · matrix: [`../RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md)
 
 ## Core assets
 
@@ -39,12 +39,13 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 - [x] Offline: `pytest test/unit/test_claim_kind.py`
 - [x] Offline: `python scripts/ci/open_core_boundary_scan.py`
 - [x] Offline: `python scripts/sb1507_risk_taxonomy_scorecard.py`
-- [ ] Live Lipozem full+deep
-- [ ] Live SB1507 local-full
+- [x] Live Lipozem full+deep (**PASS** — CRAAP / 40 facts / deep.html)
+- [~] Live SB1507 local-full (**PARTIAL** — SIFT/chips/genre OK; claim under-recall 5 vs 28)
+- [ ] Operator accept PARTIAL density **or** re-run SB1507 for §6.1 ≤ half
 - [ ] `PARITY_TEST_v3.md` optional after live
 - [ ] Paper PDF rebuild if figures changed
 - [ ] `pip install` smoke in clean venv (**no PyPI publish until operator go**)
-
+- [ ] **Do not post** until operator clears matrix; stagger 1–2 days; Chris full HTML gated
 ## Staggered posting order (1–2 days apart)
 
 1. r/MachineLearning `[P]` — method + density chart + **one** repo/branch link  

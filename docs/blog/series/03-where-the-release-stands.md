@@ -11,7 +11,7 @@ Package version in [`pyproject.toml`](../../../pyproject.toml) is **3.0.0**. Bra
 
 | Artifact | Status |
 |----------|--------|
-| Candidate SHA | `5258292` (analyst taxonomy + SIFT genre report frozen) |
+| Candidate SHA | `e12a55b` (analyst taxonomy + SIFT + local-file Vertex fix) |
 | Git tag `v3.0.0` | Still at `131ac87` (2026-08-29). Moves **only** after [`RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md) is all pass **and** an operator explicitly asks to retag. |
 | Merge to `main` / PyPI | Explicit ask required. Not part of drafting blogs. |
 

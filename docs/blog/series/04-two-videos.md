@@ -28,7 +28,11 @@ One video cannot prove both the classic consumer path and the analyst-genre path
 | What it shows | Six kinds, risk chips, **SIFT** instead of CRAAP, on-screen $ / method claims in `data_derived_inference` |
 | Public until Chris approves | Charts in `docs/blog/series/assets/` and aggregate scorecard counts only. Full HTML/transcript stay private. |
 
-**Offline re-stamp (Sep 23 smoke):** 28 claims → 13 facts, 7 data-derived, 4 causal, 2 prediction, 2 unverified; quant→inference 83.3%; scorecard `all_green`. Live re-run numbers replace these when the matrix records them.
+**Offline re-stamp (Sep 23 smoke):** 28 claims → 13 facts, 7 data-derived, 4 causal, 2 prediction, 2 unverified; quant→inference 83.3%; scorecard `all_green`.
+
+**Live `outputs/release_v3_sb1507` (2026-10-03):** 5 claims extracted (under-recall vs smoke). Genre `analyst`, SIFT §9, risk chips present. Density gate (§6.1 ≤ half) fails on n=5; see [`RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md).
+
+**Live Lipozem `outputs/release_v3_lipozem`:** 40 claims, all source-backed facts, CRAAP §9, `deep.html` — old ladder **PASS**.
 
 ![Before/after density](assets/02_before_after_density.png)
 
