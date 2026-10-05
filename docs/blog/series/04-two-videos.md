@@ -24,13 +24,13 @@ One video cannot prove both the classic consumer path and the analyst-genre path
 | Field | Value |
 |-------|-------|
 | Source | Local `sb1507.mp4` (Chris Schuermyer, Oregon QSBS / SB 1507) |
-| Command | `verityngn analyze --tier local-full -f sb1507.mp4 -o outputs/release_v3_sb1507` |
+| Command | `verityngn analyze --tier local-full --deep -f sb1507.mp4 -o outputs/release_v3_sb1507_dense` |
 | What it shows | Six kinds, risk chips, **SIFT** instead of CRAAP, on-screen $ / method claims in `data_derived_inference` |
 | Public until Chris approves | Charts in `docs/blog/series/assets/` and aggregate scorecard counts only. Full HTML/transcript stay private. |
 
 **Offline re-stamp (Sep 23 smoke):** 28 claims → 13 facts, 7 data-derived, 4 causal, 2 prediction, 2 unverified; quant→inference 83.3%; scorecard `all_green`.
 
-**Live `outputs/release_v3_sb1507` (2026-10-03):** 5 claims extracted (under-recall vs smoke). Genre `analyst`, SIFT §9, risk chips present. Density gate (§6.1 ≤ half) fails on n=5; see [`RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md).
+**Live `outputs/release_v3_sb1507_dense` (2026-10-05):** 50 extracted → 40 verified (prior thin run was 5). Genre `analyst`, SIFT §9, risk chips present. Scorecard `all_green` (§6.1=16/40; quant→inference 88.9%). See [`RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md).
 
 **Live Lipozem `outputs/release_v3_lipozem`:** 40 claims, all source-backed facts, CRAAP §9, `deep.html` — old ladder **PASS**.
 

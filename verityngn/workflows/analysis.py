@@ -3238,10 +3238,10 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
                         _tcap = int(PROCESSING_MAX_CLAIMS or 100)
                     except Exception:
                         _tcap = 100
-                    target = max(8, min(_tcap, int(max(dur, 60) / 60 * 1.8)))
+                    target = max(25, min(_tcap, int(max(dur, 60) / 60 * 3)))
                     agentic_prompt = (
                         "Extract verifiable factual claims from this video (spoken + on-screen).\n"
-                        f"Target approximately {target} high-quality claims spanning the full timeline.\n"
+                        f"Target at least {target} high-quality claims spanning the full timeline.\n"
                         "Return JSON only with keys: initial_report, claims "
                         "(claim_text, timestamp, speaker, source_type, initial_assessment), "
                         "video_analysis_summary.\n"
@@ -3345,25 +3345,33 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
                         analysis_duration_minutes = min(
                             video_duration_minutes, 60
                         )  # Max 60 min since we analyze first hour
-                        target_claims = max(
-                            8, min(15, int(analysis_duration_minutes * 1.8))
-                        )  # 1.8 claims/min to ensure mix of speaker+content claims, 8-15 range
+                        try:
+                            from verityngn.config.settings import PROCESSING_MAX_CLAIMS
+
+                            _ceil = int(PROCESSING_MAX_CLAIMS or 100)
+                        except Exception:
+                            _ceil = 100
+                        # Dense local extract: ~3 claims/min, floor 25, respect VN_MAX_CLAIMS
+                        target_claims = min(
+                            _ceil,
+                            max(25, int(analysis_duration_minutes * 3)),
+                        )
                         logger.info(
                             f"📊 Video duration: {video_duration_minutes:.1f} minutes, analyzing first {analysis_duration_minutes:.1f} minutes, targeting {target_claims} claims"
                         )
                     else:
                         target_claims = (
-                            12  # Fallback (restored from July 20th aggressive analysis)
+                            45  # Fallback — dense extract (aligned with YouTube path)
                         )
                         video_duration_minutes = 4.0  # Assume 4 minutes for fallback
                         logger.warning(
-                            "Could not determine video duration, using fallback of 12 aggressive claims"
+                            "Could not determine video duration, using fallback of 45 aggressive claims"
                         )
                 except Exception as e:
-                    target_claims = 12  # Fallback
+                    target_claims = 45  # Fallback — dense extract
                     video_duration_minutes = 4.0  # Assume 4 minutes for fallback
                     logger.warning(
-                        f"Error calculating target claims: {e}, using fallback of 12 claims"
+                        f"Error calculating target claims: {e}, using fallback of 45 claims"
                     )
 
                 # Create AGGRESSIVE multimodal prompt with dynamic claim count (restored from July 20th)
@@ -3376,7 +3384,7 @@ CRITICAL INSTRUCTIONS FOR MULTIMODAL VIDEO ANALYSIS:
 - Extract ALL factual claims, statements, assertions from ACTUAL VIDEO CONTENT
 - Focus on SPOKEN WORDS, VISUAL TEXT, ON-SCREEN GRAPHICS, and DEMONSTRATIONS
 - Ignore background music, decorative elements, or irrelevant visuals
-- Extract APPROXIMATELY {target_claims} specific, verifiable claims from the actual video frames and audio (targeting 3 claims per minute)
+- Extract AT LEAST {target_claims} specific, verifiable claims from the actual video frames and audio (targeting ~3 claims per minute; do not stop early)
 
 Video ID: {video_id}
 Video URL: {video_url}
@@ -3433,54 +3441,10 @@ OUTPUT FORMAT: Provide detailed JSON with:
 🚨 EXTRACT CLAIMS FROM ACTUAL VIDEO FRAMES & AUDIO - NOT METADATA OR DESCRIPTIONS! 🚨
 """
 
-                # Create the base prompt text
-                prompt_text = (
-                    "You are a video verification expert. Analyze this video in detail:\n\n"
-                    f"Video ID: {video_id}\n\n"
-                    f"Video URL: {video_url}\n\n"
-                    f"Video Title: {video_info.get('title', 'Unknown') if video_info else 'Unknown'}\n\n"
-                    f"Video Duration: {video_duration_minutes:.1f} minutes (estimated)\n\n"
-                    f"Video Duration: {video_duration_minutes:.1f} minutes (estimated)\n\n"
-                )
-
-                ## Extract and add tags from info.json if available
-                # info_json_path = os.path.join(os.path.dirname(state.video_path), f"{state.video_id}.info.json")
-                # if os.path.exists(info_json_path):
-                #    try:
-                #        with open(info_json_path, 'r', encoding='utf-8') as f:
-                #            video_info = json_lib.load(f)
-                #            if 'tags' in video_info and video_info['tags']:
-                #                prompt_text += (
-                #                    "The video has the following tags that may indicate topics or claims to verify:\n"
-                #                    f"{', '.join(video_info['tags'])}\n\n"
-                #                    "Please pay special attention to these topics in your analysis and consider them when identifying claims to verify.\n\n"
-                #                )
-                #    except Exception as e:
-                #        logger.warning(f"Error reading info.json: {e}")
-
-                ## Add VTT transcript to the prompt
-                # if state.transcription:
-                #    prompt_text += (
-                #        "I'm providing the VTT transcript to help with your analysis:\n\n"
-                #        f"Transcript:\n{state.transcription}\n\n"
-                #    )
-
-                prompt_text += (
-                    "Please provide a JSON response with the following structure:\n\n"
-                    "{\n"
-                    '  "initial_report": "Your detailed analysis of the video content, including visual elements, spoken claims, OCR information, and any other relevant information",\n'
-                    '  "claims": [\n'
-                    "    {\n"
-                    '      "claim_text": "The actual claim statement",\n'
-                    '      "timestamp": "MM:SS",\n'
-                    '      "speaker": "Name or description of who made the claim",\n'
-                    '      "initial_assessment": "Your initial assessment of this claim"\n'
-                    "    }\n"
-                    "  ],\n"
-                    '  "video_analysis_summary": "One sentence summary of analysis process and findings"\n'
-                    "}\n\n"
-                    "Extract APPROXIMATELY {target_claims} specific, verifiable claims from the actual video frames and audio.\n\n"
-                    "Respond with valid JSON only."
+                # Use the dense multimodal prompt (was previously built but never sent;
+                # the old stub left a literal "{target_claims}" in the LLM request).
+                prompt_text = prompt_text_new + (
+                    "\nRespond with valid JSON only matching the OUTPUT FORMAT above.\n"
                 )
 
                 # Read video file for multimodal analysis via google.genai
@@ -5069,16 +5033,24 @@ async def extract_claims_with_gemini_multimodal(
             analysis_duration_minutes = min(
                 video_duration_minutes, 60
             )  # Max 60 min since we analyze first hour
-            target_claims = max(
-                8, min(15, int(analysis_duration_minutes * 1.8))
-            )  # 1.8 claims/min to ensure mix of speaker+content claims, 8-15 range
+            try:
+                from verityngn.config.settings import PROCESSING_MAX_CLAIMS
+
+                _ceil = int(PROCESSING_MAX_CLAIMS or 100)
+            except Exception:
+                _ceil = 100
+            # Dense extract: ~3 claims/min, floor 25, respect VN_MAX_CLAIMS
+            target_claims = min(
+                _ceil,
+                max(25, int(analysis_duration_minutes * 3)),
+            )
             logger.info(
                 f"📊 Video duration: {video_duration_minutes:.1f} minutes, analyzing first {analysis_duration_minutes:.1f} minutes, targeting {target_claims} claims"
             )
         else:
-            target_claims = 12  # Fallback when duration unknown
+            target_claims = 45  # Fallback when duration unknown — dense extract
             video_duration_minutes = 4.0  # Assume 4 minutes
-            logger.warning("Video duration unknown, using fallback of 12 claims")
+            logger.warning("Video duration unknown, using fallback of 45 claims")
 
         # Download and trim video for multimodal analysis
         logger.info("🎥 Downloading and trimming video for multimodal analysis...")

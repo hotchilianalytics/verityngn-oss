@@ -29,7 +29,7 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 ## Demo
 
 - [ ] Lipozem public: `outputs/release_v3_lipozem` (CRAAP / deep.html)
-- [ ] SB1507 internal: `outputs/release_v3_sb1507` (SIFT / chips) — **no public full HTML without Chris OK**
+- [ ] SB1507 internal: `outputs/release_v3_sb1507_dense` (SIFT / chips) — **no public full HTML without Chris OK**
 - [ ] Tutorial script: `docs/launch/DEMO_VIDEO_SCRIPT.md`
 - [ ] Optional screen capture: light then full+deep
 - [ ] Operator tip: `verityngn captions <url>` with fresh cookies
@@ -40,8 +40,8 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 - [x] Offline: `python scripts/ci/open_core_boundary_scan.py`
 - [x] Offline: `python scripts/sb1507_risk_taxonomy_scorecard.py`
 - [x] Live Lipozem full+deep (**PASS** — CRAAP / 40 facts / deep.html)
-- [~] Live SB1507 local-full (**PARTIAL** — SIFT/chips/genre OK; claim under-recall 5 vs 28)
-- [ ] Operator accept PARTIAL density **or** re-run SB1507 for §6.1 ≤ half
+- [x] Live SB1507 local-full dense (`outputs/release_v3_sb1507_dense`) — 40 claims; SIFT/chips; scorecard `all_green`; §6.1=16/40
+- [x] Density gate cleared (was 5-claim PARTIAL at `outputs/release_v3_sb1507`)
 - [ ] `PARITY_TEST_v3.md` optional after live
 - [ ] Paper PDF rebuild if figures changed
 - [ ] `pip install` smoke in clean venv (**no PyPI publish until operator go**)

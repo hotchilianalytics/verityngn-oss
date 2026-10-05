@@ -62,6 +62,30 @@ def test_classify_data_derived_inference_method_quant():
     )
 
 
+def test_classify_lro_static_assumption_inference():
+    kind = classify_claim_kind(
+        "LRO revenue forecasts for SB 1507 assumed static taxpayer behavior with "
+        "zero percent dynamic capital flight."
+    )
+    assert kind == ClaimKind.DATA_DERIVED_INFERENCE.value
+
+
+def test_classify_testimony_aggregation_inference():
+    kind = classify_claim_kind(
+        "Only 28 unique non-form letters were submitted in substantive support of "
+        "SB 1507's disconnect provisions."
+    )
+    assert kind == ClaimKind.DATA_DERIVED_INFERENCE.value
+
+
+def test_classify_lro_model_mandate_analytical():
+    kind = classify_claim_kind(
+        "Oregon statutes impose no requirement on the LRO to model dynamic behavioral "
+        "responses or capital migration for bills voted on the floor."
+    )
+    assert kind == ClaimKind.CAUSAL_ANALYTICAL.value
+
+
 def test_legacy_aliases_normalize():
     assert normalize_claim_kind("factual_sourceable") == ClaimKind.SOURCE_BACKED_FACT.value
     assert normalize_claim_kind("author_proof_candidate") == ClaimKind.CAUSAL_ANALYTICAL.value

@@ -125,6 +125,7 @@ METHOD_INFERENCE_MARKERS = (
     "modeling",
     "modelled",
     "modeled",
+    "to model",
     "estimate",
     "estimated",
     "calculation",
@@ -132,6 +133,9 @@ METHOD_INFERENCE_MARKERS = (
     "analysis shows",
     "when collapsing",
     "distinct individuals",
+    "unique individuals",
+    "non-form letter",
+    "form letter",
     "copy-paste",
     "rate rose",
     "rate fell",
@@ -141,6 +145,11 @@ METHOD_INFERENCE_MARKERS = (
     "lro ",
     "legislative revenue",
     "revenue impact",
+    "revenue forecast",
+    "assumed static",
+    "static taxpayer",
+    "capital flight",
+    "capital migration",
     "qsbs",
     "bonus depreciation",
     "section 179",
@@ -152,6 +161,8 @@ METHOD_INFERENCE_MARKERS = (
     "associated with the decoupling",
     "collapsing",
     "testimony leaves",
+    "written testimony",
+    "testimony submissions",
 )
 
 BIO_OR_COLOR_MARKERS = (
@@ -261,16 +272,34 @@ def classify_claim_kind(
         return ClaimKind.REASONED_OPINION.value
 
     method_hits = sum(1 for m in METHOD_INFERENCE_MARKERS if m in lower)
-    quant = bool(re.search(r"(?:\$|\d+(?:,\d{3})*(?:\.\d+)?%|\bn\s*=\s*\d)", text, re.I))
+    quant = bool(
+        re.search(
+            r"(?:\$|\d+(?:,\d{3})*(?:\.\d+)?%|\b\d+\s*percent\b|\bzero percent\b|\bn\s*=\s*\d|"
+            r"\btwo-thirds\b|\b\d+\s+unique\b|\b\d+\s+total\b|\bcomprised\s+\d+)",
+            text,
+            re.I,
+        )
+    )
     # On-screen modeled $ figures and testimony aggregation are inferences even
     # without classic method verbs when quant + analysis framing co-occur.
     analysis_framing = bool(
         re.search(
             r"\b(?:filtering|unadjusted|graphic|decoupling provisions|raw counts|"
-            r"leaves \d+|associated with)\b",
+            r"leaves \d+|associated with|form letter|non-form|unique individuals|"
+            r"testimony submissions|assumed static|capital flight)\b",
             lower,
         )
     )
+
+    # Institutional conformity / model-mandate analytical claims (before method+quant)
+    if re.search(
+        r"\b(?:automatically (?:connects|conforms)|rolling(?:\s+\w+)?\s+conformity|"
+        r"best available models|no equivalent requirement|no requirement on the lro|"
+        r"impose no requirement)\b",
+        lower,
+    ):
+        return ClaimKind.CAUSAL_ANALYTICAL.value
+
     if method_hits >= 1 and quant:
         return ClaimKind.DATA_DERIVED_INFERENCE.value
     if method_hits >= 2:
@@ -280,14 +309,6 @@ def classify_claim_kind(
 
     factual_hits = sum(1 for pat in FACTUAL_ANCHORS if re.search(pat, text, re.I))
     causal_hits = sum(1 for m in CAUSAL_MARKERS if m in lower)
-
-    # Institutional conformity / model-mandate analytical claims
-    if re.search(
-        r"\b(?:automatically (?:connects|conforms)|rolling conformity|best available models|"
-        r"no equivalent requirement)\b",
-        lower,
-    ):
-        return ClaimKind.CAUSAL_ANALYTICAL.value
 
     if causal_hits >= 2 and factual_hits <= 3:
         return ClaimKind.CAUSAL_ANALYTICAL.value
