@@ -1,0 +1,452 @@
+[
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-08",
+    "window_days": 90,
+    "youtube_hit_estimate": 148,
+    "news_hit_estimate": 34,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-09",
+    "window_days": 90,
+    "youtube_hit_estimate": 12,
+    "news_hit_estimate": 72,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-10",
+    "window_days": 90,
+    "youtube_hit_estimate": 131,
+    "news_hit_estimate": 83,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-11",
+    "window_days": 90,
+    "youtube_hit_estimate": 43,
+    "news_hit_estimate": 47,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-12",
+    "window_days": 90,
+    "youtube_hit_estimate": 59,
+    "news_hit_estimate": 43,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-13",
+    "window_days": 90,
+    "youtube_hit_estimate": 145,
+    "news_hit_estimate": 79,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-14",
+    "window_days": 90,
+    "youtube_hit_estimate": 45,
+    "news_hit_estimate": 43,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-15",
+    "window_days": 90,
+    "youtube_hit_estimate": 166,
+    "news_hit_estimate": 12,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-16",
+    "window_days": 90,
+    "youtube_hit_estimate": 76,
+    "news_hit_estimate": 51,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-17",
+    "window_days": 90,
+    "youtube_hit_estimate": 152,
+    "news_hit_estimate": 39,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-18",
+    "window_days": 90,
+    "youtube_hit_estimate": 133,
+    "news_hit_estimate": 29,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-19",
+    "window_days": 90,
+    "youtube_hit_estimate": 92,
+    "news_hit_estimate": 44,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-20",
+    "window_days": 90,
+    "youtube_hit_estimate": 133,
+    "news_hit_estimate": 55,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-21",
+    "window_days": 90,
+    "youtube_hit_estimate": 16,
+    "news_hit_estimate": 84,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-22",
+    "window_days": 90,
+    "youtube_hit_estimate": 32,
+    "news_hit_estimate": 20,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-23",
+    "window_days": 90,
+    "youtube_hit_estimate": 123,
+    "news_hit_estimate": 64,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-24",
+    "window_days": 90,
+    "youtube_hit_estimate": 76,
+    "news_hit_estimate": 71,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-25",
+    "window_days": 90,
+    "youtube_hit_estimate": 66,
+    "news_hit_estimate": 86,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-26",
+    "window_days": 90,
+    "youtube_hit_estimate": 128,
+    "news_hit_estimate": 46,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-27",
+    "window_days": 90,
+    "youtube_hit_estimate": 28,
+    "news_hit_estimate": 27,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-28",
+    "window_days": 90,
+    "youtube_hit_estimate": 40,
+    "news_hit_estimate": 78,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-29",
+    "window_days": 90,
+    "youtube_hit_estimate": 98,
+    "news_hit_estimate": 16,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-30",
+    "window_days": 90,
+    "youtube_hit_estimate": 16,
+    "news_hit_estimate": 57,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-07-31",
+    "window_days": 90,
+    "youtube_hit_estimate": 174,
+    "news_hit_estimate": 50,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-08-01",
+    "window_days": 90,
+    "youtube_hit_estimate": 119,
+    "news_hit_estimate": 82,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-08-02",
+    "window_days": 90,
+    "youtube_hit_estimate": 104,
+    "news_hit_estimate": 37,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-08-03",
+    "window_days": 90,
+    "youtube_hit_estimate": 59,
+    "news_hit_estimate": 73,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-08-04",
+    "window_days": 90,
+    "youtube_hit_estimate": 133,
+    "news_hit_estimate": 5,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-08-05",
+    "window_days": 90,
+    "youtube_hit_estimate": 30,
+    "news_hit_estimate": 16,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_tsla_musk",
+    "as_of": "2026-08-06",
+    "window_days": 90,
+    "youtube_hit_estimate": 136,
+    "news_hit_estimate": 38,
+    "method": "seeded_hash",
+    "queries": [
+      "Elon Musk earnings call Tesla",
+      "Elon Musk interview",
+      "Elon Musk keynote",
+      "Elon Musk X Spaces"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  }
+]

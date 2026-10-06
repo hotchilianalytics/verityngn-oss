@@ -1,0 +1,41 @@
+{
+  "L": 0.708699,
+  "stop": false,
+  "weights": {
+    "fidelity": 0.3,
+    "nuisance": 0.3,
+    "power": 0.2,
+    "icir": 0.15,
+    "deflation": 0.05
+  },
+  "fidelity": 0.7714,
+  "nuisance_leak": {
+    "max_abs": 0.8214,
+    "by_nuisance": {
+      "n_claims": 0.4685,
+      "duration_sec": 0.8214,
+      "n_segments": 0.4685,
+      "days_to_print": 0.2162
+    },
+    "factor_key": "s01_congruence"
+  },
+  "power": {
+    "n_events": 6,
+    "n_required": 194,
+    "rho_target": 0.2,
+    "power": 0.0309
+  },
+  "icir": null,
+  "icir_norm": 0.0,
+  "deflation": {
+    "dsr": 0.002246,
+    "deflation_gap": 0.997754,
+    "n_trials": 20,
+    "n_obs": 6
+  },
+  "promote": "NO_PROMOTE",
+  "instrument_only": false,
+  "notes": "Keep iteration only if L strictly decreases. A rise in ICIR that also raises NuisanceLeak is a rejection. NO_PROMOTE until stop conditions.",
+  "n_rows": 7,
+  "source_report": "/Users/ajjc/.cursor/worktrees/predictions-f487c957/verityngn-core-commercial-2c6d35116c0f/.outputs/ceo_pltr_karp_corpus/ceo_pltr_karp_signal_report.json"
+}

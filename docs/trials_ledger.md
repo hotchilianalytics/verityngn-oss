@@ -1,41 +1,48 @@
-# Trials ledger (OSS)
+# Predictions Trials Ledger
 
-Register trials **before** peeking promotion metrics.
+**Format:** mirrored from hca-qngn `docs/trials_ledger.md`  
+**Rule:** Register a row **before** computing hold-out / test metrics. Count every config including failures.
 
-| Trial | Date | Hypothesis | Arms / setup | Result | Promote? |
-|-------|------|------------|--------------|--------|----------|
-| T-ABL-001 | 2026-08-29 | DR-direct risk brief (no claims inventory) can match full pipeline+DR usefulness on tL + 2 gallery videos | `verityngn ablate --arms both`; auto Jaccard + `evaluation/ablation_human_rubric.csv` | **v2 (2026-08-30):** full ok (892s, 40 claims); direct ok (21s, 16 refs, gemini-3-flash-preview); topic Jaccard 0.058 → `keep_full_default` | NO until human rubric |
-| T-ABL-002 | 2026-08-29 | Multimodal claim extraction finds material claims absent from YouTube transcript-only extraction (OCR/charts/overlays) | `verityngn ablate --mode claims --arms both`; `compare_claims.json` claim Jaccard + only_multimodal share; human rows for transcript/multimodal on tL | **v2:** TX 15 (cached_vtt) / MM 38; Jaccard 0.0; only-MM share 0.72 → `multimodal_adds_unique` (live captions still need fresh cookies) | NO until human rubric + live caption path |
-| T-ABL-004 | 2026-08-31 | Video/audio sleeve validated on genre seeds (earnings slide, UGC supers, deposition exhibit) — not Lipozem VSL | `evaluation/genre_ablation_seeds.json`; `verityngn ablate --mode claims`; gate: visual_only_share ≥ 0.25 + human rubric ≥ 0.6 on 2/3 seeds | **registered** — seeds pending operator URLs; adaptive fps enabled | NO until seeds run |
-| T-VTT-001 | 2026-09-01 | Unified caption_fetch (cached → yt-dlp android+cookies → transcript API) matches commercial subs path | `verityngn captions <url>`; unit `test_caption_fetch.py`; live row with fresh cookies on tLJC8hkK-ao | **registered** — `fetch_and_cache_vtt` + `verityngn captions` CLI; cache hit unit OK; live depends on cookies | NO until live pass logged |
-| T-ABL-005 | 2026-09-01 | VTT→DR-direct (light) vs report-JSON→DR (full inventory) on tL — DR-only latency vs claim coverage | `scripts/run_vtt_json_dr_ablation.py`; compare_vtt_json_dr.json; human rubric direct vs full | **v1 (2026-09-01):** VTT arm 15s · 50k transcript chars · 0 claims · 12 refs; JSON arm 20s · 40 claims · 23 refs; Jaccard **0.22** → `keep_full_default` (full pipeline still required for inventory+CI) | NO until human rubric |
-| T-ABL-006 | 2026-09-02 | Genre-appropriate 10–15 min seeds (earnings / UGC supers / deposition) yield visual_only_share ≥ 0.25 + multimodal-unique claims on ≥2/3; validates T-ABL-004 sleeve for archive paper | `evaluation/genre_ablation_seeds.json`; `verityngn ablate --mode claims --arms both` ×3; summary.json; human rubric; paper `verityngn_v3_ablation_archive.md` | **v1 (2026-09-02):** G1 Visa `p9nBtboU9KM` visual **0.33** PASS; G2 charts `Exj5iK_K0Kk` **0.17** FAIL; G3 hearing `2RkQ7mGWMAA` **0.20** FAIL → **1/3** auto gate (aggregate FAIL). All 3 captioned seeds `multimodal_adds_unique` (only-MM share 0.67–0.74). Fixed source_type drop in `validate_and_normalize_json_result`. Appendix Basler slides visual 0.26 but TX=0. | NO — need ≥2/3 auto gate |
-| T-ABL-007 | 2026-09-02 | For duration > 15 min with sufficient captions, light (transcript+DR, untruncated) achieves risk_recall@10 ≥ 0.80 at ≥5× lower latency and ≥5× lower $ vs full multimodal | `sufficiency.py` preflight + post-hoc; light vs full per duration stratum (S/M/L/XL); `--tier auto` calibration | **v1 (2026-09-02):** untruncated light + cost telemetry shipped. On 3 captioned M seeds: mean latency **32.8×**, cost **21.4×**, risk_recall@10 **0.15–0.20** (token-set; no 0.80 hit) → light = triage, not full replace. Defaults TAU_COV=0.70 TAU_VIS=0.35 TAU_DUR=900. Artefact `outputs/ablation_T007/summary.json` | NO — recall target unmet; promote auto as triage router only |
-| T-TX-002 | 2026-09-02 | Paid transcript path (Supadata native/generate + Groq ASR) raises success on C3/C4 (PoToken/caption-less) vs free scrapers alone | `transcript_providers` chain; success/latency/$ per path across C0–C6 | **v2 (2026-09-02, live SUPADATA_API_KEY):** n=6 — yt-dlp **0.83**, cached 0.67, Supadata native **4/6 (~8.6s, ~$0.0016)**; Alphabet free+paid OK; Basler hard C4 still locked (empty/timeout/429). Groq skipped. Artefact `outputs/transcript_supply_T002/matrix.json` | PARTIAL — native promote for captioned/blocked; C4 generate NO until RL cleared + Groq |
-| T-SRC-001 | 2026-09-03 | Relevance + cite-only + DR binder raise on-topic sources / cut CSE junk on sb1507 | local-full + deep; matrix vs OLIS/DOR/yex | **v1:** baseline noise-dominated; rerun on-topic **0.41**, noise **0.01**; DR `gemini-3.6-flash` (17/17 URL refs on-topic via allowlist bind). Prompt pack proposal pending approval | PARTIAL — code shipped; prompt wholesale await approval |
-| T-QUAL-001 | 2026-09-03 | Domain-general primary packs + dr_prompt_v2 + 3.8-flash + hops + claims ceiling 100 raise DR/source quality without Oregon-always bias | Dual fixture: sb1507 + non-leg; medical synth pack; A/B 3.6 vs 3.8; agentic spike | **v1:** sb1507 OR pack ✓; nonleg oregon_in_primary=false; medical pack FDA/NIH/CDC no OR; 3.8 on-topic 12 vs 3.6 9; hops L2=8 on sb1507 rerun; agentic YT spike HTTP 200 | PARTIAL — promote 3.8+v2 defaults; agentic stays flag-off until longer ablation |
-| T-FALL-001 | 2026-09-05 | Shared Vertex/model/API fallback keeps quality-critical OSS paths alive when `gemini-3.8-flash` is missing on one Vertex location | Unit: `pytest -q test/unit/test_llm_fallback.py test/unit/test_deepresearch.py test/unit/test_sufficiency.py`; live smokes: `tLJC8hkK-ao` full + `sb1507.mp4` local-full; forced-bad-location smoke | **v2:** unit suite **13 passed**. Refreshed live smokes completed on patched code with fallback-aware dispatch in analysis / verification / Sherlock CI paths and both `report.html` + `deep.html` present for `tL` and `sb1507`. Forced-bad-location smoke exposed stale local ADC refresh (`gcloud auth application-default login` needed), so one explicit live hop-proof remains pending outside the completed end-to-end smokes. | YES for OSS local path; batch cutover waits on post-reauth forced-hop smoke |
+| Date | Label | Bundle | Strategy file | Trials (cumulative) | CAGR | Sharpe | MaxDD | DSR | Notes |
+|------|-------|--------|---------------|---------------------|------|--------|-------|-----|-------|
+| 2026-08-06 | T000 | predictions-scaffold | timeseries/event_study.py | 1 | — | — | — | — | Scaffold harness; synthetic features; NO_PROMOTE |
+| 2026-08-06 | T001 | gallery-affect-sanity | affect/extract.py | 2 | — | — | — | — | Internal QA: affect vs claim confidence; not market |
+| 2026-08-06 | T002 | media-exuberance | quant + event_study CAR | 3 | — | — | — | — | **Registered pre-peek.** Target: surprise / CAR H=1..30. NO_PROMOTE until live audio |
+| 2026-08-06 | T003 | mediasphere-velocity | mediasphere + quant | 4 | — | — | — | — | **Registered pre-peek.** Musk stress-test for per-speaker norms |
+| 2026-08-06 | T004 | congruence-fusion | fusion/crossmodal.py | 5 | — | — | — | — | **Registered pre-peek.** Text–voice–face divergence composite |
+| 2026-08-06 | T005 | sympathetic-arousal | vision/spectral.py | 6 | — | — | — | — | **Registered pre-peek.** rPPG + SympCam-style channel; authenticity-gated |
+| 2026-08-06 | T006 | fused-composite | fusion/schema.py + hygiene | 7 | — | — | — | — | **Registered pre-peek.** Late-fusion composite; fixture hygiene correctly FAIL (sparse CS) |
+| 2026-08-10 | T007 | interpreted-measured-agreement | fusion/gemini_multisense + crossmodal | 8 | — | — | — | — | **Registered pre-peek.** Gemini interpreted vs measured (prosody/VAD) congruence; offline harness in `scripts/calibrate_multisense_agreement.py`. NO_PROMOTE until live Gemini + executive-domain audio |
+| 2026-08-10 | T008 | karp-signal-registry-n1 | scripts/build_karp_signal_report.py | 9 | — | — | — | — | **n=1** live Gemini on `QNkPpVYagRc` (CNBC Davos 2024). Seeds S01–S10 for `ceo_pltr_karp`. NO_PROMOTE until ≥5 Karp videos + measured VAD/AU (not prosody_proxy). |
+| 2026-08-10 | T008b | karp-corpus-n2 | scripts/build_karp_signal_report.py --corpus-dirs | 10 | — | — | — | — | Added `dRgPbNJ5RJc` (WEF 2026, 35 min, 6 claims, congruence 0.89). Corpus mean S01=0.80. Still NO_PROMOTE (n=2, valence_gap, prosody_proxy). |
+| 2026-08-10 | T009 | karp-s11-derailment | fusion/derailment.py | 11 | — | — | — | — | **Registered pre-peek.** Krykoniuk et al. 2026 expected-vs-actual Q&A as S11. Cue only (not disinfo). NO_PROMOTE. |
+| 2026-08-10 | T010 | karp-pre-earnings-car | scripts/karp_earnings_effect.py | 12 | — | — | — | — | **Registered before CAR peek.** Five additional pre-print Karp interviews → next PLTR print CAR H=1 vs S01/S05/S11. Leakage-safe (recorded < print). NO_PROMOTE until n≥10 + ICIR gates. |
+| 2026-08-26 | T020 | s01-claim-norm-resid | residualize_s01_karp + claim_norm | 22 | — | — | — | — | **REJECT_keep_T019.** `s01/log1p(n_claims)` then residualize → resid N 0.1261 / L 0.500 same as T019. No improvement. NO_PROMOTE. |
+| 2026-08-26 | T019 | duration-days-venue-resid | nuisance.py + residualize_s01_karp | 21 | — | — | — | — | **KEEP.** Stamp duration_sec/days_to_print/venue; OLS resid on claims+duration+days+venue (drop segments). resid N 0.306→**0.126** (&lt;0.20); resid L 0.554→**0.500**. Raw leak ↑0.82 on duration (honest). LOO resid N 0.06–0.46. T021 sensors deferred. Leak gate clears SpaceX multimodal *plan* resume; still NO_PROMOTE allocation. |
+| 2026-08-20 | T018 | mediapipe-face-landmarker-karp | vision/adapters/mediapipe.py + scripts/run_mediapipe_karp.py | 20 | — | — | — | — | **Scored.** Face on QNk/WBu9/pHu/ijR (cov 0.68–0.86). HFAsy_proxy 0.066–0.119 (not Banker 1:1). S01 face terms restored (renormalize). ijR not coverage-fail at sample_fps=1. mediapipe==0.10.18 IMAGE mode (1.0 Metal crash). NO_PROMOTE. |
+| 2026-08-20 | T017 | live-gemini-remaining-six | scripts/run_live_gemini_one.py | 19 | — | — | — | — | **Partial.** live_gemini **5/7** (QNk+dRg+V7m+ijR+WBu9). xe84+pHu hit Vertex 429 RESOURCE_EXHAUSTED after cooldown. Fixed report discovery → `_final_report.json`. L 0.706→~0.61 KEEP vs T016. Fidelity ~0.74. NO_PROMOTE. Retry xe84/pHu later. |
+| 2026-08-15 | T016 | karp-v7m-real-mp4-refusion | scripts/run_measured_affect_karp.py + refusion_s01_karp.py | 18 | — | — | — | — | **Scored.** L 0.647→0.706 REJECT (do not revert V7m; T015 leak was missing-mp4 artifact). Honest n=7: Fidelity 0.429, NuisanceLeak 0.469, 7/7 VAD+ASR, live_gemini 1/7, face 0/7. Attribution: docs/predictions/KARP_DELIVERY_ATTRIBUTION.md. NO_PROMOTE. |
+| 2026-08-15 | T015 | karp-media-five-refusion | scripts/run_measured_affect_karp.py + fusion/schema.py | 17 | — | — | — | — | **Registered before re-score of L.** Download remaining 5 Karp mp4s; measured VAD+ASR; re-fuse S01 with vision omitted (no 0.5 face fill). No new CEOs. NO_PROMOTE. |
+| 2026-08-15 | T014 | measured-lane-torch-whisper | affect/asr.py + audeering_vad.py | 16 | — | — | — | — | **Registered before re-score of L.** Install torch+transformers+faster-whisper in verityngn env; re-run measured VAD+ASR on Karp media; Fidelity should leave 0. NO_PROMOTE. |
+| 2026-08-14 | T013 | live-gemini-one-karp | scripts/run_live_gemini_one.py | 15 | — | — | — | — | **Registered before live vs offline_proxy diff** on QNkPpVYagRc. No CAR peek. Confirm live_gemini True. NO_PROMOTE. |
+| 2026-08-14 | T012 | signal-quality-loss-L | scripts/score_signal_quality.py | 14 | — | — | — | — | **Registered before scoring L** on n=7 Karp panel. Baseline Fidelity/NuisanceLeak/Power/ICIRnorm/DeflationGap. NO_PROMOTE. Loop keeps an iteration only if L decreases. |
+| 2026-08-14 | T011 | multi-ceo-huang-nvda-catalog | docs/nvda_pre_earnings_videos.json + scripts/karp_earnings_effect.py --catalog | 13 | — | — | — | — | **Registered before multi-CEO outcome peek.** Second player catalog (Huang/NVDA) mirroring Karp schema; de-hardcoded --player-id/--catalog. CAR lookback fix (≥15d) unblocks T010 n_with_car. NO_PROMOTE. |
 
-## T-QUAL-001 — Deep Quality Uplift (2026-09-03)
+## Gates (must pass before PROMOTE)
 
-- **Changes:** `dr_prompt_v2`, `primary_pack` resolver, `source_expander` L2–L3, `DEEP_RESEARCH_MODEL=gemini-3.8-flash`, `VN_MAX_CLAIMS=100`, `VN_AGENTIC_VIDEO` REST spike
-- **A/B:** `outputs/sb1507/model_ab38/ab_summary.json` — 3.8-flash 12 on-topic / 27s vs 3.6-flash 9 / 29s
-- **Eval:** `outputs/t_qual_001/eval_summary.json`
-- **Sherlock:** `~/proj/history/verityngn-oss/sherlock-sessions/SHERLOCK_DEEP_QUALITY_UPLIFT_2026-09-03.md`
+| Gate | Threshold |
+|------|-----------|
+| ICIR | ≥ 0.40 |
+| Frac IC+ | ≥ 0.55 |
+| Weekly Jaccard | < 0.25 |
+| Neutralization | resid ICIR ≥ 0.5 × raw |
+| Cost edge | Q5−Q1 > drag @ 10 bps (hygiene) / 20 bps (promote-ready) |
+| DSR | ≥ 0.95 |
 
-## T-FALL-001 — Vertex fallback + dual-output promote gate (2026-09-05)
+## Lessons carried from hca-qngn
 
-- **Changes:** shared fallback router in `verityngn/utils/llm_utils.py`; hot-path wiring in analysis, verification, Sherlock CI, context research, counter-intel, and report summarizers
-- **Defaults:** `gemini-3.8-flash`, `VERTEX_LOCATION=global`, lower-model / regional fallback, optional Developer API fallback
-- **Unit validation:** `test_llm_fallback.py`, `test_deepresearch.py`, `test_sufficiency.py` -> **13 passed**
-- **Live validation:** refreshed `tL` and `sb1507` smokes completed under `outputs/fallback_smoke_*_v2`; both emitted `report.html`, `deep.html`, and canonical report artifacts
-- **Operator note:** failure-path live proof is still blocked locally by ADC reauthentication, not by the fallback code itself
-- **Promote status:** OSS local path is green on `release/v3.0.0`; gate batch cutover on one clean post-reauth forced-hop smoke
-
-## T-SRC-001 — SB1507 source integrity uplift (2026-09-03)
-
-- **Fixture:** local `sb1507.mp4` → `3f70063ddbd`
-- **Changes:** CSE relevance gate, cite-only sources, legislative query rewrite, `.edu` host fix, DR citation binder + legislature pack, DR default `gemini-3.6-flash`
-- **Baseline (`outputs/sb1507`):** 10 claims, 4 zero-source, noise-dominated URLs; DR grounding empty on flash-preview
-- **Rerun (`outputs/sb1507_rerun`):** 25 claims; on-topic source rate ~0.41 (35/86), noise ~0.01 (1/86); DR completed on 3.6-flash with allowlist bind (structured grounding still None on Developer API)
-- **Artifacts:** Sherlock `SHERLOCK_SB1507_SOURCE_INTEGRITY_2026-09-03.md`; prompt proposal `~/proj/plans/verityngn-oss/prompt_refresh_proposal_2026-09-03.md` (**APPROVED** domain-general → shipped as `dr_prompt_v2` in T-QUAL-001)
+1. Factor PASS ≠ portfolio PROMOTE  
+2. Never live-demean by sector  
+3. Never `fillna(0)` on sparse alt-data  
+4. Horizon must match rebalance frequency  
+5. Count all trials for DSR denominator

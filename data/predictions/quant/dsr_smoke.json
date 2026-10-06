@@ -1,0 +1,8 @@
+{
+  "dsr": 1.2805291650985762e-05,
+  "pass": false,
+  "observed_sharpe": 0.8,
+  "n_obs": 252,
+  "n_trials": 6,
+  "threshold": 0.95
+}

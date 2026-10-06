@@ -1,0 +1,14 @@
+{
+  "player_id": "ceo_msft_nadella",
+  "as_of": "2026-08-06",
+  "window_days": 90,
+  "youtube_hit_estimate": 41,
+  "news_hit_estimate": 21,
+  "method": "seeded_hash",
+  "queries": [
+    "Satya Nadella earnings call",
+    "Satya Nadella interview Microsoft",
+    "Satya Nadella Build keynote"
+  ],
+  "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+}

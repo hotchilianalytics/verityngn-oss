@@ -1,0 +1,169 @@
+{
+  "dossiers": {
+    "ceo_aapl_cook": {
+      "json": "data/predictions/dossiers/ceo_aapl_cook_prediction_dossier.json",
+      "md": "data/predictions/dossiers/ceo_aapl_cook_prediction_dossier.md",
+      "html": "data/predictions/dossiers/ceo_aapl_cook_prediction_dossier.html"
+    },
+    "ceo_msft_nadella": {
+      "json": "data/predictions/dossiers/ceo_msft_nadella_prediction_dossier.json",
+      "md": "data/predictions/dossiers/ceo_msft_nadella_prediction_dossier.md",
+      "html": "data/predictions/dossiers/ceo_msft_nadella_prediction_dossier.html"
+    },
+    "ceo_nvda_huang": {
+      "json": "data/predictions/dossiers/ceo_nvda_huang_prediction_dossier.json",
+      "md": "data/predictions/dossiers/ceo_nvda_huang_prediction_dossier.md",
+      "html": "data/predictions/dossiers/ceo_nvda_huang_prediction_dossier.html"
+    },
+    "ceo_pltr_karp": {
+      "json": "data/predictions/dossiers/ceo_pltr_karp_prediction_dossier.json",
+      "md": "data/predictions/dossiers/ceo_pltr_karp_prediction_dossier.md",
+      "html": "data/predictions/dossiers/ceo_pltr_karp_prediction_dossier.html"
+    },
+    "ceo_tsla_musk": {
+      "json": "data/predictions/dossiers/ceo_tsla_musk_prediction_dossier.json",
+      "md": "data/predictions/dossiers/ceo_tsla_musk_prediction_dossier.md",
+      "html": "data/predictions/dossiers/ceo_tsla_musk_prediction_dossier.html"
+    }
+  },
+  "mediasphere": {
+    "ceo_aapl_cook": {
+      "snapshot": {
+        "player_id": "ceo_aapl_cook",
+        "as_of": "2026-08-06",
+        "window_days": 90,
+        "youtube_hit_estimate": 98,
+        "news_hit_estimate": 89,
+        "method": "seeded_hash",
+        "queries": [
+          "Tim Cook earnings call",
+          "Tim Cook interview Apple",
+          "Tim Cook WWDC"
+        ],
+        "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+      },
+      "velocity": {
+        "velocity": 2.3793103448275863,
+        "n": 30,
+        "field": "youtube_hit_estimate",
+        "latest": 98.0,
+        "start": 29.0
+      }
+    },
+    "ceo_msft_nadella": {
+      "snapshot": {
+        "player_id": "ceo_msft_nadella",
+        "as_of": "2026-08-06",
+        "window_days": 90,
+        "youtube_hit_estimate": 41,
+        "news_hit_estimate": 21,
+        "method": "seeded_hash",
+        "queries": [
+          "Satya Nadella earnings call",
+          "Satya Nadella interview Microsoft",
+          "Satya Nadella Build keynote"
+        ],
+        "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+      },
+      "velocity": {
+        "velocity": -0.41379310344827586,
+        "n": 30,
+        "field": "youtube_hit_estimate",
+        "latest": 41.0,
+        "start": 53.0
+      }
+    },
+    "ceo_nvda_huang": {
+      "snapshot": {
+        "player_id": "ceo_nvda_huang",
+        "as_of": "2026-08-06",
+        "window_days": 90,
+        "youtube_hit_estimate": 12,
+        "news_hit_estimate": 13,
+        "method": "seeded_hash",
+        "queries": [
+          "Jensen Huang earnings call",
+          "Jensen Huang GTC keynote"
+        ],
+        "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+      },
+      "velocity": {
+        "velocity": -4.379310344827586,
+        "n": 30,
+        "field": "youtube_hit_estimate",
+        "latest": 12.0,
+        "start": 139.0
+      }
+    },
+    "ceo_pltr_karp": {
+      "snapshot": {
+        "player_id": "ceo_pltr_karp",
+        "as_of": "2026-08-06",
+        "window_days": 90,
+        "youtube_hit_estimate": 173,
+        "news_hit_estimate": 66,
+        "method": "seeded_hash",
+        "queries": [
+          "Alex Karp earnings call",
+          "Alex Karp Davos",
+          "Alex Karp interview Palantir",
+          "Alexander Karp keynote"
+        ],
+        "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+      },
+      "velocity": {
+        "velocity": 1.896551724137931,
+        "n": 30,
+        "field": "youtube_hit_estimate",
+        "latest": 173.0,
+        "start": 118.0
+      }
+    },
+    "ceo_tsla_musk": {
+      "snapshot": {
+        "player_id": "ceo_tsla_musk",
+        "as_of": "2026-08-06",
+        "window_days": 90,
+        "youtube_hit_estimate": 136,
+        "news_hit_estimate": 38,
+        "method": "seeded_hash",
+        "queries": [
+          "Elon Musk earnings call Tesla",
+          "Elon Musk interview",
+          "Elon Musk keynote",
+          "Elon Musk X Spaces"
+        ],
+        "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+      },
+      "velocity": {
+        "velocity": -0.41379310344827586,
+        "n": 30,
+        "field": "youtube_hit_estimate",
+        "latest": 136.0,
+        "start": 148.0
+      }
+    }
+  },
+  "event_study": "data/predictions/timeseries/event_study_T000.json",
+  "feature_store": "data/predictions/timeseries/features.jsonl",
+  "affect_linked": [
+    {
+      "video_id": "iGeXGdYE7UE",
+      "exuberance_mean": 0.2822086059853369,
+      "gated": false,
+      "path": "data/predictions/affect/iGeXGdYE7UE_affect.json"
+    },
+    {
+      "video_id": "sbChYUijRKE",
+      "exuberance_mean": 0.5600406820033469,
+      "gated": false,
+      "path": "data/predictions/affect/sbChYUijRKE_affect.json"
+    },
+    {
+      "video_id": "tLJC8hkK-ao",
+      "exuberance_mean": 0.25999313880260705,
+      "gated": false,
+      "path": "data/predictions/affect/tLJC8hkK-ao_affect.json"
+    }
+  ]
+}

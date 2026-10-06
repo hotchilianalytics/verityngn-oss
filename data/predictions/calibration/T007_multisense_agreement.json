@@ -1,0 +1,45 @@
+{
+  "trial_id": "T007",
+  "label": "interpreted-measured-agreement",
+  "registered": "2026-08-10",
+  "status": "NO_PROMOTE",
+  "note": "Offline proxy calibration. Replace with live Gemini + executive-domain audio before any H1 promote claim. Cross-domain collapse risk remains.",
+  "n_videos": 3,
+  "mean_agreement": 0.9595333333333333,
+  "per_video": [
+    {
+      "video_id": "gallery_demo_a",
+      "n_claims": 3,
+      "n_scored": 3,
+      "mean_interpreted_measured_congruence": 0.9595333333333333,
+      "overall_congruence": 0.6249604013888889,
+      "modality_divergence_rate": 0.0,
+      "multisense_source": "offline_proxy"
+    },
+    {
+      "video_id": "gallery_demo_b",
+      "n_claims": 3,
+      "n_scored": 3,
+      "mean_interpreted_measured_congruence": 0.9595333333333333,
+      "overall_congruence": 0.6249604013888889,
+      "modality_divergence_rate": 0.0,
+      "multisense_source": "offline_proxy"
+    },
+    {
+      "video_id": "gallery_demo_c",
+      "n_claims": 3,
+      "n_scored": 3,
+      "mean_interpreted_measured_congruence": 0.9595333333333333,
+      "overall_congruence": 0.6249604013888889,
+      "modality_divergence_rate": 0.0,
+      "multisense_source": "offline_proxy"
+    }
+  ],
+  "gates": {
+    "promote_requires": [
+      "live_gemini_tier_a",
+      "executive_domain_audio",
+      "ICIR>=0.40 on linked CAR trial"
+    ]
+  }
+}

@@ -1,0 +1,1141 @@
+{
+  "schema_version": "1.0",
+  "video_id": "sbChYUijRKE",
+  "player_id": "gallery_proxy",
+  "summary": [
+    {
+      "time": 0,
+      "keywords": [
+        "fused_multimodal",
+        "congruence",
+        "gallery_proxy"
+      ],
+      "phrases": [
+        "overall_congruence=0.890331299233166"
+      ]
+    }
+  ],
+  "full_index": [
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 0
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 102.0,
+      "object": "claim",
+      "value": 1
+    },
+    {
+      "time": 102.0,
+      "object": "audio",
+      "value": "exuberance=0.2"
+    },
+    {
+      "time": 102.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 102.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 2
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 15.0,
+      "object": "claim",
+      "value": 3
+    },
+    {
+      "time": 15.0,
+      "object": "audio",
+      "value": "exuberance=0.5999097573783811"
+    },
+    {
+      "time": 15.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 15.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 4
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 5
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 6
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 7
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 8
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 1.0,
+      "object": "claim",
+      "value": 9
+    },
+    {
+      "time": 1.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 1.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 1.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 10
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 11
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 12
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 13
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.6000538825132171"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    },
+    {
+      "time": 0.0,
+      "object": "claim",
+      "value": 14
+    },
+    {
+      "time": 0.0,
+      "object": "audio",
+      "value": "exuberance=0.40005388251321716"
+    },
+    {
+      "time": 0.0,
+      "object": "physio",
+      "value": "arousal=0.615"
+    },
+    {
+      "time": 0.0,
+      "object": "face",
+      "value": "cognitive_load=0.729947440004812"
+    }
+  ],
+  "emotional_index": [
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 102.0,
+      "word": "curiosity",
+      "phrase": "sr_anticipation_interest_curiosity",
+      "relevance": 40
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 15.0,
+      "word": "curiosity",
+      "phrase": "sr_anticipation_interest_curiosity",
+      "relevance": 40
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 1.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "contentment",
+      "phrase": "sr_joy_serenity_contentment",
+      "relevance": 84
+    },
+    {
+      "time": 0.0,
+      "word": "reflection",
+      "phrase": "sr_sadness_pensiveness_reflection",
+      "relevance": 80
+    }
+  ],
+  "story_arcs": [
+    {
+      "arc": "Arc 1: sr_anticipation_interest_curiosity",
+      "start_time": 0.0,
+      "end_time": 15.0,
+      "summary": "Fused delivery window [0s\u201315s]; exuberance\u22480.59, arousal\u22480.61, sentiment\u2248-0.07.",
+      "dominant_sr_segments": [
+        {
+          "segment_id": "sr_anticipation_interest_curiosity",
+          "relevance": 40,
+          "closure": [
+            "sr_anticipation_interest_curiosity",
+            "sr_anticipation_interest",
+            "sr_anticipation"
+          ]
+        }
+      ],
+      "claims": [
+        0,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        9,
+        3
+      ],
+      "n_points": 14
+    },
+    {
+      "arc": "Arc 2: sr_anticipation_interest_curiosity",
+      "start_time": 102.0,
+      "end_time": 102.0,
+      "summary": "Fused delivery window [102s\u2013102s]; exuberance\u22480.20, arousal\u22480.61, sentiment\u22480.00.",
+      "dominant_sr_segments": [
+        {
+          "segment_id": "sr_anticipation_interest_curiosity",
+          "relevance": 40,
+          "closure": [
+            "sr_anticipation_interest_curiosity",
+            "sr_anticipation_interest",
+            "sr_anticipation"
+          ]
+        }
+      ],
+      "claims": [
+        1
+      ],
+      "n_points": 1
+    }
+  ],
+  "crossmodal": {
+    "player_id": "gallery_proxy",
+    "baseline": {
+      "player_id": "gallery_proxy",
+      "n_obs": 15,
+      "exuberance_mean": 0.5600406820033469,
+      "exuberance_std": 0.10832890856409082,
+      "arousal_mean": 0.615,
+      "arousal_std": 0.0,
+      "disfluency_mean": 0.00392156862745098,
+      "disfluency_std": 0.014673166222642907
+    },
+    "segments": [
+      {
+        "t_sec": 0.0,
+        "claim_id": 0,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 102.0,
+        "claim_id": 1,
+        "text_voice_divergence": 0.3,
+        "voice_face_divergence": 0.415,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.706,
+        "z_exuberance": -3.3235881979770467,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 2,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 15.0,
+        "claim_id": 3,
+        "text_voice_divergence": 0.09990975737838115,
+        "voice_face_divergence": 0.015090242621618843,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9260045121310809,
+        "z_exuberance": 0.36803726635394324,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 4,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 5,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 6,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 7,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 8,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 1.0,
+        "claim_id": 9,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 10,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 11,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 12,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 13,
+        "text_voice_divergence": 0.10005388251321712,
+        "voice_face_divergence": 0.014946117486782873,
+        "face_text_divergence": 0.11499999999999999,
+        "congruence": 0.9259973058743391,
+        "z_exuberance": 0.3693677065544988,
+        "z_arousal": 0.0,
+        "z_disfluency": -0.2672612419124244,
+        "delivery_risk_band": "low"
+      },
+      {
+        "t_sec": 0.0,
+        "claim_id": 14,
+        "text_voice_divergence": 0.40005388251321716,
+        "voice_face_divergence": 0.21494611748678283,
+        "face_text_divergence": 0.615,
+        "congruence": 0.6109973058743392,
+        "z_exuberance": -1.4768615470308784,
+        "z_arousal": 0.0,
+        "z_disfluency": 3.7416573867739413,
+        "delivery_risk_band": "moderate"
+      }
+    ],
+    "overall_congruence": 0.890331299233166,
+    "overall_delivery_risk_band": "low",
+    "prepared_vs_qa": {
+      "status": "not_computed"
+    },
+    "label": "congruence",
+    "disclaimer": "Congruence / delivery-risk only. Not a lie detector. Per-speaker longitudinal z-scores; not cross-speaker norms."
+  },
+  "modality_contributions": {
+    "audio": 0.3333333333333333,
+    "vision": 0.3333333333333333,
+    "text": 0.3333333333333333,
+    "note": "Coverage-weighted placeholder; replace with SHAP/attention weights when model trained.",
+    "literature_sanity": {
+      "microexpressions_share": 0.35,
+      "pitch_variation_share": 0.28
+    }
+  },
+  "fused_rows": [
+    {
+      "t_sec": 0.0,
+      "claim_id": 0,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 102.0,
+      "claim_id": 1,
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 2,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 15.0,
+      "claim_id": 3,
+      "text_sentiment": 0.0,
+      "exuberance": 0.5999097573783811,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.015864757359962248,
+        "rate_sps": 16.0,
+        "pause_ratio": 0.23685416666666667,
+        "energy_mean": 0.2584206822713216,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 4,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 5,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 6,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 7,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 8,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 1.0,
+      "claim_id": 9,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 10,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 11,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 12,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 13,
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "disfluency_rate": 0.0,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    },
+    {
+      "t_sec": 0.0,
+      "claim_id": 14,
+      "text_sentiment": -1.0,
+      "exuberance": 0.40005388251321716,
+      "disfluency_rate": 0.058823529411764705,
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "object": "fused",
+      "sympathetic_arousal": 0.615,
+      "cognitive_load_proxy": 0.729947440004812,
+      "rppg_consistency": 0.753,
+      "blink_rate_per_min": 18.95,
+      "venues": [
+        "Earnings call"
+      ],
+      "modality_present": {
+        "audio": true,
+        "vision": true,
+        "text": true
+      }
+    }
+  ],
+  "advertising_categories": [],
+  "disclaimer": "Fused multimodal index for markets research. Congruence / conviction / delivery-risk only \u2014 not a lie detector. Not for employment, HR, or education screening (EU AI Act Art. 5(1)(f)).",
+  "not_for_employment_use": true,
+  "fusion_design": {
+    "baseline": "late_fusion",
+    "reference_architecture": "SVC2026 hybrid MLP-Mixer + self-attention cross-modal",
+    "stretch": "ImageBind-style joint embedding"
+  }
+}

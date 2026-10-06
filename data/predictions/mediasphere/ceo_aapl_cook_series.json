@@ -1,0 +1,422 @@
+[
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-08",
+    "window_days": 90,
+    "youtube_hit_estimate": 29,
+    "news_hit_estimate": 16,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-09",
+    "window_days": 90,
+    "youtube_hit_estimate": 161,
+    "news_hit_estimate": 32,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-10",
+    "window_days": 90,
+    "youtube_hit_estimate": 27,
+    "news_hit_estimate": 46,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-11",
+    "window_days": 90,
+    "youtube_hit_estimate": 25,
+    "news_hit_estimate": 47,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-12",
+    "window_days": 90,
+    "youtube_hit_estimate": 78,
+    "news_hit_estimate": 42,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-13",
+    "window_days": 90,
+    "youtube_hit_estimate": 79,
+    "news_hit_estimate": 22,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-14",
+    "window_days": 90,
+    "youtube_hit_estimate": 18,
+    "news_hit_estimate": 19,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-15",
+    "window_days": 90,
+    "youtube_hit_estimate": 91,
+    "news_hit_estimate": 65,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-16",
+    "window_days": 90,
+    "youtube_hit_estimate": 152,
+    "news_hit_estimate": 42,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-17",
+    "window_days": 90,
+    "youtube_hit_estimate": 141,
+    "news_hit_estimate": 29,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-18",
+    "window_days": 90,
+    "youtube_hit_estimate": 74,
+    "news_hit_estimate": 82,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-19",
+    "window_days": 90,
+    "youtube_hit_estimate": 98,
+    "news_hit_estimate": 17,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-20",
+    "window_days": 90,
+    "youtube_hit_estimate": 171,
+    "news_hit_estimate": 14,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-21",
+    "window_days": 90,
+    "youtube_hit_estimate": 110,
+    "news_hit_estimate": 46,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-22",
+    "window_days": 90,
+    "youtube_hit_estimate": 160,
+    "news_hit_estimate": 8,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-23",
+    "window_days": 90,
+    "youtube_hit_estimate": 84,
+    "news_hit_estimate": 72,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-24",
+    "window_days": 90,
+    "youtube_hit_estimate": 108,
+    "news_hit_estimate": 42,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-25",
+    "window_days": 90,
+    "youtube_hit_estimate": 115,
+    "news_hit_estimate": 20,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-26",
+    "window_days": 90,
+    "youtube_hit_estimate": 57,
+    "news_hit_estimate": 22,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-27",
+    "window_days": 90,
+    "youtube_hit_estimate": 17,
+    "news_hit_estimate": 75,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-28",
+    "window_days": 90,
+    "youtube_hit_estimate": 87,
+    "news_hit_estimate": 29,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-29",
+    "window_days": 90,
+    "youtube_hit_estimate": 171,
+    "news_hit_estimate": 22,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-30",
+    "window_days": 90,
+    "youtube_hit_estimate": 99,
+    "news_hit_estimate": 29,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-07-31",
+    "window_days": 90,
+    "youtube_hit_estimate": 114,
+    "news_hit_estimate": 35,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-08-01",
+    "window_days": 90,
+    "youtube_hit_estimate": 168,
+    "news_hit_estimate": 44,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-08-02",
+    "window_days": 90,
+    "youtube_hit_estimate": 148,
+    "news_hit_estimate": 28,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-08-03",
+    "window_days": 90,
+    "youtube_hit_estimate": 97,
+    "news_hit_estimate": 31,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-08-04",
+    "window_days": 90,
+    "youtube_hit_estimate": 153,
+    "news_hit_estimate": 24,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-08-05",
+    "window_days": 90,
+    "youtube_hit_estimate": 173,
+    "news_hit_estimate": 6,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  },
+  {
+    "player_id": "ceo_aapl_cook",
+    "as_of": "2026-08-06",
+    "window_days": 90,
+    "youtube_hit_estimate": 98,
+    "news_hit_estimate": 89,
+    "method": "seeded_hash",
+    "queries": [
+      "Tim Cook earnings call",
+      "Tim Cook interview Apple",
+      "Tim Cook WWDC"
+    ],
+    "notes": "Seeded offline estimates for pilot demos. Replace with yt-dlp/API counts when credentials and rate limits allow."
+  }
+]

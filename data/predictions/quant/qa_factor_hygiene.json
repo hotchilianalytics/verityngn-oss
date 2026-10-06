@@ -1,0 +1,33 @@
+{
+  "factor_hygiene_pass": false,
+  "promote_ready": false,
+  "gates": {
+    "icir_floor": false,
+    "frac_ic_pos": false,
+    "churn_lt_max": false,
+    "neutralization_ok": true,
+    "cost_edge_10bps": true,
+    "cost_edge_20bps": true
+  },
+  "metrics": {
+    "ic_summary": {
+      "n": 0,
+      "mean_ic": null,
+      "std_ic": null,
+      "icir": null,
+      "frac_pos": null
+    },
+    "weekly_jaccard_turnover": 1.0,
+    "resid_icir": 0.0,
+    "q5_q1_ann": null
+  },
+  "notes": "Factor PASS \u2260 portfolio PROMOTE. Never live-demean by sector; never fillna(0) on sparse alt-data; horizon must match rebalance.",
+  "thresholds": {
+    "icir_floor": 0.4,
+    "frac_ic_pos": 0.55,
+    "weekly_jaccard_max": 0.25,
+    "neutralization_ratio": 0.5,
+    "cost_bps_hygiene": 10,
+    "cost_bps_promote": 20
+  }
+}

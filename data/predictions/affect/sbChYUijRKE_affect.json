@@ -1,0 +1,405 @@
+{
+  "video_id": "sbChYUijRKE",
+  "schema_version": "1.0",
+  "authenticity": {
+    "pass": true,
+    "gated": false,
+    "checks": [
+      {
+        "name": "corsound",
+        "status": "stub",
+        "detail": {
+          "source": "vendor:corsound",
+          "construct_type": "interpreted",
+          "status": "stub",
+          "score": 1.0,
+          "audio_path": "/tmp/verityindex_predictions_mvp/fixtures/audio/sbChYUijRKE.wav",
+          "note": "Stub pass; set CORSOUND_API_KEY to enable live checks."
+        }
+      },
+      {
+        "name": "visual_deepfake",
+        "status": "skipped",
+        "required": false
+      },
+      {
+        "name": "c2pa",
+        "status": "skipped",
+        "required": false
+      }
+    ],
+    "notes": "Authenticity gate for sbChYUijRKE: PASS"
+  },
+  "segments": [
+    {
+      "claim_id": 0,
+      "timestamp": "01:24 - 01:33",
+      "timestamp_sec": 0.0,
+      "speaker": "Dave Asprey",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 1,
+      "timestamp": "01:42",
+      "timestamp_sec": 102.0,
+      "speaker": "Dr. Oz",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 2,
+      "timestamp": "03:35 - 03:49",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 3,
+      "timestamp": "00:15",
+      "timestamp_sec": 15.0,
+      "speaker": "Dr. Oz",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.015864757359962248,
+        "rate_sps": 16.0,
+        "pause_ratio": 0.23685416666666667,
+        "energy_mean": 0.2584206822713216,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.5999097573783811,
+      "gated": false
+    },
+    {
+      "claim_id": 4,
+      "timestamp": "00:07 - 00:27",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 5,
+      "timestamp": "01:52 - 01:55",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz, Visual Text",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 6,
+      "timestamp": "02:15 - 02:18",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz, Visual Text",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 7,
+      "timestamp": "02:35 - 02:37",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz, Visual Text",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 8,
+      "timestamp": "03:17 - 03:25",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 9,
+      "timestamp": "00:01",
+      "timestamp_sec": 1.0,
+      "speaker": "Dr. Oz",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 10,
+      "timestamp": "02:22 - 02:24",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz, Visual Text",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 11,
+      "timestamp": "03:10 - 03:12",
+      "timestamp_sec": 0.0,
+      "speaker": "Dr. Oz",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 12,
+      "timestamp": "00:51 - 00:59",
+      "timestamp_sec": 0.0,
+      "speaker": "Dave Asprey",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 13,
+      "timestamp": "02:50 - 02:52",
+      "timestamp_sec": 0.0,
+      "speaker": "Dave Asprey",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000538825132171,
+      "gated": false
+    },
+    {
+      "claim_id": 14,
+      "timestamp": "01:19 - 01:22",
+      "timestamp_sec": 0.0,
+      "speaker": "Dave Asprey",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.016939695295590626,
+        "rate_sps": 17.0,
+        "pause_ratio": 0.235875,
+        "energy_mean": 0.2587934678395589,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 1,
+        "rate": 0.058823529411764705,
+        "markers": [
+          "like"
+        ]
+      },
+      "text_sentiment": -1.0,
+      "exuberance": 0.40005388251321716,
+      "gated": false
+    }
+  ],
+  "summary": {
+    "n_claims": 15,
+    "exuberance_mean": 0.5600406820033469,
+    "disfluency_mean_rate": 0.00392156862745098,
+    "audio_used": true,
+    "gated": false
+  },
+  "disclaimer": "Affect features are research signals for delivery / conviction analysis. They are not emotion diagnoses, clinical assessments, or veracity judgments."
+}

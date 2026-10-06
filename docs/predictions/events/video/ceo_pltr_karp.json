@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "lane": "video",
+  "speaker_id": "ceo_pltr_karp",
+  "ticker": "PLTR",
+  "legacy_catalog": "docs/karp_pre_earnings_videos.json",
+  "events": [
+    {
+      "event_id": "pltr-2024-02-05-QNkPpVYagRc",
+      "event_date": "2024-02-05",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "QNkPpVYagRc",
+      "source_url": "https://www.youtube.com/watch?v=QNkPpVYagRc",
+      "recorded": "2024-01-17",
+      "print_label": null,
+      "outcome_kind": "equity_car",
+      "title": null
+    },
+    {
+      "event_id": "pltr-2026-02-02-dRgPbNJ5RJc",
+      "event_date": "2026-02-02",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "dRgPbNJ5RJc",
+      "source_url": "https://www.youtube.com/watch?v=dRgPbNJ5RJc",
+      "recorded": "2026-01-20",
+      "print_label": null,
+      "outcome_kind": "equity_car",
+      "title": "WEF Annual Meeting 2026"
+    },
+    {
+      "event_id": "pltr-2025-05-05-V7mYWOzdhpc",
+      "event_date": "2025-05-05",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "V7mYWOzdhpc",
+      "source_url": "https://www.youtube.com/watch?v=V7mYWOzdhpc",
+      "recorded": "2025-02-20",
+      "print_label": "Q1'25",
+      "outcome_kind": "equity_car",
+      "title": "Alex Karp talks US software dominance, DOGE, and The Technological Republic | CNBC"
+    },
+    {
+      "event_id": "pltr-2025-11-03-ijRuuaaM6XM",
+      "event_date": "2025-11-03",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "ijRuuaaM6XM",
+      "source_url": "https://www.youtube.com/watch?v=ijRuuaaM6XM",
+      "recorded": "2025-10-28",
+      "print_label": "Q3'25",
+      "outcome_kind": "equity_car",
+      "title": "Alex Karp & Jensen Huang on Palantir NVIDIA partnership | CNBC Power Lunch"
+    },
+    {
+      "event_id": "pltr-2026-05-04-xe84cwQJKaE",
+      "event_date": "2026-05-04",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "xe84cwQJKaE",
+      "source_url": "https://www.youtube.com/watch?v=xe84cwQJKaE",
+      "recorded": "2026-03-12",
+      "print_label": "Q1'26",
+      "outcome_kind": "equity_car",
+      "title": "CNBC Seema Mody sits down with Karp (Iran / AI / workforce)"
+    },
+    {
+      "event_id": "pltr-2026-08-03-WBu9Ai6OX3I",
+      "event_date": "2026-08-03",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "WBu9Ai6OX3I",
+      "source_url": "https://www.youtube.com/watch?v=WBu9Ai6OX3I",
+      "recorded": "2026-06-10",
+      "print_label": "Q2'26",
+      "outcome_kind": "equity_car",
+      "title": "CNBC Sara Eisen interview (Iran conflict, SpaceX, frontier labs)"
+    },
+    {
+      "event_id": "pltr-2026-08-03-pHu-FarYZlU",
+      "event_date": "2026-08-03",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "pHu-FarYZlU",
+      "source_url": "https://www.youtube.com/watch?v=pHu-FarYZlU",
+      "recorded": "2026-07-01",
+      "print_label": "Q2'26",
+      "outcome_kind": "equity_car",
+      "title": "CNBC Squawk Box \u2014 Nvidia deal / token model (full ~19:33)"
+    }
+  ]
+}

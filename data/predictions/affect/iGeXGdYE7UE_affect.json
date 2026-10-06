@@ -1,0 +1,743 @@
+{
+  "video_id": "iGeXGdYE7UE",
+  "schema_version": "1.0",
+  "authenticity": {
+    "pass": true,
+    "gated": false,
+    "checks": [
+      {
+        "name": "corsound",
+        "status": "stub",
+        "detail": {
+          "source": "vendor:corsound",
+          "construct_type": "interpreted",
+          "status": "stub",
+          "score": 1.0,
+          "audio_path": "/tmp/verityindex_predictions_mvp/fixtures/audio/iGeXGdYE7UE.wav",
+          "note": "Stub pass; set CORSOUND_API_KEY to enable live checks."
+        }
+      },
+      {
+        "name": "visual_deepfake",
+        "status": "skipped",
+        "required": false
+      },
+      {
+        "name": "c2pa",
+        "status": "skipped",
+        "required": false
+      }
+    ],
+    "notes": "Authenticity gate for iGeXGdYE7UE: PASS"
+  },
+  "segments": [
+    {
+      "claim_id": 0,
+      "timestamp": "01:21",
+      "timestamp_sec": 81.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.02182130155593144,
+        "rate_sps": 20.333333333333332,
+        "pause_ratio": 0.29352083333333334,
+        "energy_mean": 0.23799738883972169,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 1,
+        "rate": 0.058823529411764705,
+        "markers": [
+          "like"
+        ]
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.5920197184914573,
+      "gated": false
+    },
+    {
+      "claim_id": 1,
+      "timestamp": "05:33",
+      "timestamp_sec": 333.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 2,
+      "timestamp": "11:18",
+      "timestamp_sec": 678.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 3,
+      "timestamp": "01:09",
+      "timestamp_sec": 69.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.018085614055236617,
+        "rate_sps": 17.666666666666668,
+        "pause_ratio": 0.236,
+        "energy_mean": 0.25848456827799476,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.5999409166768015,
+      "gated": false
+    },
+    {
+      "claim_id": 4,
+      "timestamp": "08:46",
+      "timestamp_sec": 526.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 5,
+      "timestamp": "01:03",
+      "timestamp_sec": 63.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.017409303874128458,
+        "rate_sps": 19.666666666666668,
+        "pause_ratio": 0.23625,
+        "energy_mean": 0.2586612218221029,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000092183059856,
+      "gated": false
+    },
+    {
+      "claim_id": 6,
+      "timestamp": "03:16",
+      "timestamp_sec": 196.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 7,
+      "timestamp": "04:35",
+      "timestamp_sec": 275.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 8,
+      "timestamp": "04:45",
+      "timestamp_sec": 285.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 9,
+      "timestamp": "04:57",
+      "timestamp_sec": 297.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 10,
+      "timestamp": "05:45",
+      "timestamp_sec": 345.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 11,
+      "timestamp": "06:19",
+      "timestamp_sec": 379.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 12,
+      "timestamp": "06:41",
+      "timestamp_sec": 401.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 13,
+      "timestamp": "00:05",
+      "timestamp_sec": 5.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.01580251251035531,
+        "rate_sps": 24.333333333333332,
+        "pause_ratio": 0.234625,
+        "energy_mean": 0.2586750310262044,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000145575203368,
+      "gated": false
+    },
+    {
+      "claim_id": 14,
+      "timestamp": "00:08",
+      "timestamp_sec": 8.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.015979793671888544,
+        "rate_sps": 21.666666666666668,
+        "pause_ratio": 0.23497916666666666,
+        "energy_mean": 0.2587580025990804,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000466377915367,
+      "gated": false
+    },
+    {
+      "claim_id": 15,
+      "timestamp": "04:22",
+      "timestamp_sec": 262.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 16,
+      "timestamp": "00:40",
+      "timestamp_sec": 40.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.023226421563666895,
+        "rate_sps": 21.0,
+        "pause_ratio": 0.2927708333333333,
+        "energy_mean": 0.23799430147806802,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.5920185247886539,
+      "gated": false
+    },
+    {
+      "claim_id": 17,
+      "timestamp": "01:45",
+      "timestamp_sec": 105.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 18,
+      "timestamp": "01:51",
+      "timestamp_sec": 111.0,
+      "speaker": "Visual Text",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 19,
+      "timestamp": "01:51",
+      "timestamp_sec": 111.0,
+      "speaker": "Visual Text",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 20,
+      "timestamp": "02:00",
+      "timestamp_sec": 120.0,
+      "speaker": "Visual Text",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 21,
+      "timestamp": "02:03",
+      "timestamp_sec": 123.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 22,
+      "timestamp": "02:13",
+      "timestamp_sec": 133.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 23,
+      "timestamp": "02:44",
+      "timestamp_sec": 164.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 1,
+        "rate": 0.05555555555555555,
+        "markers": [
+          "like"
+        ]
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 24,
+      "timestamp": "02:58",
+      "timestamp_sec": 178.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 25,
+      "timestamp": "07:36",
+      "timestamp_sec": 456.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 26,
+      "timestamp": "11:10",
+      "timestamp_sec": 670.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 27,
+      "timestamp": "08:03",
+      "timestamp_sec": 483.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 28,
+      "timestamp": "08:30",
+      "timestamp_sec": 510.0,
+      "speaker": "Marques Brownlee",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    }
+  ],
+  "summary": {
+    "n_claims": 29,
+    "exuberance_mean": 0.2822086059853369,
+    "disfluency_mean_rate": 0.003944106378183457,
+    "audio_used": true,
+    "gated": false
+  },
+  "disclaimer": "Affect features are research signals for delivery / conviction analysis. They are not emotion diagnoses, clinical assessments, or veracity judgments."
+}

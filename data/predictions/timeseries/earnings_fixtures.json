@@ -1,0 +1,137 @@
+[
+  {
+    "ticker": "AAPL",
+    "event_date": "2025-01-30",
+    "eps_actual": 2.4,
+    "eps_estimate": 2.35,
+    "surprise_pct": 2.13,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "AAPL",
+    "event_date": "2025-05-01",
+    "eps_actual": 1.65,
+    "eps_estimate": 1.62,
+    "surprise_pct": 1.85,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "AAPL",
+    "event_date": "2025-07-31",
+    "eps_actual": 1.57,
+    "eps_estimate": 1.55,
+    "surprise_pct": 1.29,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "MSFT",
+    "event_date": "2025-01-29",
+    "eps_actual": 3.23,
+    "eps_estimate": 3.1,
+    "surprise_pct": 4.19,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "MSFT",
+    "event_date": "2025-04-30",
+    "eps_actual": 3.46,
+    "eps_estimate": 3.35,
+    "surprise_pct": 3.28,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "MSFT",
+    "event_date": "2025-07-30",
+    "eps_actual": 3.65,
+    "eps_estimate": 3.55,
+    "surprise_pct": 2.82,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "NVDA",
+    "event_date": "2025-02-26",
+    "eps_actual": 0.89,
+    "eps_estimate": 0.84,
+    "surprise_pct": 5.95,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "NVDA",
+    "event_date": "2025-05-28",
+    "eps_actual": 0.76,
+    "eps_estimate": 0.74,
+    "surprise_pct": 2.7,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "NVDA",
+    "event_date": "2025-08-27",
+    "eps_actual": 0.95,
+    "eps_estimate": 0.9,
+    "surprise_pct": 5.56,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "PLTR",
+    "event_date": "2025-02-03",
+    "eps_actual": 0.09,
+    "eps_estimate": 0.08,
+    "surprise_pct": 12.5,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "PLTR",
+    "event_date": "2025-05-05",
+    "eps_actual": 0.13,
+    "eps_estimate": 0.11,
+    "surprise_pct": 18.18,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "PLTR",
+    "event_date": "2025-08-04",
+    "eps_actual": 0.16,
+    "eps_estimate": 0.14,
+    "surprise_pct": 14.29,
+    "source": "fixture",
+    "surprise_direction": 1
+  },
+  {
+    "ticker": "TSLA",
+    "event_date": "2025-01-29",
+    "eps_actual": 0.73,
+    "eps_estimate": 0.75,
+    "surprise_pct": -2.67,
+    "source": "fixture",
+    "surprise_direction": -1
+  },
+  {
+    "ticker": "TSLA",
+    "event_date": "2025-04-22",
+    "eps_actual": 0.27,
+    "eps_estimate": 0.43,
+    "surprise_pct": -37.21,
+    "source": "fixture",
+    "surprise_direction": -1
+  },
+  {
+    "ticker": "TSLA",
+    "event_date": "2025-07-23",
+    "eps_actual": 0.4,
+    "eps_estimate": 0.42,
+    "surprise_pct": -4.76,
+    "source": "fixture",
+    "surprise_direction": -1
+  }
+]

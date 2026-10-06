@@ -1,0 +1,1009 @@
+{
+  "video_id": "tLJC8hkK-ao",
+  "schema_version": "1.0",
+  "authenticity": {
+    "pass": true,
+    "gated": false,
+    "checks": [
+      {
+        "name": "corsound",
+        "status": "stub",
+        "detail": {
+          "source": "vendor:corsound",
+          "construct_type": "interpreted",
+          "status": "stub",
+          "score": 1.0,
+          "audio_path": "/tmp/verityindex_predictions_mvp/fixtures/audio/tLJC8hkK-ao.wav",
+          "note": "Stub pass; set CORSOUND_API_KEY to enable live checks."
+        }
+      },
+      {
+        "name": "visual_deepfake",
+        "status": "skipped",
+        "required": false
+      },
+      {
+        "name": "c2pa",
+        "status": "skipped",
+        "required": false
+      }
+    ],
+    "notes": "Authenticity gate for tLJC8hkK-ao: PASS"
+  },
+  "segments": [
+    {
+      "claim_id": 0,
+      "timestamp": "10:07",
+      "timestamp_sec": 607.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 1,
+      "timestamp": "14:48",
+      "timestamp_sec": 888.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 2,
+      "timestamp": "33:23",
+      "timestamp_sec": 2003.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 3,
+      "timestamp": "16:41",
+      "timestamp_sec": 1001.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 4,
+      "timestamp": "14:25",
+      "timestamp_sec": 865.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 5,
+      "timestamp": "09:16",
+      "timestamp_sec": 556.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 6,
+      "timestamp": "36:43",
+      "timestamp_sec": 2203.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 7,
+      "timestamp": "02:12",
+      "timestamp_sec": 132.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 8,
+      "timestamp": "40:28",
+      "timestamp_sec": 2428.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 9,
+      "timestamp": "39:27",
+      "timestamp_sec": 2367.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 10,
+      "timestamp": "12:42",
+      "timestamp_sec": 762.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 11,
+      "timestamp": "16:31",
+      "timestamp_sec": 991.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 12,
+      "timestamp": "12:06",
+      "timestamp_sec": 726.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 13,
+      "timestamp": "41:33",
+      "timestamp_sec": 2493.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 14,
+      "timestamp": "03:36",
+      "timestamp_sec": 216.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 15,
+      "timestamp": "13:08",
+      "timestamp_sec": 788.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 16,
+      "timestamp": "12:52",
+      "timestamp_sec": 772.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 17,
+      "timestamp": "13:53",
+      "timestamp_sec": 833.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 18,
+      "timestamp": "37:08",
+      "timestamp_sec": 2228.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 19,
+      "timestamp": "02:43",
+      "timestamp_sec": 163.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 20,
+      "timestamp": "13:34",
+      "timestamp_sec": 814.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 21,
+      "timestamp": "15:57",
+      "timestamp_sec": 957.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 22,
+      "timestamp": "11:01",
+      "timestamp_sec": 661.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 23,
+      "timestamp": "10:21",
+      "timestamp_sec": 621.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 24,
+      "timestamp": "02:59",
+      "timestamp_sec": 179.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 25,
+      "timestamp": "10:39",
+      "timestamp_sec": 639.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 1,
+        "rate": 0.09090909090909091,
+        "markers": [
+          "like"
+        ]
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 26,
+      "timestamp": "00:32",
+      "timestamp_sec": 32.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.012871571843099857,
+        "rate_sps": 17.333333333333332,
+        "pause_ratio": 0.23708333333333334,
+        "energy_mean": 0.25852234204610186,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 1,
+        "rate": 0.041666666666666664,
+        "markers": [
+          "like"
+        ]
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000194098721255,
+      "gated": false
+    },
+    {
+      "claim_id": 27,
+      "timestamp": "04:06",
+      "timestamp_sec": 246.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 28,
+      "timestamp": "02:08",
+      "timestamp_sec": 128.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 29,
+      "timestamp": "01:03",
+      "timestamp_sec": 63.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.012446094904483807,
+        "rate_sps": 19.333333333333332,
+        "pause_ratio": 0.237875,
+        "energy_mean": 0.25829533449808756,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.599931583184462,
+      "gated": false
+    },
+    {
+      "claim_id": 30,
+      "timestamp": "01:10",
+      "timestamp_sec": 70.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.013455770264465388,
+        "rate_sps": 16.0,
+        "pause_ratio": 0.236,
+        "energy_mean": 0.25800762430826824,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.5998202713219276,
+      "gated": false
+    },
+    {
+      "claim_id": 31,
+      "timestamp": "07:19",
+      "timestamp_sec": 439.0,
+      "speaker": "Kate Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 32,
+      "timestamp": "01:27",
+      "timestamp_sec": 87.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.013260047609977392,
+        "rate_sps": 16.666666666666668,
+        "pause_ratio": 0.23733333333333334,
+        "energy_mean": 0.2586744702657064,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000782665830362,
+      "gated": false
+    },
+    {
+      "claim_id": 33,
+      "timestamp": "00:04",
+      "timestamp_sec": 4.0,
+      "speaker": "Mark Palmer",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.011912350955310956,
+        "rate_sps": 17.333333333333332,
+        "pause_ratio": 0.23470833333333332,
+        "energy_mean": 0.25856918970743814,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.6000375347096295,
+      "gated": false
+    },
+    {
+      "claim_id": 34,
+      "timestamp": "39:13",
+      "timestamp_sec": 2353.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 35,
+      "timestamp": "34:21",
+      "timestamp_sec": 2061.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 36,
+      "timestamp": "46:39",
+      "timestamp_sec": 2799.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 37,
+      "timestamp": "37:00",
+      "timestamp_sec": 2220.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 38,
+      "timestamp": "03:42",
+      "timestamp_sec": 222.0,
+      "speaker": "Dr. Julian Ross",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": NaN,
+        "rate_sps": NaN,
+        "pause_ratio": 1.0,
+        "energy_mean": 0.0,
+        "duration_sec": 0.0
+      },
+      "disfluency": {
+        "count": 1,
+        "rate": 0.05555555555555555,
+        "markers": [
+          "like"
+        ]
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.2,
+      "gated": false
+    },
+    {
+      "claim_id": 39,
+      "timestamp": "00:12",
+      "timestamp_sec": 12.0,
+      "speaker": "Sarah Johnson",
+      "prosody": {
+        "f0_mean": NaN,
+        "f0_std": NaN,
+        "jitter": NaN,
+        "shimmer": 0.01245140169210628,
+        "rate_sps": 17.666666666666668,
+        "pause_ratio": 0.23727083333333332,
+        "energy_mean": 0.2580547053019206,
+        "duration_sec": 3.0
+      },
+      "disfluency": {
+        "count": 0,
+        "rate": 0.0,
+        "markers": []
+      },
+      "text_sentiment": 0.0,
+      "exuberance": 0.5998384864331014,
+      "gated": false
+    }
+  ],
+  "summary": {
+    "n_claims": 40,
+    "exuberance_mean": 0.25999313880260705,
+    "disfluency_mean_rate": 0.004703282828282828,
+    "audio_used": true,
+    "gated": false
+  },
+  "disclaimer": "Affect features are research signals for delivery / conviction analysis. They are not emotion diagnoses, clinical assessments, or veracity judgments."
+}

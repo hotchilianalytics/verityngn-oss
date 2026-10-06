@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "lane": "video",
+  "speaker_id": "ceo_nvda_huang",
+  "ticker": "NVDA",
+  "legacy_catalog": "docs/nvda_pre_earnings_videos.json",
+  "events": [
+    {
+      "event_id": "nvda-2025-05-28-fuq0Ncdsknk",
+      "event_date": "2025-05-28",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "fuq0Ncdsknk",
+      "source_url": "https://www.youtube.com/watch?v=fuq0Ncdsknk",
+      "recorded": "2025-01-06",
+      "print_label": "Q1'FY26",
+      "outcome_kind": "equity_car",
+      "title": "CES 2025 LIVE: NVIDIA CEO Jensen Huang Delivers Opening CES 2025 Keynote"
+    },
+    {
+      "event_id": "nvda-2025-11-19-cP8pfCJTw4Q",
+      "event_date": "2025-11-19",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "cP8pfCJTw4Q",
+      "source_url": "https://www.youtube.com/watch?v=cP8pfCJTw4Q",
+      "recorded": "2025-10-08",
+      "print_label": "Q3'FY26",
+      "outcome_kind": "equity_car",
+      "title": "Nvidia CEO Jensen Huang: Surprised AMD gave away 10% of the company in 'clever' OpenAI deal | Squawk Box"
+    },
+    {
+      "event_id": "nvda-2025-11-19-y2ab3A_pBiY",
+      "event_date": "2025-11-19",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "y2ab3A_pBiY",
+      "source_url": "https://www.youtube.com/watch?v=y2ab3A_pBiY",
+      "recorded": "2025-10-08",
+      "print_label": "Q3'FY26",
+      "outcome_kind": "equity_car",
+      "title": "Nvidia CEO Jensen Huang: Want to be part of almost everything Elon Musk is involved in | Squawk Box"
+    },
+    {
+      "event_id": "nvda-2025-11-19-ijRuuaaM6XM",
+      "event_date": "2025-11-19",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "ijRuuaaM6XM",
+      "source_url": "https://www.youtube.com/watch?v=ijRuuaaM6XM",
+      "recorded": "2025-10-28",
+      "print_label": "Q3'FY26",
+      "outcome_kind": "equity_car",
+      "title": "Alex Karp & Jensen Huang on Palantir NVIDIA partnership | CNBC Power Lunch"
+    },
+    {
+      "event_id": "nvda-2025-11-19-xDjbj_sLy_s",
+      "event_date": "2025-11-19",
+      "kind": "earnings",
+      "window": "pre",
+      "source_id": "xDjbj_sLy_s",
+      "source_url": "https://www.youtube.com/watch?v=xDjbj_sLy_s",
+      "recorded": "2025-10-28",
+      "print_label": "Q3'FY26",
+      "outcome_kind": "equity_car",
+      "title": "Nvidia CEO Jensen Huang keynote at GTC conference in Washington \u2014 10/28/25"
+    }
+  ]
+}

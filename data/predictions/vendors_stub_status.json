@@ -1,0 +1,43 @@
+{
+  "millionways": {
+    "source": "vendor:millionways",
+    "construct_type": "interpreted",
+    "vectors": {
+      "valence": 0.0,
+      "arousal": 0.0,
+      "dominance": 0.0
+    },
+    "raw": {
+      "status": "stub",
+      "audio_path": "stub.wav",
+      "note": "Set MILLIONWAYS_API_KEY to enable"
+    },
+    "error": null
+  },
+  "corsound": {
+    "source": "vendor:corsound",
+    "construct_type": "interpreted",
+    "status": "stub",
+    "score": 1.0,
+    "audio_path": "stub.wav",
+    "note": "Stub pass; set CORSOUND_API_KEY to enable live checks."
+  },
+  "nemesysco": {
+    "source": "vendor:nemesysco_lva",
+    "construct_type": "interpreted",
+    "status": "stub",
+    "note": "Licensed LVA construct; not enabled. Do not treat as veracity.",
+    "input_keys": [
+      "audio"
+    ]
+  },
+  "revealense": {
+    "source": "vendor:revealense_illuminator",
+    "construct_type": "interpreted",
+    "status": "stub",
+    "note": "Licensed Illuminator construct; not enabled.",
+    "input_keys": [
+      "video"
+    ]
+  }
+}

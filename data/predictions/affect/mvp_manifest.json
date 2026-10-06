@@ -1,0 +1,44 @@
+[
+  {
+    "video_id": "iGeXGdYE7UE",
+    "report": "/Users/ajjc/proj/commercial/verityngn-core-commercial/outputs_debug/iGeXGdYE7UE/2026-03-16_16-07-37_complete/iGeXGdYE7UE_report.json",
+    "affect": "/tmp/verityindex_predictions_mvp/affect/iGeXGdYE7UE_affect.json",
+    "deception_risk": "/tmp/verityindex_predictions_mvp/affect/iGeXGdYE7UE_deception_risk.json",
+    "audio": "/tmp/verityindex_predictions_mvp/fixtures/audio/iGeXGdYE7UE.wav",
+    "summary": {
+      "n_claims": 29,
+      "exuberance_mean": 0.2822086059853369,
+      "disfluency_mean_rate": 0.003944106378183457,
+      "audio_used": true,
+      "gated": false
+    }
+  },
+  {
+    "video_id": "tLJC8hkK-ao",
+    "report": "/Users/ajjc/proj/commercial/verityngn-core-commercial/outputs_debug/tLJC8hkK-ao/2026-02-22_21-44-37_complete/tLJC8hkK-ao_report.json",
+    "affect": "/tmp/verityindex_predictions_mvp/affect/tLJC8hkK-ao_affect.json",
+    "deception_risk": "/tmp/verityindex_predictions_mvp/affect/tLJC8hkK-ao_deception_risk.json",
+    "audio": "/tmp/verityindex_predictions_mvp/fixtures/audio/tLJC8hkK-ao.wav",
+    "summary": {
+      "n_claims": 40,
+      "exuberance_mean": 0.25999313880260705,
+      "disfluency_mean_rate": 0.004703282828282828,
+      "audio_used": true,
+      "gated": false
+    }
+  },
+  {
+    "video_id": "sbChYUijRKE",
+    "report": "/Users/ajjc/proj/commercial/verityngn-core-commercial/outputs_debug/sbChYUijRKE/2026-02-18_20-45-49_complete/sbChYUijRKE_report.json",
+    "affect": "/tmp/verityindex_predictions_mvp/affect/sbChYUijRKE_affect.json",
+    "deception_risk": "/tmp/verityindex_predictions_mvp/affect/sbChYUijRKE_deception_risk.json",
+    "audio": "/tmp/verityindex_predictions_mvp/fixtures/audio/sbChYUijRKE.wav",
+    "summary": {
+      "n_claims": 15,
+      "exuberance_mean": 0.5600406820033469,
+      "disfluency_mean_rate": 0.00392156862745098,
+      "audio_used": true,
+      "gated": false
+    }
+  }
+]

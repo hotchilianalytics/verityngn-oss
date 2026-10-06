@@ -36,11 +36,23 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0"]
+dev = ["pytest>=8.0.0", "pandas>=2.0.0"]
 deep = ["google-genai>=1.0.0"]
 vision = ["mediapipe==0.10.18", "opencv-python-headless>=4.8.0"]
+# Face/AU adapters beyond MediaPipe (install separately as needed: pyfeat, openface)
+vision-face = ["verityngn[vision]", "opencv-contrib-python==4.10.0.84"]
 audio = ["librosa>=0.10.0", "soundfile>=0.12.0", "numpy>=1.24.0"]
-all = ["verityngn[deep,vision,audio]"]
+# CEO / RiskFactor research sleeve (optional heavy ASR/VAD left commented in docs)
+affect = ["verityngn[audio]", "librosa>=0.10.0", "soundfile>=0.12.0"]
+predictions = [
+    "verityngn[vision,audio,affect]",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "yfinance>=0.2.40",
+]
+# Optional heavy stack (not pulled by predictions extra):
+#   pip install torch transformers faster-whisper opensmile
+all = ["verityngn[deep,vision,audio,predictions]"]
 
 [project.scripts]
 verityngn = "verityngn.cli:main"
@@ -59,6 +71,7 @@ verityngn = [
     "config/*.yaml",
     "config/*.json",
     "services/deepresearch/prompts/*.md",
+    "services/players/data/*.json",
 ]
 
 [tool.pytest.ini_options]

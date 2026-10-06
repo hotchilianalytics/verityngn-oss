@@ -1,0 +1,23 @@
+[
+  {
+    "video_id": "iGeXGdYE7UE",
+    "vision": "/tmp/verity_fusion_mvp2/vision/iGeXGdYE7UE_vision.json",
+    "fusion": "/tmp/verity_fusion_mvp2/fusion/iGeXGdYE7UE_fused.json",
+    "n_arcs": 4,
+    "congruence": 0.7329447421145262
+  },
+  {
+    "video_id": "sbChYUijRKE",
+    "vision": "/tmp/verity_fusion_mvp2/vision/sbChYUijRKE_vision.json",
+    "fusion": "/tmp/verity_fusion_mvp2/fusion/sbChYUijRKE_fused.json",
+    "n_arcs": 2,
+    "congruence": 0.890331299233166
+  },
+  {
+    "video_id": "tLJC8hkK-ao",
+    "vision": "/tmp/verity_fusion_mvp2/vision/tLJC8hkK-ao_vision.json",
+    "fusion": "/tmp/verity_fusion_mvp2/fusion/tLJC8hkK-ao_fused.json",
+    "n_arcs": 4,
+    "congruence": 0.7186003430598696
+  }
+]

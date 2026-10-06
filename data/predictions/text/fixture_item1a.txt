@@ -1,0 +1,4 @@
+Item 1A. Risk Factors.
+We face geopolitical and regulatory risk including export controls and tariffs.
+Climate-related transition risk and carbon emissions regulation may increase costs.
+Artificial intelligence, generative AI and GPU supply concentration create model risk.

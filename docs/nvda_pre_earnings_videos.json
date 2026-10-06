@@ -1,0 +1,94 @@
+{
+  "player_id": "ceo_nvda_huang",
+  "ticker": "NVDA",
+  "notes": "Pre-print interviews only for event-study rows. Post-print victory laps (e.g. 2026-05-20 Maria Bartiromo / Sara Eisen clips after Q1 FY27) go in excluded_on_or_post_print. Mirrors docs/karp_pre_earnings_videos.json. Trial T011 registered before any multi-CEO CAR peek. NO_PROMOTE.",
+  "nvda_prints": [
+    {"event_date": "2025-05-28", "label": "Q1'FY26"},
+    {"event_date": "2025-08-27", "label": "Q2'FY26"},
+    {"event_date": "2025-11-19", "label": "Q3'FY26"},
+    {"event_date": "2026-02-25", "label": "Q4'FY26"},
+    {"event_date": "2026-05-20", "label": "Q1'FY27"}
+  ],
+  "existing_corpus": [],
+  "run_five": [
+    {
+      "video_id": "fuq0Ncdsknk",
+      "recorded": "2025-01-06",
+      "window": "pre",
+      "next_print": "2025-05-28",
+      "print_label": "Q1'FY26",
+      "title": "CES 2025 LIVE: NVIDIA CEO Jensen Huang Delivers Opening CES 2025 Keynote",
+      "venue": "CES",
+      "source": "https://www.youtube.com/watch?v=fuq0Ncdsknk"
+    },
+    {
+      "video_id": "cP8pfCJTw4Q",
+      "recorded": "2025-10-08",
+      "window": "pre",
+      "next_print": "2025-11-19",
+      "print_label": "Q3'FY26",
+      "title": "Nvidia CEO Jensen Huang: Surprised AMD gave away 10% of the company in 'clever' OpenAI deal | Squawk Box",
+      "venue": "CNBC Squawk Box",
+      "source": "https://www.youtube.com/watch?v=cP8pfCJTw4Q",
+      "note": "Clip from 2025-10-08 Squawk Box appearance; full interview also on cnbc.com"
+    },
+    {
+      "video_id": "y2ab3A_pBiY",
+      "recorded": "2025-10-08",
+      "window": "pre",
+      "next_print": "2025-11-19",
+      "print_label": "Q3'FY26",
+      "title": "Nvidia CEO Jensen Huang: Want to be part of almost everything Elon Musk is involved in | Squawk Box",
+      "venue": "CNBC Squawk Box",
+      "source": "https://www.youtube.com/watch?v=y2ab3A_pBiY",
+      "note": "Same Squawk Box day as cP8pfCJTw4Q — two clips, one print (n_events < n_videos)"
+    },
+    {
+      "video_id": "ijRuuaaM6XM",
+      "recorded": "2025-10-28",
+      "window": "pre",
+      "next_print": "2025-11-19",
+      "print_label": "Q3'FY26",
+      "title": "Alex Karp & Jensen Huang on Palantir NVIDIA partnership | CNBC Power Lunch",
+      "venue": "CNBC Power Lunch",
+      "source": "https://www.youtube.com/watch?v=ijRuuaaM6XM",
+      "note": "Shared with Karp catalog; Huang is co-speaker — treat as Huang venue for this player"
+    },
+    {
+      "video_id": "xDjbj_sLy_s",
+      "recorded": "2025-10-28",
+      "window": "pre",
+      "next_print": "2025-11-19",
+      "print_label": "Q3'FY26",
+      "title": "Nvidia CEO Jensen Huang keynote at GTC conference in Washington — 10/28/25",
+      "venue": "GTC Washington",
+      "source": "https://www.youtube.com/watch?v=xDjbj_sLy_s"
+    }
+  ],
+  "excluded_on_or_post_print": [
+    {
+      "video_id": "gXUGGZU9bSM",
+      "recorded": "2026-05-20",
+      "window": "post",
+      "print": "2026-05-20",
+      "title": "CHINA GAMBLE: Jensen Huang tells investors to expect nothing | Mornings with Maria",
+      "reason": "Same-day / post Q1 FY27 print — victory-lap exclusion"
+    },
+    {
+      "video_id": "3ofWIJ2ScjQ",
+      "recorded": "2026-05-20",
+      "window": "post",
+      "print": "2026-05-20",
+      "title": "Nvidia CEO Jensen Huang says stock's underperformance is 'one of the mysteries of the universe'",
+      "reason": "Post-print clip"
+    },
+    {
+      "video_id": "E2bU6n7F9hM",
+      "recorded": "2025-11-19",
+      "window": "on",
+      "print": "2025-11-19",
+      "title": "Tesla's Elon Musk and Nvidia's Jensen Huang talk AI at U.S.-Saudi Investment Forum — 11/19/25",
+      "reason": "On-print-day forum; exclude from pre-print CAR join"
+    }
+  ]
+}

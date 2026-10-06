@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0",
+  "lane": "fomc",
+  "speaker_id": "fed_chair_powell",
+  "ticker": "",
+  "notes": "Methods validator: single speaker, free HD video, 8 meetings/yr. Outcomes = ZF=F / SPY H=1 via outcomes.fomc_outcomes. Trial must be registered before peeking. NO_PROMOTE.",
+  "events": [
+    {
+      "event_id": "fomc-2025-01-29",
+      "event_date": "2025-01-29",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2025-03-19",
+      "event_date": "2025-03-19",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2025-05-07",
+      "event_date": "2025-05-07",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2025-06-18",
+      "event_date": "2025-06-18",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2025-07-30",
+      "event_date": "2025-07-30",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2025-09-17",
+      "event_date": "2025-09-17",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2025-11-05",
+      "event_date": "2025-11-05",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2025-12-10",
+      "event_date": "2025-12-10",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2026-01-28",
+      "event_date": "2026-01-28",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2026-03-18",
+      "event_date": "2026-03-18",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2026-05-06",
+      "event_date": "2026-05-06",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2026-06-17",
+      "event_date": "2026-06-17",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    },
+    {
+      "event_id": "fomc-2026-07-29",
+      "event_date": "2026-07-29",
+      "kind": "fomc_presser",
+      "outcome_kind": "fomc_rates"
+    }
+  ]
+}

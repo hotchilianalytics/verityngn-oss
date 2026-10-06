@@ -1,0 +1,957 @@
+{
+  "video_id": "iGeXGdYE7UE",
+  "schema_version": "1.0",
+  "authenticity": {
+    "pass": true,
+    "gated": false,
+    "checks": [
+      {
+        "name": "corsound",
+        "status": "skipped",
+        "required": false
+      },
+      {
+        "name": "visual_deepfake",
+        "status": "skipped",
+        "required": false
+      },
+      {
+        "name": "c2pa",
+        "status": "skipped",
+        "required": false
+      },
+      {
+        "name": "rppg_consistency",
+        "status": "pass",
+        "detail": {
+          "source": "open:rppg_consistency",
+          "construct_type": "measured",
+          "status": "pass",
+          "score": 0.759,
+          "threshold": 0.45,
+          "heart_rate_bpm": 67.6,
+          "note": "Low spatial rPPG consistency is a deepfake tell; fail \u2192 gate affect/vision."
+        }
+      }
+    ],
+    "notes": "Authenticity gate for iGeXGdYE7UE: PASS"
+  },
+  "landmarks": {
+    "video_id": "iGeXGdYE7UE",
+    "fps": 5.0,
+    "backend": "synthetic",
+    "gated": false,
+    "not_for_employment_use": true,
+    "n_frames": 900,
+    "frames": [
+      {
+        "t_sec": 0.0,
+        "n_points": 68,
+        "bbox": [
+          0.36536399999999997,
+          0.230552,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8750399999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 0.2,
+        "n_points": 68,
+        "bbox": [
+          0.33638399999999996,
+          0.263788,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8641599999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 0.4,
+        "n_points": 68,
+        "bbox": [
+          0.353728,
+          0.250808,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.85015,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 0.6,
+        "n_points": 68,
+        "bbox": [
+          0.369656,
+          0.251788,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.89798,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 0.8,
+        "n_points": 68,
+        "bbox": [
+          0.359724,
+          0.242824,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.93617,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 1.0,
+        "n_points": 68,
+        "bbox": [
+          0.35774,
+          0.23834,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.93013,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 1.2,
+        "n_points": 68,
+        "bbox": [
+          0.332072,
+          0.244416,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.92585,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 1.4,
+        "n_points": 68,
+        "bbox": [
+          0.367508,
+          0.238492,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8892599999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 1.6,
+        "n_points": 68,
+        "bbox": [
+          0.34942399999999996,
+          0.240816,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.89022,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 1.8,
+        "n_points": 68,
+        "bbox": [
+          0.355936,
+          0.259476,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.9112199999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 2.0,
+        "n_points": 68,
+        "bbox": [
+          0.349892,
+          0.260692,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.88022,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 2.2,
+        "n_points": 68,
+        "bbox": [
+          0.358772,
+          0.253388,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.85778,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 2.4,
+        "n_points": 68,
+        "bbox": [
+          0.34058,
+          0.237416,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.85924,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 2.6,
+        "n_points": 68,
+        "bbox": [
+          0.3696,
+          0.238712,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.89354,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 2.8,
+        "n_points": 68,
+        "bbox": [
+          0.33481999999999995,
+          0.235384,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.85726,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 3.0,
+        "n_points": 68,
+        "bbox": [
+          0.33593999999999996,
+          0.243696,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.89755,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 3.2,
+        "n_points": 68,
+        "bbox": [
+          0.36935999999999997,
+          0.243032,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.9219499999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 3.4,
+        "n_points": 68,
+        "bbox": [
+          0.3363,
+          0.253076,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.92869,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 3.6,
+        "n_points": 68,
+        "bbox": [
+          0.33704399999999995,
+          0.254276,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.87503,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 3.8,
+        "n_points": 68,
+        "bbox": [
+          0.36847599999999997,
+          0.264168,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8673299999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 4.0,
+        "n_points": 68,
+        "bbox": [
+          0.342632,
+          0.237164,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8839699999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 4.2,
+        "n_points": 68,
+        "bbox": [
+          0.33154399999999995,
+          0.26078,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8617699999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 4.4,
+        "n_points": 68,
+        "bbox": [
+          0.335248,
+          0.261852,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.86778,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 4.6,
+        "n_points": 68,
+        "bbox": [
+          0.35397199999999995,
+          0.248068,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.86271,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 4.8,
+        "n_points": 68,
+        "bbox": [
+          0.362336,
+          0.263664,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.92352,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 5.0,
+        "n_points": 68,
+        "bbox": [
+          0.36446,
+          0.231732,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.88735,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 5.2,
+        "n_points": 68,
+        "bbox": [
+          0.34121599999999996,
+          0.245432,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8513499999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 5.4,
+        "n_points": 68,
+        "bbox": [
+          0.33671199999999996,
+          0.248284,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.85431,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 5.6,
+        "n_points": 68,
+        "bbox": [
+          0.356048,
+          0.24038,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.8559599999999999,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 5.8,
+        "n_points": 68,
+        "bbox": [
+          0.34158,
+          0.233504,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.92069,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 6.0,
+        "n_points": 68,
+        "bbox": [
+          0.34120399999999995,
+          0.254116,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.90289,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 6.2,
+        "n_points": 68,
+        "bbox": [
+          0.351956,
+          0.23602,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.89633,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 6.4,
+        "n_points": 68,
+        "bbox": [
+          0.339144,
+          0.261536,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.939,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 6.6,
+        "n_points": 68,
+        "bbox": [
+          0.34049999999999997,
+          0.257016,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.91411,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 6.8,
+        "n_points": 68,
+        "bbox": [
+          0.342336,
+          0.253012,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.91381,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 7.0,
+        "n_points": 68,
+        "bbox": [
+          0.33582799999999996,
+          0.235636,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.94652,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 7.2,
+        "n_points": 68,
+        "bbox": [
+          0.332636,
+          0.242576,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.94602,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 7.4,
+        "n_points": 68,
+        "bbox": [
+          0.35653999999999997,
+          0.26954,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.92219,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 7.6,
+        "n_points": 68,
+        "bbox": [
+          0.33288399999999996,
+          0.240384,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.85076,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 7.8,
+        "n_points": 68,
+        "bbox": [
+          0.35304399999999997,
+          0.23918,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.87602,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 8.0,
+        "n_points": 68,
+        "bbox": [
+          0.36713199999999996,
+          0.258268,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.93874,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 8.2,
+        "n_points": 68,
+        "bbox": [
+          0.33405199999999996,
+          0.233936,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.86815,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 8.4,
+        "n_points": 68,
+        "bbox": [
+          0.35337599999999997,
+          0.25778,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.92874,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 8.6,
+        "n_points": 68,
+        "bbox": [
+          0.335732,
+          0.266888,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.90737,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 8.8,
+        "n_points": 68,
+        "bbox": [
+          0.335792,
+          0.248476,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.92975,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 9.0,
+        "n_points": 68,
+        "bbox": [
+          0.34410799999999997,
+          0.240188,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.88378,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 9.2,
+        "n_points": 68,
+        "bbox": [
+          0.338972,
+          0.268436,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.94284,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 9.4,
+        "n_points": 68,
+        "bbox": [
+          0.345504,
+          0.245896,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.93031,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 9.6,
+        "n_points": 68,
+        "bbox": [
+          0.344024,
+          0.26316,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.94377,
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 9.8,
+        "n_points": 68,
+        "bbox": [
+          0.33753999999999995,
+          0.231108,
+          0.3,
+          0.4
+        ],
+        "confidence": 0.94434,
+        "source": "synthetic"
+      }
+    ],
+    "frames_truncated": true
+  },
+  "action_units": {
+    "video_id": "iGeXGdYE7UE",
+    "backend": "synthetic",
+    "gated": false,
+    "not_for_employment_use": true,
+    "au_f1_benchmark_note": "OpenFace 3.0 MTL AU F1 ~0.60 on DISFA \u2014 not clinical grade",
+    "mean_intensities": {
+      "AU01": 0.5005392222222222,
+      "AU02": 0.5069022222222223,
+      "AU04": 0.5063378888888889,
+      "AU05": 0.5034077777777778,
+      "AU06": 0.5003693333333333,
+      "AU07": 0.49846533333333337,
+      "AU12": 0.49892966666666666,
+      "AU15": 0.5174537777777778,
+      "AU17": 0.48968988888888887,
+      "AU20": 0.5059232222222222,
+      "AU23": 0.5031328888888889,
+      "AU25": 0.5049494444444445,
+      "AU26": 0.49765966666666667,
+      "AU45": 0.6023638888888889
+    },
+    "n_frames": 900,
+    "frames_sample": [
+      {
+        "t_sec": 0.0,
+        "intensities": {
+          "AU01": 0.8426,
+          "AU02": 0.7361,
+          "AU04": 0.6254,
+          "AU05": 0.3854,
+          "AU06": 0.8194,
+          "AU07": 0.5942,
+          "AU12": 0.8378,
+          "AU15": 0.1124,
+          "AU17": 0.6058,
+          "AU20": 0.5321,
+          "AU23": 0.6158,
+          "AU25": 0.7591,
+          "AU26": 0.7042,
+          "AU45": 2.8926
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 18.0,
+        "intensities": {
+          "AU01": 0.7839,
+          "AU02": 0.6574,
+          "AU04": 0.7183,
+          "AU05": 0.8737,
+          "AU06": 0.4671,
+          "AU07": 0.1086,
+          "AU12": 0.8858,
+          "AU15": 0.3826,
+          "AU17": 0.5232,
+          "AU20": 0.7716,
+          "AU23": 0.8394,
+          "AU25": 0.1617,
+          "AU26": 0.8569,
+          "AU45": 0.897
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 36.0,
+        "intensities": {
+          "AU01": 0.4363,
+          "AU02": 0.1207,
+          "AU04": 0.3961,
+          "AU05": 0.7352,
+          "AU06": 0.6463,
+          "AU07": 0.4809,
+          "AU12": 0.8752,
+          "AU15": 0.342,
+          "AU17": 0.4716,
+          "AU20": 0.5527,
+          "AU23": 0.185,
+          "AU25": 0.7053,
+          "AU26": 0.4068,
+          "AU45": 0.3203
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 54.0,
+        "intensities": {
+          "AU01": 0.4042,
+          "AU02": 0.7026,
+          "AU04": 0.6403,
+          "AU05": 0.6843,
+          "AU06": 0.7846,
+          "AU07": 0.248,
+          "AU12": 0.5222,
+          "AU15": 0.2579,
+          "AU17": 0.1502,
+          "AU20": 0.3563,
+          "AU23": 0.2345,
+          "AU25": 0.2898,
+          "AU26": 0.7311,
+          "AU45": 0.2397
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 72.0,
+        "intensities": {
+          "AU01": 0.803,
+          "AU02": 0.382,
+          "AU04": 0.6978,
+          "AU05": 0.407,
+          "AU06": 0.5326,
+          "AU07": 0.4345,
+          "AU12": 0.1021,
+          "AU15": 0.889,
+          "AU17": 0.3742,
+          "AU20": 0.3072,
+          "AU23": 0.857,
+          "AU25": 0.74,
+          "AU26": 0.5099,
+          "AU45": 0.3914
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 90.0,
+        "intensities": {
+          "AU01": 0.2851,
+          "AU02": 0.4333,
+          "AU04": 0.4257,
+          "AU05": 0.7562,
+          "AU06": 0.494,
+          "AU07": 0.694,
+          "AU12": 0.1548,
+          "AU15": 0.873,
+          "AU17": 0.2444,
+          "AU20": 0.7445,
+          "AU23": 0.5658,
+          "AU25": 0.7509,
+          "AU26": 0.367,
+          "AU45": 2.9747
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 108.0,
+        "intensities": {
+          "AU01": 0.6268,
+          "AU02": 0.7141,
+          "AU04": 0.397,
+          "AU05": 0.8383,
+          "AU06": 0.3449,
+          "AU07": 0.5431,
+          "AU12": 0.5686,
+          "AU15": 0.1963,
+          "AU17": 0.6605,
+          "AU20": 0.7812,
+          "AU23": 0.461,
+          "AU25": 0.7406,
+          "AU26": 0.4932,
+          "AU45": 0.8112
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 126.0,
+        "intensities": {
+          "AU01": 0.323,
+          "AU02": 0.7206,
+          "AU04": 0.89,
+          "AU05": 0.3214,
+          "AU06": 0.5266,
+          "AU07": 0.5427,
+          "AU12": 0.7499,
+          "AU15": 0.5596,
+          "AU17": 0.8878,
+          "AU20": 0.3764,
+          "AU23": 0.5539,
+          "AU25": 0.859,
+          "AU26": 0.825,
+          "AU45": 0.6762
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 144.0,
+        "intensities": {
+          "AU01": 0.137,
+          "AU02": 0.3787,
+          "AU04": 0.8702,
+          "AU05": 0.6926,
+          "AU06": 0.8314,
+          "AU07": 0.5246,
+          "AU12": 0.4914,
+          "AU15": 0.8258,
+          "AU17": 0.2774,
+          "AU20": 0.7751,
+          "AU23": 0.4802,
+          "AU25": 0.8485,
+          "AU26": 0.5454,
+          "AU45": 0.1886
+        },
+        "source": "synthetic"
+      },
+      {
+        "t_sec": 162.0,
+        "intensities": {
+          "AU01": 0.2964,
+          "AU02": 0.7326,
+          "AU04": 0.3077,
+          "AU05": 0.5978,
+          "AU06": 0.5054,
+          "AU07": 0.3788,
+          "AU12": 0.106,
+          "AU15": 0.4934,
+          "AU17": 0.1444,
+          "AU20": 0.3486,
+          "AU23": 0.716,
+          "AU25": 0.8107,
+          "AU26": 0.6787,
+          "AU45": 0.8413
+        },
+        "source": "synthetic"
+      }
+    ]
+  },
+  "gaze_blink": {
+    "video_id": "iGeXGdYE7UE",
+    "blink_rate_per_min": 19.4,
+    "blink_amplitude_mean": 0.566,
+    "blink_amplitude_std": 0.193,
+    "fixation_count": 147.4,
+    "gaze_yaw_mean": 8.5,
+    "gaze_pitch_mean": 3.5,
+    "gaze_aversion_ratio": 0.381,
+    "backend": "synthetic",
+    "validity_note": "Blink amplitude/rate are cognitive-load / anxiety proxies. Gaze aversion does not predict veracity \u2014 never use as a lie signal.",
+    "gated": false,
+    "not_for_employment_use": true
+  },
+  "spectral": {
+    "video_id": "iGeXGdYE7UE",
+    "heart_rate_bpm": 67.6,
+    "hrv_sdnn_ms": 41.5,
+    "sympathetic_arousal": 0.646,
+    "rppg_consistency": 0.759,
+    "method": "synthetic_chrom",
+    "backend": "synthetic",
+    "gated": false,
+    "not_for_employment_use": true,
+    "notes": "Sympathetic arousal is a separate channel from rPPG HR. rppg_consistency feeds authenticity gate (deepfake tell)."
+  },
+  "ocr_geo": {
+    "video_id": "iGeXGdYE7UE",
+    "on_screen_text": [
+      {
+        "t_sec": 5.0,
+        "text": "Q3 FY2025 Earnings",
+        "kind": "chyron"
+      },
+      {
+        "t_sec": 12.0,
+        "text": "Revenue +12% YoY",
+        "kind": "slide"
+      }
+    ],
+    "venues": [
+      "Earnings call"
+    ],
+    "geo_hints": [],
+    "backend": "synthetic",
+    "gated": false,
+    "not_for_employment_use": true
+  },
+  "summary": {
+    "gated": false,
+    "cognitive_load_proxy": 0.6575406259200409,
+    "sympathetic_arousal": 0.646,
+    "rppg_consistency": 0.759,
+    "mean_au": {
+      "AU01": 0.5005392222222222,
+      "AU02": 0.5069022222222223,
+      "AU04": 0.5063378888888889,
+      "AU05": 0.5034077777777778,
+      "AU06": 0.5003693333333333,
+      "AU07": 0.49846533333333337,
+      "AU12": 0.49892966666666666,
+      "AU15": 0.5174537777777778,
+      "AU17": 0.48968988888888887,
+      "AU20": 0.5059232222222222,
+      "AU23": 0.5031328888888889,
+      "AU25": 0.5049494444444445,
+      "AU26": 0.49765966666666667,
+      "AU45": 0.6023638888888889
+    },
+    "venues": [
+      "Earnings call"
+    ],
+    "backend": {
+      "landmarks": "synthetic",
+      "action_units": "synthetic",
+      "gaze_blink": "synthetic",
+      "spectral": "synthetic"
+    }
+  },
+  "disclaimer": "Vision/affect features are for markets research only. Not for employment, HR, or education screening (EU AI Act Art. 5(1)(f) workplace/education prohibition).",
+  "not_for_employment_use": true
+}

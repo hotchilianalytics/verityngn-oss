@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.1",
+  "players": [
+    {
+      "player_id": "ceo_aapl_cook",
+      "name": "Tim Cook",
+      "role": "CEO",
+      "company": "Apple Inc.",
+      "ticker": "AAPL",
+      "aliases": [
+        "Timothy Cook",
+        "Tim D. Cook"
+      ],
+      "search_queries": [
+        "Tim Cook earnings call",
+        "Tim Cook interview Apple",
+        "Tim Cook WWDC"
+      ],
+      "pilot": true,
+      "entities": [
+        {
+          "name": "Apple Inc.",
+          "kind": "public_company",
+          "ticker": "AAPL",
+          "tradable": true
+        }
+      ],
+      "baseline_video_ids": []
+    },
+    {
+      "player_id": "ceo_msft_nadella",
+      "name": "Satya Nadella",
+      "role": "CEO",
+      "company": "Microsoft Corp.",
+      "ticker": "MSFT",
+      "aliases": [
+        "Satya Narayana Nadella"
+      ],
+      "search_queries": [
+        "Satya Nadella earnings call",
+        "Satya Nadella interview Microsoft",
+        "Satya Nadella Build keynote"
+      ],
+      "pilot": true,
+      "entities": [
+        {
+          "name": "Microsoft Corp.",
+          "kind": "public_company",
+          "ticker": "MSFT",
+          "tradable": true
+        }
+      ],
+      "baseline_video_ids": []
+    },
+    {
+      "player_id": "ceo_nvda_huang",
+      "name": "Jensen Huang",
+      "role": "CEO",
+      "company": "NVIDIA Corp.",
+      "ticker": "NVDA",
+      "aliases": [
+        "Jen-Hsun Huang",
+        "Jensen Huang NVIDIA"
+      ],
+      "search_queries": [
+        "Jensen Huang earnings call",
+        "Jensen Huang GTC keynote"
+      ],
+      "pilot": true,
+      "entities": [
+        {
+          "name": "NVIDIA Corp.",
+          "kind": "public_company",
+          "ticker": "NVDA",
+          "tradable": true
+        }
+      ],
+      "baseline_video_ids": []
+    },
+    {
+      "player_id": "ceo_pltr_karp",
+      "name": "Alex Karp",
+      "role": "CEO",
+      "company": "Palantir Technologies",
+      "ticker": "PLTR",
+      "aliases": [
+        "Alexander Karp",
+        "Alexander C. Karp"
+      ],
+      "search_queries": [
+        "Alex Karp earnings call",
+        "Alex Karp Davos",
+        "Alex Karp interview Palantir",
+        "Alexander Karp keynote"
+      ],
+      "pilot": true,
+      "entities": [
+        {
+          "name": "Palantir Technologies",
+          "kind": "public_company",
+          "ticker": "PLTR",
+          "tradable": true
+        }
+      ],
+      "baseline_video_ids": []
+    },
+    {
+      "player_id": "ceo_tsla_musk",
+      "name": "Elon Musk",
+      "role": "CEO",
+      "company": "Tesla, Inc.",
+      "ticker": "TSLA",
+      "aliases": [
+        "Elon R. Musk"
+      ],
+      "search_queries": [
+        "Elon Musk earnings call Tesla",
+        "Elon Musk interview",
+        "Elon Musk keynote",
+        "Elon Musk X Spaces"
+      ],
+      "pilot": true,
+      "entities": [
+        {
+          "name": "Tesla, Inc.",
+          "kind": "public_company",
+          "ticker": "TSLA",
+          "tradable": true
+        },
+        {
+          "name": "xAI",
+          "kind": "private_company",
+          "ticker": null,
+          "tradable": false
+        },
+        {
+          "name": "SpaceX",
+          "kind": "private_company",
+          "ticker": null,
+          "tradable": false
+        },
+        {
+          "name": "X",
+          "kind": "platform",
+          "ticker": null,
+          "tradable": false
+        }
+      ],
+      "baseline_video_ids": []
+    },
+    {
+      "player_id": "fed_chair_powell",
+      "speaker_id": "fed_chair_powell",
+      "name": "Jerome Powell",
+      "role": "fed_chair",
+      "company": "Federal Reserve",
+      "ticker": "",
+      "pilot": false,
+      "aliases": [
+        "Jay Powell",
+        "Chair Powell"
+      ],
+      "search_queries": [
+        "FOMC press conference Powell"
+      ],
+      "entities": [
+        {
+          "name": "Federal Reserve",
+          "kind": "public_company",
+          "ticker": null,
+          "tradable": false
+        }
+      ],
+      "baseline_video_ids": []
+    }
+  ]
+}

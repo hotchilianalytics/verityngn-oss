@@ -1,0 +1,416 @@
+{
+  "video_id": "iGeXGdYE7UE",
+  "segments": [
+    {
+      "claim_id": 0,
+      "timestamp_sec": 81.0,
+      "divergence": 0.09201971849145729,
+      "disfluency_rate": 0.058823529411764705,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.24729122626233224,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 1,
+      "timestamp_sec": 333.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 2,
+      "timestamp_sec": 678.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 3,
+      "timestamp_sec": 69.0,
+      "divergence": 0.0999409166768015,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.044973412504560675,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 4,
+      "timestamp_sec": 526.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 5,
+      "timestamp_sec": 63.0,
+      "divergence": 0.10000921830598564,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.04500414823769354,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 6,
+      "timestamp_sec": 196.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 7,
+      "timestamp_sec": 275.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 8,
+      "timestamp_sec": 285.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 9,
+      "timestamp_sec": 297.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 10,
+      "timestamp_sec": 345.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 11,
+      "timestamp_sec": 379.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 12,
+      "timestamp_sec": 401.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 13,
+      "timestamp_sec": 5.0,
+      "divergence": 0.10001455752033683,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.04500655088415158,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 14,
+      "timestamp_sec": 8.0,
+      "divergence": 0.10004663779153666,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.0450209870061915,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 15,
+      "timestamp_sec": 262.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 16,
+      "timestamp_sec": 40.0,
+      "divergence": 0.09201852478865391,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.04140833615489426,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 17,
+      "timestamp_sec": 105.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 18,
+      "timestamp_sec": 111.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 19,
+      "timestamp_sec": 111.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 20,
+      "timestamp_sec": 120.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 21,
+      "timestamp_sec": 123.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 22,
+      "timestamp_sec": 133.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 23,
+      "timestamp_sec": 164.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.05555555555555555,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.32944444444444443,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 24,
+      "timestamp_sec": 178.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 25,
+      "timestamp_sec": 456.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 26,
+      "timestamp_sec": 670.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 27,
+      "timestamp_sec": 483.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    },
+    {
+      "claim_id": 28,
+      "timestamp_sec": 510.0,
+      "divergence": 0.3,
+      "disfluency_rate": 0.0,
+      "jitter_z": 0.0,
+      "deception_risk_score": 0.135,
+      "deception_risk_band": "low",
+      "flags": {
+        "congruence": "aligned",
+        "conviction": "steady",
+        "delivery_risk": "low"
+      }
+    }
+  ],
+  "overall_band": "low",
+  "overall_score": 0.1299361760515265,
+  "vendor_constructs": [],
+  "disclaimer": "deception_risk is a delivery / congruence band derived from measured speech-text features. It is not a lie detector and must not be presented as a finding that a named person is lying.",
+  "label": "deception_risk"
+}

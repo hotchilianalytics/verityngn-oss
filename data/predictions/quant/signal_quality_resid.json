@@ -1,0 +1,196 @@
+{
+  "trial": "T019",
+  "promote": "NO_PROMOTE",
+  "nuisance_leak_raw": {
+    "max_abs": 0.8214,
+    "by_nuisance": {
+      "n_claims": 0.4685,
+      "duration_sec": 0.8214,
+      "n_segments": 0.4685,
+      "days_to_print": 0.2162
+    },
+    "factor_key": "s01_congruence"
+  },
+  "nuisance_leak_resid": {
+    "max_abs": 0.1261,
+    "by_nuisance": {
+      "n_claims": 0.1261,
+      "duration_sec": 0.0714,
+      "n_segments": 0.1261,
+      "days_to_print": -0.0541
+    },
+    "factor_key": "s01_congruence_resid"
+  },
+  "score_raw": {
+    "L": 0.708699,
+    "stop": false,
+    "weights": {
+      "fidelity": 0.3,
+      "nuisance": 0.3,
+      "power": 0.2,
+      "icir": 0.15,
+      "deflation": 0.05
+    },
+    "fidelity": 0.7714,
+    "nuisance_leak": {
+      "max_abs": 0.8214,
+      "by_nuisance": {
+        "n_claims": 0.4685,
+        "duration_sec": 0.8214,
+        "n_segments": 0.4685,
+        "days_to_print": 0.2162
+      },
+      "factor_key": "s01_congruence"
+    },
+    "power": {
+      "n_events": 6,
+      "n_required": 194,
+      "rho_target": 0.2,
+      "power": 0.0309
+    },
+    "icir": null,
+    "icir_norm": 0.0,
+    "deflation": {
+      "dsr": 0.002246,
+      "deflation_gap": 0.997754,
+      "n_trials": 20,
+      "n_obs": 6
+    },
+    "promote": "NO_PROMOTE",
+    "instrument_only": false,
+    "notes": "Keep iteration only if L strictly decreases. A rise in ICIR that also raises NuisanceLeak is a rejection. NO_PROMOTE until stop conditions."
+  },
+  "score_on_resid_factor": {
+    "L": 0.500109,
+    "stop": false,
+    "weights": {
+      "fidelity": 0.3,
+      "nuisance": 0.3,
+      "power": 0.2,
+      "icir": 0.15,
+      "deflation": 0.05
+    },
+    "fidelity": 0.7714,
+    "nuisance_leak": {
+      "max_abs": 0.1261,
+      "by_nuisance": {
+        "n_claims": 0.1261,
+        "duration_sec": 0.0714,
+        "n_segments": 0.1261,
+        "days_to_print": -0.0541
+      },
+      "factor_key": "s01_congruence_resid"
+    },
+    "power": {
+      "n_events": 6,
+      "n_required": 194,
+      "rho_target": 0.2,
+      "power": 0.0309
+    },
+    "icir": null,
+    "icir_norm": 0.0,
+    "deflation": {
+      "dsr": 0.002246,
+      "deflation_gap": 0.997754,
+      "n_trials": 20,
+      "n_obs": 6
+    },
+    "promote": "NO_PROMOTE",
+    "instrument_only": false,
+    "notes": "Keep iteration only if L strictly decreases. A rise in ICIR that also raises NuisanceLeak is a rejection. NO_PROMOTE until stop conditions."
+  },
+  "note": "Residualized S01 may enter a market test only after leak < 0.20 and Fidelity \u2265 0.60. Raw stays on the panel for QA. Do not add CEOs to fix leak.",
+  "rows": [
+    {
+      "video_id": "QNkPpVYagRc",
+      "s01_congruence": 0.48335348186834415,
+      "s01_congruence_resid": -0.024194,
+      "n_claims": 5,
+      "n_segments": 5,
+      "duration_sec": 842.327,
+      "days_to_print": 53,
+      "venue": "interview",
+      "live_gemini": true,
+      "vision_source": "mediapipe_face_landmarker",
+      "sympathetic_arousal": 0.0285
+    },
+    {
+      "video_id": "dRgPbNJ5RJc",
+      "s01_congruence": 0.8662776100610937,
+      "s01_congruence_resid": 0.008749,
+      "n_claims": 6,
+      "n_segments": 6,
+      "duration_sec": 2110.067,
+      "days_to_print": 13,
+      "venue": "interview",
+      "live_gemini": true,
+      "vision_source": "",
+      "sympathetic_arousal": null
+    },
+    {
+      "video_id": "V7mYWOzdhpc",
+      "s01_congruence": 0.8478099385851434,
+      "s01_congruence_resid": 0.059451,
+      "n_claims": 38,
+      "n_segments": 38,
+      "duration_sec": 1047.778,
+      "days_to_print": 74,
+      "venue": "conference",
+      "live_gemini": true,
+      "vision_source": "",
+      "sympathetic_arousal": null
+    },
+    {
+      "video_id": "ijRuuaaM6XM",
+      "s01_congruence": 0.5888980419168974,
+      "s01_congruence_resid": 0.015445,
+      "n_claims": 26,
+      "n_segments": 26,
+      "duration_sec": 736.421,
+      "days_to_print": 6,
+      "venue": "interview",
+      "live_gemini": true,
+      "vision_source": "mediapipe_face_landmarker",
+      "sympathetic_arousal": 0.0278
+    },
+    {
+      "video_id": "xe84cwQJKaE",
+      "s01_congruence": 0.8745034742400426,
+      "s01_congruence_resid": 0.106464,
+      "n_claims": 38,
+      "n_segments": 38,
+      "duration_sec": 1248.816,
+      "days_to_print": 53,
+      "venue": "conference",
+      "live_gemini": false,
+      "vision_source": "",
+      "sympathetic_arousal": null
+    },
+    {
+      "video_id": "WBu9Ai6OX3I",
+      "s01_congruence": 0.633302944872556,
+      "s01_congruence_resid": -0.166232,
+      "n_claims": 40,
+      "n_segments": 40,
+      "duration_sec": 1233.653,
+      "days_to_print": 54,
+      "venue": "conference",
+      "live_gemini": true,
+      "vision_source": "mediapipe_face_landmarker",
+      "sympathetic_arousal": 0.0757
+    },
+    {
+      "video_id": "pHu-FarYZlU",
+      "s01_congruence": 0.6039350254810099,
+      "s01_congruence_resid": 0.000318,
+      "n_claims": 36,
+      "n_segments": 36,
+      "duration_sec": 1173.606,
+      "days_to_print": 33,
+      "venue": "conference",
+      "live_gemini": false,
+      "vision_source": "mediapipe_face_landmarker",
+      "sympathetic_arousal": 0.0343
+    }
+  ]
+}
