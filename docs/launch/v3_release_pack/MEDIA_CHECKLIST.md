@@ -2,7 +2,7 @@
 
 Use this list before HN / Reddit / LinkedIn / X posts.  
 **Do not post on the same day as the live test run.**  
-**Candidate:** `e12a55b` · matrix: [`../RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md)
+**Candidate:** `8d6a8e3` · matrix: [`../RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md) · slate: [`../OSS_RELEASE_VIDEO_SLATE_v3.md`](../OSS_RELEASE_VIDEO_SLATE_v3.md)
 
 ## Core assets
 
@@ -19,6 +19,7 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 ## Copy drafts
 
 - [ ] Series: `docs/blog/series/01`–`04` (+ README)
+- [ ] Series Wave B outlines: `05`–`08` (full draft after primary-10 battery)
 - [ ] Chris walkthrough: `docs/blog/analyst_risk_taxonomy_chris_review_2026-09-25.md` (private share until approved)
 - [ ] Blog: `docs/launch/v3_release_pack/BLOG_POST.md`
 - [ ] HN: `docs/launch/v3_release_pack/HN_POST.md`
@@ -42,10 +43,12 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 - [x] Live Lipozem full+deep (**PASS** — CRAAP / 40 facts / deep.html)
 - [x] Live SB1507 local-full dense (`outputs/release_v3_sb1507_dense`) — 40 claims; SIFT/chips; scorecard `all_green`; §6.1=16/40
 - [x] Density gate cleared (was 5-claim PARTIAL at `outputs/release_v3_sb1507`)
+- [ ] Primary-10 battery (`scripts/run_release_v3_battery.sh`) — **PENDING** (hackathon freeze)
 - [ ] `PARITY_TEST_v3.md` optional after live
 - [ ] Paper PDF rebuild if figures changed
 - [ ] `pip install` smoke in clean venv (**no PyPI publish until operator go**)
 - [ ] **Do not post** until operator clears matrix; stagger 1–2 days; Chris full HTML gated
+- [ ] Retag / merge / PyPI — **explicit operator ask only**
 ## Staggered posting order (1–2 days apart)
 
 1. r/MachineLearning `[P]` — method + density chart + **one** repo/branch link  
