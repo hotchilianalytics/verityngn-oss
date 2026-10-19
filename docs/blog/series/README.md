@@ -7,12 +7,12 @@
 3. [Where the release stands](03-where-the-release-stands.md) — refresh SHAs after primary-10 battery
 4. [Two videos: old ladder and new lanes](04-two-videos.md) — refresh after battery
 
-## Wave B (outlined — full draft after hackathon / primary-10)
+## Wave B (post-battery)
 
-5. [Predictions in OSS](05-predictions-in-oss.md) — RiskFactor sensors Apache; commercial = scale/billing
-6. [CEO audio/video lanes](06-ceo-audio-video-lanes.md) — affect/vision/fusion opt-in; S14 refuse
-7. [Ten-video battery](07-ten-video-battery.md) — primary-10 coverage matrix (no private full HTML)
-8. [Open-core after absorb](08-open-core-after-absorb.md) — hoster pin + `verityngn[predictions]`
+5. [Predictions in OSS](05-predictions-in-oss.md) — outline; RiskFactor sensors Apache; commercial = scale/billing
+6. [CEO audio/video lanes](06-ceo-audio-video-lanes.md) — outline; affect/vision/fusion opt-in; S14 refuse
+7. [Ten-video battery](07-ten-video-battery.md) — **drafted** from `outputs/release_v3_battery_2026-10-18`
+8. [Open-core after absorb](08-open-core-after-absorb.md) — outline; hoster pin + `verityngn[predictions]`
 
 Charts: `assets/`. Classification diagram: `assets/verityngn-claim-classification-diagram.png`  
 **Charts to add with Wave B:** genre×fixture heatmap; primary-10 feature grid; open-core before/after.

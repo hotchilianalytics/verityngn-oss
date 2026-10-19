@@ -1,10 +1,11 @@
 # RELEASE_TEST_MATRIX v3.0.0
 
-**Candidate SHA:** `8d6a8e3` (predictions/RiskFactor absorb; prior density/SIFT work included)  
+**Candidate SHA:** `e8cb7d8` (docs/slate; predictions absorb `8d6a8e3`)  
 **Branch:** `release/v3.0.0`  
-**Date:** 2026-10-07  
+**Date:** 2026-10-18  
 **Package version:** 3.0.0  
-**Video slate:** [`OSS_RELEASE_VIDEO_SLATE_v3.md`](OSS_RELEASE_VIDEO_SLATE_v3.md)
+**Video slate:** [`OSS_RELEASE_VIDEO_SLATE_v3.md`](OSS_RELEASE_VIDEO_SLATE_v3.md)  
+**Battery results:** [`BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md)
 
 ## Offline
 
@@ -25,20 +26,20 @@
 | SB1507 analyst lanes | local `sb1507.mp4` → `outputs/release_v3_sb1507_dense` | claims>0; genre `analyst`; §9 SIFT; chips; §6.1 ≤ half; scorecard green | **PASS** | 50→40 claims; §6.1=16/40; quant→inference 88.9% |
 | Vertex / 0-claims stop | either run | Fix `VERTEX_LOCATION=global` if 0 claims | **PASS** | google.genai + dense local prompt |
 
-## Live (primary-10 expansion — PENDING)
+## Live (primary-10 expansion — PASS)
 
-Frozen until hummingbot hackathon clear. Runner: `scripts/run_release_v3_battery.sh` → `outputs/release_v3_battery_<date>/`.
+Runner: `scripts/run_release_v3_battery.sh` → `outputs/release_v3_battery_2026-10-18/`.
 
 | Gate | Fixture | Pass criteria | Result | Notes |
 |------|---------|---------------|--------|-------|
-| Karp CEO short | `V7mYWOzdhpc` full+deep | claims>0; talking-head extract | **PENDING** | predictions sleeve face+voice |
-| Karp+Huang dual | `ijRuuaaM6XM` full+deep | claims>0; dual-speaker | **PENDING** | fusion / two-speaker |
-| Huang CES keynote | `fuq0Ncdsknk` full+deep | claims>0; long-form coverage | **PENDING** | duration / exhibits |
-| Karp WEF long | `dRgPbNJ5RJc` full+deep | claims>0; Q/A arcs | **PENDING** | long interview |
-| Nadella Stargate | `lb_ZJylekWo` full+deep | claims>0; third CEO player | **PENDING** | `ceo_msft_nadella` |
-| Odd Lots podcast | `tSdWpsj1Cyo` full+deep | claims>0; finance-podcast mix | **PENDING** | non-CEO genre |
-| Butler Kahn deposition | `7MXE1kDCY-k` full+deep | claims>0; legal spoken | **PENDING** | deposition cadence |
-| Carney peptides | `RuinHdlpXvE` full+deep | claims>0; CI preferred | **PENDING** | health counter-intel |
+| Karp CEO short | `V7mYWOzdhpc` full+deep | claims>0; talking-head extract | **PASS** | 37 claims; `deep.html` |
+| Karp+Huang dual | `ijRuuaaM6XM` full+deep | claims>0; dual-speaker | **PASS** | 32 claims; `deep.html` |
+| Huang CEO (swap) | `cP8pfCJTw4Q` full+deep | claims>0 | **PASS** | 16 claims; replaced `fuq0Ncdsknk` (12h LIVE) |
+| Karp WEF long | `dRgPbNJ5RJc` full+deep | claims>0; Q/A arcs | **PASS** | 40 claims |
+| Nadella Stargate | `lb_ZJylekWo` full+deep | claims>0; third CEO player | **PASS** | 19 claims |
+| Odd Lots podcast | `tSdWpsj1Cyo` full+deep | claims>0; finance-podcast mix | **PASS** | 40 claims |
+| Butler Kahn deposition | `7MXE1kDCY-k` full+deep | claims>0; legal spoken | **PASS** | 39 claims |
+| Carney peptides | `RuinHdlpXvE` full+deep | claims>0; CI preferred | **PASS** | 40 claims |
 
 ## Scorecard thresholds (analyst fixture)
 
@@ -56,11 +57,11 @@ Frozen until hummingbot hackathon clear. Runner: `scripts/run_release_v3_battery
 | Offline gates | **PASS** |
 | Lipozem live (old features) | **PASS** |
 | SB1507 live (analyst + density) | **PASS** |
-| Predictions primary-10 battery | **PENDING** — freeze until hackathon clear |
-| Marketing / retag / merge / PyPI | **Blocked on operator ask** after primary-10 green (or operator accepts PENDING expansion) |
+| Predictions primary-10 battery | **PASS** — `outputs/release_v3_battery_2026-10-18` (Huang Squawk swap) |
+| Marketing / retag / merge / PyPI | **Blocked on operator ask** — matrix primary-10 green |
 
 ## Operator decision
 
-1. Proven CRAAP + SIFT densify + predictions absorb are on `8d6a8e3`.
-2. Primary-10 battery is lined up in the slate; do not start Vertex until hackathon clear.
+1. Proven CRAAP + SIFT densify + predictions absorb on `8d6a8e3`; battery docs on `e8cb7d8`.
+2. Primary-10 battery **PASS** with documented Huang swap (`fuq0Ncdsknk` → `cP8pfCJTw4Q`).
 3. Retag / merge / PyPI only on **explicit ask**.

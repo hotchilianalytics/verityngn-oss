@@ -11,8 +11,9 @@ Package version in [`pyproject.toml`](../../../pyproject.toml) is **3.0.0**. Bra
 
 | Artifact | Status |
 |----------|--------|
-| Candidate SHA | `e12a55b` (analyst taxonomy + SIFT + local-file Vertex fix) |
-| Git tag `v3.0.0` | Still at `131ac87` (2026-08-29). Moves **only** after [`RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md) is all pass **and** an operator explicitly asks to retag. |
+| Candidate SHA | `e8cb7d8` (docs/slate; predictions absorb `8d6a8e3`; density earlier) |
+| Primary-10 battery | **PASS** — [`BATTERY_RESULTS_v3.md`](../../launch/BATTERY_RESULTS_v3.md) |
+| Git tag `v3.0.0` | Still at prior SHA until matrix sign-off **and** an operator explicitly asks to retag. |
 | Merge to `main` / PyPI | Explicit ask required. Not part of drafting blogs. |
 
 There is no 5.0.0. If that number appeared in conversation, it was informal. The tree ships under 3.0.0.
@@ -27,7 +28,7 @@ Everything already on the August–September 3.0 line, plus:
 4. Genre switch: analyst videos get **Method & Reliance Review (SIFT)**; consumer videos keep CRAAP.
 5. Offline scorecard + Chris review package builders.
 
-Offline gates (unit tests, open-core scrub, SB1507 scorecard on the Sep 23 smoke JSON) are **PASS**. Live Lipozem + SB1507 gates are recorded in the matrix as they finish.
+Offline gates (unit tests, open-core scrub, SB1507 scorecard) are **PASS**. Live Lipozem + SB1507 + primary-10 battery are **PASS** in the matrix (Huang Squawk swap documented).
 
 ## What a launch should decide
 

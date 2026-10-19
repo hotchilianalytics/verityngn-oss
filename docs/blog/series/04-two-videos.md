@@ -32,7 +32,9 @@ One video cannot prove both the classic consumer path and the analyst-genre path
 
 **Live `outputs/release_v3_sb1507_dense` (2026-10-05):** 50 extracted → 40 verified (prior thin run was 5). Genre `analyst`, SIFT §9, risk chips present. Scorecard `all_green` (§6.1=16/40; quant→inference 88.9%). See [`RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md).
 
-**Live Lipozem `outputs/release_v3_lipozem`:** 40 claims, all source-backed facts, CRAAP §9, `deep.html` — old ladder **PASS**.
+**Live Lipozem `outputs/release_v3_lipozem`:** 39–40 claims, CRAAP §9, `deep.html` — old ladder **PASS**.
+
+**Primary-10 expansion:** eight additional live fixtures in `outputs/release_v3_battery_2026-10-18` (Karp / Huang / Nadella / podcast / legal / health). See [Part 7](07-ten-video-battery.md) and [`BATTERY_RESULTS_v3.md`](../../launch/BATTERY_RESULTS_v3.md).
 
 ![Before/after density](assets/02_before_after_density.png)
 
