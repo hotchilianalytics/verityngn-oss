@@ -39,6 +39,12 @@
 | Cost edge | Q5−Q1 > drag @ 10 bps (hygiene) / 20 bps (promote-ready) |
 | DSR | ≥ 0.95 |
 
+## GCP engine pins (commercial Batch / Cloud Run)
+
+| Date | Label | Pin SHA | Image tag | Job ID | Notes |
+|------|-------|---------|-----------|--------|-------|
+| 2026-10-20 | T-GCP-001 | `be663182f2404ed6211d77b42a5109525cdc9c3e` | `batch-oss-be66318` (local build `sha256:d219eaf4`) | pending push | Overlay Dockerfiles clone OSS by SHA. Image built locally; Artifact Registry push blocked on `gcloud auth login` reauth. Lipozem smoke + Cloud Run deploy wait on push. |
+
 ## Lessons carried from hca-qngn
 
 1. Factor PASS ≠ portfolio PROMOTE  
