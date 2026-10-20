@@ -450,8 +450,37 @@ class UnifiedReportGenerator:
                 
                 # Clean up old versions (keep last 5)
                 timestamped_storage.cleanup_old_versions(self.video_id, keep_count=5)
+                # Local backend renames `_processing` → `_complete`; follow the move
+                # so returned paths and artifact_sync still find the files.
+                try:
+                    proc = Path(self.timestamped_dir)
+                    if proc.name.endswith("_processing"):
+                        complete = proc.with_name(
+                            proc.name.replace("_processing", "_complete", 1)
+                        )
+                        if complete.is_dir():
+                            self.timestamped_dir = str(complete)
+                            json_path = str(complete / Path(json_path).name)
+                            markdown_path = str(complete / Path(markdown_path).name)
+                            html_path = str(complete / Path(html_path).name)
+                            fast_html_path = str(complete / Path(fast_html_path).name)
+                            private_markdown_path = str(complete / Path(private_markdown_path).name)
+                            private_html_path = str(complete / Path(private_html_path).name)
+                except Exception as rename_exc:  # noqa: BLE001
+                    self.logger.warning("timestamped complete-dir follow failed: %s", rename_exc)
             else:
                 self.logger.warning(f"⚠️ [TIMESTAMPED] Failed to mark generation complete")
+
+            try:
+                from verityngn.services.report.artifact_sync import sync_standard_report_artifacts
+
+                sync_standard_report_artifacts(
+                    self.out_dir_path,
+                    self.video_id,
+                    src_dir=self.timestamped_dir,
+                )
+            except Exception as sync_exc:  # noqa: BLE001
+                self.logger.warning("artifact_sync after report write failed: %s", sync_exc)
 
             try:
                 cleanup_yt_api_artefacts(self.out_dir_path, self.video_id)

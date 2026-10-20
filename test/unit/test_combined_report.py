@@ -89,3 +89,19 @@ def test_deep_markdown_scrub_removes_poisoned_urls():
     assert LEGIT in cleaned
     assert MALICIOUS not in cleaned
     assert "pdfJsViewer" not in cleaned
+
+
+def test_normalize_report_dict_coerces_persisted_json():
+    from verityngn.services.report.regen import normalize_report_dict
+
+    raw = {
+        "overall_assessment": ["MIXED", "Mixed evidence"],
+        "claims_breakdown": [{"claim_id": "claim_3", "verification_result": {"result": "LIKELY_TRUE"}}],
+        "evidence_summary": [{"url": "https://example.com"}],
+    }
+    d = normalize_report_dict(raw, "vid1")
+    assert d["overall_assessment"] == ("MIXED", "Mixed evidence")
+    assert d["claims_breakdown"][0]["claim_id"] == 3
+    assert d["claims_breakdown"][0]["initial_assessment"] == "LIKELY_TRUE"
+    assert d["evidence_summary"][0]["title"]
+    assert d["media_embed"]["video_id"] == "vid1"

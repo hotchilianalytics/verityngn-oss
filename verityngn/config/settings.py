@@ -308,11 +308,12 @@ def get_storage_directories():
         compare_dir.mkdir(parents=True, exist_ok=True)
         
     elif DEPLOYMENT_MODE == DeploymentMode.PRODUCTION:
-        # Production mode: minimal local storage, everything goes to GCS
-        base_path = Path("/tmp/verityngn")
-        downloads_dir = base_path / "downloads"
-        outputs_dir = base_path / "outputs"
-        compare_dir = base_path / "compare"
+        # Production / Batch: honor OUTPUTS_DIR so job -o and GCS staging share a path.
+        outputs_env = os.getenv("OUTPUTS_DIR", "/tmp/verityngn/outputs")
+        downloads_env = os.getenv("DOWNLOADS_DIR", "/tmp/verityngn/downloads")
+        downloads_dir = Path(downloads_env)
+        outputs_dir = Path(outputs_env)
+        compare_dir = outputs_dir / "compare"
         
         # Ensure directories exist
         downloads_dir.mkdir(parents=True, exist_ok=True)

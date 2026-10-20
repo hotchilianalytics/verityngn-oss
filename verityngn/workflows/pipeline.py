@@ -391,6 +391,17 @@ def run_verification(
             logger.info(f"📊 Claims processed: {len(final_state.get('claims', []))}")
             logger.info(f"📄 Reports saved to: {out_dir_path}")
             logger.info(f"📝 Workflow log saved to: {log_file_path}")
+            try:
+                from verityngn.services.report.artifact_sync import (
+                    checklist_artifacts,
+                    sync_standard_report_artifacts,
+                )
+
+                arts = sync_standard_report_artifacts(out_dir_path, video_id)
+                checklist_artifacts(out_dir_path, video_id)
+                logger.info("📦 artifact_sync copied=%s", arts.get("copied"))
+            except Exception as sync_exc:  # noqa: BLE001
+                logger.warning("artifact_sync at workflow end failed: %s", sync_exc)
         finally:
             try:
                 cleanup_yt_api_artefacts(out_dir_path, video_id)

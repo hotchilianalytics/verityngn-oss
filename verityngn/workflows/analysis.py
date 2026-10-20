@@ -3159,6 +3159,26 @@ async def run_initial_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
                 )
                 video_info_extracted = {}
 
+        try:
+            from verityngn.config.video_segmentation import clamp_duration_seconds
+
+            raw_dur = int((video_info_extracted or {}).get("duration") or 0)
+            clamped, was_clamped = clamp_duration_seconds(raw_dur)
+            if was_clamped:
+                logger.warning(
+                    "⏱️ Duration clamp: video %s is %ss; analyzing first %ss",
+                    video_id,
+                    raw_dur,
+                    clamped,
+                )
+                video_info_extracted = dict(video_info_extracted or {})
+                video_info_extracted["duration"] = clamped
+                video_info_extracted["duration_raw_seconds"] = raw_dur
+                video_info_extracted["duration_clamped"] = True
+                state["video_info"] = video_info_extracted
+        except Exception as clamp_exc:  # noqa: BLE001
+            logger.warning("Duration clamp failed (proceeding): %s", clamp_exc)
+
         # ===== CHECK FOR DOWNLOADED .MP4 FILE FIRST =====
         # Prefer explicit state.video_path (file-upload staging), then known locations.
         possible_video_paths = []
@@ -4492,6 +4512,15 @@ async def extract_claims_with_gemini_multimodal_youtube_url_segmented_vertex(
         logger.warning(
             f"⚠️ Using fallback duration of {duration_sec}s for segmentation since metadata failed"
         )
+    else:
+        from verityngn.config.video_segmentation import clamp_duration_seconds
+
+        raw_dur = duration_sec
+        duration_sec, was_clamped = clamp_duration_seconds(duration_sec)
+        if was_clamped and isinstance(video_info, dict):
+            video_info["duration"] = duration_sec
+            video_info["duration_raw_seconds"] = raw_dur
+            video_info["duration_clamped"] = True
     
     # Calculate optimal segment duration based on model context window
     SEGMENT_DURATION_SECONDS = get_segment_duration_from_env_or_optimal(

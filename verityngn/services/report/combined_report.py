@@ -374,8 +374,27 @@ async def generate_combined_report_artifacts(
     Does not re-run Deep Research or the main verification pipeline. When ``skip_llm``
     is True (default for batch/backfill), uses a deterministic TL;DR hook.
     """
-    from verityngn.services.report.regen import normalize_report_dict
     from verityngn.services.reputation.url_safety import sanitize_report_dict_urls
+
+    try:
+        from verityngn.services.report.regen import normalize_report_dict
+    except ImportError:  # pragma: no cover — degrade combined, keep standard report
+        logger.warning("report.regen missing; using inline normalize_report_dict")
+
+        def normalize_report_dict(data, vid):  # type: ignore[no-redef]
+            d = dict(data)
+            overall = d.get("overall_assessment")
+            if isinstance(overall, list) and len(overall) == 2:
+                d["overall_assessment"] = tuple(overall)
+            if not d.get("media_embed"):
+                d["media_embed"] = {"video_id": vid, "title": d.get("title") or vid}
+            if not d.get("title"):
+                d["title"] = vid
+            if not d.get("key_findings"):
+                d["key_findings"] = []
+            if not d.get("evidence_summary"):
+                d["evidence_summary"] = []
+            return d
 
     if not Path(report_json_path).is_file():
         raise FileNotFoundError(f"report json not found: {report_json_path}")

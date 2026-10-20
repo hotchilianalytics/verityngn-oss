@@ -169,6 +169,33 @@ def calculate_optimal_segment_duration(
     return result
 
 
+def clamp_duration_seconds(
+    duration_sec: int,
+    limit_mins: Optional[int] = None,
+) -> Tuple[int, bool]:
+    """Cap the analysis window so livestream restreams cannot open 18+ Vertex segments.
+
+    Default cap is ``VIDEO_LENGTH_LIMIT_MINS`` (90). Returns ``(clamped_sec, was_clamped)``.
+    """
+    try:
+        from verityngn.config.settings import VIDEO_LENGTH_LIMIT_MINS
+
+        cap_mins = VIDEO_LENGTH_LIMIT_MINS if limit_mins is None else limit_mins
+    except Exception:  # noqa: BLE001
+        cap_mins = 90 if limit_mins is None else limit_mins
+    cap_sec = max(1, int(cap_mins) * 60)
+    dur = int(duration_sec or 0)
+    if dur > cap_sec:
+        logger.warning(
+            "⏱️ Duration clamp: %ss exceeds %s min cap; analyzing first %ss",
+            dur,
+            cap_mins,
+            cap_sec,
+        )
+        return cap_sec, True
+    return dur, False
+
+
 def get_segmentation_for_video(
     video_duration_seconds: int,
     model_name: str = "gemini-2.5-flash",
@@ -188,6 +215,7 @@ def get_segmentation_for_video(
     Returns:
         Tuple of (segment_duration_seconds, total_segments)
     """
+    video_duration_seconds, _ = clamp_duration_seconds(int(video_duration_seconds or 0))
     optimal = calculate_optimal_segment_duration(model_name, fps)
     max_segment = optimal["max_segment_seconds"]
     

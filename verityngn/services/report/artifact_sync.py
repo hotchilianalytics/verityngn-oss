@@ -1,33 +1,87 @@
 """Copy standard + deep report artifacts into the user -o directory.
 
-UnifiedReportGenerator writes under outputs_debug/{vid}/*_complete/.
-Deep Research writes into out_dir. Consumers expect both report.html and
-deep.html (stable aliases) beside {vid}_report.json in -o.
+UnifiedReportGenerator writes under STORAGE_CONFIG local outputs
+(`outputs_debug/{vid}/*_complete/` when DEBUG_OUTPUTS=true).
+Deep Research writes into out_dir. Consumers (CLI `-o`, Batch OUTPUTS_DIR,
+gallery/GCS upload) expect `{vid}_report.json/html` plus stable aliases
+`report.html` / `deep.html` in the job dir.
 """
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 logger = logging.getLogger(__name__)
 
-# Canonical names consumers may rely on (stable contract).
 ALIAS_REPORT_HTML = "report.html"
 ALIAS_DEEP_HTML = "deep.html"
 
 
-def _latest_debug_complete(video_id: str) -> Optional[Path]:
-    debug_root = Path("outputs_debug") / video_id
-    if not debug_root.is_dir():
+def _unique_paths(paths: Iterable[Path]) -> List[Path]:
+    seen = set()
+    out: List[Path] = []
+    for p in paths:
+        try:
+            key = str(p.resolve()) if p.exists() else str(p)
+        except OSError:
+            key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(p)
+    return out
+
+
+def _debug_roots() -> List[Path]:
+    """Candidate parents of `{video_id}/*_complete/` report trees."""
+    roots: List[Path] = []
+    try:
+        from verityngn.config.settings import BASE_DIR, OUTPUTS_DIR, STORAGE_CONFIG
+
+        local_out = (STORAGE_CONFIG or {}).get("local", {}).get("outputs_dir")
+        if local_out:
+            roots.append(Path(local_out))
+        roots.append(Path(OUTPUTS_DIR))
+        roots.append(Path(BASE_DIR) / "outputs_debug")
+        roots.append(Path(BASE_DIR) / "outputs")
+    except Exception:  # noqa: BLE001
+        pass
+    env_out = os.environ.get("OUTPUTS_DIR")
+    if env_out:
+        roots.append(Path(env_out))
+    roots.append(Path("outputs_debug"))
+    roots.append(Path("outputs"))
+    return _unique_paths(roots)
+
+
+def _latest_debug_complete(video_id: str, extra_roots: Optional[Sequence[Path]] = None) -> Optional[Path]:
+    candidates: List[Path] = []
+    roots = list(extra_roots or []) + _debug_roots()
+    for root in _unique_paths(roots):
+        debug_root = root / video_id
+        if not debug_root.is_dir():
+            continue
+        candidates.extend(p for p in debug_root.glob("*_complete") if p.is_dir())
+    if not candidates:
         return None
-    completes = sorted(
-        [p for p in debug_root.glob("*_complete") if p.is_dir()],
-        key=lambda p: p.stat().st_mtime,
-        reverse=True,
-    )
-    return completes[0] if completes else None
+    return max(candidates, key=lambda p: p.stat().st_mtime)
+
+
+def _copy_file(src: Path, dest_dir: Path) -> Optional[str]:
+    if not src.is_file():
+        return None
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    target = dest_dir / src.name
+    try:
+        if not target.is_file() or src.stat().st_mtime > target.stat().st_mtime:
+            shutil.copy2(src, target)
+            return src.name
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("artifact_sync: failed to copy %s: %s", src, exc)
+    return None
 
 
 def sync_standard_report_artifacts(
@@ -35,71 +89,99 @@ def sync_standard_report_artifacts(
     video_id: str,
     *,
     patterns: Optional[List[str]] = None,
+    src_dir: Optional[str | Path] = None,
 ) -> Dict[str, Any]:
     """
-    Copy {vid}_report.{json,html,md,pdf} (and private/fast variants) from the
-    latest timestamped complete dir into out_dir when missing or older.
-    Also writes stable alias report.html when the canonical HTML exists.
+    Copy `{vid}_report.*` (and private/fast/deep variants) from the latest
+    timestamped complete dir into out_dir. Also writes stable aliases
+    `report.html` / `deep.html`.
     """
     dest = Path(out_dir)
     dest.mkdir(parents=True, exist_ok=True)
-    names = patterns or [
-        f"{video_id}_report.json",
-        f"{video_id}_report.html",
-        f"{video_id}_report.md",
-        f"{video_id}_report.pdf",
-        f"{video_id}_private_report.pdf",
-        f"{video_id}_private_report.html",
-        f"{video_id}_fast_report.html",
-    ]
-    src_dir = _latest_debug_complete(video_id)
+
+    explicit = Path(src_dir) if src_dir else None
+    if explicit and explicit.name.endswith("_processing"):
+        complete = explicit.with_name(explicit.name.replace("_processing", "_complete", 1))
+        if complete.is_dir():
+            explicit = complete
+
+    src_complete = None
+    if explicit and explicit.is_dir():
+        src_complete = explicit
+    else:
+        extra = [explicit.parent] if explicit else None
+        src_complete = _latest_debug_complete(video_id, extra_roots=extra)
+
     copied: List[str] = []
-    if src_dir:
-        for name in names:
-            src = src_dir / name
+    if src_complete:
+        names = patterns or [
+            f"{video_id}_report.json",
+            f"{video_id}_report.html",
+            f"{video_id}_report.md",
+            f"{video_id}_report.pdf",
+            f"{video_id}_private_report.md",
+            f"{video_id}_private_report.html",
+            f"{video_id}_private_report.pdf",
+            f"{video_id}_fast_report.html",
+            f"{video_id}_deep_private_report.json",
+            f"{video_id}_deep_private_report.html",
+            f"{video_id}_deep_private_report.md",
+            f"{video_id}_deep_private_report.pdf",
+            ALIAS_REPORT_HTML,
+            ALIAS_DEEP_HTML,
+        ]
+        wanted = set(names)
+        for src in src_complete.iterdir():
             if not src.is_file():
                 continue
-            target = dest / name
-            try:
-                if not target.is_file() or src.stat().st_mtime > target.stat().st_mtime:
-                    shutil.copy2(src, target)
+            if src.name in wanted or src.name.startswith(f"{video_id}_"):
+                name = _copy_file(src, dest)
+                if name:
                     copied.append(name)
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("artifact_sync: failed to copy %s: %s", src, exc)
     else:
-        # Fallback: search any report.json under outputs_debug
-        debug_root = Path("outputs_debug") / video_id
-        if debug_root.is_dir():
+        for root in _debug_roots():
+            debug_root = root / video_id
+            if not debug_root.is_dir():
+                continue
             for cand in sorted(
                 debug_root.rglob(f"{video_id}_report.json"),
                 key=lambda p: p.stat().st_mtime,
                 reverse=True,
             ):
-                try:
-                    shutil.copy2(cand, dest / cand.name)
-                    copied.append(cand.name)
-                    sibling_html = cand.with_name(f"{video_id}_report.html")
-                    if sibling_html.is_file():
-                        shutil.copy2(sibling_html, dest / sibling_html.name)
-                        copied.append(sibling_html.name)
-                except Exception as exc:  # noqa: BLE001
-                    logger.warning("artifact_sync: fallback copy failed: %s", exc)
+                name = _copy_file(cand, dest)
+                if name:
+                    copied.append(name)
+                for sibling_name in (
+                    f"{video_id}_report.html",
+                    f"{video_id}_report.md",
+                    f"{video_id}_private_report.html",
+                    f"{video_id}_fast_report.html",
+                ):
+                    sibling = cand.with_name(sibling_name)
+                    copied_name = _copy_file(sibling, dest)
+                    if copied_name:
+                        copied.append(copied_name)
+                break
+            if copied:
                 break
 
     alias_info = ensure_report_html_alias(dest, video_id)
+    deep_alias = ensure_deep_html_alias(dest, video_id)
     logger.info(
-        "artifact_sync: out_dir=%s video_id=%s copied=%s alias=%s",
+        "artifact_sync: out_dir=%s video_id=%s copied=%s src_dir=%s alias=%s",
         dest,
         video_id,
         copied,
+        src_complete,
         alias_info.get("report_html"),
     )
     return {
         "out_dir": str(dest),
         "video_id": video_id,
         "copied": copied,
-        "src_dir": str(src_dir) if src_dir else None,
+        "src_dir": str(src_complete) if src_complete else None,
         **alias_info,
+        **deep_alias,
     }
 
 
