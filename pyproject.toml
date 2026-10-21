@@ -68,6 +68,7 @@ include = ["verityngn*"]
 
 [tool.setuptools.package-data]
 verityngn = [
+    "template.html",
     "config/*.yaml",
     "config/*.json",
     "services/deepresearch/prompts/*.md",

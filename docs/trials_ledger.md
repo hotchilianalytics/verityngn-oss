@@ -43,7 +43,7 @@
 
 | Date | Label | Pin SHA | Image tag | Job ID | Notes |
 |------|-------|---------|-----------|--------|-------|
-| 2026-10-20 | T-GCP-001 | `be663182f2404ed6211d77b42a5109525cdc9c3e` | `batch-oss-be66318` (local build `sha256:d219eaf4`) | pending push | Overlay Dockerfiles clone OSS by SHA. Image built locally; Artifact Registry push blocked on `gcloud auth login` reauth. Lipozem smoke + Cloud Run deploy wait on push. |
+| 2026-10-20 | T-GCP-001 | `be663182f2404ed6211d77b42a5109525cdc9c3e` | `batch-oss-be66318` / `:latest` | `f392013d` Lipozem 40 claims; Cloud Run `00017` | Hosted pin live. HTML wheel omitted `template.html` this image; JSON/MD gate. |
 
 ## Lessons carried from hca-qngn
 
