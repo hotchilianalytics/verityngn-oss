@@ -3,32 +3,33 @@
 ## Title
 
 ```
-Show HN: VerityNgn 3.0 – open-source multimodal video fact-checking with Deep Research
+Show HN: VerityNgn 3.0 – open-source video claim-risk engine (Deep Research + domain packs)
 ```
 
 ## Body
 
 ---
 
-I just shipped **VerityNgn OSS 3.0.0** — a standalone Apache-2.0 engine that turns a YouTube URL (or local video file) into a claim-level truthfulness report, now including the **Deep Research** grounded forensic pass that used to live only on our commercial fork.
+I just shipped **VerityNgn OSS 3.0.0** — a standalone Apache-2.0 engine that turns a YouTube URL (or local video file) into a claim-level **risk** report (not a lie detector), including **Deep Research** in the public CLI.
 
-**Install:** `pip install verityngn`  
+**Install:** `pip install verityngn` (after PyPI; until then `pip install -e '.[deep]'` from `release/v3.0.0`)  
 **CLI:** `verityngn analyze <url>` · `verityngn analyze <url> --deep` · `verityngn analyze --file clip.mp4`  
-**Repo:** https://github.com/hotchilianalytics/verityngn-oss  
+**Repo:** https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0  
 **Demo:** https://verityngn.streamlit.app  
-**Paper:** `papers/verityngn_oss_v3_release.md` (+ charts)
+**Platform:** `docs/platform/PLATFORM_OVERVIEW.md`  
+**Paper:** `papers/verityngn_oss_v3_release.md`
 
 ### What it does
 
 1. Multimodal claim extraction (Gemini) over video frames + transcript  
 2. Counter-intelligence: seeks contradictory YouTube reviews and press-release bias  
-3. THREE-state probabilities (TRUE / FALSE / UNCERTAIN), not binary slogans  
-4. Optional Deep Research: grounded Gemini summary with citation audit trail  
-5. Optional authenticity stubs + spectral voice cues + MediaPipe Face Landmarker  
+3. THREE-state probabilities (TRUE / FALSE / UNCERTAIN) with residual reliance risk  
+4. Optional Deep Research: grounded summary with citation audit trail  
+5. Domain packs: CRAAP consumer, SIFT analyst, CEO sensors, legal/health lanes  
 
 ### Open-core boundary (honest)
 
-Hosted multi-tenant SaaS, **predictions**, and **RiskFactor** products stay closed and are expected to **depend on this OSS base**. This release does **not** include earnings prediction, allocation factors, or “lie detection.”
+Engine + research sleeves (predictions/sensors) are OSS. Hosted multi-tenant SaaS and credits live on **verityindex.com** (control plane). ClearFactor disclosure **services** are paid; disclosure **engine** opens as a sleeve. No earnings prediction / allocation alpha in this release.
 
 ### Ask
 

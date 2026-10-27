@@ -2,7 +2,9 @@
 
 **Goal:** Get technical readers to star the repo, try `pip install verityngn`, and open one gallery report — without looking like spam.
 
-**Framing:** Lead with **claim-level risk abatement** (disclosure / delivery / sponsor-readiness). Avoid “truthfulness” / “lie detector” / “fact-check SaaS” language.
+**Framing:** Lead with **claim-level risk abatement** / **risk platform** (disclosure / delivery / sponsor-readiness). Avoid “truthfulness” / “lie detector” / “fact-check SaaS” language.
+
+**Candidate SHA:** `b13bcf1` · Primary-10 **PASS** · Platform: [`docs/platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md)
 
 **Primary CTAs (pick one per post):**
 1. Repo: https://github.com/hotchilianalytics/verityngn-oss  
@@ -14,6 +16,7 @@
 - `papers/figures/gallery_thumb_collage.png`
 - `papers/figures/gallery_live_claims_per_video.png`
 - `papers/figures/open_core_architecture.png`
+- `papers/figures/platform_layers.png` (platform morph)
 
 ---
 
@@ -45,7 +48,7 @@
 
 ### Title
 ```
-[P] VerityNgn 3.0 — open-source multimodal video claim-risk analysis + Deep Research (Apache-2.0)
+[P] VerityNgn 3.0 — open-source multimodal video claim-risk platform + Deep Research (Apache-2.0)
 ```
 
 ### Body
@@ -53,6 +56,8 @@
 I just cut VerityNgn OSS 3.0.0 — a local CLI that takes a YouTube URL (or a local mp4) and produces a claim-level **risk** report (disclosure / delivery / sponsor-readiness) with counter-intelligence and an optional grounded Deep Research pass.
 
 **Why it exists:** transcript-only checkers miss on-screen graphics/OCR; naive web search often retrieves the subject’s own PR as “evidence.” VerityNgn extracts multimodal claims, then actively looks for contradictory review content and press-release-shaped sources.
+
+**Platform angle:** the report is the evidence object; domain packs (CRAAP, SIFT, CEO sensors, disclosure) sit on one engine. Hosted control plane is verityindex.com — not a closed fork of the quality path.
 
 **Try it**
 ```bash
@@ -62,25 +67,26 @@ verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
 verityngn captions 'https://www.youtube.com/watch?v=VIDEO_ID'   # operator VTT debug
 ```
 
-**Repo / release:** https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0
+**Repo / branch:** https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0
 
 **Public gallery of engine reports:** https://verityindex.com/gallery  
-(scraped 2026-08-29: 12 reports, 427 claims; mix of “Likely True” / “Mixed” gallery labels)
 
 **Honest limits**
 - English-first; YouTube + local file (not TikTok-native)
 - LLM-assisted risk briefs — not a lie detector, not earnings prediction
-- Hosted SaaS / predictions / risk-factor products are separate overlays on top of OSS
+- Predictions/sensors are optional OSS extras; hosted credits/SaaS are commercial
 
 Happy to take hard negatives. If a report looks wrong, drop the video id.
 
-Image: gallery claim-volume chart (attached)
+Image: gallery claim-volume chart or platform_layers (attached)
 ```
 
 ### First comment (links + paper)
 ```
 Paper (charts + gallery table): https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/papers/verityngn_oss_v3_release.md
 Open-core boundary: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/OPEN_CORE.md
+Platform layers: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/platform/PLATFORM_OVERVIEW.md
+Primary-10 battery: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/launch/BATTERY_RESULTS_v3.md
 Streamlit demo (optional): https://verityngn.streamlit.app
 ```
 
@@ -103,7 +109,7 @@ Release note for an open-source pipeline that:
 
 Install: `pip install 'verityngn[deep]'` then `verityngn analyze <url> --deep`
 
-Release: https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0  
+Branch: https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0  
 Gallery examples: https://verityindex.com/gallery
 
 Not claiming SOTA on a shared leaderboard yet — looking for critique of the claim typology and CI weighting.
@@ -115,16 +121,16 @@ Not claiming SOTA on a shared leaderboard yet — looking for critique of the cl
 
 ### Title
 ```
-Release: VerityNgn 3.0 — Apache-2.0 video fact-checking engine (CLI + Deep Research)
+Release: VerityNgn 3.0 — Apache-2.0 video claim-risk engine (CLI + Deep Research)
 ```
 
 ### Body
 ```
-Open-core video verification engine. v3 puts Deep Research in the Apache tree; commercial SaaS / predictions stay overlays that depend on the OSS package.
+Open-core video claim-risk engine. v3 puts Deep Research and research sleeves (predictions sensors) in the Apache tree; hosted SaaS / credits stay on verityindex.com.
 
 `pip install verityngn` · `verityngn analyze <url> --deep`
 
-https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0
+https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0
 ```
 
 ---
@@ -133,16 +139,16 @@ https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0
 
 ### Title
 ```
-Open-source tool: claim-level verification reports from YouTube videos (counter-intel search)
+Open-source tool: claim-level risk reports from YouTube videos (counter-intel search)
 ```
 
 ### Body
 ```
-Sharing an OSS CLI that produces structured claim reports from YouTube or local video files, with an explicit counter-intelligence step (looks for independent review videos / promotional-source patterns).
+Sharing an OSS CLI that produces structured claim-risk reports from YouTube or local video files, with an explicit counter-intelligence step (looks for independent review videos / promotional-source patterns).
 
 Meant as a research aid — human review still required. Not a courtroom-ready authenticity oracle.
 
-Release: https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0  
+Branch: https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0  
 Example gallery: https://verityindex.com/gallery
 ```
 
@@ -154,10 +160,10 @@ Example gallery: https://verityindex.com/gallery
 Claims are multimodal (frames/OCR/transcript). Verification is a separate graph with timeouts, domain tiers, and CI. Deep Research is an optional grounded pass over a sanitized report JSON.
 
 **“What’s free vs paid?”**  
-Engine quality (including Deep Research) is OSS Apache-2.0. Hosted multi-tenant delivery / credits are commercial. Predictions/RiskFactor are closed overlays.
+Engine quality (including Deep Research and optional predictions sensors) is OSS Apache-2.0. Hosted multi-tenant delivery / credits are commercial on verityindex.com. ClearFactor disclosure **services** (vault / counsel briefs) are paid; disclosure **engine** opens as a sleeve.
 
 **“Show me numbers.”**  
-Point to gallery (427 claims / 12 reports as of 2026-08-29) and paper figures. Don’t invent new accuracy % in comments.
+Point to primary-10 battery (`docs/launch/BATTERY_RESULTS_v3.md`) and gallery. Don’t invent new accuracy % in comments.
 
 **“How do I run without GCP?”**  
 Gemini/Vertex credentials are required for the LLM path today; documented in `.env.example`. Local-file path skips yt-dlp.
@@ -167,10 +173,10 @@ Gemini/Vertex credentials are required for the LLM path today; documented in `.e
 ## Checklist before submit
 
 - [ ] Account has karma / isn’t brand-new empty  
-- [ ] One image attached (claims-per-video or collage)  
+- [ ] One image attached (claims-per-video, collage, or platform_layers)  
 - [ ] Only one primary URL in body  
 - [ ] No “revolutionary / disrupt / lie detector / alpha” language  
-- [ ] First comment ready with paper + OPEN_CORE  
+- [ ] First comment ready with paper + OPEN_CORE + platform overview  
 - [ ] Calendar: reply window for 48h  
 
 ---
@@ -179,10 +185,11 @@ Gemini/Vertex credentials are required for the LLM path today; documented in `.e
 
 | Channel | Asset |
 |---------|-------|
-| Show HN | `docs/launch/HN_POST.md` |
-| LinkedIn | `docs/launch/LINKEDIN_POST.md` |
-| X | `docs/launch/X_THREAD.md` |
-| Blog | `docs/launch/v3_release_pack/BLOG_POST.md` |
-| Media checklist | `docs/launch/v3_release_pack/MEDIA_CHECKLIST.md` |
+| Show HN | `docs/launch/HN_POST.md` / pack `HN_POST.md` |
+| LinkedIn | `LINKEDIN_POST.md` |
+| X | `X_THREAD.md` |
+| Blog | `BLOG_POST.md` |
+| Media checklist | `MEDIA_CHECKLIST.md` |
+| Exec summary | `docs/launch/EXEC_SUMMARY_v3.md` |
 
 Stagger ≥6–12h after the ML post so Reddit doesn’t see a synchronized blast.

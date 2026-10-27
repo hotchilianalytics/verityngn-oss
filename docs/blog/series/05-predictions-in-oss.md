@@ -1,32 +1,62 @@
-# Part 5 — Predictions in OSS (outline)
+# Part 5 — Predictions in OSS
 
 **Series:** VerityNgn OSS  
-**Part 5 of 8 · Draft after hackathon / primary-10 battery**  
-**Status:** OUTLINE — full draft when matrix expansion runs
+**Part 5 of 9**  
+**Status:** DRAFT · absorb SHA `8d6a8e3` · candidate `b13bcf1`
 
 ---
 
 ## Thesis
 
-Research RiskFactor sensors (S00–S15, quant, fusion, affect, players) live in **Apache OSS**. Commercial keeps hosted scale, billing, credits, and user-scoped gallery.
+Research RiskFactor **sensors** (S00–S15, quant, fusion, affect, players) live in **Apache OSS**. Commercial keeps hosted scale, billing, credits, and user-scoped gallery — not a second copy of the research tree.
 
-## Outline
+## What moved
 
-1. **What moved** — packages under `verityngn/services/{predictions,quant,fusion,…}`; absorb commit `8d6a8e3`.
-2. **What stayed closed** — Stripe, trial credits, `verityindex_commercial` GCS paths, SaaS UI, outreach CRM.
-3. **OPEN_CORE rewrite** — boundary scan fails on commercial markers, not research dir names.
-4. **Install** — `pip install verityngn[predictions]` (optional extras; no hard torch/whisper).
-5. **What we do not claim** — no Family B allocation / alpha; measurement and abatement language only.
+Packages under `verityngn/services/{predictions,quant,fusion,players,affect,mediasphere,text_risk,timeseries}` plus vision AU/gaze extractors and `scripts/predictions/`. Absorb commit: `8d6a8e3` on `release/v3.0.0`.
+
+These are **measurement** sleeves for CEO / talking-head delivery and instrument risk. They are not Family B allocation products.
+
+## What stayed closed (hosted)
+
+- Stripe / trial credits  
+- `verityindex_commercial` GCS paths  
+- SaaS UI (VerityEngine / verityindex.com)  
+- Outreach CRM and engagement letters  
+
+## OPEN_CORE rewrite
+
+Boundary scan fails on **commercial markers** (`stripe`, credits paths, commercial gallery prefixes), not on research directory names. See [OPEN_CORE.md](../../OPEN_CORE.md).
+
+## Install
+
+```bash
+pip install 'verityngn[predictions]'
+# or from source:
+pip install -e '.[predictions]'
+```
+
+Optional extras — no hard torch/whisper on the default `analyze` path. Predictions scripts are opt-in under `scripts/predictions/`.
+
+## Naming: two RiskFactors
+
+| Name | Meaning |
+|------|---------|
+| Predictions / RiskFactor **sensors** | This part — OSS S00–S15 |
+| ClearFactor disclosure RiskFactor | Item 1A vs 8-K counsel product — engine sleeve Phase 1; services paid |
+
+Do not market them as one blob. Platform map: [COMMERCIAL_MAP.md](../../platform/COMMERCIAL_MAP.md).
+
+## What we do not claim
+
+- No Family B allocation / alpha  
+- Measurement and abatement language only  
+- S14 (near-chance vocal dissonance) stays refused  
 
 ## Cite
 
 - [`docs/OPEN_CORE.md`](../../OPEN_CORE.md)
 - [`docs/predictions/OSS_ABSORB.md`](../../predictions/OSS_ABSORB.md)
 - [`docs/predictions/RISK_FACTOR_REGISTRY_S00_S15.md`](../../predictions/RISK_FACTOR_REGISTRY_S00_S15.md)
-
-## Charts (later)
-
-Before/after open-core diagram; optional package map.
 
 ---
 

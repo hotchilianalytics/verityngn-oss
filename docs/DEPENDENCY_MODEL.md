@@ -14,6 +14,7 @@ verityngn-oss (Apache-2.0) ──► PyPI verityngn==3.0.0
 1. **Preferred:** pin a promoted OSS release/ref inside commercial and batch images.
    - stable: `pip install verityngn==3.0.0`
    - research extras: `pip install verityngn[predictions]`
+   - disclosure sleeve (Phase 1): `pip install -e ../rfkit-oss` then `verityngn[disclosure]`
    - pre-cutover smoke: git ref `release/v3.0.0`
 2. **Legacy:** Docker `COPY` / git submodule of `verityngn-oss` (still used by some Cloud Run builds).
 3. **Do not fork** predictions/quant/fusion back into commercial after the 2026-10-05 absorb — pin OSS and keep only hosted extras.

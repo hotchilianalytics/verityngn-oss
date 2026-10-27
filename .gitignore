@@ -50,6 +50,7 @@ venv/
 ENV/
 env/
 .venv
+.venv-ship-gate
 .conda/
 *.conda
 conda-meta/

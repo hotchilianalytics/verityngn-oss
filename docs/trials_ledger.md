@@ -43,7 +43,7 @@
 
 | Date | Label | Pin SHA | Image tag | Job ID | Notes |
 |------|-------|---------|-----------|--------|-------|
-| 2026-10-20 | T-GCP-001 | `be663182f2404ed6211d77b42a5109525cdc9c3e` | `batch-oss-be66318` / `:latest` | `f392013d` Lipozem 40 claims; Cloud Run `00017` | Hosted pin live. HTML wheel omitted `template.html` this image; JSON/MD gate. |
+| 2026-10-20 | T-GCP-001 | `94f62f6621431d57deda8e606b2db7a0f2ab9fa3` | Batch `batch-oss-94f62f6` (`:latest`); API `api-oss-94f62f6` | `f392013d` Lipozem 40 claims on prior image; Cloud Run `00018` | Both tiers pinned to `94f62f6`. Smoke predates the HTML-template fix. |
 
 ## Lessons carried from hca-qngn
 

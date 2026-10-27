@@ -79,8 +79,8 @@ Companion to <a href="https://github.com/hotchilianalytics/verityngn-oss/release
 · Live gallery: <a href="https://verityindex.com/gallery">verityindex.com/gallery</a></p>
 
 <div class="callout">
-<strong>Drop-in public engine.</strong> Deep Research, claim verification, and optional authenticity cues ship in Apache OSS.
-Predictions and RiskFactor stay closed overlays that depend on OSS — not the reverse.
+<strong>Claim-risk platform, not a lie detector.</strong> Deep Research, six claim kinds, genre-aware CRAAP/SIFT, and optional CEO sensors ship in Apache OSS.
+verityindex.com is the hosted control plane. ClearFactor is the first paid disclosure app. Predictions <em>sensors</em> are OSS extras — not allocation alpha.
 </div>
 
 <h2>1. Abstract</h2>
@@ -88,7 +88,8 @@ Predictions and RiskFactor stay closed overlays that depend on OSS — not the r
 This release restores <strong>Deep Research</strong> (grounded forensic summarization) to the public tree, adds optional authenticity and spectral voice cues,
 and documents the open-core boundary. We do <em>not</em> claim earnings prediction, allocation factors, or lie detection.</p>
 
-{_img("figures/open_core_architecture.png", "Open-core architecture", "Figure 1. OSS Apache engine vs closed commercial and predictions/RiskFactor overlays.")}
+{_img("figures/open_core_architecture.png", "Open-core architecture", "Figure 1. OSS Apache engine vs hosted control plane and paid apps.")}
+{_img("figures/platform_layers.png", "Platform layers", "Figure 1b. L0 signals through L5 apps. Apache owns L0–L3.")}
 
 <h2>2. System overview</h2>
 <pre>Video URL or file
@@ -135,12 +136,12 @@ verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
 verityngn analyze --file deposition.mp4 --title "Matter clip"</pre>
 
 <h2>6. Open-core dependency model</h2>
-<p>Commercial, predictions, and RiskFactor pin <strong>OSS ≥3.0.0</strong>. Boundary CI fails if
-<code>services/predictions</code> or <code>services/quant</code> appear under the public package.
-See <code>docs/OPEN_CORE.md</code>.</p>
+<p>Hosters pin <strong>OSS ≥3.0.0</strong>. Research sleeves (including CEO sensors) live in the public tree.
+Boundary CI fails on commercial markers (Stripe, credits paths), not on research package names.
+See <code>docs/OPEN_CORE.md</code> and <code>docs/platform/PLATFORM_OVERVIEW.md</code>.</p>
 
 <div class="warn">
-<strong>What we will not claim:</strong> earnings prediction / allocation alpha; “lie detector” branding; RiskFactor S00–S15 registry scores in this paper.
+<strong>What we will not claim:</strong> earnings prediction / allocation alpha; “lie detector” branding; crawl or surveillance.
 </div>
 
 <h2>7. Links</h2>

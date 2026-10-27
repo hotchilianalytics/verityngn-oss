@@ -13,7 +13,7 @@
 
 ## Abstract
 
-We release **VerityNgn OSS 3.0.0**, a standalone open-source multimodal engine for claim extraction and verification from video. This release restores **Deep Research** (grounded forensic summarization) to the public Apache tree, adds optional **authenticity** and **spectral voice** cues, and documents a clear open-core boundary: predictions and RiskFactor products remain closed overlays that **depend on OSS**, not the reverse. We do not claim earnings prediction, allocation factors, or lie detection.
+We release **VerityNgn OSS 3.0.0**, a standalone open-source multimodal **claim-risk** engine. This release restores **Deep Research** to the Apache tree, ships six claim kinds and genre-aware CRAAP/SIFT, and absorbs CEO **sensors** as `verityngn[predictions]`. verityindex.com is the hosted control plane; ClearFactor is the first paid disclosure app. We do not claim earnings prediction, allocation factors, or lie detection.
 
 **Keywords:** video verification, counter-intelligence, deep research, open-core, multimodal LLM
 
@@ -25,7 +25,11 @@ Prior open-core practice left Deep Research and several authenticity cues on the
 
 ![Open-core architecture](figures/open_core_architecture.png)
 
-*Figure 1. OSS Apache engine vs closed commercial and predictions/RiskFactor overlays.*
+*Figure 1. OSS Apache engine vs hosted control plane and paid apps.*
+
+![Platform layers](figures/platform_layers.png)
+
+*Figure 1b. L0 signals through L5 apps. Apache owns L0–L3.*
 
 ---
 

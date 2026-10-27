@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "verityngn",
+  "version": "3.1.0",
+  "description": "Claim-risk engine: analyze video, review disclosure, read a local report. Not a lie detector. Not a crawler."
+}

@@ -1,15 +1,14 @@
 # X / Twitter thread — VerityNgn OSS 3.0
 
-1/ Shipping **VerityNgn OSS 3.0.0** — open-source multimodal video claim verification. Deep Research is now in the Apache CLI, not locked behind the commercial fork.
+1/ Shipping **VerityNgn OSS 3.0.0** — open-source multimodal **claim-risk** engine. Deep Research + research sleeves are in the Apache tree. Risk platform, not a lie detector.
 
-2/ Install: `pip install verityngn`  
+2/ Install (branch until PyPI): `pip install -e '.[deep]'` from `release/v3.0.0`  
 Run: `verityngn analyze <youtube-url> --deep`  
-Also supports local files: `verityngn analyze --file clip.mp4`
+Local files: `verityngn analyze --file clip.mp4`
 
-3/ Stack: Gemini multimodal claims → counter-intel (YouTube reviews + press-release bias) → TRUE/FALSE/UNCERTAIN probabilities → optional grounded Deep Research report.
+3/ Stack: Gemini multimodal claims → counter-intel → TRUE/FALSE/UNCERTAIN + residual reliance → optional Deep Research. Domain packs: CRAAP / SIFT / CEO sensors / legal / health.
 
-4/ Open-core honesty: predictions & RiskFactor stay closed overlays that depend on OSS. No earnings prediction. No “lie detector.”
+4/ Open-core: engine quality stays OSS. verityindex.com = hosted control plane + apps. Predictions sensors are OSS extras — not a closed fork.
 
-5/ Paper + charts: github.com/hotchilianalytics/verityngn-oss → `papers/verityngn_oss_v3_release.md`  
-Demo: verityngn.streamlit.app  
-Stars/issues welcome.
+5/ Platform overview + primary-10 battery in repo (`docs/platform/`, `docs/launch/BATTERY_RESULTS_v3.md`)  
+Demo: verityngn.streamlit.app · Gallery: verityindex.com/gallery

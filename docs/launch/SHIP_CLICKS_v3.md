@@ -1,6 +1,6 @@
 # Ship clicks — v3.0.0 (gated)
 
-**Status:** Not executed. Awaiting **explicit operator ask** after matrix green (or operator accepts PENDING primary-10 expansion).
+**Status:** Operator **go** received 2026-10-26. Pre-flight PASS. Executing retag / merge / PyPI.
 
 | Action | Command / note | Allowed now? |
 |--------|----------------|--------------|

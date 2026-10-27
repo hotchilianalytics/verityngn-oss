@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "verityngn": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "verityngn.agent.mcp_server"]
+    }
+  }
+}

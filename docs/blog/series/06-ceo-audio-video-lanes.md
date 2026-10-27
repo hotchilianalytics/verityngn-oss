@@ -1,8 +1,8 @@
-# Part 6 — CEO audio/video lanes (outline)
+# Part 6 — CEO audio/video lanes
 
 **Series:** VerityNgn OSS  
-**Part 6 of 8 · Draft after hackathon / primary-10 battery**  
-**Status:** OUTLINE
+**Part 6 of 9**  
+**Status:** DRAFT · primary-10 battery PASS
 
 ---
 
@@ -10,23 +10,46 @@
 
 Affect, vision, and fusion are **opt-in** sleeves for talking-head and keynote videos. S00–S15 is a risk-measurement registry, not an alpha product. S14 (near-chance vocal dissonance) stays refused.
 
-## Outline
+## Why CEO interviews
 
-1. **Why CEO interviews** — delivery consistency, instrument risk, disclosure risk before any earnings join.
-2. **Sensors** — MediaPipe face, VAD/ASR stubs vs measured, crossmodal fusion, derailment.
-3. **Hygiene** — pre-print catalogs only; post-print victory laps excluded; register trials before CAR peek.
-4. **Scripts** — `scripts/predictions/` (mediapipe, affect, signal_quality); not on default `analyze` path.
-5. **Ethics** — congruence / delivery risk only; not employment screening; deception vendors disabled stubs.
+Delivery consistency, instrument risk, and disclosure-adjacent statements show up in short CNBC cuts and long WEF stages before any earnings join. The primary-10 battery proved extractability across Karp, Huang, and Nadella fixtures without requiring local media bytes for every row.
+
+## Sensors (opt-in)
+
+- MediaPipe face landmarker  
+- VAD / ASR stubs vs measured paths  
+- Crossmodal fusion and derailment checks  
+- Brand-safety / exhibit maps on the standard report path  
+
+Default `verityngn analyze` does not require the full predictions stack. Operators enable scripts under `scripts/predictions/` when measuring delivery risk.
+
+## Hygiene
+
+- Prefer **pre-print** catalog IDs ([karp](../../karp_pre_earnings_videos.json) / [nvda](../../nvda_pre_earnings_videos.json))  
+- Exclude post-print victory-lap uploads  
+- Register trials in a ledger before any CAR peek  
+
+## Primary-10 CEO rows
+
+| ID | Role | Claims (battery) |
+|----|------|------------------|
+| `V7mYWOzdhpc` | Karp short | 37 |
+| `ijRuuaaM6XM` | Karp + Huang dual | 32 |
+| `cP8pfCJTw4Q` | Huang Squawk (CES LIVE swap) | 16 |
+| `dRgPbNJ5RJc` | Karp WEF long | 40 |
+| `lb_ZJylekWo` | Nadella Stargate | 19 |
+
+Full table: [BATTERY_RESULTS_v3.md](../../launch/BATTERY_RESULTS_v3.md).
+
+## Ethics
+
+Congruence / delivery risk only. Not employment screening. Deception-vendor stubs stay disabled. No surveil / crawl product.
 
 ## Cite
 
-- [`docs/karp_pre_earnings_videos.json`](../../karp_pre_earnings_videos.json)
 - [`docs/predictions/VIDEO_CUE_CRITICAL_RATING.md`](../../predictions/VIDEO_CUE_CRITICAL_RATING.md)
 - [`docs/launch/OSS_RELEASE_VIDEO_SLATE_v3.md`](../../launch/OSS_RELEASE_VIDEO_SLATE_v3.md)
-
-## Charts (later)
-
-CEO panel feature grid; S00–S15 bucket map.
+- [`docs/platform/DOMAIN_PACKS.md`](../../platform/DOMAIN_PACKS.md)
 
 ---
 

@@ -52,6 +52,11 @@ predictions = [
 ]
 # Optional heavy stack (not pulled by predictions extra):
 #   pip install torch transformers faster-whisper opensmile
+# Phase 1 disclosure sleeve: install the public rfkit checkout until PyPI
+#   pip install -e ../rfkit-oss
+#   then: pip install -e '.[disclosure]'
+disclosure = []
+mcp = []
 all = ["verityngn[deep,vision,audio,predictions]"]
 
 [project.scripts]
