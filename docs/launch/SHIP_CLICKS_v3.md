@@ -1,6 +1,6 @@
 # Ship clicks — v3.0.0 (gated)
 
-**Status:** Operator **go** received 2026-10-26. Pre-flight PASS. Executing retag / merge / PyPI.
+**Status:** Operator go 2026-10-26. Git tag `v3.0.0` = `644e5b4` on `main` and `release/v3.0.0`. GitHub release updated. **PyPI still needs an API token** (`TWINE_PASSWORD`).
 
 | Action | Command / note | Allowed now? |
 |--------|----------------|--------------|

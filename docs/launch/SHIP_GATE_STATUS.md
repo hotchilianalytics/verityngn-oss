@@ -1,8 +1,8 @@
 # Ship-gate pre-flight — 2026-10-25
 
 **Branch:** `release/v3.0.0`  
-**HEAD:** `94f62f6` (uncommitted platform-refresh files sit on this SHA)  
-**Published tag `v3.0.0`:** moving off `c740bad` on operator go 2026-10-26
+**HEAD / tag:** `644e5b4` (`v3.0.0`)  
+**Previous tag:** `c740bad` (moved on operator go 2026-10-26)
 
 ## Pre-flight (this pass)
 
@@ -18,10 +18,21 @@
 
 ## Operator go (2026-10-26)
 
-1. Retag `v3.0.0` to this branch tip (includes platform pack)  
-2. Fast-forward `origin/main` to `release/v3.0.0` (do **not** use local `main` commit `68703d7`, which has `.downloads` media)  
-3. Publish `verityngn==3.0.0` to PyPI  
-4. GitHub release assets  
-5. Public `gh repo create` for rfkit still waits on Derrick `OPEN_CLOSED.md`
+| Step | Result |
+|------|--------|
+| Push `release/v3.0.0` | **Done** `644e5b4` |
+| Fast-forward `origin/main` | **Done** `f28b3e8` → `644e5b4` (did not use local `68703d7`) |
+| Retag `v3.0.0` | **Done** annotated tag `ca76d68` → `644e5b4` |
+| GitHub release | **Done** https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0 |
+| PyPI `verityngn==3.0.0` | **Blocked** — no `TWINE_PASSWORD` / PyPI API token in this environment |
+| `gh repo create` rfkit | Still waits on Derrick `OPEN_CLOSED.md` |
+
+Wheels are built at `dist/verityngn-3.0.0-*.whl` / `.tar.gz`. To finish PyPI:
+
+```bash
+export TWINE_USERNAME=__token__
+export TWINE_PASSWORD=pypi-...   # API token
+python -m twine upload dist/verityngn-3.0.0-py3-none-any.whl dist/verityngn-3.0.0.tar.gz
+```
 
 See [`SHIP_CLICKS_v3.md`](SHIP_CLICKS_v3.md).
