@@ -56,7 +56,9 @@ predictions = [
 #   pip install -e ../rfkit-oss
 #   then: pip install -e '.[disclosure]'
 disclosure = []
-mcp = []
+# verityngn-mcp v2 (remote MCP server): schema validation, JWT access tokens, xlsx export.
+# Optional: uvicorn for the ASGI binding; docling for PDF/DOCX registration.
+mcp = ["jsonschema>=4.21", "PyJWT[crypto]>=2.8", "openpyxl>=3.1"]
 all = ["verityngn[deep,vision,audio,predictions]"]
 
 [project.scripts]
@@ -78,6 +80,7 @@ verityngn = [
     "config/*.json",
     "services/deepresearch/prompts/*.md",
     "services/players/data/*.json",
+    "agent/mcp_v2/data/*.json",
 ]
 
 [tool.pytest.ini_options]

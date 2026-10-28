@@ -5,6 +5,16 @@ All notable changes to VerityNgn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **verityngn-mcp v2** (`verityngn/agent/mcp_v2`): remote MCP server on protocol 2026-07-28 (stateless Streamable HTTP, `server/discover`), with 17 SplitRisk tools returning `ClaimRiskRecord` 2.0 with W3C anchors, server-side locks, the Tasks extension, five MCP Apps widgets, and RFC 9728 metadata with pluggable JWT validation. See `docs/agent/MCP_V2.md`. The 3.1 stdio server is unchanged.
+- `ClaimRiskRecord` schema 2.0 fields (anchors, coverage, severity, review, judgment, provenance), all optional; `from_video_claim` and `from_disclosure` are unchanged.
+- `scripts/ci/mcp_ship_gate.py`: reports each MCP tool as REAL, BLOCKED or FAIL from real results over HTTP.
+
+### Fixed
+- The ship gate counted the stdio server's command strings as "MCP PASS". Its tests now say they check a command surface, and hosted execution is gated separately.
+
 ## [3.0.0] - 2026-09-03
 
 Candidate cut on `release/v3.0.0` (intended to replace `main` after operator testing). Existing git tag `v3.0.0` still points at the 2026-08-29 canonical engine commit until retag is approved.

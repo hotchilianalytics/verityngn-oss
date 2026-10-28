@@ -1,0 +1,4 @@
+{
+  "_comment": "Curated owned-channel registry, keyed by SEC CIK. ClearFactor curates it; a channel counts as owned only if the issuer's own website or investor-relations page links to it (verified_by: issuer_site_link) or after manual review. Add rows as {\"channel_id\": \"UC...\", \"verified_by\": \"issuer_site_link\", \"evidence_url\": \"https://...\"}. Deployments can merge a private file via SPLITRISK_OWNED_CHANNELS.",
+  "issuers": {}
+}
