@@ -1,4 +1,11 @@
-"""Unified claim / evidence / action record for video and disclosure packs."""
+"""Unified claim / evidence / action record for video and disclosure packs.
+
+Schema 2.0 (verityngn-mcp v2) adds anchors, coverage, severity, review and
+provenance. Every new field is optional so 1.x records still load; the MCP v2
+server always fills them. There is deliberately no computed likelihood field:
+``confidence`` is evidence confidence, and likelihood exists only as a
+human-entered ``judgment``.
+"""
 
 from __future__ import annotations
 
@@ -6,12 +13,44 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+SCHEMA_VERSION = "2.0"
+
+VERDICTS = ("SUPPORTED", "CONTESTED", "UNRESOLVED")
+ACTIONS = ("REWRITE", "KEEP", "MOVE", "REMOVE", "ADD")
+
+_LEGACY_VERDICTS = {
+    "TRUE": "SUPPORTED",
+    "LIKELY_TRUE": "SUPPORTED",
+    "MOSTLY_TRUE": "SUPPORTED",
+    "HIGHLY_LIKELY_TO_BE_TRUE": "SUPPORTED",
+    "SUPPORTED": "SUPPORTED",
+    "FALSE": "CONTESTED",
+    "LIKELY_FALSE": "CONTESTED",
+    "MOSTLY_FALSE": "CONTESTED",
+    "HIGHLY_LIKELY_TO_BE_FALSE": "CONTESTED",
+    "CONTESTED": "CONTESTED",
+    "MOVE TO GENERAL RISK FACTORS": "MOVE",
+    "MOVE_TO_GENERAL": "MOVE",
+    "REMOVE AS STALE": "REMOVE",
+    "REMOVE_AS_STALE": "REMOVE",
+}
+
 
 class EvidenceItem(BaseModel):
     source: str = ""
     quote: str = ""
     date: Optional[str] = None
     url: Optional[str] = None
+    source_id: Optional[str] = None
+    source_class: Optional[str] = None
+    stance: Optional[str] = None
+    visibility: Optional[str] = None
+    anchor: Optional[dict[str, Any]] = None
+    match_mode: Optional[str] = None
+    quote_sha256: Optional[str] = None
+    allegation: bool = False
+    licence: Optional[dict[str, Any]] = None
+    retrieved_at: Optional[str] = None
 
 
 class ClaimRiskRecord(BaseModel):
@@ -26,6 +65,44 @@ class ClaimRiskRecord(BaseModel):
     confidence: Optional[float] = None
     residual_reliance_risk: Optional[str] = None
     source_lane: str = "video"
+
+    schema_version: Optional[str] = None
+    doc_id: Optional[str] = None
+    target: Optional[dict[str, Any]] = None
+    entity_id: Optional[str] = None
+    category: Optional[str] = None
+    item_1a_heading: Optional[str] = None
+    severity: Optional[dict[str, Any]] = None
+    coverage: Optional[dict[str, Any]] = None
+    visibility: Optional[str] = None
+    role_view: Optional[list[str]] = None
+    allegation: bool = False
+    junior_obvious: Optional[dict[str, Any]] = None
+    lag_clock: Optional[dict[str, Any]] = None
+    illustrative_rewrite: Optional[str] = None
+    review: Optional[dict[str, Any]] = None
+    judgment: Optional[dict[str, Any]] = None
+    no_promote: bool = False
+    disclaimers: Optional[list[str]] = None
+    provenance: Optional[dict[str, Any]] = None
+
+    def to_wire(self) -> dict[str, Any]:
+        """JSON shape for MCP v2 (``urn:splitrisk:schema:v1#/$defs/ClaimRiskRecord``)."""
+        return self.model_dump(mode="json", exclude_none=True)
+
+
+def neutral_verdict(raw: Any, *, claim_kind: str) -> str:
+    """Map legacy truthfulness labels onto Supported / Contested / Unresolved.
+
+    Supported and Contested are only allowed on ``source_backed_fact``.
+    """
+    key = str(raw or "").strip().upper().replace("-", "_")
+    mapped = _LEGACY_VERDICTS.get(key) or _LEGACY_VERDICTS.get(key.replace("_", " "))
+    if mapped is None:
+        mapped = key if key in VERDICTS + ACTIONS else "UNRESOLVED"
+    if mapped in ("SUPPORTED", "CONTESTED") and claim_kind != "source_backed_fact":
+        return "UNRESOLVED"
+    return mapped
 
 
 def from_video_claim(claim: Any, *, domain_pack: str = "consumer_craap") -> ClaimRiskRecord:
