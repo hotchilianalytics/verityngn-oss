@@ -7,6 +7,8 @@ Every call sends the declared User-Agent and stays under 10 requests a second.
 from __future__ import annotations
 
 import datetime as dt
+import html
+import re
 import time
 import urllib.parse
 from pathlib import Path
@@ -17,8 +19,14 @@ from verityngn.agent.mcp_v2.documents import user_agent
 from verityngn.agent.mcp_v2.errors import ToolFailure
 
 STAFF_FORMS = {"UPLOAD", "CORRESP"}
+MAX_DOCUMENT_BYTES = 60 * 1024 * 1024
 _LIMIT = RateLimiter(per_second=8)
 _CACHE = Path.home() / ".cache" / "verityngn" / "company_tickers.json"
+
+
+def form_matches(form: str, wanted: list[str]) -> bool:
+    """A requested base form also matches its amendments; a requested /A form matches only amendments."""
+    return form in wanted or form.removesuffix("/A") in wanted
 
 
 def entity_id_for_cik(cik: str | int) -> str:
@@ -45,7 +53,10 @@ class EdgarClient:
 
     def get_bytes(self, url: str) -> bytes:
         _LIMIT.wait()
-        return request(url, headers={"User-Agent": user_agent(), "Accept": "*/*"}, provider=self.provider)
+        data = request(url, headers={"User-Agent": user_agent(), "Accept": "*/*"}, provider=self.provider)
+        if len(data) > MAX_DOCUMENT_BYTES:
+            raise ToolFailure("INVALID", f"The filing document is larger than {MAX_DOCUMENT_BYTES // (1024 * 1024)} MB.")
+        return data
 
     def company_tickers(self) -> list[dict[str, Any]]:
         from verityngn.services.text_risk.edgar import company_tickers
@@ -81,7 +92,33 @@ class EdgarClient:
             entry = by_cik.setdefault(c, {"cik": str(c), "name": r.get("title", ""), "tickers": []})
             if r.get("ticker") and r["ticker"] not in entry["tickers"]:
                 entry["tickers"].append(r["ticker"])
+        if not by_cik and cik:
+            return [self._registrant(cik)]
+        if not by_cik and name:
+            return self._registrants_named(name, limit)
         return list(by_cik.values())[:limit]
+
+    def _registrant(self, cik: str) -> dict[str, Any]:
+        """Registrants without a ticker (for example before an IPO) are not in the ticker list."""
+        data = self.submissions(cik)
+        return {"cik": str(int(cik)), "name": str(data.get("name") or ""), "tickers": list(data.get("tickers") or [])}
+
+    def _registrants_named(self, name: str, limit: int) -> list[dict[str, Any]]:
+        """EDGAR's company-name lookup: autocomplete for exact names, then the company feed for each CIK."""
+        data = self._get_json("https://efts.sec.gov/LATEST/search-index?" + urllib.parse.urlencode({"keysTyped": name}))
+        names = [str((h.get("_source") or {}).get("entity") or "") for h in (data.get("hits") or {}).get("hits") or []]
+        out: list[dict[str, Any]] = []
+        for entity in [n for n in names if n][: min(limit, 3)]:
+            feed = self.get_bytes(
+                "https://www.sec.gov/cgi-bin/browse-edgar?"
+                + urllib.parse.urlencode({"company": entity, "action": "getcompany", "type": "", "owner": "include", "count": 1, "output": "atom"})
+            ).decode("latin-1", errors="replace")
+            head = feed.split("<entry", 1)[0]
+            cik_m = re.search(r"<cik>(\d+)</cik>", head)
+            name_m = re.search(r"<conformed-name>([^<]+)</conformed-name>", head)
+            if cik_m and not any(o["cik"] == str(int(cik_m.group(1))) for o in out):
+                out.append({"cik": str(int(cik_m.group(1))), "name": html.unescape(name_m.group(1)) if name_m else entity, "tickers": []})
+        return out
 
     def _recent_rows(self, data: dict[str, Any]) -> list[dict[str, Any]]:
         recent = (data.get("filings") or {}).get("recent") or {}
@@ -98,11 +135,10 @@ class EdgarClient:
                 if f.get("filingTo", "") >= start.isoformat() and f.get("filingFrom", "9999") <= end.isoformat():
                     extra = self._get_json(f"https://data.sec.gov/submissions/{f['name']}")
                     rows.extend(self._recent_rows({"filings": {"recent": extra}}))
-        wanted = set(forms)
         out = []
         for r in rows:
             base_form = r["form"].removesuffix("/A")
-            if base_form not in wanted:
+            if not form_matches(r["form"], forms):
                 continue
             if not (start.isoformat() <= r["filingDate"] <= end.isoformat()):
                 continue
@@ -126,7 +162,7 @@ class EdgarClient:
         params = {
             "q": f'"{query}"' if " " in query and not query.startswith('"') else query,
             "ciks": f"{int(cik):010d}",
-            "forms": ",".join(forms),
+            "forms": ",".join(sorted({f.removesuffix("/A") for f in forms})),
             "dateRange": "custom",
             "startdt": start.isoformat(),
             "enddt": end.isoformat(),
@@ -143,6 +179,8 @@ class EdgarClient:
             if accession in seen:
                 continue
             base_form = str(src.get("form", "")).removesuffix("/A")
+            if not form_matches(str(src.get("form", "")), forms):
+                continue
             seen[accession] = {
                 "accession": accession,
                 "form": src.get("form", ""),

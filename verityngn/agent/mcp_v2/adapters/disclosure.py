@@ -15,6 +15,12 @@ Finding contract (one dict per finding; offsets are into ``request.text``):
 ``allegation``, ``evidence`` (list of EvidenceItem-shaped dicts with
 ``source_class`` and ``stance``), and provenance keys ``engine_version``,
 ``engine_commit``, ``model``.
+
+With ``prior_doc_id`` (last year's 10-K, or the previous version of a
+registration statement such as DRS/A or S-1 against S-1/A) the request also
+carries ``prior_text``, ``prior_outline`` and ``section_pairs``: one entry per
+outline key with the ``current`` and ``prior`` spans (either may be null when
+a section was added or removed), so the engine can compare like with like.
 """
 
 from __future__ import annotations
@@ -42,6 +48,8 @@ class AssessRequest:
     outline: list[dict[str, Any]] = field(default_factory=list)
     entity: Optional[dict[str, Any]] = None
     prior_text: Optional[str] = None
+    prior_outline: list[dict[str, Any]] = field(default_factory=list)
+    section_pairs: list[dict[str, Any]] = field(default_factory=list)
 
 
 class DisclosureEngine(Protocol):

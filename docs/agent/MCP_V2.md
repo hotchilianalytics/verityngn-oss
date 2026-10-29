@@ -32,7 +32,7 @@ Production: set `SPLITRISK_RESOURCE_URL` (canonical endpoint; also the token aud
 |---|---|
 | `register_document` | Real for text, HTML (including inline XBRL), WebVTT and URLs (public hosts only). PDF and DOCX need Docling; `upload_ref` needs the hosted object store. Both report `ENGINE_NOT_INSTALLED`. |
 | `verify_quote` | Real: exact, fuzzy (with character diff) or failed, plus an anchor. Native matcher, not `rfkit/verify.py`. |
-| `resolve_entity`, `filings_search`, `get_filing_section` | Real against SEC EDGAR (submissions index, full-text search, archives); verified live on the Microsoft Item 1.05 8-K. |
+| `resolve_entity`, `filings_search`, `get_filing_section` | Real against SEC EDGAR (submissions index, full-text search, archives, company lookup). Verified live on the Microsoft Item 1.05 8-K and on the Anthropic, PBC S-1 (`0001628280-26-067168`) and its DRS/A. |
 | `compose_assessment`, `record_review_action`, `get_record`, `get_report` | Real. |
 | `export_assessment` | Real for `json`, `md`, `w3c_annotations` and `xlsx`; `docx_comments` and `audit_pdf` are not built yet. |
 | `news_window` | GDELT is real (no key). The Event Registry client follows its public API but has not run against a live key. |
@@ -51,6 +51,29 @@ Every position is an offset into the document's normalized text, counted in Unic
 - **`sr-norm-1`** is applied to every registered document. HTML and WebVTT are extracted first, then normalized (`html+sr-norm-1`, `webvtt+sr-norm-1`). Steps: NFKC; CR LF and CR become LF; U+00A0 becomes a space; runs of space, tab, form feed and vertical tab become one space; each line is stripped of `str.isspace()` characters; three or more line breaks become exactly two; the whole text is stripped. Line breaks are kept.
 - **Test vectors** for clients that compute anchors themselves are in `verityngn/agent/mcp_v2/data/sr-norm-1.vectors.json`, also served as the resource `splitrisk://normalizer/sr-norm-1`. Each vector gives the input, the normalized output, its code-point and UTF-16 lengths, `source_hash`, the `doc_id` for tenant `acme`, and quote offsets in both units. Regenerate the file with `python -m verityngn.agent.mcp_v2.norm_vectors`; a unit test fails if it drifts from the code.
 - **Reading a registered document:** `register_document` and `get_filing_section` return `document_uri` (`splitrisk://documents/{doc_id}`). Reading it returns the normalized text, `source_hash`, normalizer, outline, the WebVTT cue table and `pages`. `pages` stays empty until paged formats are extracted, because PDF support needs Docling. Use this resource for documents the server fetched itself instead of re-implementing HTML extraction.
+
+## Registration statements and prospectuses
+
+`filings_search` accepts `S-1`, `S-1/A`, `F-1`, `F-1/A`, `424B1`, `424B3`, `424B4`, `DRS` and `DRS/A`, alongside the periodic forms. A base form also returns its amendments (`S-1` includes `S-1/A`); an `/A` form returns amendments only. `resolve_entity` finds registrants that have no ticker yet, such as an issuer before its IPO, through EDGAR's company lookup (by name) or its submissions index (by CIK).
+
+For these forms, `get_filing_section` builds a prospectus outline:
+
+- The filing's own table of contents (titles followed by page numbers) gives the sections and their order.
+- Each title is located in the body. The server prefers an occurrence that opens a page, then the longest span, and keeps the table-of-contents order, so a summary's "Risk Factors" line or a "Legal Matters" note in the financial statements is not mistaken for the section.
+- Wrapped headings across up to three lines are matched.
+- Running headers (lines repeated 20 or more times, such as a confidential-treatment legend), page numbers and "Table of Contents" links are excluded from headings and trimmed from section ends.
+- Part II Items 13–17 follow as Items. Without a usable table of contents, a fixed list of standard headings is matched instead.
+
+Section keys: `prospectus-summary`, `risk-factors`, `forward-looking-statements`, `market-and-industry-data`, `use-of-proceeds`, `dividend-policy`, `capitalization`, `dilution`, `selected-financial-data`, `mdna`, `business`, `governance`, `management`, `executive-compensation`, `related-party-transactions`, `principal-stockholders`, `description-of-capital-stock`, `shares-eligible-for-future-sale`, `tax-considerations`, `underwriting`, `legal-matters`, `experts`, `additional-information` and `financial-statements`. Other titles get a slug of the title, for example `select-defined-terms`.
+
+- `item` accepts a key, a title ("Risk Factors", "MD&A") or an Item. When the filing has no such Item, `1A`, `7` and `1` map to `risk-factors`, `mdna` and `business`.
+- `governance` is the issuer's governance section when it has one, as Anthropic's "Our Governance Structure and Its Goals" does. Otherwise it is a synthetic parent entry (`"synthetic": true`) spanning Management through Description of Capital Stock.
+- `register_document` applies the same outline automatically when a document has at least four standard prospectus sections, including the summary or use of proceeds.
+- Normalization (`html+sr-norm-1`) and `document_uri` are the same as for every other document.
+
+**Comparing versions (S-1 against S-1/A, or against a DRS/A).** Within the existing contracts this goes through `assess_document` with `prior_doc_id`. The disclosure engine receives `prior_text`, `prior_outline` and `section_pairs`: one entry per section key, with the span in each version, or null when a section was added or removed. Without an engine this returns `ENGINE_NOT_INSTALLED`. Clients can also compare client-side: both versions' text and outlines are readable through `document_uri`, and the keys line up (Anthropic's S-1 and its latest DRS/A share the same 30 keys).
+
+**Follow-up (needs a new contract):** a read-only `diff_filings(prior_doc_id, doc_id, items?)` tool returning per-section status (`unchanged`, `changed`, `added`, `removed`) and paragraph-level changes with W3C targets in both versions. It would be server-native and make no judgments. It is not in Round 2's 17 tools, and the concept doc deferred `diff_risk_factors`, so it waits for Alan's go.
 
 ## Records and review history
 

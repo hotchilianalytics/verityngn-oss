@@ -169,6 +169,9 @@ def run(live: bool) -> int:
                       check=lambda sc: (_assert(any(f["accession"] == "0001193125-24-011295" for f in sc["filings"]), "Item 1.05 8-K found"), "Item 1.05 8-K of 2024-01-19 found")[1])
             gate.tool("get_filing_section", {"accession": "0001193125-24-011295", "cik": "789019", "item": "8-K:1.05"},
                       check=lambda sc: f"section target {sc['target']['section']['item']} in {sc['doc_id']}")
+            gate.tool("get_filing_section", {"accession": "0001628280-26-067168", "item": "risk-factors"},
+                      check=lambda sc: (_assert("/data/2130357/" in sc["url"], "issuer CIK, not the filing agent"),
+                                        f"Anthropic S-1 {sc['target']['section']['item']} in {sc['doc_id']}")[1])
     finally:
         server.shutdown()
 

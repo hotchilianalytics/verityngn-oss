@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **verityngn-mcp v2** (`verityngn/agent/mcp_v2`): remote MCP server on protocol 2026-07-28 (stateless Streamable HTTP, `server/discover`), with 17 SplitRisk tools returning `ClaimRiskRecord` 2.0 with W3C anchors, server-side locks, the Tasks extension, five MCP Apps widgets, and RFC 9728 metadata with pluggable JWT validation. See `docs/agent/MCP_V2.md`. The 3.1 stdio server is unchanged.
 - `ClaimRiskRecord` schema 2.0 fields (anchors, coverage, severity, review, judgment, provenance), all optional; `from_video_claim` and `from_disclosure` are unchanged.
 - `scripts/ci/mcp_ship_gate.py`: reports each MCP tool as REAL, BLOCKED or FAIL from real results over HTTP.
+- Registration statements and prospectuses in verityngn-mcp v2: S-1, S-1/A, F-1, 424B1, 424B3, 424B4 and DRS forms; prospectus section outlines read from the filing's table of contents; entity resolution for issuers without a ticker. Verified on the Anthropic, PBC S-1 (`0001628280-26-067168`).
 
 ### Fixed
 - The ship gate counted the stdio server's command strings as "MCP PASS". Its tests now say they check a command surface, and hosted execution is gated separately.

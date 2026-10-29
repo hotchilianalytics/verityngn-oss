@@ -152,7 +152,60 @@ _ITEM_10K = re.compile(r"^item\s+(\d{1,2}[a-c]?)\s*[.:\-—–]?\s*(.{0,240})$",
 _ITEM_8K = re.compile(r"^item\s+(\d\.\d{2})\s*[.:\-—–]?\s*(.{0,240})$", re.I)
 
 
-def build_outline(text: str) -> list[dict[str, Any]]:
+def build_outline(text: str, kind: str = "auto") -> list[dict[str, Any]]:
+    """Section outline: SEC Items (10-K, 10-Q, 8-K) or prospectus sections (S-1, F-1, 424B*).
+
+    ``kind`` is ``items``, ``prospectus`` or ``auto`` (prospectus when at least
+    four standard prospectus sections, including the summary or use of
+    proceeds, are found). Prospectus outlines keep Part II Items (13-17).
+    """
+    from verityngn.agent.mcp_v2 import prospectus
+
+    items = _item_outline(text)
+    if kind == "items":
+        return items
+    sections = prospectus.prospectus_sections(text)
+    keys = {k for _, k, _ in sections}
+    if kind == "auto" and not (len(keys) >= 4 and keys & {"prospectus-summary", "use-of-proceeds"}):
+        return items
+    if not sections:
+        return items
+    part_ii = prospectus.part_ii_start(text)
+    cut = part_ii if part_ii is not None else sections[-1][0]
+    starts = [(s, k, h) for s, k, h in sections if part_ii is None or s < part_ii]
+    starts += [(e["start"], e["item"], e["heading_path"][0]) for e in items if e["start"] >= cut]
+    starts.sort()
+    furniture = prospectus.furniture_lines(text)
+    outline: list[dict[str, Any]] = []
+    for i, (start, key, heading) in enumerate(starts):
+        nxt = starts[i + 1][0] if i + 1 < len(starts) else len(text)
+        if part_ii is not None and start < part_ii < nxt:
+            nxt = part_ii
+        end = prospectus.trim_page_furniture(text, start, nxt, furniture)
+        outline.append({"heading_path": [heading], "item": key, "start": start, "end": end})
+    parent = prospectus.governance_parent(outline)
+    if parent:
+        outline.append(parent)
+        outline.sort(key=lambda e: (e["start"], -e["end"]))
+    return outline
+
+
+def align_outlines(prior: list[dict[str, Any]], current: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Pair sections of two versions of a filing by outline key, in current order, then removed sections."""
+    def span(e: dict[str, Any]) -> dict[str, Any]:
+        return {"start": e["start"], "end": e["end"], "heading": e["heading_path"][-1]}
+
+    before = {e["item"]: e for e in prior}
+    pairs = []
+    for e in current:
+        old = before.pop(e["item"], None)
+        pairs.append({"item": e["item"], "current": span(e), "prior": span(old) if old else None})
+    for key, old in before.items():
+        pairs.append({"item": key, "current": None, "prior": span(old)})
+    return pairs
+
+
+def _item_outline(text: str) -> list[dict[str, Any]]:
     """SEC Item boundaries.
 
     Running page headers repeat an Item inside its own section, so consecutive
@@ -264,6 +317,7 @@ def register(
     url: Optional[str] = None,
     title: str = "",
     video_id: Optional[str] = None,
+    outline_kind: str = "auto",
 ) -> Document:
     if data is None:
         data = (text or "").encode("utf-8")
@@ -278,7 +332,7 @@ def register(
         source_hash=source_hash(norm),
         media_type=media_type,
         normalizer=normalizer,
-        outline=build_outline(norm),
+        outline=build_outline(norm, outline_kind),
         title=title,
         url=url,
         rights=rights,

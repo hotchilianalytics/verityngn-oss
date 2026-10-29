@@ -165,7 +165,7 @@ _TOOLS: list[dict[str, Any]] = [
                 "doc_id": ref("DocId"),
                 "domain_pack": ref("DomainPack"),
                 "entity_id": ref("EntityId"),
-                "prior_doc_id": {**ref("DocId"), "description": "Last year's filing, for softening detection"},
+                "prior_doc_id": {**ref("DocId"), "description": "Last year's filing, or the previous version of a registration statement (DRS/A or S-1 against S-1/A), for softening and change detection"},
             },
         },
         "outputSchema": {
@@ -414,7 +414,8 @@ _TOOLS: list[dict[str, Any]] = [
         "title": "Search SEC filings",
         "description": (
             "List an issuer's SEC filings by form inside a bounded window (EDGAR submissions index; EDGAR "
-            "full-text search when a query is given). Staff comment letters are tagged source_class staff."
+            "full-text search when a query is given), including registration statements and prospectuses "
+            "(S-1, F-1, 424B, DRS). Staff comment letters are tagged source_class staff."
         ),
         "scope": "search",
         "inputSchema": {
@@ -426,7 +427,13 @@ _TOOLS: list[dict[str, Any]] = [
                 "forms": {
                     "type": "array",
                     "minItems": 1,
-                    "items": {"enum": ["10-K", "10-Q", "8-K", "20-F", "6-K", "CORRESP", "UPLOAD", "DEF 14A", "S-1"]},
+                    "items": {
+                        "enum": [
+                            "10-K", "10-Q", "8-K", "20-F", "6-K", "CORRESP", "UPLOAD", "DEF 14A",
+                            "S-1", "S-1/A", "F-1", "F-1/A", "424B1", "424B3", "424B4", "DRS", "DRS/A",
+                        ]
+                    },
+                    "description": "A base form also returns its amendments (S-1 includes S-1/A); an /A form returns amendments only.",
                 },
                 "window": ref("Window"),
                 "query": {"type": "string", "maxLength": 200},
@@ -461,8 +468,9 @@ _TOOLS: list[dict[str, Any]] = [
         "name": "get_filing_section",
         "title": "Open a filing section",
         "description": (
-            "Fetch one SEC filing, register it as a document and return the target for one Item "
-            "(1A, 1C, 7, or an 8-K item such as 8-K:1.05), so the viewer can open it scrolled to that Item."
+            "Fetch one SEC filing, register it as a document and return the target for one Item (1A, 1C, 7, or an "
+            "8-K item such as 8-K:1.05) or, for registration statements and prospectuses, one section (risk-factors, "
+            "use-of-proceeds, mdna, governance...), so the viewer can open it scrolled there."
         ),
         "scope": "search",
         "inputSchema": {
@@ -476,7 +484,13 @@ _TOOLS: list[dict[str, Any]] = [
                     "pattern": "^[0-9]{1,10}$",
                     "description": "Registrant CIK. If omitted it is looked up on EDGAR; the accession prefix is often a filing agent, not the issuer.",
                 },
-                "item": {"type": "string", "description": "1A, 1C, 7, 8-K:1.05, 8-K:2.02"},
+                "item": {
+                    "type": "string",
+                    "description": "SEC Item (1A, 1C, 7, 8-K:1.05) or, for S-1, F-1, 424B and DRS filings, a prospectus section: "
+                    "risk-factors, prospectus-summary, use-of-proceeds, mdna, business, governance, management, "
+                    "executive-compensation, principal-stockholders, description-of-capital-stock, underwriting "
+                    "(titles such as 'Risk Factors' also work; 1A, 7 and 1 map to risk-factors, mdna and business).",
+                },
                 "confirmed": {"type": "boolean", "default": False},
             },
         },

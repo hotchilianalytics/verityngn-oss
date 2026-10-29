@@ -11,7 +11,7 @@
 | Open-core boundary scan | PASS |
 | Unit: claim schema + CLI/boundary | PASS |
 | MCP stdio 3.1 surface | Command strings only; does not run analyses. Was previously counted as "MCP PASS" (corrected 2026-10-28) |
-| MCP v2 hosted execution | `python scripts/ci/mcp_ship_gate.py [--live]` asserts real tool results over HTTP. 2026-10-28 on a lean install with `--live`: 9 REAL, 4 BLOCKED (rfkit engine, video stack, OpenSanctions key, CourtListener adapter), 0 FAIL. Branch `cursor/verityngn-mcp-v2-24bd`, not on this release |
+| MCP v2 hosted execution | `python scripts/ci/mcp_ship_gate.py [--live]` asserts real tool results over HTTP. 2026-10-29 on a lean install with `--live`: 10 REAL, 4 BLOCKED (rfkit engine, video stack, OpenSanctions key, CourtListener adapter), 0 FAIL. Branch `cursor/verityngn-mcp-v2-24bd`, not on this release |
 | Clean Python 3.12 venv `pip install -e .` | PASS — `verityngn 3.0.0`, CLI help |
 | Release paper PDF | Present (`papers/verityngn_oss_v3_release.pdf`, 7 pages / 2.19MB) |
 | Browser gallery / GitHub | PASS (see `BROWSER_VERIFY_v3.md`) |

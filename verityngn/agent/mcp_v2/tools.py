@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Callable, Optional
 
-from verityngn.agent.mcp_v2 import anchors, coverage, documents, exports, locks
+from verityngn.agent.mcp_v2 import anchors, coverage, documents, exports, locks, prospectus
 from verityngn.agent.mcp_v2.adapters import Adapters
 from verityngn.agent.mcp_v2.adapters.disclosure import AssessRequest
 from verityngn.agent.mcp_v2.adapters.edgar import cik_from_entity_id, entity_id_for_cik
@@ -310,6 +310,8 @@ class ToolRunner:
             outline=doc.outline,
             entity=entity,
             prior_text=prior.text if prior else None,
+            prior_outline=prior.outline if prior else [],
+            section_pairs=documents.align_outlines(prior.outline, doc.outline) if prior else [],
         )
         def progress(msg: str) -> None:
             tctx.check()
@@ -621,24 +623,25 @@ class ToolRunner:
         cik = args.get("cik") or self.adapters.edgar.issuer_cik(accession)
         self._confirm("get_filing_section", args, ctx, {"cik": cik, "accession": accession, "item": args["item"]})
         url, row = self.adapters.edgar.filing_document(cik, accession)
+        form = str(row.get("form") or "")
         doc = self.store.document_for_url(url, ctx.principal.tenant)
         if doc is None:
             data = self.adapters.edgar.get_bytes(url)
             doc = documents.register(
                 self.store, tenant=ctx.principal.tenant, media_type="text/html", rights="public_source", data=data, url=url,
-                title=f"{row.get('form', '')} {row.get('filingDate', '')} {accession}".strip(),
+                title=f"{form} {row.get('filingDate', '')} {accession}".strip(),
+                outline_kind="prospectus" if form in prospectus.PROSPECTUS_FORMS else "auto",
             )
-        wanted = args["item"].upper().split(":", 1)[-1]
-        entry = next((e for e in doc.outline if e["item"].upper() == wanted), None)
+        entry = find_section(doc.outline, args["item"])
         if entry is None:
             raise ToolFailure(
                 "ANCHOR_UNRESOLVED",
-                f"Item {args['item']} was not found in {accession}.",
-                alternative=f"Open the whole filing ({doc.doc_id}) and assess it as a document.",
+                f"Section {args['item']} was not found in {accession}.",
+                alternative=f"Use one of the sections found, or open the whole filing ({doc.doc_id}) and assess it as a document.",
                 details={"doc_id": doc.doc_id, "items_found": [e["item"] for e in doc.outline]},
             )
         target = anchors.section_target(doc, entry, status="exact")
-        return ok({"doc_id": doc.doc_id, "document_uri": documents.document_uri(doc.doc_id), "target": target, "url": url}, f"Item {entry['item']} of {accession} registered as {doc.doc_id}.")
+        return ok({"doc_id": doc.doc_id, "document_uri": documents.document_uri(doc.doc_id), "target": target, "url": url}, f"Section {entry['item']} ({entry['heading_path'][-1][:80]}) of {form or 'filing'} {accession} registered as {doc.doc_id}.")
 
     def sanctions_match(self, args: dict[str, Any], ctx: CallContext) -> dict[str, Any]:
         self._confirm("sanctions_match", args, ctx, {"name": args["name"], "schema": args["schema"]})
@@ -794,6 +797,17 @@ class ToolRunner:
             {"resource_uri": uri, "media_type": media, "expires_at": exp.expires_at.isoformat().replace("+00:00", "Z")},
             f"Export ready at {uri} ({len(data):,} bytes); it expires in 24 hours.",
         )
+
+
+def find_section(outline: list[dict[str, Any]], requested: str) -> Optional[dict[str, Any]]:
+    """Outline entry for an SEC Item ('1A', '8-K:1.05') or a prospectus section ('risk-factors', 'Risk Factors')."""
+    raw = requested.strip()
+    item = raw.split(":", 1)[1] if raw.upper().startswith(("8-K:", "10-K:", "10-Q:")) else raw
+    exact = next((e for e in outline if e["item"].upper() == item.upper()), None)
+    if exact:
+        return exact
+    key = prospectus.normalize_item(item)
+    return next((e for e in outline if e["item"] == key), None)
 
 
 def match_quote(doc: Document, quote: str, threshold: float) -> dict[str, Any]:
