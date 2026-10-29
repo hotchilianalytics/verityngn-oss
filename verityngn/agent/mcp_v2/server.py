@@ -12,6 +12,7 @@ import binascii
 import json
 import logging
 import re
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Optional
 
@@ -23,6 +24,7 @@ from verityngn.agent.mcp_v2.auth import (
     DevTokenValidator,
     Principal,
     TokenValidator,
+    default_scopes,
     protected_resource_metadata,
     www_authenticate,
 )
@@ -43,6 +45,7 @@ from verityngn.agent.mcp_v2.errors import (
     RpcError,
     ToolFailure,
 )
+from verityngn.agent.mcp_v2.documents import document_payload
 from verityngn.agent.mcp_v2.records import view
 from verityngn.agent.mcp_v2.schema_defs import SCHEMA_ID, definitions_document
 from verityngn.agent.mcp_v2.store import MemoryStore
@@ -68,6 +71,8 @@ INSTRUCTIONS = (
     "never computed. Verdicts are Supported, Contested or Unresolved. Not legal advice. When a call returns an error "
     "with an 'alternative', offer that alternative to the user."
 )
+NORMALIZER_URI = "splitrisk://normalizer/sr-norm-1"
+NORMALIZER_VECTORS = Path(__file__).resolve().parent / "data" / "sr-norm-1.vectors.json"
 _B64 = re.compile(r"^=\?base64\?(.*)\?=$")
 _HEADER_SAFE = re.compile(r"^[\x20-\x7e]*$")
 
@@ -259,9 +264,11 @@ class McpServer:
         if method == "resources/list":
             listing = [ui.resource_listing(n) for n in ui.WIDGET_NAMES]
             listing.append({"uri": "splitrisk://schema/v1", "name": "splitrisk_schema_v1", "title": "SplitRisk shared definitions", "mimeType": "application/schema+json"})
+            listing.append({"uri": NORMALIZER_URI, "name": "sr_norm_1", "title": "sr-norm-1 definition and test vectors", "mimeType": "application/json"})
             return self._result({"resources": listing}, cacheable=True)
         if method == "resources/templates/list":
             templates = [
+                {"uriTemplate": "splitrisk://documents/{doc_id}", "name": "document", "title": "Normalized text, outline and offset tables", "mimeType": "application/json"},
                 {"uriTemplate": "splitrisk://records/{record_id}", "name": "record", "mimeType": "application/json"},
                 {"uriTemplate": "splitrisk://reports/{report_id}", "name": "report", "mimeType": "application/json"},
                 {"uriTemplate": "splitrisk://exports/{export_id}", "name": "export"},
@@ -294,28 +301,10 @@ class McpServer:
         if not isinstance(arguments, dict):
             raise RpcError(INVALID_PARAMS, "arguments must be an object")
         needed = required_scopes(name)
+        if name == "record_review_action" and principal.role == "gc" and arguments.get("action") not in (None, "propose"):
+            needed = ["splitrisk.review.decide"]
         if not any(principal.has_scope(s) for s in needed):
-            alternative = (
-                "Ask an analyst or general counsel to run it." if name == "analyze_video" else "Ask an admin for access."
-            )
-            raise self._challenge(
-                403,
-                FORBIDDEN,
-                f"{name} needs scope {' or '.join(needed)}",
-                error="insufficient_scope",
-                scopes=needed[:1] if len(needed) > 1 else needed,
-                data={"required_scopes": needed, "alternative": alternative},
-            )
-        if (
-            name == "record_review_action"
-            and arguments.get("action") not in (None, "propose")
-            and principal.role == "gc"
-            and not principal.has_scope("splitrisk.review.decide")
-        ):
-            raise self._challenge(
-                403, FORBIDDEN, "Decisions need scope splitrisk.review.decide",
-                error="insufficient_scope", scopes=["splitrisk.review.decide"],
-            )
+            raise self._scope_denied(name, needed, principal)
         ctx = CallContext(principal=principal, tasks_ok=self._client_has(params, TASKS_EXT))
         result = self.runner.call(name, arguments, ctx)
         if result.get("resultType") == "complete" and not result.get("isError"):
@@ -324,6 +313,41 @@ class McpServer:
                 logger.error("Output of %s violates its outputSchema: %s", name, problems[:3])
                 raise RpcError(INTERNAL_ERROR, f"{name} produced output that does not match its outputSchema")
         return self._result(result)
+
+    def _scope_denied(self, name: str, needed: list[str], principal: Principal) -> RpcError:
+        """403 ``insufficient_scope`` that keeps the allowed alternative visible.
+
+        The alternative is repeated in the JSON-RPC message, in ``error.data``
+        and in the challenge's ``error_description``, because clients differ in
+        which of the three they surface. ``step_up`` is false when the caller's
+        role never holds the scope, so re-authorizing cannot help.
+        """
+        reachable = [s for s in needed if s in default_scopes(principal.role)]
+        step_up = bool(reachable)
+        scope = reachable[0] if reachable else needed[0]
+        if step_up:
+            alternative = f"Re-authorize with scope {scope}."
+        elif name == "analyze_video":
+            alternative = "Ask an analyst or general counsel to run analyze_video, or assess a transcript you upload with register_document."
+        elif name == "record_review_action":
+            alternative = "Call record_review_action with action 'propose'; general counsel decides."
+        else:
+            alternative = "Ask an admin for access."
+        message = f"{name} needs scope {' or '.join(needed)}. Instead: {alternative}"
+        return self._challenge(
+            403,
+            FORBIDDEN,
+            message,
+            error="insufficient_scope",
+            scopes=[scope],
+            data={
+                **({} if step_up else {"code": "LOCK_ROLE"}),
+                "required_scopes": needed,
+                "role": principal.role,
+                "step_up": step_up,
+                "alternative": alternative,
+            },
+        )
 
     def _resources_read(self, uri: str, principal: Principal) -> dict[str, Any]:
         if uri.startswith("ui://splitrisk/"):
@@ -337,7 +361,17 @@ class McpServer:
                 {"contents": [{"uri": uri, "mimeType": "application/schema+json", "text": json.dumps(doc), "_meta": {"$id": SCHEMA_ID}}]},
                 cacheable=True,
             )
+        if uri == NORMALIZER_URI:
+            return self._result(
+                {"contents": [{"uri": uri, "mimeType": "application/json", "text": NORMALIZER_VECTORS.read_text(encoding="utf-8")}]},
+                cacheable=True,
+                ttl=86_400_000,
+            )
         try:
+            if uri.startswith("splitrisk://documents/"):
+                doc = self.store.get_document(uri[len("splitrisk://documents/"):], principal.tenant)
+                contents = [{"uri": uri, "mimeType": "application/json", "text": json.dumps(document_payload(doc))}]
+                return self._result({"contents": contents}, cacheable=True, scope="private", ttl=86_400_000)
             if uri.startswith("splitrisk://records/"):
                 rec = self.store.get_record(uri[len("splitrisk://records/"):], principal.tenant)
                 text = json.dumps(view(rec, principal.role))

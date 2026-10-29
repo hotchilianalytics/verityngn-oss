@@ -19,12 +19,28 @@ from verityngn.agent.mcp_v2.auth import Principal
 from verityngn.agent.mcp_v2.config import ServerConfig
 from verityngn.agent.mcp_v2.contracts import published_tool
 from verityngn.agent.mcp_v2.errors import NotFound, ToolFailure
-from verityngn.agent.mcp_v2.records import build_record, evidence_hash, now_iso, sha256_text, view
+from verityngn.agent.mcp_v2.records import (
+    build_record,
+    carry_review,
+    evidence_hash,
+    finding_key,
+    now_iso,
+    sha256_text,
+    view,
+)
 from verityngn.agent.mcp_v2.schema_defs import JUDGMENT_LABEL
 from verityngn.agent.mcp_v2.store import Document, MemoryStore, Report
 from verityngn.agent.mcp_v2.tasks import Cancelled, TaskContext, TaskManager
 
 VIDEO_URN = anchors.VIDEO_SOURCE
+REVIEW_LABELS = {
+    "propose": "Proposed",
+    "accept": "Accepted",
+    "edit": "Edited",
+    "reject": "Rejected",
+    "set_judgment": "Judgment set",
+    "clear_judgment": "Judgment cleared",
+}
 
 
 @dataclass
@@ -257,6 +273,7 @@ class ToolRunner:
             )
         out = {
             "doc_id": doc.doc_id,
+            "document_uri": documents.document_uri(doc.doc_id),
             "source_hash": doc.source_hash,
             "normalizer": doc.normalizer,
             "length": len(doc.text),
@@ -317,7 +334,11 @@ class ToolRunner:
                 doc_id=doc.doc_id,
                 target=anchors.span_target(doc, fs, fe, status="exact"),
                 entity_id=(entity or {}).get("entity_id"),
+                key=finding_key(doc.doc_id, getattr(engine, "name", "rfkit"), domain_pack, fs, str(f.get("claim_text") or "")),
             )
+            if any(r["claim_id"] == rec["claim_id"] for r in records):
+                continue
+            rec = carry_review(rec, self.store.records.get(rec["claim_id"]))
             self.store.add_report_record(report, rec)
             records.append(rec)
             tctx.progress(f"{i + 1} of {len(findings)} done", records_ready=len(report.record_ids))
@@ -510,6 +531,7 @@ class ToolRunner:
                 rec = self._video_record(claim, doc=doc, video_id=video_id, published=published, retrieved=retrieved,
                                          domain_pack=args["domain_pack"], entity=entity, model=result.get("model", ""),
                                          engine=engine)
+                rec = carry_review(rec, self.store.records.get(rec["claim_id"]))
                 self.store.add_report_record(report, rec)
                 records.append(rec)
             tctx.progress(f"{len(claims)} of {len(claims)} done", records_ready=len(report.record_ids))
@@ -558,6 +580,7 @@ class ToolRunner:
             tenant=doc.tenant, domain_pack=domain_pack, tool="analyze_video", engine="verityngn",
             engine_version=getattr(engine, "version", ""), model=model, source_lane="video", doc_id=doc.doc_id,
             target=target, entity_id=(entity or {}).get("entity_id"), extra_disclaimers=("youtube_editorial",),
+            key=finding_key(doc.doc_id, "verityngn-video", domain_pack, cue["start"] if cue else t0, claim["claim_text"]),
         )
 
     def news_window(self, args: dict[str, Any], ctx: CallContext) -> dict[str, Any]:
@@ -595,7 +618,7 @@ class ToolRunner:
 
     def get_filing_section(self, args: dict[str, Any], ctx: CallContext) -> dict[str, Any]:
         accession = args["accession"]
-        cik = args.get("cik") or str(int(accession.split("-", 1)[0]))
+        cik = args.get("cik") or self.adapters.edgar.issuer_cik(accession)
         self._confirm("get_filing_section", args, ctx, {"cik": cik, "accession": accession, "item": args["item"]})
         url, row = self.adapters.edgar.filing_document(cik, accession)
         doc = self.store.document_for_url(url, ctx.principal.tenant)
@@ -615,7 +638,7 @@ class ToolRunner:
                 details={"doc_id": doc.doc_id, "items_found": [e["item"] for e in doc.outline]},
             )
         target = anchors.section_target(doc, entry, status="exact")
-        return ok({"doc_id": doc.doc_id, "target": target, "url": url}, f"Item {entry['item']} of {accession} registered as {doc.doc_id}.")
+        return ok({"doc_id": doc.doc_id, "document_uri": documents.document_uri(doc.doc_id), "target": target, "url": url}, f"Item {entry['item']} of {accession} registered as {doc.doc_id}.")
 
     def sanctions_match(self, args: dict[str, Any], ctx: CallContext) -> dict[str, Any]:
         self._confirm("sanctions_match", args, ctx, {"name": args["name"], "schema": args["schema"]})
@@ -670,7 +693,9 @@ class ToolRunner:
         changes = {k: args[k] for k in ("verdict_or_action", "severity_level", "illustrative_rewrite") if k in args}
         entry: dict[str, Any] = {
             "action": action,
+            "label": REVIEW_LABELS[action],
             "by": p.sub,
+            "by_name": p.display_name,
             "role": p.role,
             "at": now_iso(),
             "evidence_hash": evidence_hash(rec),
@@ -694,11 +719,17 @@ class ToolRunner:
                 "likelihood": args["judgment_likelihood"],
                 "label": JUDGMENT_LABEL,
                 "entered_by": p.sub,
+                "entered_by_name": p.display_name,
                 "entered_at": entry["at"],
             }
             entry["judgment"] = args["judgment_likelihood"]
         elif action == "clear_judgment":
             rec.pop("judgment", None)
+        entry["outcome"] = {
+            "state": review["state"],
+            "verdict_or_action": rec["verdict_or_action"],
+            "severity": {k: v for k, v in (rec.get("severity") or {}).items() if k in ("level", "basis", "rule")},
+        }
         review.setdefault("history", []).append(entry)
         review["version"] = int(review.get("version", 1)) + 1
         self.store.put_record(rec)

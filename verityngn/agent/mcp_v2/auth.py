@@ -31,6 +31,10 @@ class Principal:
     def has_scope(self, scope: str) -> bool:
         return scope in self.scopes
 
+    @property
+    def display_name(self) -> str:
+        return str(self.claims.get("name") or self.claims.get("preferred_username") or self.sub)
+
 
 class AuthError(Exception):
     """Raised by validators. ``error`` is the RFC 6750 error code."""
@@ -134,18 +138,21 @@ class JWTTokenValidator:
 
 
 class DevTokenValidator:
-    """``dev:<tenant>:<role>[:<sub>][:lic=a,b]`` with the role's default scopes. Local use only."""
+    """``dev:<tenant>:<role>[:<sub>][:lic=a,b][:name=First_Last]`` with the role's default scopes. Local use only."""
 
     def validate(self, token: str) -> Principal:
         parts = token.split(":")
         if len(parts) < 3 or parts[0] != "dev":
             raise AuthError("invalid_token", "dev mode expects tokens like dev:<tenant>:<role>[:<sub>]")
         tenant, role = parts[1], parts[2]
-        sub = parts[3] if len(parts) > 3 and not parts[3].startswith("lic=") else f"dev-{role}"
+        sub = parts[3] if len(parts) > 3 and "=" not in parts[3] else f"dev-{role}"
         licences: list[str] = []
+        name = ""
         for extra in parts[3:]:
             if extra.startswith("lic="):
                 licences = [x for x in extra[4:].split(",") if x]
+            elif extra.startswith("name="):
+                name = extra[5:].replace("_", " ")
         claims = {
             "sub": sub,
             "tenant_id": tenant,
@@ -154,6 +161,8 @@ class DevTokenValidator:
             "licences": licences,
             "dev": True,
         }
+        if name:
+            claims["name"] = name
         return principal_from_claims(claims)
 
 
@@ -191,6 +200,6 @@ def www_authenticate(
         parts.append(f'scope="{" ".join(scopes)}"')
     parts.append(f'resource_metadata="{resource_metadata_url}"')
     if description:
-        safe = description.replace('"', "'")
+        safe = "".join(c if 0x20 <= ord(c) <= 0x7E and c not in '"\\' else "'" if c == '"' else " " for c in description)
         parts.append(f'error_description="{safe}"')
     return "Bearer " + ", ".join(parts)

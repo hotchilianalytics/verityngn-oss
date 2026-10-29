@@ -8,7 +8,7 @@ Code: `verityngn/agent/mcp_v2/`. Tests: `test/unit/mcp_v2/`. Gate: `scripts/ci/m
 
 ```bash
 pip install -e '.[mcp]'
-python -m verityngn.agent.mcp_v2 --dev            # loopback only; tokens like dev:<tenant>:<role>[:<sub>][:lic=a,b]
+python -m verityngn.agent.mcp_v2 --dev            # loopback only; tokens like dev:<tenant>:<role>[:<sub>][:lic=a,b][:name=First_Last]
 python scripts/ci/mcp_ship_gate.py --live         # REAL / BLOCKED / FAIL per tool, over HTTP
 ```
 
@@ -44,6 +44,19 @@ Production: set `SPLITRISK_RESOURCE_URL` (canonical endpoint; also the token aud
 
 **Disclosure engine contract.** An engine is any object with `name`, `version` and `assess(request, progress) -> list[finding]`. `request` carries the normalized text and the range to assess; each finding has `claim_text`, `start` and `end` (inside the range) and optionally `claim_kind`, `verdict_or_action`, `category`, `item_1a_heading`, `confidence`, `illustrative_rewrite`, `junior_obvious`, `lag_clock`, `allegation` and `evidence` (EvidenceItem-shaped, with `source_class` and `stance`). See `adapters/disclosure.py`. The server builds the record, anchors, coverage and severity, and rejects any record that fails the schema.
 
+## Documents, positions and `sr-norm-1`
+
+Every position is an offset into the document's normalized text, counted in Unicode code points (as in W3C Web Annotation) and pinned by `source_hash`.
+
+- **`sr-norm-1`** is applied to every registered document. HTML and WebVTT are extracted first, then normalized (`html+sr-norm-1`, `webvtt+sr-norm-1`). Steps: NFKC; CR LF and CR become LF; U+00A0 becomes a space; runs of space, tab, form feed and vertical tab become one space; each line is stripped of `str.isspace()` characters; three or more line breaks become exactly two; the whole text is stripped. Line breaks are kept.
+- **Test vectors** for clients that compute anchors themselves are in `verityngn/agent/mcp_v2/data/sr-norm-1.vectors.json`, also served as the resource `splitrisk://normalizer/sr-norm-1`. Each vector gives the input, the normalized output, its code-point and UTF-16 lengths, `source_hash`, the `doc_id` for tenant `acme`, and quote offsets in both units. Regenerate the file with `python -m verityngn.agent.mcp_v2.norm_vectors`; a unit test fails if it drifts from the code.
+- **Reading a registered document:** `register_document` and `get_filing_section` return `document_uri` (`splitrisk://documents/{doc_id}`). Reading it returns the normalized text, `source_hash`, normalizer, outline, the WebVTT cue table and `pages`. `pages` stays empty until paged formats are extracted, because PDF support needs Docling. Use this resource for documents the server fetched itself instead of re-implementing HTML extraction.
+
+## Records and review history
+
+- **Record IDs are stable for the same finding.** An ID is derived from the document, engine, domain pack, position and claim text, so re-assessing a document returns the same IDs. The reviewer's history, judgment, reviewer severity and the fields a reviewer accepted or edited carry over. If the engine's evidence changed, a `reassessed` entry is added.
+- **Each history entry** carries `label` (for example "Accepted"), `by` (token subject), `by_name` (the token's `name` or `preferred_username`, when present), `role`, `at`, `note`, `changes`, `outcome` (`state`, `verdict_or_action`, `severity` after the step) and `evidence_hash`. Judgment entries stay in the GC view.
+
 ## Locks (enforced in the server)
 
 | Request | Result |
@@ -56,7 +69,7 @@ Production: set `SPLITRISK_RESOURCE_URL` (canonical endpoint; also the token aud
 | Judgment while the workspace column is off | `LOCK_ROLE` |
 | Junior search without `confirmed: true` | `NEEDS_CONFIRMATION`, with the resolved entity and window in `details` |
 | Junior export with `include_internal` | `LOCK_ROLE` |
-| Token without the tool's scope | HTTP 403, `WWW-Authenticate: Bearer error="insufficient_scope"`, with an alternative in the error data |
+| Token without the tool's scope | HTTP 403 with `WWW-Authenticate: Bearer error="insufficient_scope"`. The alternative appears in the JSON-RPC `message` (after "Instead:"), in `error.data.alternative` and in the challenge's `error_description`, because clients surface different parts. `error.data.step_up` is false when the caller's role never holds the scope (then `error.data.code` is `LOCK_ROLE`), so clients should show the alternative rather than re-authorize. |
 | Another tenant's handle | The same `NOT_FOUND` as a missing handle |
 
 Coverage cells are a dated quote or nothing. Severity is consequence only (rules `SEV-OWN-PAIR`, `SEV-STAFF`, `SEV-DOCKET`, `SEV-SPOKEN`, `SEV-SOFTEN`, `SEV-SHORT`, `SEV-CONTEXT`, `SEV-JUNIOR`); reviewer overrides set `basis: reviewer`. Likelihood exists only as the GC's labelled `judgment`. It is stripped, together with the history entries that set it, from every non-GC view, from `compose_assessment` and from JSON, Markdown and W3C exports, and appears only in GC `xlsx` exports.
@@ -79,7 +92,7 @@ Checked on 28 October 2026 against the [2026-07-28 changelog](https://modelconte
 4. **MCP Apps network access** is declared in `_meta.ui.csp.connectDomains`, not `_meta.ui.domain`, which sets the sandbox origin. Widgets declare no connect domains at all: every call goes through the host bridge. The video widget declares `frameDomains` for youtube-nocookie.com, and the assessment widget asks for `clipboardWrite`.
 5. **Workpaper widget** is linked to `get_report` for every role, because `tools/list` is public-cacheable and cannot vary by caller. It renders read-only for non-GC callers, and the server strips judgment.
 6. **Added to `ToolError`:** the code `ENGINE_NOT_INSTALLED` and an optional `details` object.
-7. **Added inputs:** `confirmed` on `filings_search`, `get_filing_section` and `search_litigation` (section 2.2 needs it, but those schemas omitted it); `resolve_entity` is exempt. `get_filing_section` also takes an optional `cik`, because an accession number's prefix is the filer agent, not always the issuer.
+7. **Added inputs:** `confirmed` on `filings_search`, `get_filing_section` and `search_litigation` (section 2.2 needs it, but those schemas omitted it); `resolve_entity` is exempt. `get_filing_section` also takes an optional `cik`. Without it, the server looks up the registrant on EDGAR full-text search. The accession prefix is used only when that CIK's own submissions list the filing, because the prefix is often a filing agent: `0001193125` for Microsoft's 8-K. If the filing has several registrants, the call returns `INVALID` with the candidate CIKs.
 8. **`search_litigation`** is listed as a lock-only tool, because the doc says it returns `LOCK_NO_LICENCE` while blocked.
 9. **Pending output.** Task-required tools use an output schema of `oneOf` the final result or `{report_id, status: "running"}`, the documented fallback for hosts without Tasks.
 10. **Scope failures** use HTTP 403 with an `insufficient_scope` challenge, as the auth spec says. Role and argument locks stay tool errors with alternatives.

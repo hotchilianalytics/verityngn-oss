@@ -38,3 +38,8 @@ def test_item_105_section_and_quote(client):
     sentence = next(s for s in section.split(". ") if "nation-state" in s.lower())
     vq = client.ok("verify_quote", {"quote": sentence, "source": sec["doc_id"]})
     assert vq["match_mode"] == "exact" and vq["target"]["anchor_status"] == "exact"
+
+
+def test_item_105_without_cik_resolves_issuer_not_filing_agent(client):
+    sec = client.ok("get_filing_section", {"accession": MSFT_ITEM_105, "item": "8-K:1.05"})
+    assert sec["url"].startswith("https://www.sec.gov/Archives/edgar/data/789019/")

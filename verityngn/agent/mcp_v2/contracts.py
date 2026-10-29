@@ -83,6 +83,7 @@ _TOOLS: list[dict[str, Any]] = [
             "required": ["doc_id", "source_hash", "outline"],
             "properties": {
                 "doc_id": ref("DocId"),
+                "document_uri": {"type": "string", "description": "splitrisk://documents/{doc_id}: normalized text, outline and offset tables"},
                 "source_hash": {"type": "string", "description": "sha256 of the normalized text that all positions refer to"},
                 "normalizer": {"type": "string", "description": "e.g. docling-2.x+sr-norm-1"},
                 "length": {"type": "integer"},
@@ -470,7 +471,11 @@ _TOOLS: list[dict[str, Any]] = [
             "additionalProperties": False,
             "properties": {
                 "accession": {"type": "string", "pattern": "^[0-9]{10}-[0-9]{2}-[0-9]{6}$"},
-                "cik": {"type": "string", "pattern": "^[0-9]{1,10}$"},
+                "cik": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,10}$",
+                    "description": "Registrant CIK. If omitted it is looked up on EDGAR; the accession prefix is often a filing agent, not the issuer.",
+                },
                 "item": {"type": "string", "description": "1A, 1C, 7, 8-K:1.05, 8-K:2.02"},
                 "confirmed": {"type": "boolean", "default": False},
             },
@@ -478,7 +483,12 @@ _TOOLS: list[dict[str, Any]] = [
         "outputSchema": {
             "type": "object",
             "required": ["doc_id", "target"],
-            "properties": {"doc_id": ref("DocId"), "target": ref("Target"), "url": {"type": "string"}},
+            "properties": {
+                "doc_id": ref("DocId"),
+                "document_uri": {"type": "string", "description": "splitrisk://documents/{doc_id}"},
+                "target": ref("Target"),
+                "url": {"type": "string"},
+            },
         },
         "annotations": {"readOnlyHint": True, "openWorldHint": True},
     },

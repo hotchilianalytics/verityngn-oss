@@ -140,7 +140,8 @@ class MemoryStore:
     def add_report_record(self, report: Report, record: dict[str, Any]) -> None:
         with self._lock:
             self.records[record["claim_id"]] = record
-            report.record_ids.append(record["claim_id"])
+            if record["claim_id"] not in report.record_ids:
+                report.record_ids.append(record["claim_id"])
 
     def put_export(self, tenant: str, media_type: str, data: bytes, ttl_hours: int = 24) -> Export:
         exp = Export(

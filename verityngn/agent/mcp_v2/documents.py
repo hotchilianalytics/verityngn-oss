@@ -287,3 +287,32 @@ def register(
         registered_at=dt.datetime.now(dt.timezone.utc).isoformat(),
     )
     return store.put_document(doc)
+
+
+def document_uri(doc_id: str) -> str:
+    return f"splitrisk://documents/{doc_id}"
+
+
+def document_payload(doc: Document) -> dict[str, Any]:
+    """What a client needs to show a registered document and map anchors onto it.
+
+    ``pages`` maps page numbers to normalized offsets once paged formats are
+    extracted (PDF through Docling); text, HTML and WebVTT have no pages.
+    ``cues`` maps WebVTT time ranges to normalized offsets.
+    """
+    return {
+        "doc_id": doc.doc_id,
+        "source_hash": doc.source_hash,
+        "normalizer": doc.normalizer,
+        "media_type": doc.media_type,
+        "title": doc.title,
+        "url": doc.url,
+        "rights": doc.rights,
+        "length": len(doc.text),
+        "length_utf16": len(doc.text.encode("utf-16-le")) // 2,
+        "positions": "Unicode code points",
+        "outline": doc.outline,
+        "pages": [],
+        "cues": doc.cues,
+        "text": doc.text,
+    }

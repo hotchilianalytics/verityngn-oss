@@ -153,6 +153,45 @@ class EdgarClient:
             }
         return sorted(seen.values(), key=lambda f: f["filed_at"], reverse=True)
 
+    def issuer_cik(self, accession: str) -> str:
+        """The registrant's CIK for an accession.
+
+        An accession number's prefix is whoever transmitted the filing, often a
+        filing agent (for example 0001193125), so it is only trusted when that
+        CIK's own submissions list the accession.
+        """
+        data = self._get_json("https://efts.sec.gov/LATEST/search-index?" + urllib.parse.urlencode({"q": f'"{accession}"'}))
+        ciks = sorted(
+            {
+                str(int(c))
+                for hit in (data.get("hits") or {}).get("hits") or []
+                if (hit.get("_source") or {}).get("adsh") == accession
+                for c in (hit.get("_source") or {}).get("ciks") or []
+                if str(c).isdigit()
+            },
+            key=int,
+        )
+        if len(ciks) == 1:
+            return ciks[0]
+        if len(ciks) > 1:
+            raise ToolFailure(
+                "INVALID",
+                f"Accession {accession} was filed for several registrants.",
+                alternative=f"Repeat the call with cik set to one of: {', '.join(ciks)}.",
+                details={"ciks": ciks},
+            )
+        prefix = str(int(accession.split("-", 1)[0]))
+        try:
+            if any(r["accessionNumber"] == accession for r in self._recent_rows(self.submissions(prefix))):
+                return prefix
+        except ToolFailure:
+            pass
+        raise ToolFailure(
+            "NOT_FOUND",
+            f"Could not determine which registrant filed {accession}; its prefix is the filing agent.",
+            alternative="Repeat the call with cik, taken from resolve_entity or filings_search.",
+        )
+
     def filing_document(self, cik: str, accession: str) -> tuple[str, dict[str, Any]]:
         """Return the primary document URL and the submissions row for one accession."""
         data = self.submissions(cik)

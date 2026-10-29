@@ -33,6 +33,15 @@ _EVIDENCE_KEYS = (
 _PASSTHROUGH = ("category", "item_1a_heading", "illustrative_rewrite", "junior_obvious", "lag_clock", "entity_id")
 
 
+def record_key(key: str) -> str:
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:24]
+
+
+def finding_key(source_id: str, engine: str, domain_pack: str, start: Any, claim_text: str) -> str:
+    """Identity of one engine finding: same document, engine, pack, position and text."""
+    return "|".join([source_id, engine, domain_pack, str(start), " ".join(claim_text.split())])
+
+
 def now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -92,13 +101,15 @@ def build_record(
     target: Optional[dict[str, Any]] = None,
     entity_id: Optional[str] = None,
     extra_disclaimers: tuple[str, ...] = (),
+    key: Optional[str] = None,
 ) -> dict[str, Any]:
+    """Build a schema 2.0 record. With ``key``, the record ID is stable for the same finding."""
     kind = _claim_kind(raw.get("claim_kind"))
     evidence = [_evidence(e) for e in raw.get("evidence") or [] if isinstance(e, dict)]
     allegation = bool(raw.get("allegation")) or any(e.get("allegation") for e in evidence)
     rec: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
-        "claim_id": f"sr:rec:{tenant}/{new_token()}",
+        "claim_id": f"sr:rec:{tenant}/{record_key(key) if key else new_token()}",
         "domain_pack": domain_pack,
         "claim_text": str(raw.get("claim_text") or "").strip(),
         "claim_kind": kind,
@@ -176,3 +187,45 @@ def view(rec: dict[str, Any], role: str) -> dict[str, Any]:
 
 def evidence_hash(rec: dict[str, Any]) -> str:
     return "sha256:" + canonical_hash(rec.get("evidence") or [])
+
+
+REVIEWER_FIELDS = ("verdict_or_action", "illustrative_rewrite")
+_IDENTITY_KEYS = ("source", "quote", "url", "source_id", "source_class", "stance")
+
+
+def _evidence_identity(rec: dict[str, Any]) -> str:
+    """Evidence fingerprint that ignores retrieval timestamps."""
+    return canonical_hash([{k: e.get(k) for k in _IDENTITY_KEYS} for e in rec.get("evidence") or []])
+
+
+def carry_review(new: dict[str, Any], old: Optional[dict[str, Any]]) -> dict[str, Any]:
+    """Re-assessment of a finding already in the workpaper keeps the reviewer's work.
+
+    Review history, judgment, reviewer severity and fields a reviewer changed
+    survive; the engine's evidence is refreshed, and a ``reassessed`` entry is
+    appended when the evidence changed.
+    """
+    if not old:
+        return new
+    review = old.get("review") or {}
+    applied: set[str] = set()
+    for entry in review.get("history") or []:
+        if entry.get("action") in ("accept", "edit"):
+            applied.update((entry.get("changes") or {}).keys())
+    for field in REVIEWER_FIELDS:
+        if field in applied and field in old:
+            new[field] = old[field]
+    if (old.get("severity") or {}).get("basis") == "reviewer":
+        new["severity"] = old["severity"]
+    if "judgment" in old:
+        new["judgment"] = old["judgment"]
+    review = {**review, "history": list(review.get("history") or [])}
+    if _evidence_identity(new) != _evidence_identity(old) and review.get("history"):
+        review["history"].append(
+            {"action": "reassessed", "label": "Re-assessed by engine", "by": "engine", "role": "engine",
+             "at": now_iso(), "evidence_hash": evidence_hash(new)}
+        )
+        review["version"] = int(review.get("version", 1)) + 1
+    new["review"] = review or new["review"]
+    validate_record(new)
+    return new
