@@ -1,7 +1,7 @@
 # Ship-gate — Monday 9 Nov 2026
 
 **Branch:** `release/v3.0.0` (= `main` after Monday push)  
-**Tag:** `v3.0.0` → `5a1076e` (examples + SB1507 public + deck)  
+**Tag:** `v3.0.0` → `b977303` (examples + SB1507 public + deck; content commit `5a1076e`)  
 **Previous published tip:** `644e5b4`
 
 ## Pre-flight (this pass)
@@ -23,8 +23,9 @@
 | Item | Value |
 |------|-------|
 | Live commercial OSS pin (docs) | `94f62f6` — `~/proj/commercial/verityngn-backend-commercial/docs/OSS_V3_ENGINE_PIN.md` |
-| Monday OSS tip | `5a1076e` |
-| Action | Bump Batch / Cloud Run pin `94f62f6` → `5a1076e`; redeploy only if `gcloud` is already authed |
+| Monday OSS tip | `b977303` |
+| Action | Bump Batch / Cloud Run pin `94f62f6` → `b977303`; redeploy only if `gcloud` is already authed |
+| PyPI | Skipped 2026-11-07 — no token in env; wheels checked PASSED |
 
 ## PyPI
 
