@@ -51,6 +51,8 @@ ENV/
 env/
 .venv
 .venv-ship-gate
+docs/launch/decks/_build/
+docs/launch/perplexity_review_2026-10-27/_render/
 .conda/
 *.conda
 conda-meta/

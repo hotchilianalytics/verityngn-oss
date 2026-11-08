@@ -2,17 +2,17 @@
 
 Standalone Apache-2.0 multimodal **claim-risk** engine with Deep Research — the L1 core of the VerityNgn risk platform.
 
-## Release candidate
+## Release
 
 | Field | Value |
 |-------|-------|
-| Branch | `release/v3.0.0` |
+| Branch | `release/v3.0.0` (= `main`) |
 | Package version | **3.0.0** (`pyproject.toml`) |
-| Battery SHA | `b13bcf1` (primary-10 PASS) |
-| Engine/Batch pin | `94f62f6` |
-| Git tag `v3.0.0` | Operator go 2026-10-26 — moves to this release tip |
+| Primary-10 | PASS ([`BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md)) |
+| Commercial Batch pin (pre-Monday) | `94f62f6` — bump to this tip for verityindex |
+| Git tag `v3.0.0` | Monday 9 Nov 2026 tip (examples + SB1507 public) |
+| Examples | [`docs/launch/EXAMPLES.md`](EXAMPLES.md) |
 | Test matrix | [`docs/launch/RELEASE_TEST_MATRIX_v3.md`](RELEASE_TEST_MATRIX_v3.md) |
-| Battery | [`docs/launch/BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md) |
 | Platform | [`docs/platform/PLATFORM_OVERVIEW.md`](../platform/PLATFORM_OVERVIEW.md) |
 
 ## Highlights
@@ -32,15 +32,16 @@ Standalone Apache-2.0 multimodal **claim-risk** engine with Deep Research — th
 ## Install
 
 ```bash
-pip install 'verityngn==3.0.0'
-# from source until then:
+pip install 'verityngn[deep]==3.0.0'
+# or from source:
 pip install -e '.[deep,vision,audio]'
 # optional research sleeve:
 pip install -e '.[predictions]'
-verityngn analyze --tier auto '<url>'
-verityngn analyze --tier full '<url>' --deep
-verityngn captions '<url>'
+# copy-paste fixtures: docs/launch/EXAMPLES.md
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
+verityngn captions 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
 ```
+
 
 ## Environment
 

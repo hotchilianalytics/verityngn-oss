@@ -2,7 +2,7 @@
 
 Use this list before HN / Reddit / LinkedIn / X posts.  
 **Do not post on the same day as the live test run.**  
-**Candidate:** `b13bcf1` · matrix: [`../RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md) · slate: [`../OSS_RELEASE_VIDEO_SLATE_v3.md`](../OSS_RELEASE_VIDEO_SLATE_v3.md) · results: [`../BATTERY_RESULTS_v3.md`](../BATTERY_RESULTS_v3.md) · platform: [`../../platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md)
+**Release:** `v3.0.0` on `main` / `release/v3.0.0` · examples: [`../EXAMPLES.md`](../EXAMPLES.md) · matrix: [`../RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md) · slate: [`../OSS_RELEASE_VIDEO_SLATE_v3.md`](../OSS_RELEASE_VIDEO_SLATE_v3.md) · results: [`../BATTERY_RESULTS_v3.md`](../BATTERY_RESULTS_v3.md) · platform: [`../../platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md) · deck: [`../decks/`](../decks/)
 
 ## Core assets
 
@@ -21,7 +21,7 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 
 - [x] Series: `docs/blog/series/01`–`04` (+ README)
 - [ ] Series Wave B: `05`–`08` + Part 9 platform morph (fill in this refresh)
-- [ ] Chris walkthrough: `docs/blog/analyst_risk_taxonomy_chris_review_2026-09-25.md` (private share until approved)
+- [x] Chris walkthrough / SB1507: public (Chris approved 2026-11); mp4 stays local — see [`../EXAMPLES.md`](../EXAMPLES.md)
 - [x] Blog: `docs/launch/BLOG_POST.md` (full features / benefits / applications; pack copy synced)
 - [x] HN: `docs/launch/v3_release_pack/HN_POST.md`
 - [x] Reddit: pack README
@@ -32,7 +32,7 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 ## Demo
 
 - [x] Lipozem public: `outputs/release_v3_lipozem` (CRAAP / deep.html)
-- [x] SB1507 internal: `outputs/release_v3_sb1507_dense` (SIFT / chips) — **no public full HTML without Chris OK**
+- [x] SB1507 public: `outputs/release_v3_sb1507_dense` (SIFT / chips; Chris approved; mp4 not in git)
 - [x] Primary-10: `outputs/release_v3_battery_2026-10-18`
 - [ ] Tutorial script: `docs/launch/DEMO_VIDEO_SCRIPT.md`
 - [ ] Optional screen capture: light then full+deep
@@ -50,8 +50,9 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 - [ ] `PARITY_TEST_v3.md` optional after live
 - [ ] Paper PDF rebuild if figures changed
 - [ ] `pip install` smoke in clean venv (**no PyPI publish until operator go**)
-- [ ] **Do not post** until operator clears; stagger 1–2 days; Chris full HTML gated
-- [ ] Retag / merge / PyPI — **explicit operator ask only**
+- [x] SB1507 ungated for Monday 9 Nov 2026 collateral
+- [ ] Stagger social posts 1–2 days; wake Streamlit before blast
+- [ ] PyPI — needs account API token if not already uploaded
 
 ## Staggered posting order (1–2 days apart)
 
@@ -61,7 +62,7 @@ Use this list before HN / Reddit / LinkedIn / X posts.
 4. r/OSINT — SIFT vs CRAAP, counter-intel (no hype)  
 5. HN → then X → LinkedIn (same claims, shorter)
 
-Public proof: gallery or Lipozem. SB1507 full report gated.
+Public proof: gallery, Lipozem, and SB1507 scorecard / local report (mp4 stays local).
 
 ## Honest messaging locks
 
@@ -71,7 +72,7 @@ Public proof: gallery or Lipozem. SB1507 full report gated.
 - Lipozem-class VSL = weak multimodal proof
 - YouTube API key ≠ `.en.vtt` for third-party videos
 - One primary link per post
-- Do not claim tag/`pip install verityngn==3.0.0` until retag + publish
+- Claim `pip install verityngn==3.0.0` only after the PyPI upload lands
 
 ## Links
 

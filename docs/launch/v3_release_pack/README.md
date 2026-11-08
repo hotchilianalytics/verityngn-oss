@@ -4,11 +4,11 @@
 
 **Framing:** Lead with **claim-level risk abatement** / **risk platform** (disclosure / delivery / sponsor-readiness). Avoid “truthfulness” / “lie detector” / “fact-check SaaS” language.
 
-**Candidate SHA:** `b13bcf1` · Primary-10 **PASS** · Platform: [`docs/platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md)
+**Tag:** `v3.0.0` on `main` / `release/v3.0.0` · Primary-10 **PASS** · Examples: [`docs/launch/EXAMPLES.md`](../EXAMPLES.md) · Platform: [`docs/platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md)
 
 **Primary CTAs (pick one per post):**
 1. Repo: https://github.com/hotchilianalytics/verityngn-oss  
-2. Release candidate: branch `release/v3.0.0` (becomes `main` after operator testing)  
+2. Release: https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0  
 3. Gallery proof: https://verityindex.com/gallery  
 4. Papers: `papers/verityngn_oss_v3_release.pdf` · `papers/verityngn_v3_ablation_archive.pdf`
 

@@ -159,7 +159,7 @@ Two names that must not be mashed together:
 
 ## Try it
 
-From `release/v3.0.0` until the tag and PyPI move (those clicks stay gated on an explicit operator ask):
+From tag `v3.0.0` (PyPI when the upload lands):
 
 ```bash
 pip install -e '.[deep]'

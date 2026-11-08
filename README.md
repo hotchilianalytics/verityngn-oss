@@ -19,16 +19,15 @@
 
 ```bash
 pip install 'verityngn[deep]'
-verityngn analyze --tier auto 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
-verityngn analyze --tier full --modality video 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze --file /path/to/video.mp4 --title "Local clip"
-# Local test helpers
-verityngn local analyze --file clip.mp4 -o outputs/local --arm full
-verityngn local analyze --url 'https://www.youtube.com/watch?v=VIDEO_ID' --arm direct --offline
-verityngn ablate --video-id tLJC8hkK-ao --url '...' --arms direct --offline -o outputs/ablation_tL
+# Public Lipozem demo
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
+# Analyst local file (SB1507 — provide your own path to the mp4)
+verityngn analyze --tier local-full --deep -f /path/to/sb1507.mp4 -o outputs/release_v3_sb1507_dense
+# CEO talking-head
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=lb_ZJylekWo'
 ```
+
+Copy-paste fixtures, scorecard counts, and what is *not* in the wheel: [`docs/launch/EXAMPLES.md`](docs/launch/EXAMPLES.md).
 
 Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Dependency model: [`docs/DEPENDENCY_MODEL.md`](docs/DEPENDENCY_MODEL.md) · Promotion checklist: [`docs/launch/OSS_BATCH_COMMERCIAL_PROMOTION.md`](docs/launch/OSS_BATCH_COMMERCIAL_PROMOTION.md) · Gemini gap: [`docs/research/GEMINI_2026_CAPABILITY_GAP.md`](docs/research/GEMINI_2026_CAPABILITY_GAP.md)
 

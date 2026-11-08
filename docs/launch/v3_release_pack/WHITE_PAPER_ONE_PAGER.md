@@ -1,7 +1,7 @@
 # Claim-level risk abatement — one-pager
 
-**VerityNgn OSS 3.0.0 candidate** · Apache-2.0 engine · HotChili Analytics  
-**SHA:** `b13bcf1` on `release/v3.0.0` · Primary-10 battery **PASS**
+**VerityNgn OSS 3.0.0** · Apache-2.0 engine · HotChili Analytics  
+**Tag:** `v3.0.0` on `main` / `release/v3.0.0` · Primary-10 battery **PASS** · Examples: [`../EXAMPLES.md`](../EXAMPLES.md)
 
 ## Problem
 
@@ -37,7 +37,7 @@ Consumer CRAAP · Analyst SIFT · CEO predictions sensors · Securities disclosu
 - Not earnings prediction or allocation alpha
 - Not a lie detector or moral truthfulness score
 - YouTube API key ≠ caption download for arbitrary public videos
-- SB1507 full report stays private until the creator approves excerpts
+- SB1507 report is public (Chris approved); the source mp4 stays local and out of git
 - No crawl / surveil product (disclosure uses public EDGAR + optional client vault)
 
 ## Open-core boundary

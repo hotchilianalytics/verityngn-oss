@@ -1,6 +1,6 @@
 # VerityNgn platform overview — 3.0.0
 
-**Branch:** `release/v3.0.0` · **Candidate SHA:** `b13bcf1`  
+**Branch / tag:** `release/v3.0.0` = `main` · `v3.0.0` · Examples: [`docs/launch/EXAMPLES.md`](../launch/EXAMPLES.md)  
 **Framing:** claim-level **risk abatement** platform — not a lie detector, not earnings alpha.
 
 VerityNgn started as a YouTube → truthfulness report pipeline. v3.0.0 ships that pipeline as the durable **engine** of a layered platform: open domain sleeves, an agent surface, a hosted control plane on [verityindex.com](https://verityindex.com), and paid apps/services (ClearFactor disclosure review first).

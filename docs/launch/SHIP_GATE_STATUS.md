@@ -1,38 +1,41 @@
-# Ship-gate pre-flight — 2026-10-25
+# Ship-gate — Monday 9 Nov 2026
 
-**Branch:** `release/v3.0.0`  
-**HEAD / tag:** `644e5b4` (`v3.0.0`)  
-**Previous tag:** `c740bad` (moved on operator go 2026-10-26)
+**Branch:** `release/v3.0.0` (= `main` after Monday push)  
+**Tag:** `v3.0.0` → Monday tip (examples + SB1507 public + deck)  
+**Previous published tip:** `644e5b4`
 
 ## Pre-flight (this pass)
 
 | Check | Result |
 |-------|--------|
 | Open-core boundary scan | PASS |
-| Unit: MCP + claim schema + CLI/boundary | PASS (7 tests) |
-| Clean Python 3.12 venv `pip install -e .` | PASS — `verityngn 3.0.0`, CLI help |
-| Release paper PDF | Present (`papers/verityngn_oss_v3_release.pdf`, 7 pages / 2.19MB) |
-| Browser gallery / GitHub | PASS (see `BROWSER_VERIFY_v3.md`) |
-| Streamlit demo | FAIL (asleep) — wake before launch blast |
-| rfkit extract tests | PASS (69) at `~/proj/rfkit-oss` |
+| Unit: MCP + claim schema | PASS (3) |
+| SB1507 scorecard from dense checkpoint | PASS — 40 claims; §6.1=16; quant→inference 88.9%; `all_green` |
+| Examples page | [`EXAMPLES.md`](EXAMPLES.md) — Lipozem · SB1507 · Nadella |
+| SB1507 public copy | Chris approved; mp4 **not** in git |
+| Example deck PDF | `docs/launch/decks/VerityNgn_3_Release_with_examples.pdf` (22 pages) |
+| Streamlit demo | Operator click — wake https://verityngn.streamlit.app before blast |
+| rfkit GitHub | Still waits on Derrick `OPEN_CLOSED.md` |
+| SplitRisk | Separate sleeve / possible later company — **not** in this wheel |
 
-## Operator go (2026-10-26)
+## verityindex / commercial pin
 
-| Step | Result |
-|------|--------|
-| Push `release/v3.0.0` | **Done** `644e5b4` |
-| Fast-forward `origin/main` | **Done** `f28b3e8` → `644e5b4` (did not use local `68703d7`) |
-| Retag `v3.0.0` | **Done** annotated tag `ca76d68` → `644e5b4` |
-| GitHub release | **Done** https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0 |
-| PyPI `verityngn==3.0.0` | **Blocked** — no `TWINE_PASSWORD` / PyPI API token in this environment |
-| `gh repo create` rfkit | Still waits on Derrick `OPEN_CLOSED.md` |
+| Item | Value |
+|------|-------|
+| Live commercial OSS pin (docs) | `94f62f6` — `~/proj/commercial/verityngn-backend-commercial/docs/OSS_V3_ENGINE_PIN.md` |
+| Monday OSS tip | tip of `v3.0.0` after this push |
+| Action | Bump Batch / Cloud Run pin `94f62f6` → Monday SHA; redeploy only if `gcloud` is already authed |
 
-Wheels are built at `dist/verityngn-3.0.0-*.whl` / `.tar.gz`. To finish PyPI:
+## PyPI
+
+Wheels at `dist/verityngn-3.0.0-*.whl` / `.tar.gz`. Upload only when `TWINE_USERNAME=__token__` and `TWINE_PASSWORD=pypi-…` are set:
 
 ```bash
-export TWINE_USERNAME=__token__
-export TWINE_PASSWORD=pypi-...   # API token
 python -m twine upload dist/verityngn-3.0.0-py3-none-any.whl dist/verityngn-3.0.0.tar.gz
 ```
 
-See [`SHIP_CLICKS_v3.md`](SHIP_CLICKS_v3.md).
+Token: https://pypi.org/manage/account/token/ (Entire account scope for first publish).
+
+## See also
+
+[`SHIP_CLICKS_v3.md`](SHIP_CLICKS_v3.md) · [`EXAMPLES.md`](EXAMPLES.md) · [`BROWSER_VERIFY_v3.md`](BROWSER_VERIFY_v3.md)

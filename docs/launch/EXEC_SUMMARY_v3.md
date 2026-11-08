@@ -1,6 +1,6 @@
 # Executive summary — VerityNgn OSS 3.0.0
 
-**Date:** 2026-10-25 · **Branch:** `release/v3.0.0` · **HEAD:** `94f62f6` (launch-docs SHA `b13bcf1`; published tag still `c740bad`)
+**Date:** 2026-11-09 · **Branch:** `release/v3.0.0` = `main` · **Tag:** `v3.0.0` · Examples: [`EXAMPLES.md`](EXAMPLES.md)
 
 ## One sentence
 
