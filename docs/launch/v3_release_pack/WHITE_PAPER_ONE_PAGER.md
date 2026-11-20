@@ -11,7 +11,7 @@ Marketing, legal, agency, and **analyst-creator** teams need **claim-level** dis
 
 A **risk platform** layered on an open engine:
 
-1. **Extract** claims from multimodal video (adaptive **1–6 fps**, speech, OCR, charts, exhibits) — or filings for disclosure. **81** pixel-only claims in the v3 benchmark; **18/40 (45%)** on SB1507; silent Lipozem credential cards.
+1. **Extract** claims from multimodal video (adaptive **1–6 fps**, speech, OCR, charts, exhibits) — or filings for disclosure. **81** pixel-only claims across 10 v3 release runs (69 in the final primary-10); **18/40 (45%)** on SB1507; silent Lipozem credential cards.
 2. **Classify** into six kinds (source-backed fact, data-derived inference, causal/analytical, reasoned opinion, prediction, unverified assertion).
 3. **Verify** with counter-intelligence; stamp likelihood, evidence confidence, residual reliance risk.
 4. **Report** — consumer: TRUE/FALSE ladder + CRAAP. Analyst: typed sections + risk chips + SIFT. Disclosure: Rewrite / Keep / Move / Remove. Auto-emit `brand_safety_scores.json` + `{id}_exhibit_map.json`.

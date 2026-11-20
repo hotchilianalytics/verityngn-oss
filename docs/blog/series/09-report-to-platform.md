@@ -41,7 +41,7 @@ S00–S15 heritage (Spot Runner, Mayew, Banker HFAsy, Krykoniuk, Kim disclosure)
 
 | Stage | Default-on |
 |-------|------------|
-| **3.0.1 (now)** | Visual text / exhibits / brand-safety · 81 pixel claims · 45% SB1507 |
+| **3.0.1 (now)** | Visual text / exhibits / brand-safety · 81 pixel claims (10 runs) · 45% SB1507 |
 | **3.1** | Object / prop / action semantics · visual–spoken contradiction · splice risk |
 | **3.2** | Pose / lip / face / audio congruence (MediaPipe + MultiSense sleeves already in the wheel) |
 

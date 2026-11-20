@@ -14,7 +14,7 @@
 
 ## Abstract
 
-We release **VerityNgn OSS 3.0.1**, a standalone open-source multimodal **claim-risk** engine installable from PyPI. The engine restores **Deep Research** to the Apache tree, ships six claim kinds and genre-aware CRAAP/SIFT, absorbs CEO **sensors** as `verityngn[predictions]`, and — on every `full` / `local-full` run — extracts **pixel-sourced claims** (on-screen text, graphics, charts, demos), adaptive **1–6 fps** sampling, and auto-written **brand-safety** / **exhibit-map** sidecars. Across the v3 release benchmark, **81** verified claims exist only in pixels (never spoken), including **45%** of SB1507 legislative claims. Opt-in sleeves (`[vision]`, `[audio]`, `[predictions]`, MultiSense) already ship in the wheel for face/prosody congruence research. verityindex.com is the hosted control plane; ClearFactor is the first paid disclosure app. We do not claim earnings prediction, allocation factors, or lie detection.
+We release **VerityNgn OSS 3.0.1**, a standalone open-source multimodal **claim-risk** engine installable from PyPI. The engine restores **Deep Research** to the Apache tree, ships six claim kinds and genre-aware CRAAP/SIFT, absorbs CEO **sensors** as `verityngn[predictions]`, and — on every `full` / `local-full` run — extracts **pixel-sourced claims** (on-screen text, graphics, charts, demos), adaptive **1–6 fps** sampling, and auto-written **brand-safety** / **exhibit-map** sidecars. Across 10 v3 release runs, **81** verified claims exist only in pixels (never spoken; **69** within the final primary-10 battery), including **45%** of SB1507 legislative claims. Opt-in sleeves (`[vision]`, `[audio]`, `[predictions]`, MultiSense) already ship in the wheel for face/prosody congruence research. verityindex.com is the hosted control plane; ClearFactor is the first paid disclosure app. We do not claim earnings prediction, allocation factors, or lie detection.
 
 **Keywords:** video verification, counter-intelligence, deep research, open-core, multimodal LLM, brand safety, exhibit maps
 
@@ -96,7 +96,7 @@ Genre-aware FPS/resolution sampling (`services/vision/adaptive_sampler.py`) is *
 
 #### Pixel-sourced claims on the v3 release benchmark
 
-Every claim carries `source_type` ∈ `{spoken, visual_text, graphic, chart, demonstration}`. Across `outputs/release_v3_*` exhibit maps (**81** pixel-only claims):
+Every claim carries `source_type` ∈ `{spoken, visual_text, graphic, chart, demonstration}`. Across `outputs/release_v3_*` exhibit maps (**81** pixel-only claims across 10 release runs; **69** within the final primary-10 battery):
 
 | Source type | Count | Role |
 |-------------|-------|------|

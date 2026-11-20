@@ -4,7 +4,7 @@ Attach: `papers/figures/open_core_architecture.png` (or `platform_layers.png`).
 
 We just cut **VerityNgn OSS 3.0.1** (public launch **Monday, Nov 16, 2026**): an Apache-2.0 multimodal engine for **claim-level risk abatement** on video — adaptive **1–6 fps** sampling, pixel claims, auto-emitted `brand_safety_scores.json` + exhibit maps, Deep Research in the public CLI, analyst SIFT vs consumer CRAAP, and a documented morph from “truthfulness report” to a layered **risk platform**.
 
-**Pixel proof:** 45% of SB1507 claims and Lipozem’s doctor/weight-loss cards exist only in pixels — transcript-only tools miss them. 81 verified pixel-only claims across the v3 release benchmark.
+**Pixel proof:** 45% of SB1507 claims and Lipozem’s doctor/weight-loss cards exist only in pixels — transcript-only tools miss them. 81 verified pixel-only claims across 10 v3 release runs (69 within the final primary-10).
 
 Public proof (hosted gallery): https://verityindex.com/gallery  
 

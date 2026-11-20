@@ -14,7 +14,7 @@ pip install 'verityngn[deep]==3.0.1'
 
 Set Vertex / search keys from `.env.example`. Prefer `VERTEX_LOCATION=global`.
 
-Full runs auto-emit `brand_safety_scores.json` and `{video_id}_exhibit_map.json`. Pixel benchmark across release seeds: **81** claims (`visual_text`/`graphic`/`chart`/`demonstration`). Roadmap: **3.1** object/action semantics + visual–spoken contradiction · **3.2** pose/lip/audio congruence.
+Full runs auto-emit `brand_safety_scores.json` and `{video_id}_exhibit_map.json`. Pixel claims across 10 release runs: **81** claims (69 within the final primary-10) (`visual_text`/`graphic`/`chart`/`demonstration`). Roadmap: **3.1** object/action semantics + visual–spoken contradiction · **3.2** pose/lip/audio congruence.
 
 ---
 

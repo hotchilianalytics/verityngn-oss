@@ -10,7 +10,7 @@ Proof gallery: https://verityindex.com/gallery
 Run: `verityngn analyze <youtube-url> --deep`  
 Local files: `verityngn analyze --tier local-full -f clip.mp4`
 
-3/ Stack: Gemini multimodal claims (81 pixel-only in the v3 benchmark) → counter-intel → TRUE/FALSE/UNCERTAIN + residual reliance → Deep Research with `visual_only_claims`. Domain packs: CRAAP / SIFT / CEO sensors / legal / health.
+3/ Stack: Gemini multimodal claims (81 pixel-only across 10 v3 release runs) → counter-intel → TRUE/FALSE/UNCERTAIN + residual reliance → Deep Research with `visual_only_claims`. Domain packs: CRAAP / SIFT / CEO sensors / legal / health.
 
 4/ Analyst path (SB1507): 40 claims, **18 pixel-only from slides/charts**, SIFT §9. Source mp4 stays local. Method + numbers: `docs/launch/EXAMPLES.md`.
 

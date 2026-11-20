@@ -261,7 +261,7 @@ def slide_12d():
     rows = [
         ["STAGE", "WHAT TURNS ON", "PROOF / BOUNDARY"],
         ["3.0.1 now", "Adaptive 1–6 fps · pixel claims · brand_safety_scores.json · exhibit maps",
-         "81 pixel-only claims · 18/40 (45%) on SB1507 · Lipozem silent credential cards"],
+         "81 pixel-only claims (10 release runs) · 18/40 (45%) on SB1507 · Lipozem silent credential cards"],
         ["Opt-in sleeve", "MediaPipe · MultiSense S00–S15 · librosa/VAD · AGENTIC · AuthenticityGate",
          "Already in the 3.0.1 wheel — not default-on yet"],
         ["3.1 next", "Object / prop / action semantics · visual–spoken contradiction · splice risk",
@@ -290,7 +290,7 @@ def slide_12d():
     s.notes_with_sources(
         """Slide 12D is the honest capability boundary for the Monday Nov 16, 2026 launch of verityngn==3.0.1.
 Default-on today: adaptive 1–6 fps sampling, four pixel modalities, brand_safety_scores.json, exhibit maps,
-and Deep Research visual_only_claims. Empirical proof: 81 pixel-only claims across release runs; 45 percent
+and Deep Research visual_only_claims. Empirical proof: 81 pixel-only claims across 10 release runs (69 in the final primary-10); 45 percent
 of SB1507 claims from slides/charts; silent Lipozem doctor/weight-loss cards. Opt-in sleeves already ship
 in the same wheel (MediaPipe, MultiSense, librosa, AGENTIC, AuthenticityGate) but are not default-on.
 Roadmap: 3.1 promotes object/action semantics and visual–spoken contradiction because early prompts under-

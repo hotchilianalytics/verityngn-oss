@@ -40,7 +40,7 @@ Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Dependency model
 Default-on in every full run (no extra extras required):
 
 - **Adaptive 1–6 fps scene-aware sampling** — `lecture_vsl` @ 1 fps → `montage_motion` @ 3 → HIGH `exhibit_slide` @ 4 (depositions/earnings) → HIGH `flash_ocr` @ 6 (ads/Shorts); `--tier auto` escalates slide-heavy videos via optical `visual_text_density`.
-- **Pixel-sourced claims** — four modalities (`visual_text`, `graphic`, `chart`, `demonstration`). v3 release benchmark: **81** verified pixel-only claims; **18/40 (45%)** on SB1507 legislative charts/tables; silent testimonial/credential cards on Lipozem; exhibit OCR on Butler Kahn; CES/CNBC boards.
+- **Pixel-sourced claims** — four modalities (`visual_text`, `graphic`, `chart`, `demonstration`). 10 v3 release runs: **81** verified pixel-only claims (69 within the final primary-10); **18/40 (45%)** on SB1507 legislative charts/tables; silent testimonial/credential cards on Lipozem; exhibit OCR on Butler Kahn; CES/CNBC boards.
 - **Visual risk sidecars** — `brand_safety_scores.json` (`visual_only_high_risk_count`, credential-flash, sub-1000ms disclosure blink risk) and `{video_id}_exhibit_map.json` (Bates/OCR ledger). Deep Research (`--deep`) leads with a `visual_only_claims` array.
 - **Six claim kinds**, CRAAP/SIFT domain packs, counter-intel, calibrated Supported / Contested / Unresolved.
 
@@ -50,7 +50,7 @@ Default-on in every full run (no extra extras required):
 
 | Release | Turning default-on |
 |---------|-------------------|
-| **3.1** | Object / prop / action semantics; visual–spoken contradiction; temporal splice risk (today’s prompts catch slides/OCR more than physical demos — 4/81 demonstrations in the v3 benchmark) |
+| **3.1** | Object / prop / action semantics; visual–spoken contradiction; temporal splice risk (today’s prompts catch slides/OCR more than physical demos — 4/81 demonstrations across the 10 v3 release runs) |
 | **3.2** | Pose / lip / face / audio congruence atop in-repo MediaPipe + MultiSense sleeves — framed as **delivery / conviction / disclosure risk**, never lie detection |
 
 Heritage threads merging into that roadmap: Spot Runner emotional-arc indexing, Speech Craft / Mayew vocal Q&A reactivity, Banker HFAsy, Krykoniuk derailment, Kim/Muhn disclosure → ClearFactor, plus negative-result hygiene (refuse near-chance S14; no synthetic vision fills).

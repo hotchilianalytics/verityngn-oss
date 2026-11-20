@@ -27,9 +27,10 @@
 | Lipozem `tLJC8hkK-ao` | **5** silent testimonial / doctor-authority cards | Credential supers never spoken |
 | Peptides `RuinHdlpXvE` | **13** | Contested health visuals |
 | Butler Kahn `7MXE1kDCY-k` | **12** | Deposition exhibit OCR |
-| CES keynote `fuq0Ncdsknk` | **12** | Spec slides |
+| CES keynote `fuq0Ncdsknk` | **12** | Spec slides — this live restream was swapped out of the final battery (Vertex 500 after segment 1), so it counts toward 81 but not 69 |
 | CNBC `ijRuuaaM6XM` | **10** | Market boards |
-| **Benchmark total** | **81** (`visual_text` 43 · `graphic` 23 · `chart` 11 · `demonstration` 4) | |
+| **Final primary-10 total** | **69** (81 minus the swapped-out CES restream's 12) | Scope used in release copy: 342 claims, 69 pixel-only |
+| **All-runs total (10 runs)** | **81** (`visual_text` 43 · `graphic` 23 · `chart` 11 · `demonstration` 4) | |
 | T-ABL-006 | 67%–74% unique multimodal share on slide/exhibit seeds | Ablation archive |
 
 ### Opt-in sleeves already in the 3.0.1 wheel (non-default — see full brief)
@@ -102,7 +103,7 @@ From `docs/predictions/VIDEO_CUE_CRITICAL_RATING.md`:
 flowchart LR
   subgraph live301 ["Live default in v3.0.1"]
     AdaptiveFPS["Adaptive 1–6 fps"]
-    PixelClaims["Pixel claims · 81 benchmark"]
+    PixelClaims["Pixel claims · 81 across 10 runs"]
     BrandSafety["brand_safety_scores.json"]
     ExhibitMap["exhibit_map.json"]
   end

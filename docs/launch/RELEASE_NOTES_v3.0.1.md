@@ -25,7 +25,7 @@ Feature surface is the same as the 3.0 engine cut (tiers, Deep Research, CRAAP/S
 | Default-on in 3.0.1 | Proof / artifact |
 |---------------------|------------------|
 | Adaptive **1–6 fps** scene sampling | `adaptive_sampler` scene classes |
-| Pixel modalities (`visual_text` / `graphic` / `chart` / `demonstration`) | **81** benchmark claims; **18/40 (45%)** on SB1507; 5 Lipozem silent cards |
+| Pixel modalities (`visual_text` / `graphic` / `chart` / `demonstration`) | **81** pixel-only claims across 10 release runs (69 within the final primary-10); **18/40 (45%)** on SB1507; 5 Lipozem silent cards |
 | `brand_safety_scores.json` | visual-only high-risk, credential-flash, blink-disclosure |
 | `{video_id}_exhibit_map.json` | Bates / OCR ledger |
 | Deep Research `visual_only_claims` | `--deep` lead section |

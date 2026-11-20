@@ -12,7 +12,7 @@ VerityNgn 3.0.1 ships an Apache multimodal **claim-risk engine** (adaptive 1–6
 |------|--------|
 | Offline unit / boundary / SB1507 scorecard | PASS · **18/40 (45%)** pixel-only on SB1507 |
 | Lipozem + SB1507 live | PASS · silent credential/testimonial cards extracted |
-| Pixel benchmark | **81** visual_text/graphic/chart/demonstration claims |
+| Pixel claims (10 release runs; 69 in the final primary-10) | **81** visual_text/graphic/chart/demonstration claims |
 | Primary-10 battery | PASS |
 | PyPI `3.0.1` | Live + secret-scan PASS (immutable for Nov 16) |
 | PyPI `3.0.0` | Yanked (do not pin) |

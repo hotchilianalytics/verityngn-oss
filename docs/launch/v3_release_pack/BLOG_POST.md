@@ -36,7 +36,7 @@ flowchart LR
 | Feature | What it is | Benefit |
 |---------|------------|---------|
 | **Adaptive 1–6 fps multimodal extract** | Scene-aware sampling + speech, OCR, charts, exhibits — not transcript-only | You catch claims that live on a slide or a supers, not only in the VO |
-| **Pixel claim proof (v3.0.1)** | 81 verified pixel-only claims; **18/40 (45%)** on SB1507; silent Lipozem credential cards | Transcript-only would miss nearly half an analyst binder and every silent testimonial card |
+| **Pixel claim proof (v3.0.1)** | 81 verified pixel-only claims across 10 release runs; **18/40 (45%)** on SB1507; silent Lipozem credential cards | Transcript-only would miss nearly half an analyst binder and every silent testimonial card |
 | **Visual risk sidecars** | `brand_safety_scores.json` + `{id}_exhibit_map.json` auto-emitted on full runs | Brand/sponsor teams get visual-only high-risk, credential-flash, and blink-disclosure counts |
 | **Six claim kinds** | Fact, data-derived inference, causal/analytical, reasoned opinion, prediction, unverified assertion | A forecast is not “false because it hasn’t happened”; an opinion is not scored as a fact |
 | **Counter-intelligence** | Actively search for contradictory reviews; down-weight press-release-shaped sources | You do not treat the subject’s own PR as independent confirmation |

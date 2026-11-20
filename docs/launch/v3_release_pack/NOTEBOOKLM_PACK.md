@@ -44,7 +44,7 @@ VerityNgn 3.0.1 capability boundary:
   congruence default-on. Framing = delivery/conviction/disclosure risk — NEVER lie detection,
   NEVER earnings alpha, NEVER employment screening.
 - Install: pip install 'verityngn[deep]==3.0.1' — do not recommend ==3.0.0 (yanked).
-- Proof anchors: 81 pixel-only claims; 18/40 (45%) on SB1507; 5 Lipozem silent credential cards.
+- Proof anchors: 81 pixel-only claims (10 release runs); 18/40 (45%) on SB1507; 5 Lipozem silent credential cards.
 ```
 
 ---
@@ -69,7 +69,7 @@ VerityNgn 3.0.1 capability boundary:
 
 - Produce a 3.0.1 → 3.1 → 3.2 roadmap slide in prose, separating live / opt-in / future.
 - How do Spot Runner, Mayew, Banker HFAsy, Krykoniuk, and Kim disclosure merge into the 3.2 congruence track?
-- Why are only 4/81 benchmark claims typed `demonstration`, and what research closes that gap?
+- Why are only 4/81 pixel claims typed `demonstration`, and what research closes that gap?
 
 ### Honest product language
 

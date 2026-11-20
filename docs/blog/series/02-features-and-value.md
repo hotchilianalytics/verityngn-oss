@@ -77,7 +77,7 @@ Transcript-only tools miss the claims that never leave the pixels. In the v3 rel
 
 | Proof | Number |
 |-------|--------|
-| Pixel-only claims across release seeds | **81** (`visual_text` 43 · `graphic` 23 · `chart` 11 · `demonstration` 4) |
+| Pixel-only claims across 10 release runs (69 in the final primary-10) | **81** (`visual_text` 43 · `graphic` 23 · `chart` 11 · `demonstration` 4) |
 | SB1507 slides/charts/tables | **18 / 40 (45%)** |
 | Lipozem silent testimonial / doctor-authority cards | **5** |
 | Auto sidecars on every full run | `brand_safety_scores.json` · `{id}_exhibit_map.json` |

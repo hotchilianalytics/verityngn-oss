@@ -1131,7 +1131,7 @@ A comprehensive logging system captures detailed debug information throughout th
 
 3. **Enhanced Visual Analysis (v3.0.1 live + 3.1/3.2 roadmap)**
    - **Live in 3.0.1:** adaptive 1–6 fps sampling; pixel claims (`visual_text` / `graphic` / `chart` / `demonstration`); `brand_safety_scores.json`; exhibit maps; Deep Research `visual_only_claims`
-   - **3.1:** object / prop / action semantics; visual–spoken contradiction; temporal splice risk (today’s prompts under-extract physical demos — 4/81 in the v3 benchmark)
+   - **3.1:** object / prop / action semantics; visual–spoken contradiction; temporal splice risk (today’s prompts under-extract physical demos — 4/81 across 10 v3 release runs)
    - **3.2:** default-on pose / lip / face / audio congruence atop MediaPipe + MultiSense sleeves already in the wheel (delivery/conviction risk only — not lie detection)
    - Merges Spot Runner / Mayew / Banker HFAsy / Krykoniuk / Kim disclosure research with negative-result hygiene (refuse near-chance S14; no synthetic vision fills)
 
