@@ -162,6 +162,8 @@ Artefact: `outputs/ablation_T007/summary.json`. Light = live DR-direct; full cla
 
 Aggregate auto gate **1/3** → no promote. Secondary: 3/3 `multimodal_adds_unique`. Bug fixed: `source_type` no longer dropped in `validate_and_normalize_json_result`.
 
+**Forward note (v3.0.1 → 3.1):** T-ABL-006 histograms are dominated by `visual_text` / `graphic` / `chart` (OCR and slides). The v3 release benchmark later measured **81** pixel-only claims with only **4** tagged `demonstration` — consistent with prompts that prioritize on-screen text and suppress “decorative” visuals. **3.1** expands object/action semantics and visual–spoken contradiction on top of this OCR/exhibit foundation; **3.2** promotes MediaPipe + MultiSense pose/lip/audio congruence to default-on delivery risk (never lie detection). See [`verityngn_oss_v3_release.md`](verityngn_oss_v3_release.md) §8.
+
 ![T006 claim counts](figures/t006_claim_counts.png)  
 *Figure 5. T-ABL-006 transcript vs multimodal claim counts.*
 

@@ -71,6 +71,20 @@ When the claim mix crosses the analyst threshold, section 9 of a newly generated
 
 A creator can show a viewer the difference between “the Senate voted 17–12” and “our clustering says 66.7% of distinct testimonies opposed the disconnect.” A reviewer can argue with the bin and the chip without arguing that the whole video is “uncertain.” A later Deep Research pass can prioritize causal and incomplete paths instead of every missing URL.
 
+## Pixel risk that ships in v3.0.1
+
+Transcript-only tools miss the claims that never leave the pixels. In the v3 release benchmark:
+
+| Proof | Number |
+|-------|--------|
+| Pixel-only claims across release seeds | **81** (`visual_text` 43 · `graphic` 23 · `chart` 11 · `demonstration` 4) |
+| SB1507 slides/charts/tables | **18 / 40 (45%)** |
+| Lipozem silent testimonial / doctor-authority cards | **5** |
+| Auto sidecars on every full run | `brand_safety_scores.json` · `{id}_exhibit_map.json` |
+| Sampling | Adaptive **1–6 fps** scene probe |
+
+Deep Research (`--deep`) leads with a `visual_only_claims` array. Honest gap: prompts still catch OCR/slides (77/81) more than physical demos (4/81) — that is the 3.1 job. Full brief: [MULTIMODAL_AND_FUTURES_v3.md](../../launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md).
+
 ---
 
 *Previous: [Part 1 — History](01-history-and-mission.md) · Next: [Part 3 — Where the release stands](03-where-the-release-stands.md)*

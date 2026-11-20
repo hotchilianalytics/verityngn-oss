@@ -1,7 +1,7 @@
 # Claim-level risk abatement — one-pager
 
-**VerityNgn OSS 3.0.0** · Apache-2.0 engine · HotChili Analytics  
-**Tag:** `v3.0.0` on `main` / `release/v3.0.0` · Primary-10 battery **PASS** · Examples: [`../EXAMPLES.md`](../EXAMPLES.md)
+**VerityNgn OSS 3.0.1** · Apache-2.0 engine · HotChili Analytics · Launch **Monday Nov 16, 2026**  
+**PyPI:** `pip install 'verityngn[deep]==3.0.1'` · engine tip `1b2cca8` · Primary-10 battery **PASS** · Examples: [`../EXAMPLES.md`](../EXAMPLES.md) · Multimodal brief: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md)
 
 ## Problem
 
@@ -11,11 +11,13 @@ Marketing, legal, agency, and **analyst-creator** teams need **claim-level** dis
 
 A **risk platform** layered on an open engine:
 
-1. **Extract** claims from multimodal video (speech, on-screen text, charts) — or filings for disclosure.
+1. **Extract** claims from multimodal video (adaptive **1–6 fps**, speech, OCR, charts, exhibits) — or filings for disclosure. **81** pixel-only claims in the v3 benchmark; **18/40 (45%)** on SB1507; silent Lipozem credential cards.
 2. **Classify** into six kinds (source-backed fact, data-derived inference, causal/analytical, reasoned opinion, prediction, unverified assertion).
 3. **Verify** with counter-intelligence; stamp likelihood, evidence confidence, residual reliance risk.
-4. **Report** — consumer: TRUE/FALSE ladder + CRAAP. Analyst: typed sections + risk chips + SIFT. Disclosure: Rewrite / Keep / Move / Remove.
-5. **Optional Deep Research** — grounded forensic risk brief with citation audit trail.
+4. **Report** — consumer: TRUE/FALSE ladder + CRAAP. Analyst: typed sections + risk chips + SIFT. Disclosure: Rewrite / Keep / Move / Remove. Auto-emit `brand_safety_scores.json` + `{id}_exhibit_map.json`.
+5. **Optional Deep Research** — grounded forensic risk brief with `visual_only_claims` lead + citation audit trail.
+
+**Roadmap:** 3.1 object/action semantics + visual–spoken contradiction · 3.2 pose/lip/audio congruence (opt-in sleeves already in the wheel).
 
 Platform layers: [docs/platform/PLATFORM_OVERVIEW.md](../../platform/PLATFORM_OVERVIEW.md).
 
@@ -51,6 +53,7 @@ Engine quality + research sleeves (including **predictions / RiskFactor sensors 
 
 ## Contact
 
+- Install: `pip install 'verityngn[deep]==3.0.1'` · https://pypi.org/project/verityngn/3.0.1/  
 - Gallery: https://verityindex.com/gallery  
 - Engine: https://github.com/hotchilianalytics/verityngn-oss  
 - Series: `docs/blog/series/`  

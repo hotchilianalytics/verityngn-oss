@@ -1,14 +1,16 @@
-# VerityNgn 3.0.0 decks
+# VerityNgn 3.0.1 decks
 
 | File | What it is |
 |------|------------|
 | `../perplexity_review_2026-10-27/` | Perplexity's review assets as received: Release deck (18 slides), Demolicious cut (7), PDFs, legal-use-case brief |
-| `VerityNgn_3_Release_with_examples.pptx` / `.pdf` | Perplexity Release deck plus four real-run example slides (22 slides) |
-| `VerityNgn_3_example_slides.pdf` | The four example slides on their own |
+| `VerityNgn_3_Release_with_examples.pptx` / `.pdf` | Perplexity Release deck plus five real-run example slides (23 slides) |
+| `VerityNgn_3_example_slides.pdf` | The five example slides on their own |
+
+Footer lock: `VERITYNGN OSS / 3.0.1 · Nov 16 2026`.
 
 ## Example slides
 
-They are numbered so the slide numbers in Perplexity's legal brief and presenter notes still apply.
+They are numbered so the slide numbers in Perplexity's legal brief and presenter notes still apply (`01–18`, `08A`, `12A–12C` intact).
 
 | Slide | After | Shows |
 |-------|-------|-------|
@@ -16,8 +18,9 @@ They are numbered so the slide numbers in Perplexity's legal brief and presenter
 | 12A | 12 (release evidence) | Claim-kind and assessment-label counts for the 263 claims in battery rows 3–10 |
 | 12B | 12A | Deposition (row 9): expert projections routed to prediction and inference lanes, not scored true/false |
 | 12C | 12B | Nadella interview (row 7): timestamped claims; bridge to ClearFactor's "own voice" input |
+| **12D** | 12C | **Multimodal risk in v3.0.1 today → v3.1/3.2 congruence & scene semantics** (pixel proof + sleeves + roadmap) |
 
-All counts and quotes come from `outputs/release_v3_battery_2026-10-18/*/…_report.json`, which is a local run artifact and not in git, and from the public EDGAR filings cited in each slide's notes.
+All counts and quotes come from `outputs/release_v3_battery_2026-10-18/*/…_report.json`, which is a local run artifact and not in git, and from the public EDGAR filings cited in each slide's notes. Slide 12D cites [`MULTIMODAL_AND_FUTURES_v3.md`](../v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md).
 
 Two deliberate omissions:
 

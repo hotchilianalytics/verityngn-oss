@@ -1,18 +1,20 @@
-# VerityNgn 3.0.0 — runnable examples
+# VerityNgn 3.0.1 — runnable examples
 
-Public copy-paste fixtures for the Monday 9 Nov 2026 release.  
-**Tag:** `v3.0.0` on `release/v3.0.0` / `main`.  
-**Battery:** [`BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md) · **Matrix:** [`RELEASE_TEST_MATRIX_v3.md`](RELEASE_TEST_MATRIX_v3.md)
+Public copy-paste fixtures for the OSS 3.0 launch (**Monday Nov 16, 2026**).  
+**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8`.  
+**Battery:** [`BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md) · **Matrix:** [`RELEASE_TEST_MATRIX_v3.md`](RELEASE_TEST_MATRIX_v3.md) · **Notes:** [`RELEASE_NOTES_v3.0.1.md`](RELEASE_NOTES_v3.0.1.md) · **Multimodal:** [`v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md)
 
 Install once:
 
 ```bash
-pip install 'verityngn[deep]'
-# optional CEO / delivery sensors:
-# pip install 'verityngn[predictions]'
+pip install 'verityngn[deep]==3.0.1'
+# optional sleeves already in the wheel:
+# pip install 'verityngn[vision,audio,predictions]==3.0.1'
 ```
 
 Set Vertex / search keys from `.env.example`. Prefer `VERTEX_LOCATION=global`.
+
+Full runs auto-emit `brand_safety_scores.json` and `{video_id}_exhibit_map.json`. Pixel benchmark across release seeds: **81** claims (`visual_text`/`graphic`/`chart`/`demonstration`). Roadmap: **3.1** object/action semantics + visual–spoken contradiction · **3.2** pose/lip/audio congruence.
 
 ---
 
@@ -22,7 +24,7 @@ Set Vertex / search keys from `.env.example`. Prefer `VERTEX_LOCATION=global`.
 |-------|-------|
 | Video | https://www.youtube.com/watch?v=tLJC8hkK-ao |
 | Lane | `consumer_craap` · CRAAP §9 · Deep Research |
-| Proven | 39–40 claims · `outputs/release_v3_lipozem` |
+| Proven | 39–40 claims · **5** silent testimonial/doctor-authority pixel cards · `outputs/release_v3_lipozem` |
 
 ```bash
 verityngn analyze --tier full --deep \
@@ -42,7 +44,7 @@ Chris Schuermyer’s Oregon QSBS / SB 1507 walkthrough. **Chris approved public 
 |-------|-------|
 | Source | Local `sb1507.mp4` (not in the repo) |
 | Lane | `analyst_sift` · SIFT §9 · risk chips |
-| Proven | 50 extracted → 40 verified · §6.1 = 16/40 · quant→inference 88.9% · scorecard `all_green` |
+| Proven | 50 extracted → 40 verified · **18/40 (45%) pixel-only** from slides/charts/tables · §6.1 = 16/40 · quant→inference 88.9% · scorecard `all_green` |
 | Local artifact | `outputs/release_v3_sb1507_dense/` |
 
 ```bash

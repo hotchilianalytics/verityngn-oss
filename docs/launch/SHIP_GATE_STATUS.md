@@ -1,42 +1,36 @@
-# Ship-gate — Monday 9 Nov 2026
+# Ship-gate — go-now 3.0.1 (10–11 Nov 2026)
 
-**Branch:** `release/v3.0.0` (= `main` after Monday push)  
-**Tag:** `v3.0.0` → `b977303` (examples + SB1507 public + deck; content commit `5a1076e`)  
-**Previous published tip:** `644e5b4`
+**Package:** `verityngn==3.0.1` on PyPI (**live**)  
+**Engine tip:** `1b2cca8` (tag `v3.0.0`) + packaging hardening on `release/v3.0.0`  
+**Yanked:** `verityngn==3.0.0` (do not advertise / pin)
 
-## Pre-flight (this pass)
+## Pre-flight
 
 | Check | Result |
 |-------|--------|
-| Open-core boundary scan | PASS |
-| Unit: MCP + claim schema | PASS (3) |
-| SB1507 scorecard from dense checkpoint | PASS — 40 claims; §6.1=16; quant→inference 88.9%; `all_green` |
-| Examples page | [`EXAMPLES.md`](EXAMPLES.md) — Lipozem · SB1507 · Nadella |
-| SB1507 public copy | Chris approved; mp4 **not** in git |
-| Example deck PDF | `docs/launch/decks/VerityNgn_3_Release_with_examples.pdf` (22 pages) |
-| Streamlit demo | Operator click — wake https://verityngn.streamlit.app before blast |
-| rfkit GitHub | Still waits on Derrick `OPEN_CLOSED.md` |
-| SplitRisk | Separate sleeve / possible later company — **not** in this wheel |
+| PyPI `3.0.1` | **200** — wheel + sdist; secret-scan PASS |
+| PyPI `3.0.0` | **yanked** (both files) |
+| Open-core / Primary-10 / SB1507 / examples | Unchanged from Monday tip — PASS |
+| Live gallery | https://verityindex.com/gallery |
+| Packaging commits on branch | Committed on `release/v3.0.0`; tagged `v3.0.1` (GitHub release) |
+| PyPI `3.0.1` vs repo `verityngn/` | Sdist code diff-clean vs repo (local-only runtime dirs excluded) |
 
-## verityindex / commercial pin
-
-| Item | Value |
-|------|-------|
-| Live commercial OSS pin (docs) | `94f62f6` — `~/proj/commercial/verityngn-backend-commercial/docs/OSS_V3_ENGINE_PIN.md` |
-| Monday OSS tip | `b977303` |
-| Action | Bump Batch / Cloud Run pin `94f62f6` → `b977303`; redeploy only if `gcloud` is already authed |
-| PyPI | Skipped 2026-11-07 — no token in env; wheels checked PASSED |
-
-## PyPI
-
-Wheels at `dist/verityngn-3.0.0-*.whl` / `.tar.gz`. Upload only when `TWINE_USERNAME=__token__` and `TWINE_PASSWORD=pypi-…` are set:
+## Public install lock (all posts)
 
 ```bash
-python -m twine upload dist/verityngn-3.0.0-py3-none-any.whl dist/verityngn-3.0.0.tar.gz
+pip install 'verityngn[deep]==3.0.1'
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
 ```
 
-Token: https://pypi.org/manage/account/token/ (Entire account scope for first publish).
+Do **not** say `pip install verityngn==3.0.0`.
+
+## Operator clicks before blast
+
+1. Commit packaging + release-pack updates on `release/v3.0.0` (when ready)
+2. Optional: annotated tag + GitHub Release `v3.0.1` pointing at that commit (PyPI already live)
+3. Wake Streamlit only if you want a secondary CTA: https://verityngn.streamlit.app
+4. Stagger posts per [`v3_release_pack/SURFACES.md`](v3_release_pack/SURFACES.md)
 
 ## See also
 
-[`SHIP_CLICKS_v3.md`](SHIP_CLICKS_v3.md) · [`EXAMPLES.md`](EXAMPLES.md) · [`BROWSER_VERIFY_v3.md`](BROWSER_VERIFY_v3.md)
+[`RELEASE_NOTES_v3.0.1.md`](RELEASE_NOTES_v3.0.1.md) · [`v3_release_pack/MEDIA_CHECKLIST.md`](v3_release_pack/MEDIA_CHECKLIST.md) · [`EXAMPLES.md`](EXAMPLES.md)

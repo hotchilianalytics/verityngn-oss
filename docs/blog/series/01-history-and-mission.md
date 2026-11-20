@@ -34,7 +34,7 @@ The report’s ordinal bands stay familiar: highly likely true through highly li
 | 2026-09-25 | Analyst-video taxonomy: six claim kinds, dual risk metrics, SIFT genre §9. |
 | 2026-10-03 | Freeze commit `5258292` on `release/v3.0.0` as the 3.0.0 release candidate (tag still at August SHA until matrix green). |
 
-The published package version in `pyproject.toml` is **3.0.0**. The analyst-genre work is part of that candidate. It is not a separate tagged 5.0.0.
+The published package on PyPI is **`verityngn==3.0.1`** (engine tip `v3.0.0` / `1b2cca8`). The analyst-genre work is part of that line. It is not a separate tagged 5.0.0.
 
 ## Why a new grammar was needed
 
@@ -42,7 +42,7 @@ The 3.0 report assumed a consumer video: checkable sentences, outside sources, a
 
 An analyst video — legislative revenue bridges, clustering of testimony, on-screen dollar graphics — is a different product. Most of its sentences are **calculations and arguments**, not newspaper facts. Scoring all of them on one true/false ladder, and grading the video with a library CRAAP test, hides the work the analyst actually did.
 
-Part 2 describes the features. Part 3 states the candidate SHA and tag rules. Part 4 names the two demo videos.
+Part 2 describes the features. Part 3 states the release tip (`3.0.1` on PyPI / engine `1b2cca8`) and gate rules. Part 4 names the two demo videos.
 
 ---
 

@@ -1,7 +1,8 @@
-"""Insert real-run example slides into the Perplexity VerityNgn 3.0.0 release deck.
+"""Insert real-run example slides into the Perplexity VerityNgn 3.0 release deck.
 
-New slides are numbered 08A and 12A–12C so the slide numbers used in the
-Perplexity legal brief's presenter notes stay valid.
+New slides are numbered 08A and 12A–12D so the slide numbers used in the
+Perplexity legal brief's presenter notes stay valid (01–18, 08A, 12A–12C intact;
+12D appended after 12C).
 
     python scripts/decks/add_oss_examples.py
 """
@@ -66,7 +67,7 @@ TAG = "https://github.com/hotchilianalytics/verityngn-oss/blob/v3.0.0"
 MSFT_8K = "https://www.sec.gov/Archives/edgar/data/789019/000119312524011295/d708866d8k.htm"
 MSFT_10K = "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm"
 
-THEME = Theme(footer="VERITYNGN OSS  /  3.0.0")
+THEME = Theme(footer="VERITYNGN OSS  /  3.0.1  ·  Nov 16 2026")
 ROWS_3_10 = ["V7mYWOzdhpc", "ijRuuaaM6XM", "cP8pfCJTw4Q", "dRgPbNJ5RJc",
              "lb_ZJylekWo", "tSdWpsj1Cyo", "7MXE1kDCY-k", "RuinHdlpXvE"]
 SUPPORTED = {"HIGHLY_LIKELY_TRUE", "LIKELY_TRUE", "LEANING_TRUE"}
@@ -255,11 +256,62 @@ Presenter caution on currency: this run also labeled Nadella's right-of-first-re
     return s
 
 
+def slide_12d():
+    """Multimodal risk live in 3.0.1 → congruence & scene semantics in 3.1/3.2."""
+    rows = [
+        ["STAGE", "WHAT TURNS ON", "PROOF / BOUNDARY"],
+        ["3.0.1 now", "Adaptive 1–6 fps · pixel claims · brand_safety_scores.json · exhibit maps",
+         "81 pixel-only claims · 18/40 (45%) on SB1507 · Lipozem silent credential cards"],
+        ["Opt-in sleeve", "MediaPipe · MultiSense S00–S15 · librosa/VAD · AGENTIC · AuthenticityGate",
+         "Already in the 3.0.1 wheel — not default-on yet"],
+        ["3.1 next", "Object / prop / action semantics · visual–spoken contradiction · splice risk",
+         "Prompts today catch OCR/slides (77/81) more than physical demos (4/81)"],
+        ["3.2 next", "Pose / lip / face / audio congruence default-on",
+         "Delivery / conviction / disclosure risk only — never lie detection"],
+    ]
+
+    def style(r, c, v):
+        if r == 1 and c == 0:
+            return (THEME.card, THEME.accent, True)
+        if r >= 3 and c == 0:
+            return (THEME.card, THEME.accent2, True)
+        return None
+
+    s = Slide(THEME)
+    s.chrome(
+        "Multimodal risk / now → futures",
+        "Visual text & brand-safety live. Congruence next.",
+        "v3.0.1 ships pixel risk default-on. MediaPipe + MultiSense sleeves graduate in 3.1/3.2.",
+        "Source: MULTIMODAL_AND_FUTURES_v3.md · release paper §2/§8 · T-ABL-006. Launch Monday Nov 16, 2026.",
+        "12D",
+    )
+    s.table(0.50, 2.80, [1.55, 5.55, 5.55], rows, row_h=0.58, size=12.5, cell_style=style)
+    s.band("Heritage: Spot Runner · Mayew · Banker HFAsy · Krykoniuk · Kim disclosure — plus refuse near-chance S14.", y=6.0, h=0.5)
+    s.notes_with_sources(
+        """Slide 12D is the honest capability boundary for the Monday Nov 16, 2026 launch of verityngn==3.0.1.
+Default-on today: adaptive 1–6 fps sampling, four pixel modalities, brand_safety_scores.json, exhibit maps,
+and Deep Research visual_only_claims. Empirical proof: 81 pixel-only claims across release runs; 45 percent
+of SB1507 claims from slides/charts; silent Lipozem doctor/weight-loss cards. Opt-in sleeves already ship
+in the same wheel (MediaPipe, MultiSense, librosa, AGENTIC, AuthenticityGate) but are not default-on.
+Roadmap: 3.1 promotes object/action semantics and visual–spoken contradiction because early prompts under-
+extract physical demos (4 of 81). 3.2 promotes pose/lip/face/audio congruence as a delivery-and-conviction
+track — never lie detection — merging Spot Runner, Mayew, Banker HFAsy, Krykoniuk, and Kim disclosure
+research with negative-result hygiene (refuse S14; no synthetic vision fills). Do not tell an audience that
+congruence is live in 3.0.1.""",
+        [f"{TAG}/docs/launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md",
+         f"{TAG}/papers/verityngn_oss_v3_release.md",
+         f"{TAG}/papers/figures/t006_ablation_stats.json",
+         "PyPI: https://pypi.org/project/verityngn/3.0.1/"],
+        verified="13 November 2026",
+    )
+    return s
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     BUILD.mkdir(parents=True, exist_ok=True)
     kinds, labels = battery_counts()
-    examples = {8: [slide_8a()], 12: [slide_12a(kinds, labels), slide_12b(), slide_12c()]}
+    examples = {8: [slide_8a()], 12: [slide_12a(kinds, labels), slide_12b(), slide_12c(), slide_12d()]}
 
     prs = Presentation(str(REVIEW / "VerityNgn_3_Release.pptx"))
     promoted = promote_paragraph_defaults(prs)
@@ -274,7 +326,7 @@ def main():
 
     ex_specs = examples[8] + examples[12]
     html_path = BUILD / "oss_examples.html"
-    html_path.write_text(render_html(ex_specs, "VerityNgn 3.0.0 example slides"), encoding="utf-8")
+    html_path.write_text(render_html(ex_specs, "VerityNgn 3.0.1 example slides"), encoding="utf-8")
     ex_pdf = OUT / "VerityNgn_3_example_slides.pdf"
     html_to_pdf(html_path, ex_pdf)
 

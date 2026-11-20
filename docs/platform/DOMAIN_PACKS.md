@@ -1,6 +1,8 @@
-# Domain packs — VerityNgn 3.0
+# Domain packs — VerityNgn 3.0.1
 
 Domain packs are Credo-style **policy packs** for claim-level risk: each pack names inputs, claim typology, verification sources, §9 method, and action labels. Packs are Apache research/product surfaces on top of the L1 engine.
+
+**Multimodal boundary (honest):** L0–L2 pixel risk (`visual_text` / `graphic` / `chart` / `demonstration`), `brand_safety_scores.json`, and exhibit maps are **default-on in 3.0.1**. MediaPipe / MultiSense / audio congruence sleeves are **opt-in in 3.0.1** and turn default-on in **3.1** (object/action semantics + visual–spoken contradiction) and **3.2** (pose/lip/audio congruence). See [`MULTIMODAL_AND_FUTURES_v3.md`](../launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md).
 
 ## Pack catalog
 
@@ -12,7 +14,7 @@ Domain packs are Credo-style **policy packs** for claim-level risk: each pack na
 | `securities_disclosure` | Item 1A vs own record (sleeve one of the ClearFactor committee pack) | EDGAR 10-K/Q + 8-K; optional incident log | Same-incident match + `junior_obvious` gate | **Rewrite · Keep · Move to General · Remove**; famous 8-K pairs go to hygiene |
 | `legal_deposition` | Spoken deposition / expert | YouTube or file | Claim extract + CI | Claim risk + exhibit map |
 | `health_ci` | Contested health / lab claims | Source investigation video | Counter-intel heavy | Contested / Unresolved emphasis |
-| `brand_safety` | Sponsor / brand readiness | Video + overlays | Brand safety scores | Visual-only risk buckets |
+| `brand_safety` | Sponsor / brand readiness | Video + overlays (1–6 fps) | `brand_safety_scores.json` + pixel claims | Visual-only high-risk / credential-flash / blink-disclosure buckets (live in 3.0.1) |
 
 ## Shared claim / evidence / action schema (target)
 

@@ -1,22 +1,23 @@
 # Part 3 — Where the release stands
 
 **Series:** VerityNgn OSS  
-**Part 3 of 4 · The 3.0.0 candidate**
+**Part 3 of 4 · The 3.0 release tip**
 
 ---
 
-## This work *is* the 3.0.0 candidate
+## This work *is* the 3.0 tip
 
-Package version in [`pyproject.toml`](../../../pyproject.toml) is **3.0.0**. Branch: `release/v3.0.0`.
+Package version in [`pyproject.toml`](../../../pyproject.toml) is **3.0.1** (PyPI). Engine tip: tag `v3.0.0` → `1b2cca8`. Branch: `release/v3.0.0`.
 
 | Artifact | Status |
 |----------|--------|
-| Candidate SHA | `e8cb7d8` (docs/slate; predictions absorb `8d6a8e3`; density earlier) |
+| Engine tip | `v3.0.0` → `1b2cca8` (EXAMPLES + SB1507 public copy) |
+| PyPI | **`verityngn==3.0.1` live** — install `pip install 'verityngn[deep]==3.0.1'` |
+| PyPI `3.0.0` | **Yanked** — do not pin |
 | Primary-10 battery | **PASS** — [`BATTERY_RESULTS_v3.md`](../../launch/BATTERY_RESULTS_v3.md) |
-| Git tag `v3.0.0` | Still at prior SHA until matrix sign-off **and** an operator explicitly asks to retag. |
-| Merge to `main` / PyPI | Explicit ask required. Not part of drafting blogs. |
+| Hosted gallery | Live — https://verityindex.com/gallery |
 
-There is no 5.0.0. If that number appeared in conversation, it was informal. The tree ships under 3.0.0.
+There is no 5.0.0. If that number appeared in conversation, it was informal. Public install is **3.0.1**.
 
 ## What the candidate includes
 
@@ -30,11 +31,11 @@ Everything already on the August–September 3.0 line, plus:
 
 Offline gates (unit tests, open-core scrub, SB1507 scorecard) are **PASS**. Live Lipozem + SB1507 + primary-10 battery are **PASS** in the matrix (Huang Squawk swap documented).
 
-## What a launch should decide
+## What launch still decides
 
-- Live matrix green?
-- Chris: public charts only, or excerpts from the analyst report?
-- Retag / merge / PyPI when you say so — not when the blog goes live.
+- Streamlit wake optional (gallery is the primary proof URL).
+- Optional GitHub tag `v3.0.1` after packaging commits land.
+- Chris: SB1507 **report/scorecard** is public; source mp4 stays local.
 
 ## Reproduce
 

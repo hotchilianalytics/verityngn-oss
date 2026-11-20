@@ -1,15 +1,19 @@
 # VerityNgn OSS 3.0 — Release Push Pack (Reddit-first)
 
-**Goal:** Get technical readers to star the repo, try `pip install verityngn`, and open one gallery report — without looking like spam.
+**Goal:** Get technical readers to star the repo, `pip install` **3.0.1**, and open one gallery report — without looking like spam.
 
 **Framing:** Lead with **claim-level risk abatement** / **risk platform** (disclosure / delivery / sponsor-readiness). Avoid “truthfulness” / “lie detector” / “fact-check SaaS” language.
 
-**Tag:** `v3.0.0` on `main` / `release/v3.0.0` · Primary-10 **PASS** · Examples: [`docs/launch/EXAMPLES.md`](../EXAMPLES.md) · Platform: [`docs/platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md)
+**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · Launch **Monday, Nov 16, 2026** · Primary-10 **PASS** · Live gallery · Examples: [`docs/launch/EXAMPLES.md`](../EXAMPLES.md) · Notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · Multimodal + futures: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · Surfaces: [`SURFACES.md`](SURFACES.md) · Figures: [`FIGURES.md`](FIGURES.md) · Orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md)
+
+**Install lock:** `pip install 'verityngn[deep]==3.0.1'` — do **not** advertise `==3.0.0` (yanked).
+
+**Pitch lock:** “45% of SB1507 claims and Lipozem’s doctor/weight-loss cards exist only in pixels; adaptive 1–6 fps + brand-safety/exhibit JSONs live in 3.0.1. Next: 3.1 object/action semantics + visual–spoken contradiction; 3.2 pose/lip/audio congruence atop MediaPipe + MultiSense.”
 
 **Primary CTAs (pick one per post):**
-1. Repo: https://github.com/hotchilianalytics/verityngn-oss  
-2. Release: https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0  
-3. Gallery proof: https://verityindex.com/gallery  
+1. Gallery proof: https://verityindex.com/gallery  
+2. PyPI: https://pypi.org/project/verityngn/3.0.1/  
+3. Repo: https://github.com/hotchilianalytics/verityngn-oss  
 4. Papers: `papers/verityngn_oss_v3_release.pdf` · `papers/verityngn_v3_ablation_archive.pdf`
 
 **Assets to attach (images):**
@@ -42,6 +46,8 @@
 4. **r/OSINT** — counter-intel / evidence angle (day later; no hype)  
 5. Avoid blasting r/SideProject + r/Python + HN same hour  
 
+Full calendar: [`SURFACES.md`](SURFACES.md).
+
 ---
 
 ## A. r/MachineLearning — copy/paste
@@ -53,41 +59,42 @@
 
 ### Body
 ```
-I just cut VerityNgn OSS 3.0.0 — a local CLI that takes a YouTube URL (or a local mp4) and produces a claim-level **risk** report (disclosure / delivery / sponsor-readiness) with counter-intelligence and an optional grounded Deep Research pass.
+I just cut VerityNgn OSS 3.0.1 — a local CLI that takes a YouTube URL (or a local mp4) and produces a claim-level **risk** report (disclosure / delivery / sponsor-readiness) with counter-intelligence and an optional grounded Deep Research pass.
 
-**Why it exists:** transcript-only checkers miss on-screen graphics/OCR; naive web search often retrieves the subject’s own PR as “evidence.” VerityNgn extracts multimodal claims, then actively looks for contradictory review content and press-release-shaped sources.
+**Why it exists:** transcript-only checkers miss on-screen graphics/OCR (45% of SB1507 claims + Lipozem’s silent credential cards are pixel-only); naive web search often retrieves the subject’s own PR as “evidence.” VerityNgn extracts multimodal claims at adaptive 1–6 fps, emits brand-safety/exhibit sidecars, then actively looks for contradictory review content and press-release-shaped sources. Roadmap: 3.1 object/action semantics + visual–spoken contradiction; 3.2 pose/lip/audio congruence.
 
 **Platform angle:** the report is the evidence object; domain packs (CRAAP, SIFT, CEO sensors, disclosure) sit on one engine. Hosted control plane is verityindex.com — not a closed fork of the quality path.
 
-**Try it**
+**Try it:**
 ```bash
-pip install 'verityngn[deep]'
-verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
+pip install 'verityngn[deep]==3.0.1'
+verityngn analyze --tier light 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
 verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
 verityngn captions 'https://www.youtube.com/watch?v=VIDEO_ID'   # operator VTT debug
 ```
 
-**Repo / branch:** https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0
-
-**Public gallery of engine reports:** https://verityindex.com/gallery  
+**Primary link:** https://verityindex.com/gallery  
 
 **Honest limits**
 - English-first; YouTube + local file (not TikTok-native)
 - LLM-assisted risk briefs — not a lie detector, not earnings prediction
 - Predictions/sensors are optional OSS extras; hosted credits/SaaS are commercial
+- Gemini/Vertex credentials required for the LLM path today
 
 Happy to take hard negatives. If a report looks wrong, drop the video id.
 
-Image: gallery claim-volume chart or platform_layers (attached)
+Image: `docs/blog/series/assets/02_before_after_density.png` or `platform_layers.png` (attached)
 ```
 
 ### First comment (links + paper)
 ```
-Paper (charts + gallery table): https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/papers/verityngn_oss_v3_release.md
-Open-core boundary: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/OPEN_CORE.md
-Platform layers: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/platform/PLATFORM_OVERVIEW.md
-Primary-10 battery: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/launch/BATTERY_RESULTS_v3.md
-Streamlit demo (optional): https://verityngn.streamlit.app
+PyPI: https://pypi.org/project/verityngn/3.0.1/
+Repo: https://github.com/hotchilianalytics/verityngn-oss
+Paper: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/papers/verityngn_oss_v3_release.md
+Open-core: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/OPEN_CORE.md
+Platform: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/platform/PLATFORM_OVERVIEW.md
+Battery: https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/launch/BATTERY_RESULTS_v3.md
+Examples (incl. SB1507 scorecard): https://github.com/hotchilianalytics/verityngn-oss/blob/release/v3.0.0/docs/launch/EXAMPLES.md
 ```
 
 ---
@@ -107,10 +114,10 @@ Release note for an open-source pipeline that:
 2. verifies with web/YouTube counter-evidence
 3. optionally runs a grounded Deep Research forensic summary (`--deep`)
 
-Install: `pip install 'verityngn[deep]'` then `verityngn analyze <url> --deep`
+Install: `pip install 'verityngn[deep]==3.0.1'` then `verityngn analyze <url> --deep`
 
-Branch: https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0  
-Gallery examples: https://verityindex.com/gallery
+Gallery: https://verityindex.com/gallery  
+PyPI: https://pypi.org/project/verityngn/3.0.1/
 
 Not claiming SOTA on a shared leaderboard yet — looking for critique of the claim typology and CI weighting.
 ```
@@ -121,16 +128,17 @@ Not claiming SOTA on a shared leaderboard yet — looking for critique of the cl
 
 ### Title
 ```
-Release: VerityNgn 3.0 — Apache-2.0 video claim-risk engine (CLI + Deep Research)
+Release: VerityNgn 3.0.1 — Apache-2.0 video claim-risk engine (CLI + Deep Research)
 ```
 
 ### Body
 ```
 Open-core video claim-risk engine. v3 puts Deep Research and research sleeves (predictions sensors) in the Apache tree; hosted SaaS / credits stay on verityindex.com.
 
-`pip install verityngn` · `verityngn analyze <url> --deep`
+`pip install 'verityngn[deep]==3.0.1'` → `verityngn analyze <url> --deep`
 
-https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0
+https://pypi.org/project/verityngn/3.0.1/  
+Gallery: https://verityindex.com/gallery
 ```
 
 ---
@@ -148,7 +156,7 @@ Sharing an OSS CLI that produces structured claim-risk reports from YouTube or l
 
 Meant as a research aid — human review still required. Not a courtroom-ready authenticity oracle.
 
-Branch: https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0  
+Install: pip install 'verityngn[deep]==3.0.1'  
 Example gallery: https://verityindex.com/gallery
 ```
 
@@ -168,6 +176,9 @@ Point to primary-10 battery (`docs/launch/BATTERY_RESULTS_v3.md`) and gallery. D
 **“How do I run without GCP?”**  
 Gemini/Vertex credentials are required for the LLM path today; documented in `.env.example`. Local-file path skips yt-dlp.
 
+**“pip install / 3.0.0?”**  
+Use `3.0.1`. Do not pin `3.0.0` (yanked packaging cut).
+
 ---
 
 ## Checklist before submit
@@ -185,11 +196,14 @@ Gemini/Vertex credentials are required for the LLM path today; documented in `.e
 
 | Channel | Asset |
 |---------|-------|
-| Show HN | `docs/launch/HN_POST.md` / pack `HN_POST.md` |
+| Show HN | `HN_POST.md` |
 | LinkedIn | `LINKEDIN_POST.md` |
 | X | `X_THREAD.md` |
+| Bluesky / Lobsters / TLDR / Changelog | `SURFACES.md` |
 | Blog | `BLOG_POST.md` |
+| Figures kit | `FIGURES.md` |
+| Org interest map | `ORG_INTEREST_2026-11.md` |
 | Media checklist | `MEDIA_CHECKLIST.md` |
 | Exec summary | `docs/launch/EXEC_SUMMARY_v3.md` |
 
-Stagger ≥6–12h after the ML post so Reddit doesn’t see a synchronized blast.
+Stagger: blog → Reddit ML → HN (12–24h later) → X / LinkedIn / Bluesky. Full calendar in `SURFACES.md`.
