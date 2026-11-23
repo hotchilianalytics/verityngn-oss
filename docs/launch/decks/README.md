@@ -6,7 +6,7 @@
 | `VerityNgn_3_Release_with_examples.pptx` / `.pdf` | Perplexity Release deck plus five real-run example slides (23 slides) |
 | `VerityNgn_3_example_slides.pdf` | The five example slides on their own |
 
-Footer lock: `VERITYNGN OSS / 3.0.1 · Nov 16 2026`.
+Footer lock: `VERITYNGN OSS / 3.0.1 · Nov 23 2026`.
 
 ## Example slides
 
@@ -36,3 +36,13 @@ python scripts/decks/add_oss_examples.py
 ```
 
 Needs Google Chrome for the four-slide example PDF, LibreOffice (`soffice`) for the full 22-page PDF from the PPTX, and the local battery outputs (checkpoints are enough if `*_report.json` is gone). Run it outside the Cursor sandbox, because matplotlib can fail inside it. The shared kit (`scripts/decks/slidekit.py`, `charts.py`) also builds the ClearFactor decks in the private rfkit consulting tree.
+
+## Monday Nov 23 attachables
+
+The checked-in PPTX/PDF under this folder still carry older 3.0.0 front-matter slides (Nov 13 build). **Do not attach them to Monday posts.** Attach instead:
+
+- `docs/releases/v3.0.1/verity-engine-oss-3.0.1-golden-release-paper.pdf`
+- `docs/releases/v3.0.1/VerityNgn_Multimodal_Claim_Risk_Engine.pdf`
+- `papers/verityngn_oss_v3_release.pdf` (rebuilt with 81/69 scope)
+
+Rebuild when LibreOffice headless is reliable: `python scripts/decks/add_oss_examples.py`.

@@ -67,7 +67,7 @@ TAG = "https://github.com/hotchilianalytics/verityngn-oss/blob/v3.0.0"
 MSFT_8K = "https://www.sec.gov/Archives/edgar/data/789019/000119312524011295/d708866d8k.htm"
 MSFT_10K = "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm"
 
-THEME = Theme(footer="VERITYNGN OSS  /  3.0.1  ·  Nov 16 2026")
+THEME = Theme(footer="VERITYNGN OSS  /  3.0.1  ·  Nov 23 2026")
 ROWS_3_10 = ["V7mYWOzdhpc", "ijRuuaaM6XM", "cP8pfCJTw4Q", "dRgPbNJ5RJc",
              "lb_ZJylekWo", "tSdWpsj1Cyo", "7MXE1kDCY-k", "RuinHdlpXvE"]
 SUPPORTED = {"HIGHLY_LIKELY_TRUE", "LIKELY_TRUE", "LEANING_TRUE"}
@@ -282,13 +282,13 @@ def slide_12d():
         "Multimodal risk / now → futures",
         "Visual text & brand-safety live. Congruence next.",
         "v3.0.1 ships pixel risk default-on. MediaPipe + MultiSense sleeves graduate in 3.1/3.2.",
-        "Source: MULTIMODAL_AND_FUTURES_v3.md · release paper §2/§8 · T-ABL-006. Launch Monday Nov 16, 2026.",
+        "Source: MULTIMODAL_AND_FUTURES_v3.md · release paper §2/§8 · T-ABL-006. Launch Monday Nov 23, 2026.",
         "12D",
     )
     s.table(0.50, 2.80, [1.55, 5.55, 5.55], rows, row_h=0.58, size=12.5, cell_style=style)
     s.band("Heritage: Spot Runner · Mayew · Banker HFAsy · Krykoniuk · Kim disclosure — plus refuse near-chance S14.", y=6.0, h=0.5)
     s.notes_with_sources(
-        """Slide 12D is the honest capability boundary for the Monday Nov 16, 2026 launch of verityngn==3.0.1.
+        """Slide 12D is the honest capability boundary for the Monday Nov 23, 2026 launch of verityngn==3.0.1.
 Default-on today: adaptive 1–6 fps sampling, four pixel modalities, brand_safety_scores.json, exhibit maps,
 and Deep Research visual_only_claims. Empirical proof: 81 pixel-only claims across 10 release runs (69 in the final primary-10); 45 percent
 of SB1507 claims from slides/charts; silent Lipozem doctor/weight-loss cards. Opt-in sleeves already ship

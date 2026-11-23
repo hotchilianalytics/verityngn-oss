@@ -51,7 +51,7 @@ Try the open-source CLI: `pip install 'verityngn[deep]==3.0.1'`
 4. Domain coverage has expanded beyond consumer health supplements into 6 institutional packs: Consumer VSLs (CRAAP), Legislative & Fiscal (SIFT), CEO & Exec Interviews, Sworn Legal Depositions, and Contested Health Science in the engine, plus Corporate Disclosures via the rfkit / ClearFactor companion.
 5. Shipping in 3.0.1: `verityngn captions <url>` CLI diagnostic; auto-emitted `brand_safety_scores.json` and exhibit maps; clean dependency sleeves for vision and audio sensors; groundwork for 3.1 action semantics and 3.2 non-verbal congruence.
 6. Everything that governs verification quality lives in the Apache-2.0 OSS core. Hosted scale, team galleries, and compliance workflows live on [https://verityindex.com](https://verityindex.com).
-7. Read the complete technical release essay and view our Emergent Mind whiteboard architecture boards on Substack: [https://ajjcop.substack.com](https://ajjcop.substack.com). Install: `pip install 'verityngn[deep]==3.0.1'`.
+7. Read the complete technical release essay and the whiteboard architecture boards on Substack: [https://ajjcop.substack.com](https://ajjcop.substack.com). Install: `pip install 'verityngn[deep]==3.0.1'`.
 
 ### Reddit (r/MachineLearning)
 * **Title**: [P] Verity Engine OSS 3.0.1: An open multimodal video-to-text truthfulness and claim-risk pipeline

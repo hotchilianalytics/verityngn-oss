@@ -1,6 +1,6 @@
 # Executive summary — VerityNgn OSS 3.0.1
 
-**Date:** 2026-11-13 · **Launch lock:** Monday Nov 16, 2026 · **Package:** `verityngn==3.0.1` on PyPI · **Engine tip:** `1b2cca8` · Examples: [`EXAMPLES.md`](EXAMPLES.md) · Multimodal: [`v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md)
+**Date:** 2026-11-13 · **Launch lock:** Monday Nov 23, 2026 · **Package:** `verityngn==3.0.1` on PyPI · **Engine tip:** `1b2cca8` · **Docs/release tip:** `12be77d` (tag `v3.0.1`) · Examples: [`EXAMPLES.md`](EXAMPLES.md) · Multimodal: [`v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md)
 
 ## One sentence
 
@@ -14,7 +14,7 @@ VerityNgn 3.0.1 ships an Apache multimodal **claim-risk engine** (adaptive 1–6
 | Lipozem + SB1507 live | PASS · silent credential/testimonial cards extracted |
 | Pixel claims (10 release runs; 69 in the final primary-10) | **81** visual_text/graphic/chart/demonstration claims |
 | Primary-10 battery | PASS |
-| PyPI `3.0.1` | Live + secret-scan PASS (immutable for Nov 16) |
+| PyPI `3.0.1` | Live + secret-scan PASS (immutable for Nov 23) |
 | PyPI `3.0.0` | Yanked (do not pin) |
 
 **Roadmap callout:** 3.1 object/action semantics + visual–spoken contradiction · 3.2 pose/lip/audio congruence (MediaPipe + MultiSense sleeves already in the wheel).

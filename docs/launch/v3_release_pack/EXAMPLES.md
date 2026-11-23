@@ -1,7 +1,7 @@
 # VerityNgn 3.0.1 — runnable examples
 
-Public copy-paste fixtures for the OSS 3.0 launch (**Monday Nov 16, 2026**).  
-**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8`.  
+Public copy-paste fixtures for the OSS 3.0 launch (**Monday Nov 23, 2026**).  
+**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · docs tip `12be77d`.  
 **Battery:** [`BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md) · **Matrix:** [`RELEASE_TEST_MATRIX_v3.md`](RELEASE_TEST_MATRIX_v3.md) · **Notes:** [`RELEASE_NOTES_v3.0.1.md`](RELEASE_NOTES_v3.0.1.md) · **Multimodal:** [`v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md)
 
 Install once:
@@ -82,7 +82,7 @@ verityngn analyze --tier full --deep \
 | Surface | Where it lives |
 |---------|----------------|
 | `verityngn[predictions]` sensors (S00–S15) | Optional OSS extra — not the default `analyze` path |
-| Disclosure matcher / ClearFactor | Planned `verityngn[disclosure]` + public `rfkit` after Derrick’s `OPEN_CLOSED.md` review — empty extra in 3.0.0 |
+| Disclosure matcher / ClearFactor | Planned `verityngn[disclosure]` + public `rfkit` after Derrick’s `OPEN_CLOSED.md` review — empty extra in 3.0.1 |
 | SplitRisk Signals Lab | Separate commercial sleeve (`~/proj/commercial/splitrisk`) — not an OSS extra |
 | Hosted gallery / billing | https://verityindex.com (pins a commercial image of this engine) |
 

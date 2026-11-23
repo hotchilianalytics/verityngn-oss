@@ -7,7 +7,7 @@ Packaging / security patch on the OSS 3.0 claim-risk engine. **Install from PyPI
 | Field | Value |
 |-------|-------|
 | Package | **`verityngn==3.0.1`** on PyPI |
-| Engine tip | Monday OSS cut `1b2cca8` (`v3.0.0` tag) + packaging hardening |
+| Engine tip | Monday OSS cut `1b2cca8` · Docs/release tip `12be77d` (tag `v3.0.1`) |
 | Branch | `release/v3.0.0` |
 | Primary-10 | PASS ([`BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md)) |
 | Examples | [`EXAMPLES.md`](EXAMPLES.md) |
@@ -20,7 +20,7 @@ Packaging / security patch on the OSS 3.0 claim-risk engine. **Install from PyPI
 - **`verityngn==3.0.0` yanked** on PyPI (packaging hygiene). Do not pin `3.0.0`.
 - Publish script refuses upload if credential material appears in `dist/`.
 
-Feature surface is the same as the 3.0 engine cut (tiers, Deep Research, CRAAP/SIFT, predictions sleeve, examples) — plus the multimodal risk surfaces that were always in that cut and are now pitched accurately for the **Monday Nov 16, 2026** launch:
+Feature surface is the same as the 3.0 engine cut (tiers, Deep Research, CRAAP/SIFT, predictions sleeve, examples) — plus the multimodal risk surfaces that were always in that cut and are now pitched accurately for the **Monday Nov 23, 2026** launch:
 
 | Default-on in 3.0.1 | Proof / artifact |
 |---------------------|------------------|
@@ -57,7 +57,7 @@ Same as 3.0.0 — see [`RELEASE_NOTES_v3.0.0.md`](RELEASE_NOTES_v3.0.0.md). Keep
 
 - Gallery: https://verityindex.com/gallery  
 - PyPI: https://pypi.org/project/verityngn/3.0.1/  
-- GitHub engine cut: https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0  
+- GitHub engine cut: https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.1  
 
 ## Artifacts
 

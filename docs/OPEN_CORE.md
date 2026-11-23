@@ -1,6 +1,6 @@
 # Open-Core Boundary — VerityNgn OSS v3.0.1
 
-**Effective:** 2026-11-13 (collateral refresh; PyPI `3.0.1` immutable for Monday Nov 16 launch)  
+**Effective:** 2026-11-13 (collateral refresh; PyPI `3.0.1` immutable for Monday Nov 23 launch)  
 **Rule:** `verityngn-oss` is the **canonical engine and research feature tree**. Commercial repos add **hosted scale, billing, and packaging** only. Predictions / MultiSense / vision / audio sleeves are **absorbed in OSS** — not commercial-only.
 
 ## OSS (`verityngn-oss`) — public Apache-2.0

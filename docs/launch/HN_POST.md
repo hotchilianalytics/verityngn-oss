@@ -27,7 +27,7 @@ I just shipped **VerityNgn OSS 3.0.1** — a standalone Apache-2.0 engine that t
 5. Optional Deep Research with a `visual_only_claims` lead  
 6. Domain packs: CRAAP consumer, SIFT analyst, CEO sensors, legal/health lanes  
 
-Local-file path is the same engine (analyst SIFT example: SB1507 scorecard, 40 claims / 18 pixel-only — source mp4 stays private; method is public). Roadmap hook: 3.1 object/action semantics + visual–spoken contradiction; 3.2 pose/lip/audio congruence atop in-repo MediaPipe + MultiSense sleeves. Launch Monday Nov 16, 2026.
+Local-file path is the same engine (analyst SIFT example: SB1507 scorecard, 40 claims / 18 pixel-only — source mp4 stays private; method is public). Roadmap hook: 3.1 object/action semantics + visual–spoken contradiction; 3.2 pose/lip/audio congruence atop in-repo MediaPipe + MultiSense sleeves. Launch Monday Nov 23, 2026.
 
 ### Open-core boundary (honest)
 

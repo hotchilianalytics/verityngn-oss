@@ -4,7 +4,7 @@
 
 **Framing:** Lead with **claim-level risk abatement** / **risk platform** (disclosure / delivery / sponsor-readiness). Avoid “truthfulness” / “lie detector” / “fact-check SaaS” language.
 
-**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · Launch **Monday, Nov 16, 2026** · Primary-10 **PASS** · Live gallery · Examples: [`docs/launch/EXAMPLES.md`](../EXAMPLES.md) · Notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · Multimodal + futures: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · Surfaces: [`SURFACES.md`](SURFACES.md) · Figures: [`FIGURES.md`](FIGURES.md) · Orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md)
+**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · docs tip `12be77d` · Launch **Monday, Nov 23, 2026** · Primary-10 **PASS** · Live gallery · Examples: [`docs/launch/EXAMPLES.md`](../EXAMPLES.md) · Notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · Multimodal + futures: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · Surfaces: [`SURFACES.md`](SURFACES.md) · Figures: [`FIGURES.md`](FIGURES.md) · Orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md)
 
 **Install lock:** `pip install 'verityngn[deep]==3.0.1'` — do **not** advertise `==3.0.0` (yanked).
 

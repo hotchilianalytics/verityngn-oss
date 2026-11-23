@@ -1,8 +1,8 @@
 # Multimodal Risk Now (v3.0.1) → Futures (v3.1 / v3.2)
 
 **Audience:** NotebookLM, slides, blogs, exec readers  
-**Package lock:** `verityngn==3.0.1` on PyPI (`3.0.0` yanked) · Launch **Monday, Nov 16, 2026**  
-**Branch:** `release/v3.0.0` · Engine tip `1b2cca8`  
+**Package lock:** `verityngn==3.0.1` on PyPI (`3.0.0` yanked) · Launch **Monday, Nov 23, 2026**  
+**Branch:** `release/v3.0.0` · Engine tip `1b2cca8` · Docs tip `12be77d` · Docs tip `12be77d`  
 **Rule:** Separate (a) default-on in 3.0.1, (b) opt-in sleeves already in the wheel, (c) research turning default-on in 3.1 / 3.2 — so no slide contradicts CLI behavior.
 
 ---

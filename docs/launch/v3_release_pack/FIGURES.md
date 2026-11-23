@@ -1,7 +1,7 @@
 # Figures + examples kit — OSS 3.0.1 push
 
 Use these existing assets. Do not invent new accuracy charts for social.  
-**Package:** `verityngn==3.0.1` · engine tip `1b2cca8`. **Gallery:** https://verityindex.com/gallery · **PyPI:** https://pypi.org/project/verityngn/3.0.1/
+**Package:** `verityngn==3.0.1` · engine tip `1b2cca8` · docs tip `12be77d`. **Gallery:** https://verityindex.com/gallery · **PyPI:** https://pypi.org/project/verityngn/3.0.1/
 
 ---
 
@@ -69,7 +69,7 @@ Offline SB1507 scorecard (no Vertex): `python scripts/sb1507_risk_taxonomy_score
 
 ## Caption hygiene
 
-- Prefer “PyPI `3.0.1` / engine tip `1b2cca8` / launch Monday Nov 16, 2026” over “candidate SHA” or floating HEAD language. Never advertise `==3.0.0`.
+- Prefer “PyPI `3.0.1` / engine tip `1b2cca8` / launch Monday Nov 23, 2026” over “candidate SHA” or floating HEAD language. Never advertise `==3.0.0`.
 - Prefer pixel-proof captions (“45% of SB1507 claims are pixel-only”; “Lipozem doctor cards exist only in pixels”) over generic “multimodal.”
 - One-sentence futures OK: “3.1 object/action semantics + visual–spoken contradiction; 3.2 pose/lip/audio congruence.”
 - Do not attach or redistribute the SB1507 source mp4.

@@ -1,7 +1,7 @@
 # Claim-level risk abatement — one-pager
 
-**VerityNgn OSS 3.0.1** · Apache-2.0 engine · HotChili Analytics · Launch **Monday Nov 16, 2026**  
-**PyPI:** `pip install 'verityngn[deep]==3.0.1'` · engine tip `1b2cca8` · Primary-10 battery **PASS** · Examples: [`../EXAMPLES.md`](../EXAMPLES.md) · Multimodal brief: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md)
+**VerityNgn OSS 3.0.1** · Apache-2.0 engine · HotChili Analytics · Launch **Monday Nov 23, 2026**  
+**PyPI:** `pip install 'verityngn[deep]==3.0.1'` · engine tip `1b2cca8` · docs tip `12be77d` · Primary-10 battery **PASS** · Examples: [`../EXAMPLES.md`](../EXAMPLES.md) · Multimodal brief: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md)
 
 ## Problem
 
@@ -11,7 +11,7 @@ Marketing, legal, agency, and **analyst-creator** teams need **claim-level** dis
 
 A **risk platform** layered on an open engine:
 
-1. **Extract** claims from multimodal video (adaptive **1–6 fps**, speech, OCR, charts, exhibits) — or filings for disclosure. **81** pixel-only claims across 10 v3 release runs (69 in the final primary-10); **18/40 (45%)** on SB1507; silent Lipozem credential cards.
+1. **Extract** claims from multimodal video (adaptive **1–6 fps**, speech, OCR, charts, exhibits). Disclosure filings reconciliation is the rfkit / ClearFactor companion (not in the 3.0.1 wheel). **81** pixel-only claims across 10 v3 release runs (69 in the final primary-10); **18/40 (45%)** on SB1507; silent Lipozem credential cards.
 2. **Classify** into six kinds (source-backed fact, data-derived inference, causal/analytical, reasoned opinion, prediction, unverified assertion).
 3. **Verify** with counter-intelligence; stamp likelihood, evidence confidence, residual reliance risk.
 4. **Report** — consumer: TRUE/FALSE ladder + CRAAP. Analyst: typed sections + risk chips + SIFT. Disclosure: Rewrite / Keep / Move / Remove. Auto-emit `brand_safety_scores.json` + `{id}_exhibit_map.json`.
@@ -44,7 +44,7 @@ Consumer CRAAP · Analyst SIFT · CEO predictions sensors · Securities disclosu
 
 ## Open-core boundary
 
-Engine quality + research sleeves (including **predictions / RiskFactor sensors S00–S15**) live in **verityngn-oss** (Apache). Hosted control plane, trial credits, gallery scale, and ClearFactor **services** (vault, counsel briefs) sit on **verityindex.com**. Disclosure **engine** opens as `verityngn[disclosure]` (Phase 1). See [COMMERCIAL_MAP.md](../../platform/COMMERCIAL_MAP.md) and [OPEN_CORE.md](../../OPEN_CORE.md).
+Engine quality + research sleeves (including **predictions / RiskFactor sensors S00–S15**) live in **verityngn-oss** (Apache). Hosted control plane, trial credits, gallery scale, and ClearFactor **services** (vault, counsel briefs) sit on **verityindex.com**. Disclosure is the rfkit / ClearFactor companion; `verityngn[disclosure]` is an empty placeholder in 3.0.1. See [COMMERCIAL_MAP.md](../../platform/COMMERCIAL_MAP.md) and [OPEN_CORE.md](../../OPEN_CORE.md).
 
 ## Proof
 

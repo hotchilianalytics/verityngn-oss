@@ -8,7 +8,7 @@
 | 2.1.x   | :white_check_mark: (security fixes only) |
 | < 2.1   | :x: |
 
-**Note:** VerityNgn OSS 3.0.0 is the canonical public engine release. Report vulnerabilities privately (see below).
+**Note:** VerityNgn OSS **3.0.1** is the current public engine release (`3.0.0` is yanked on PyPI). Report vulnerabilities privately (see below).
 
 ---
 

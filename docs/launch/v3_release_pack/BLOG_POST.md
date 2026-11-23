@@ -1,6 +1,6 @@
 # VerityNgn 3.0: an open claim-risk engine you can run on a video
 
-**Release:** OSS **3.0.1** · Apache-2.0 · on [PyPI](https://pypi.org/project/verityngn/3.0.1/) · engine tip `1b2cca8`  
+**Release:** OSS **3.0.1** · Apache-2.0 · on [PyPI](https://pypi.org/project/verityngn/3.0.1/) · engine tip `1b2cca8` · docs tip `12be77d`  
 **CTA:** [PyPI](https://pypi.org/project/verityngn/3.0.1/) · [gallery](https://verityindex.com/gallery) · `pip install 'verityngn[deep]==3.0.1'`
 
 Take a YouTube URL or a local file. Get a claim-level **risk** report: what was said, what the pixels showed, what independent sources contradict, and what residual risk remains if someone acts on it.
@@ -35,7 +35,7 @@ flowchart LR
 
 | Feature | What it is | Benefit |
 |---------|------------|---------|
-| **Adaptive 1–6 fps multimodal extract** | Scene-aware sampling + speech, OCR, charts, exhibits — not transcript-only | You catch claims that live on a slide or a supers, not only in the VO |
+| **Adaptive 1–6 fps multimodal extract** | Content-aware sampling + speech, OCR, charts, exhibits — not transcript-only | You catch claims that live on a slide or a supers, not only in the VO |
 | **Pixel claim proof (v3.0.1)** | 81 verified pixel-only claims across 10 release runs; **18/40 (45%)** on SB1507; silent Lipozem credential cards | Transcript-only would miss nearly half an analyst binder and every silent testimonial card |
 | **Visual risk sidecars** | `brand_safety_scores.json` + `{id}_exhibit_map.json` auto-emitted on full runs | Brand/sponsor teams get visual-only high-risk, credential-flash, and blink-disclosure counts |
 | **Six claim kinds** | Fact, data-derived inference, causal/analytical, reasoned opinion, prediction, unverified assertion | A forecast is not “false because it hasn’t happened”; an opinion is not scored as a fact |

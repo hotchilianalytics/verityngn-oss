@@ -2,7 +2,7 @@
 
 **Series:** VerityNgn OSS  
 **Part 9 of 9**  
-**Status:** DRAFT · 2026-11-13 · package **`verityngn==3.0.1`** · launch Monday Nov 16, 2026
+**Status:** DRAFT · 2026-11-13 · package **`verityngn==3.0.1`** · launch Monday Nov 23, 2026
 
 ---
 

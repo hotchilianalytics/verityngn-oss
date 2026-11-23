@@ -8,7 +8,7 @@ Originally published on Substack at [https://ajjcop.substack.com](https://ajjcop
 
 ## Part I. Whiteboard Front Page: Architectural Briefing
 
-Modeled after the Emergent Mind research whiteboard architecture format ([Emergent Mind Reference](https://www.emergentmind.com/papers/2611.05217#whiteboard)), this front page synthesizes the core pipeline, visual recognition stack, epistemological taxonomy, domain pack expansion, and platform boundaries.
+This whiteboard-style front page synthesizes the core pipeline, visual recognition stack, epistemological taxonomy, domain pack expansion, and platform boundaries.
 
 ### Whiteboard Architectural Overview
 ![Verity Engine Video-to-Text Recognition Pipeline](whiteboard_video_recognition_pipeline.png)

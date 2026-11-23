@@ -1,11 +1,11 @@
 # Media pack checklist — VerityNgn OSS v3.0.1 launch
 
 Use this list before HN / Reddit / LinkedIn / X / Bluesky posts.  
-**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · Launch **Monday Nov 16, 2026** · examples: [`../EXAMPLES.md`](../EXAMPLES.md) · notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · multimodal: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · pack: [`README.md`](README.md) · surfaces: [`SURFACES.md`](SURFACES.md) · figures: [`FIGURES.md`](FIGURES.md) · orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md) · ship: [`../SHIP_GATE_STATUS.md`](../SHIP_GATE_STATUS.md)
+**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · docs tip `12be77d` · Launch **Monday Nov 23, 2026** · examples: [`../EXAMPLES.md`](../EXAMPLES.md) · notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · multimodal: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · pack: [`README.md`](README.md) · surfaces: [`SURFACES.md`](SURFACES.md) · figures: [`FIGURES.md`](FIGURES.md) · orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md) · ship: [`../SHIP_GATE_STATUS.md`](../SHIP_GATE_STATUS.md)
 
 ## Core assets
 
-- [x] Release paper PDF: `papers/verityngn_oss_v3_release.pdf` (Chrome headless rebuild 2026-11-13)
+- [x] Release paper PDF: `papers/verityngn_oss_v3_release.pdf` (Chrome headless rebuild 2026-11-22; 81/69 scope)
 - [x] White paper one-pager: `WHITE_PAPER_ONE_PAGER.md`
 - [x] Multimodal + futures NotebookLM brief: `MULTIMODAL_AND_FUTURES_v3.md`
 - [x] Opt-in sophisticated media paths: `OPTIN_MEDIA_PATHS_v3.md`
@@ -25,6 +25,8 @@ Use this list before HN / Reddit / LinkedIn / X / Bluesky posts.
 - [x] Release notes: `../RELEASE_NOTES_v3.0.1.md` (+ pack copy)
 
 ## Demo
+
+- [x] **Withhold** `docs/launch/decks/VerityNgn_3_Release_with_examples.pptx` (stale 3.0.0 front matter) — attach golden + Multimodal + papers PDFs instead
 
 - [x] Lipozem / SB1507 / Primary-10 / live gallery (unchanged Monday proof)
 - [ ] Optional: wake Streamlit https://verityngn.streamlit.app (secondary CTA)
@@ -48,7 +50,7 @@ Use this list before HN / Reddit / LinkedIn / X / Bluesky posts.
 - **Futures hook (1 sentence):** 3.1 object/action semantics + visual–spoken contradiction; 3.2 pose/lip/audio congruence
 - One primary link per post
 - Creator cold email stays frozen — public posts only
-- Launch date lock: **Monday, Nov 16, 2026**
+- Launch date lock: **Monday, Nov 23, 2026**
 
 ## Links
 
@@ -57,5 +59,5 @@ Use this list before HN / Reddit / LinkedIn / X / Bluesky posts.
 | PyPI 3.0.1 | https://pypi.org/project/verityngn/3.0.1/ |
 | Gallery | https://verityindex.com/gallery |
 | Repo | https://github.com/hotchilianalytics/verityngn-oss |
-| Engine cut (GitHub) | https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0 |
+| Engine cut (GitHub) | https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.1 |
 | Streamlit (optional) | https://verityngn.streamlit.app |

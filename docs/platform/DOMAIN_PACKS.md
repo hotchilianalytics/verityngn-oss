@@ -44,7 +44,7 @@ Video packs use Supported / Contested / Unresolved (display) over TRUE / FALSE /
 | `ceo_predictions` | Karp / Huang / Nadella battery rows |
 | `legal_deposition` | Butler Kahn `7MXE1kDCY-k` |
 | `health_ci` | Carney `RuinHdlpXvE` |
-| `securities_disclosure` | rfkit specimen / review (ClearFactor); OSS sleeve Phase 1 |
+| `securities_disclosure` | rfkit / ClearFactor companion (not in the 3.0.1 wheel; `verityngn[disclosure]` empty placeholder) |
 
 Full battery: [BATTERY_RESULTS_v3.md](../launch/BATTERY_RESULTS_v3.md).
 

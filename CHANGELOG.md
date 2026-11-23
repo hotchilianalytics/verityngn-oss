@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tighten `.gitignore` for `verityngn/config/*.json`, `**/verityindex*.json`, `**/credentials.json`.
 - Operators: yank `3.0.0` on PyPI; rotate any key that lived under `verityngn/config/`; keep credentials outside the package tree (e.g. `~/proj/secrets/verityngn/`).
 
+### Docs
+- Fact-checked Notebook-generated release kit before the named GitHub release (speech path, 81/69 pixel-claim scope, Pack 6 disclosure companion, battery swap). See [`docs/releases/v3.0.1/CORRECTIONS_FROM_NOTEBOOK_DRAFT.md`](docs/releases/v3.0.1/CORRECTIONS_FROM_NOTEBOOK_DRAFT.md).
+- Public launch lock: Monday Nov 23, 2026. Engine tip `1b2cca8`; docs/release tip `12be77d` (tag `v3.0.1`).
+
 ## [3.0.0] - 2026-09-03
 
 Candidate cut on `release/v3.0.0` (intended to replace `main` after operator testing). Existing git tag `v3.0.0` still points at the 2026-08-29 canonical engine commit until retag is approved.

@@ -88,7 +88,7 @@ verityindex.com is the hosted control plane. ClearFactor is the first paid discl
 
 <h2>1. Abstract</h2>
 <p>We release <strong>VerityNgn OSS 3.0.1</strong>, a standalone multimodal engine for claim-level risk abatement from video.
-Across 10 v3 release runs, <strong>81</strong> verified claims exist only in pixels (never spoken), including
+Across 10 v3 release runs, <strong>81</strong> verified claims exist only in pixels (never spoken; <strong>69</strong> within the final primary-10 battery), including
 <strong>45%</strong> of SB1507 legislative claims. We do <em>not</em> claim earnings prediction, allocation factors, or lie detection.</p>
 
 {_img("figures/open_core_architecture.png", "Open-core architecture", "Figure 1. OSS Apache engine vs hosted control plane and paid apps.")}
@@ -112,7 +112,7 @@ Across 10 v3 release runs, <strong>81</strong> verified claims exist only in pix
   <tr><td><code>demonstration</code></td><td>4</td><td>Physical / on-camera actions (under-extracted today)</td></tr>
   </tbody>
 </table>
-<p><strong>81</strong> pixel-only claims across 10 release runs · SB1507 <strong>18/40 (45%)</strong> visual · Lipozem <strong>5</strong> silent cards ·
+<p><strong>81</strong> pixel-only claims across 10 release runs (<strong>69</strong> in the final primary-10) · SB1507 <strong>18/40 (45%)</strong> visual · Lipozem <strong>5</strong> silent cards ·
 T-ABL-006 only-MM share of union <strong>0.67–0.74</strong> on slide/exhibit seeds.</p>
 <p><code>verityngn analyze &lt;url&gt; --deep</code> runs after the standard report JSON exists.</p>
 

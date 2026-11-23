@@ -1,7 +1,7 @@
 # Opt-In (Non-Default) Sophisticated Media Paths — VerityNgn 3.0.1
 
 **Audience:** NotebookLM, technical readers, IR / brand reviewers evaluating advanced sleeves  
-**Package lock:** `verityngn==3.0.1` · Launch day **Monday, Nov 16, 2026**  
+**Package lock:** `verityngn==3.0.1` · Launch day **Monday, Nov 23, 2026**  
 **Rule:** These paths **ship in the wheel** but are **not** what `verityngn analyze` does by default. Do not pitch them as live-on-every-run until 3.1 / 3.2 turns the relevant pieces default-on.
 
 ---

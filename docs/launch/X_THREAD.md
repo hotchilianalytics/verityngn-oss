@@ -2,7 +2,7 @@
 
 Attach one image on tweet 1: `papers/figures/platform_layers.png` (or claim-classification diagram).
 
-1/ Shipping **VerityNgn OSS 3.0.1** (launch Mon Nov 16) — open-source multimodal **claim-risk** engine on PyPI. 45% of SB1507 claims + Lipozem’s doctor cards exist only in pixels. Adaptive 1–6 fps + brand-safety/exhibit JSONs live default-on. Not a lie detector.
+1/ Shipping **VerityNgn OSS 3.0.1** (launch Mon Nov 23) — open-source multimodal **claim-risk** engine on PyPI. 45% of SB1507 claims + Lipozem’s doctor cards exist only in pixels. Adaptive 1–6 fps + brand-safety/exhibit JSONs live default-on. Not a lie detector.
 
 Proof gallery: https://verityindex.com/gallery
 

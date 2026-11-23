@@ -6,8 +6,8 @@ Paste-ready blurbs for channels outside the Reddit pack and HN/X/LinkedIn drafts
 | Lock | Value |
 |------|-------|
 | Package | **`verityngn==3.0.1`** on PyPI |
-| Engine tip | `1b2cca8` (tag `v3.0.0`) |
-| Launch | **Monday, Nov 16, 2026** |
+| Engine tip | `1b2cca8` · Docs/release tip `12be77d` (tag `v3.0.1`) |
+| Launch | **Monday, Nov 23, 2026** |
 | Gallery | https://verityindex.com/gallery |
 | PyPI | https://pypi.org/project/verityngn/3.0.1/ |
 | Install | `pip install 'verityngn[deep]==3.0.1'` |
@@ -21,11 +21,11 @@ Creator / journalist **cold email stays frozen**. These are public posts only.
 
 ---
 
-## Stagger calendar (suggested) — lock Monday Nov 16, 2026
+## Stagger calendar (suggested) — lock Monday Nov 23, 2026
 
 | Day | Channel | Asset |
 |-----|---------|-------|
-| **Mon Nov 16** | Blog / Substack or site mirror of [`BLOG_POST.md`](BLOG_POST.md) | Full article |
+| **Mon Nov 23** | Blog / Substack or site mirror of [`BLOG_POST.md`](BLOG_POST.md) | Full article |
 | **+6–12h** | r/MachineLearning `[P]` | Pack [`README.md`](README.md) §A |
 | **+12–24h** | r/LanguageTechnology | Pack README §B |
 | **+24h** | **Show HN** | [`HN_POST.md`](HN_POST.md) |
@@ -44,7 +44,7 @@ Do **not** blast HN + Reddit + X in the same hour.
 **Single post** (attach `papers/figures/platform_layers.png`):
 
 ```
-VerityNgn OSS 3.0.1 is on PyPI (launch Mon Nov 16) — Apache-2.0 multimodal claim-risk. 45% of SB1507 claims + Lipozem’s doctor cards exist only in pixels; adaptive 1–6 fps + brand-safety/exhibit JSONs live default-on. Next: 3.1 object/action semantics, 3.2 pose/lip/audio congruence. Not a lie detector.
+VerityNgn OSS 3.0.1 is on PyPI (launch Mon Nov 23) — Apache-2.0 multimodal claim-risk. 45% of SB1507 claims + Lipozem’s doctor cards exist only in pixels; adaptive 1–6 fps + brand-safety/exhibit JSONs live default-on. Next: 3.1 object/action semantics, 3.2 pose/lip/audio congruence. Not a lie detector.
 
 pip install 'verityngn[deep]==3.0.1'
 
