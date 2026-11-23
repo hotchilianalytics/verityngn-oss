@@ -6,7 +6,7 @@ Paste-ready blurbs for channels outside the Reddit pack and HN/X/LinkedIn drafts
 | Lock | Value |
 |------|-------|
 | Package | **`verityngn==3.0.1`** on PyPI |
-| Engine tip | `1b2cca8` · Docs/release tip `12be77d` (tag `v3.0.1`) |
+| Engine tip | `1b2cca8` · Docs/release tip `f6aeb2e` (tag `v3.0.1`) |
 | Launch | **Monday, Nov 23, 2026** |
 | Gallery | https://verityindex.com/gallery |
 | PyPI | https://pypi.org/project/verityngn/3.0.1/ |

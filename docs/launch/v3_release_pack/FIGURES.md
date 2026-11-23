@@ -1,7 +1,7 @@
 # Figures + examples kit — OSS 3.0.1 push
 
 Use these existing assets. Do not invent new accuracy charts for social.  
-**Package:** `verityngn==3.0.1` · engine tip `1b2cca8` · docs tip `12be77d`. **Gallery:** https://verityindex.com/gallery · **PyPI:** https://pypi.org/project/verityngn/3.0.1/
+**Package:** `verityngn==3.0.1` · engine tip `1b2cca8` · docs tip `f6aeb2e`. **Gallery:** https://verityindex.com/gallery · **PyPI:** https://pypi.org/project/verityngn/3.0.1/
 
 ---
 

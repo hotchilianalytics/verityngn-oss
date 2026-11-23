@@ -1,7 +1,7 @@
 # Media pack checklist — VerityNgn OSS v3.0.1 launch
 
 Use this list before HN / Reddit / LinkedIn / X / Bluesky posts.  
-**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · docs tip `12be77d` · Launch **Monday Nov 23, 2026** · examples: [`../EXAMPLES.md`](../EXAMPLES.md) · notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · multimodal: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · pack: [`README.md`](README.md) · surfaces: [`SURFACES.md`](SURFACES.md) · figures: [`FIGURES.md`](FIGURES.md) · orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md) · ship: [`../SHIP_GATE_STATUS.md`](../SHIP_GATE_STATUS.md)
+**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · docs tip `f6aeb2e` · Launch **Monday Nov 23, 2026** · examples: [`../EXAMPLES.md`](../EXAMPLES.md) · notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · multimodal: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · pack: [`README.md`](README.md) · surfaces: [`SURFACES.md`](SURFACES.md) · figures: [`FIGURES.md`](FIGURES.md) · orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md) · ship: [`../SHIP_GATE_STATUS.md`](../SHIP_GATE_STATUS.md)
 
 ## Core assets
 

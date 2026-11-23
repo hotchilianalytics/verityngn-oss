@@ -2,7 +2,7 @@
 
 **Authors:** HotChili Analytics / VerityNgn Research  
 **Date:** 2026-11-13 (packaging cut 2026-11-10; engine tip 2026-08–11)  
-**Version:** **3.0.1** on PyPI (`3.0.0` yanked — packaging hygiene) · engine tip `1b2cca8` · docs tip `12be77d`  
+**Version:** **3.0.1** on PyPI (`3.0.0` yanked — packaging hygiene) · engine tip `1b2cca8` · docs tip `f6aeb2e`  
 **License:** Apache-2.0 (engine); commercial overlays under separate terms  
 **Live gallery:** https://verityindex.com/gallery  
 **PyPI:** https://pypi.org/project/verityngn/3.0.1/  

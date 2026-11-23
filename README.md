@@ -8,7 +8,7 @@
 [![Research](https://img.shields.io/badge/status-research-yellow.svg)]()
 
 > **Current OSS runtime:** `verityngn==3.0.1` on PyPI (`release/v3.0.0` branch; `3.0.0` yanked).
-> Launch lock: **Monday, Nov 23, 2026** · docs tip `12be77d` (tag `v3.0.1`). Analysis / verification / Deep Research default to
+> Launch lock: **Monday, Nov 23, 2026** · docs tip `f6aeb2e` (tag `v3.0.1`). Analysis / verification / Deep Research default to
 > `gemini-3.8-flash`, always emit `report.html` + `deep.html`, and share a Vertex fallback
 > policy across `global` and `us-central1`.
 

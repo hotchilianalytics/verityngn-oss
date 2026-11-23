@@ -1,7 +1,7 @@
 # Ship-gate — go-now 3.0.1 (Monday Nov 23, 2026)
 
 **Package:** `verityngn==3.0.1` on PyPI (**live**)  
-**Engine tip:** `1b2cca8` · **Docs/release tip:** `12be77d` (tag `v3.0.1`) on `release/v3.0.0` / `main`  
+**Engine tip:** `1b2cca8` · **Docs/release tip:** `f6aeb2e` (tag `v3.0.1`) on `release/v3.0.0` / `main`  
 **Yanked:** `verityngn==3.0.0` (do not advertise / pin)
 
 ## Pre-flight

@@ -1,6 +1,6 @@
 # Ship clicks — v3.0.1 go-now (Monday Nov 23, 2026)
 
-**Status:** PyPI **`verityngn==3.0.1` live**. `3.0.0` **yanked**. Public posts use the install lock below. Engine tip `1b2cca8`; docs/release tip `12be77d` (tag `v3.0.1`).
+**Status:** PyPI **`verityngn==3.0.1` live**. `3.0.0` **yanked**. Public posts use the install lock below. Engine tip `1b2cca8`; docs/release tip `f6aeb2e` (tag `v3.0.1`).
 
 | Action | Status / note |
 |--------|----------------|

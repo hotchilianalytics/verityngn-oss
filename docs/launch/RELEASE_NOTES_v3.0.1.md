@@ -7,7 +7,7 @@ Packaging / security patch on the OSS 3.0 claim-risk engine. **Install from PyPI
 | Field | Value |
 |-------|-------|
 | Package | **`verityngn==3.0.1`** on PyPI |
-| Engine tip | Monday OSS cut `1b2cca8` · Docs/release tip `12be77d` (tag `v3.0.1`) |
+| Engine tip | Monday OSS cut `1b2cca8` · Docs/release tip `f6aeb2e` (tag `v3.0.1`) |
 | Branch | `release/v3.0.0` |
 | Primary-10 | PASS ([`BATTERY_RESULTS_v3.md`](BATTERY_RESULTS_v3.md)) |
 | Examples | [`EXAMPLES.md`](EXAMPLES.md) |

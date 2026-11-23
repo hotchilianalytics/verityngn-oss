@@ -1,6 +1,6 @@
 # VerityNgn 3.0: an open claim-risk engine you can run on a video
 
-**Release:** OSS **3.0.1** · Apache-2.0 · on [PyPI](https://pypi.org/project/verityngn/3.0.1/) · engine tip `1b2cca8` · docs tip `12be77d`  
+**Release:** OSS **3.0.1** · Apache-2.0 · on [PyPI](https://pypi.org/project/verityngn/3.0.1/) · engine tip `1b2cca8` · docs tip `f6aeb2e`  
 **CTA:** [PyPI](https://pypi.org/project/verityngn/3.0.1/) · [gallery](https://verityindex.com/gallery) · `pip install 'verityngn[deep]==3.0.1'`
 
 Take a YouTube URL or a local file. Get a claim-level **risk** report: what was said, what the pixels showed, what independent sources contradict, and what residual risk remains if someone acts on it.

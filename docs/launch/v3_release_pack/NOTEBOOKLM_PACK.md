@@ -1,7 +1,7 @@
 # NotebookLM source pack — VerityNgn OSS 3.0.1
 
 **Upload this folder (or the zip) into a single Google NotebookLM notebook.**  
-**Package:** `verityngn==3.0.1` on PyPI (`3.0.0` yanked) · **Launch:** Monday, Nov 23, 2026 · Engine tip `1b2cca8` · Docs tip `12be77d`
+**Package:** `verityngn==3.0.1` on PyPI (`3.0.0` yanked) · **Launch:** Monday, Nov 23, 2026 · Engine tip `1b2cca8` · Docs tip `f6aeb2e`
 
 This pack is built so NotebookLM can answer three different questions without conflating them:
 

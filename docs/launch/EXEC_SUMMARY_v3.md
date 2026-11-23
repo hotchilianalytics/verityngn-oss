@@ -1,6 +1,6 @@
 # Executive summary — VerityNgn OSS 3.0.1
 
-**Date:** 2026-11-13 · **Launch lock:** Monday Nov 23, 2026 · **Package:** `verityngn==3.0.1` on PyPI · **Engine tip:** `1b2cca8` · **Docs/release tip:** `12be77d` (tag `v3.0.1`) · Examples: [`EXAMPLES.md`](EXAMPLES.md) · Multimodal: [`v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md)
+**Date:** 2026-11-13 · **Launch lock:** Monday Nov 23, 2026 · **Package:** `verityngn==3.0.1` on PyPI · **Engine tip:** `1b2cca8` · **Docs/release tip:** `f6aeb2e` (tag `v3.0.1`) · Examples: [`EXAMPLES.md`](EXAMPLES.md) · Multimodal: [`v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md)
 
 ## One sentence
 

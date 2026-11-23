@@ -1,7 +1,7 @@
 # Claim-level risk abatement — one-pager
 
 **VerityNgn OSS 3.0.1** · Apache-2.0 engine · HotChili Analytics · Launch **Monday Nov 23, 2026**  
-**PyPI:** `pip install 'verityngn[deep]==3.0.1'` · engine tip `1b2cca8` · docs tip `12be77d` · Primary-10 battery **PASS** · Examples: [`../EXAMPLES.md`](../EXAMPLES.md) · Multimodal brief: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md)
+**PyPI:** `pip install 'verityngn[deep]==3.0.1'` · engine tip `1b2cca8` · docs tip `f6aeb2e` · Primary-10 battery **PASS** · Examples: [`../EXAMPLES.md`](../EXAMPLES.md) · Multimodal brief: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md)
 
 ## Problem
 
