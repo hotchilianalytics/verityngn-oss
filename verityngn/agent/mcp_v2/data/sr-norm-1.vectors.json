@@ -1,0 +1,475 @@
+{
+  "definition": {
+    "name": "sr-norm-1",
+    "applies_to": "text/plain registration, and the final step of every other media type (html+sr-norm-1, webvtt+sr-norm-1, docling+sr-norm-1)",
+    "steps": [
+      "1. Input is a Unicode string. Bytes are decoded as UTF-8 with invalid sequences replaced by U+FFFD.",
+      "2. Apply Unicode NFKC normalization.",
+      "3. Replace CR LF with LF, then any remaining CR with LF, then U+00A0 with U+0020.",
+      "4. Replace every run of one or more of U+0020, U+0009, U+000C, U+000B with a single U+0020.",
+      "5. Split on LF. Strip leading and trailing characters of the strip set from each line. Join with LF.",
+      "6. Replace every run of three or more LF with exactly two LF.",
+      "7. Strip leading and trailing characters of the strip set from the whole text."
+    ],
+    "strip_set": [
+      "U+0009",
+      "U+000A",
+      "U+000B",
+      "U+000C",
+      "U+000D",
+      "U+001C",
+      "U+001D",
+      "U+001E",
+      "U+001F",
+      "U+0020",
+      "U+0085",
+      "U+00A0",
+      "U+1680",
+      "U+2000",
+      "U+2001",
+      "U+2002",
+      "U+2003",
+      "U+2004",
+      "U+2005",
+      "U+2006",
+      "U+2007",
+      "U+2008",
+      "U+2009",
+      "U+200A",
+      "U+2028",
+      "U+2029",
+      "U+202F",
+      "U+205F",
+      "U+3000"
+    ],
+    "strip_set_note": "Python str.isspace(). Characters in the set that step 4 does not collapse (for example U+2028, U+0085, U+001C-U+001F, U+1680) are kept inside a line and removed only at line edges. U+200B is not in the set.",
+    "line_breaks": "Kept. Paragraph breaks become exactly one blank line.",
+    "source_hash": "'sha256:' + lowercase hex SHA-256 of the UTF-8 bytes of the normalized text",
+    "doc_id": "'sr:doc:' + tenant + '/' + first 32 lowercase hex chars of SHA-256(UTF-8(tenant + LF + normalized text))",
+    "positions": "TextPositionSelector start and end count Unicode code points in the normalized text (W3C Web Annotation). Each vector also gives UTF-16 code-unit offsets for JavaScript clients."
+  },
+  "vectors": [
+    {
+      "id": "ascii",
+      "description": "Plain ASCII is unchanged.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "We may experience cybersecurity incidents.",
+      "normalized": "We may experience cybersecurity incidents.",
+      "length": 42,
+      "length_utf16": 42,
+      "source_hash": "sha256:cc0958ac59f3ec1dc57703b9aa3ae02545b2e78871ecf08cf13f7e2fb7a3abbb",
+      "doc_id_for_tenant_acme": "sr:doc:acme/c076c07ed8e204100f94818fa4005970",
+      "quotes": [
+        {
+          "exact": "cybersecurity",
+          "start": 18,
+          "end": 31,
+          "start_utf16": 18,
+          "end_utf16": 31
+        }
+      ]
+    },
+    {
+      "id": "crlf-cr",
+      "description": "CR LF and lone CR become LF.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "Line one\r\nLine two\rLine three",
+      "normalized": "Line one\nLine two\nLine three",
+      "length": 28,
+      "length_utf16": 28,
+      "source_hash": "sha256:46c949c0b79bc3c1eef1d2970222427b7a0e8d70233d4cc2429535f0f41a0e9a",
+      "doc_id_for_tenant_acme": "sr:doc:acme/656c97eaba8b3178c8c6116064b3d953",
+      "quotes": [
+        {
+          "exact": "Line two",
+          "start": 9,
+          "end": 17,
+          "start_utf16": 9,
+          "end_utf16": 17
+        }
+      ]
+    },
+    {
+      "id": "horizontal-runs",
+      "description": "Runs of space, tab, form feed and vertical tab collapse to one space; line edges are stripped.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "  Risk\t\tfactors \f\u000b apply.   \n\tNext line  ",
+      "normalized": "Risk factors apply.\nNext line",
+      "length": 29,
+      "length_utf16": 29,
+      "source_hash": "sha256:36e7e4a7a15aec77c7efba1d5560a367ee0a1987c8b58ffcae3ef13fa452ddf9",
+      "doc_id_for_tenant_acme": "sr:doc:acme/59f4362c6c51d33bb2444b59e5a5f911",
+      "quotes": [
+        {
+          "exact": "factors apply",
+          "start": 5,
+          "end": 18,
+          "start_utf16": 5,
+          "end_utf16": 18
+        }
+      ]
+    },
+    {
+      "id": "unicode-spaces",
+      "description": "NBSP, narrow NBSP, em space and ideographic space become spaces through NFKC and step 3.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "a\u00a0b\u202fc\u2003d\u3000e",
+      "normalized": "a b c d e",
+      "length": 9,
+      "length_utf16": 9,
+      "source_hash": "sha256:52cf9f06f83e0a0a90dc25dcf548c18421244f9520c577672cd27b6618f12134",
+      "doc_id_for_tenant_acme": "sr:doc:acme/d22977e4a4322eb0054a0a0707c2165e",
+      "quotes": [
+        {
+          "exact": "b c d",
+          "start": 2,
+          "end": 7,
+          "start_utf16": 2,
+          "end_utf16": 7
+        }
+      ]
+    },
+    {
+      "id": "ogham-space",
+      "description": "U+1680 survives NFKC and is not collapsed inside a line, but is stripped at line edges.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "\u1680x\u1680\u1680y\u1680",
+      "normalized": "x\u1680\u1680y",
+      "length": 4,
+      "length_utf16": 4,
+      "source_hash": "sha256:ba69693e6efe6267214c854925645913bafdf180d40a80d5714c8f75bf534958",
+      "doc_id_for_tenant_acme": "sr:doc:acme/1d09336aa25d76ba56ca9d121da58239",
+      "quotes": [
+        {
+          "exact": "x\u1680\u1680y",
+          "start": 0,
+          "end": 4,
+          "start_utf16": 0,
+          "end_utf16": 4
+        }
+      ]
+    },
+    {
+      "id": "nfkc-compat",
+      "description": "NFKC folds ligatures, full-width letters, superscripts and fractions.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "\ufb01led \ufb02ow \uff21\uff22\uff23 x\u00b2 \u00bd",
+      "normalized": "filed flow ABC x2 1\u20442",
+      "length": 21,
+      "length_utf16": 21,
+      "source_hash": "sha256:d533a313b7b14b79cecf37d6c60fb5957ac2ff1dc412fcd47f717420c117d31f",
+      "doc_id_for_tenant_acme": "sr:doc:acme/98ea6b552dac8b756cdc01a20d321b34",
+      "quotes": [
+        {
+          "exact": "filed flow ABC x2 1\u20442",
+          "start": 0,
+          "end": 21,
+          "start_utf16": 0,
+          "end_utf16": 21
+        }
+      ]
+    },
+    {
+      "id": "nfkc-compose",
+      "description": "Combining sequences are composed; curly quotes are kept.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "Cafe\u0301 \u2019quoted\u2019",
+      "normalized": "Caf\u00e9 \u2019quoted\u2019",
+      "length": 13,
+      "length_utf16": 13,
+      "source_hash": "sha256:07f2d3186fe18f3a1d54a20fb5a0520c555d363588230905e8de2655499bd8b1",
+      "doc_id_for_tenant_acme": "sr:doc:acme/f81d3f8018ea7aa6310663aea47d646a",
+      "quotes": [
+        {
+          "exact": "Caf\u00e9 \u2019quoted\u2019",
+          "start": 0,
+          "end": 13,
+          "start_utf16": 0,
+          "end_utf16": 13
+        }
+      ]
+    },
+    {
+      "id": "blank-lines",
+      "description": "Three or more line breaks become one blank line; whitespace-only lines are emptied.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "Para one.\n\n\n\nPara two.\n   \n \t \nPara three.",
+      "normalized": "Para one.\n\nPara two.\n\nPara three.",
+      "length": 33,
+      "length_utf16": 33,
+      "source_hash": "sha256:c4988c7cabc5c6afccfd18641a878d67d73a2df9d42997ac76c85627e83aa8f7",
+      "doc_id_for_tenant_acme": "sr:doc:acme/a845943fd97a3f475abfc6ed4092bef8",
+      "quotes": [
+        {
+          "exact": "Para two.\n\nPara three.",
+          "start": 11,
+          "end": 33,
+          "start_utf16": 11,
+          "end_utf16": 33
+        }
+      ]
+    },
+    {
+      "id": "outer-whitespace",
+      "description": "Leading and trailing whitespace of the whole text is removed.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "\n\n  \u3000Body text.\u2029\n\n",
+      "normalized": "Body text.",
+      "length": 10,
+      "length_utf16": 10,
+      "source_hash": "sha256:4319bbb0a28e6761cdf1b618cbd54d368d4eaf35a98c3f3802f4820dff1448a5",
+      "doc_id_for_tenant_acme": "sr:doc:acme/a263203736b9e65195da8258283ed688",
+      "quotes": [
+        {
+          "exact": "Body text.",
+          "start": 0,
+          "end": 10,
+          "start_utf16": 0,
+          "end_utf16": 10
+        }
+      ]
+    },
+    {
+      "id": "line-separators",
+      "description": "U+2028 and U+0085 are kept inside a line and stripped at line edges.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "alpha\u2028beta\u2028\n\u0085gamma\u0085delta",
+      "normalized": "alpha\u2028beta\ngamma\u0085delta",
+      "length": 22,
+      "length_utf16": 22,
+      "source_hash": "sha256:54e8bbd60339e1d447f04c55e452263127c3f0070dfbdb4686190e4271dab0ad",
+      "doc_id_for_tenant_acme": "sr:doc:acme/f0d8397a01d43b7e5f3959b6e2e26814",
+      "quotes": [
+        {
+          "exact": "alpha\u2028beta",
+          "start": 0,
+          "end": 10,
+          "start_utf16": 0,
+          "end_utf16": 10
+        },
+        {
+          "exact": "gamma\u0085delta",
+          "start": 11,
+          "end": 22,
+          "start_utf16": 11,
+          "end_utf16": 22
+        }
+      ]
+    },
+    {
+      "id": "control-separators",
+      "description": "U+001C to U+001F are kept inside a line and stripped at line edges.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "\u001cone\u001dtwo\u001f",
+      "normalized": "one\u001dtwo",
+      "length": 7,
+      "length_utf16": 7,
+      "source_hash": "sha256:3881f097b4e40d0dc0dc45c0737140045554f0c84ca6b648743bb85bb92bfddc",
+      "doc_id_for_tenant_acme": "sr:doc:acme/2ff122f40273d53e1a713b754498ba2b",
+      "quotes": [
+        {
+          "exact": "one\u001dtwo",
+          "start": 0,
+          "end": 7,
+          "start_utf16": 0,
+          "end_utf16": 7
+        }
+      ]
+    },
+    {
+      "id": "zero-width",
+      "description": "U+200B is not whitespace and is kept everywhere.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "\u200bzero\u200bwidth\u200b",
+      "normalized": "\u200bzero\u200bwidth\u200b",
+      "length": 12,
+      "length_utf16": 12,
+      "source_hash": "sha256:b194f96eb47b6ae1b9ff7a46794d2512123f3b72d83aedf5f4c59eef75628ac6",
+      "doc_id_for_tenant_acme": "sr:doc:acme/da00f5f8c58e7b9d7f0fcd2e71f44c19",
+      "quotes": [
+        {
+          "exact": "zero\u200bwidth",
+          "start": 1,
+          "end": 11,
+          "start_utf16": 1,
+          "end_utf16": 11
+        }
+      ]
+    },
+    {
+      "id": "astral",
+      "description": "Characters outside the BMP count as one code point but two UTF-16 units.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "Revenue \ud83d\udcc8 rose 12%. Risk remains.",
+      "normalized": "Revenue \ud83d\udcc8 rose 12%. Risk remains.",
+      "length": 33,
+      "length_utf16": 34,
+      "source_hash": "sha256:244c825aacb1b21f424877349e800cc32cd6f5c5ff10f26570ea8f1e384342d2",
+      "doc_id_for_tenant_acme": "sr:doc:acme/1f24a9216a735b5a4d952d26390e6d6b",
+      "quotes": [
+        {
+          "exact": "Risk remains",
+          "start": 20,
+          "end": 32,
+          "start_utf16": 21,
+          "end_utf16": 33
+        }
+      ]
+    },
+    {
+      "id": "form-feed-pages",
+      "description": "A form feed between pages becomes a space, then is stripped at the line edge.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "End of page 1.\f\nStart of page 2.",
+      "normalized": "End of page 1.\nStart of page 2.",
+      "length": 31,
+      "length_utf16": 31,
+      "source_hash": "sha256:d2fddf876fd8048eb91e1870d6d1fa9c3bf98737df2d80ce604d5600ddc1c8b5",
+      "doc_id_for_tenant_acme": "sr:doc:acme/47746514b1c886730f5d1f9dd8445100",
+      "quotes": [
+        {
+          "exact": "Start of page 2.",
+          "start": 15,
+          "end": 31,
+          "start_utf16": 15,
+          "end_utf16": 31
+        }
+      ]
+    },
+    {
+      "id": "tenk-excerpt",
+      "description": "A 10-K excerpt with CR LF, NBSP, tabs, trailing spaces and extra blank lines.",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": "ITEM 1A. RISK FACTORS\r\n\r\nRisks Relating to Cybersecurity.  We may experience cybersecurity incidents that could materially\u00a0adversely affect us.   \r\n\r\n\r\n\r\nITEM 1B.\tUNRESOLVED STAFF COMMENTS\r\nNone.\r\n",
+      "normalized": "ITEM 1A. RISK FACTORS\n\nRisks Relating to Cybersecurity. We may experience cybersecurity incidents that could materially adversely affect us.\n\nITEM 1B. UNRESOLVED STAFF COMMENTS\nNone.",
+      "length": 182,
+      "length_utf16": 182,
+      "source_hash": "sha256:a2a1cdb7dcd1f18c59362740899560a59501c34ff86797235775d00df065cd0d",
+      "doc_id_for_tenant_acme": "sr:doc:acme/7bb77b04b0fc464f7c8dac0ad8d3cdab",
+      "quotes": [
+        {
+          "exact": "We may experience cybersecurity incidents",
+          "start": 56,
+          "end": 97,
+          "start_utf16": 56,
+          "end_utf16": 97
+        },
+        {
+          "exact": "ITEM 1B. UNRESOLVED STAFF COMMENTS",
+          "start": 142,
+          "end": 176,
+          "start_utf16": 142,
+          "end_utf16": 176
+        }
+      ]
+    },
+    {
+      "id": "whitespace-only",
+      "description": "Whitespace-only input normalizes to the empty string (register_document rejects it).",
+      "media_type": "text/plain",
+      "normalizer": "sr-norm-1",
+      "input": " \t\r\n\u3000\n",
+      "normalized": "",
+      "length": 0,
+      "length_utf16": 0,
+      "source_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "doc_id_for_tenant_acme": null,
+      "quotes": []
+    }
+  ],
+  "pipelines": [
+    {
+      "id": "html-basic",
+      "description": "Block elements become line breaks; script, style and head are dropped; entities are decoded.",
+      "media_type": "text/html",
+      "normalizer": "html+sr-norm-1",
+      "input": "<html><head><title>x</title><style>p{}</style></head><body><p>ITEM 1A. RISK FACTORS</p><p>We may&nbsp;fail &amp; recover.</p><script>x()</script></body></html>",
+      "normalized": "ITEM 1A. RISK FACTORS\n\nWe may fail & recover.",
+      "length": 45,
+      "length_utf16": 45,
+      "source_hash": "sha256:2f304568c7ddcaec3fd222385c3104e18876ce7deb060a128d4452f67ed271db",
+      "doc_id_for_tenant_acme": "sr:doc:acme/920fbc3405063ede45f6f8cb07880b6c",
+      "quotes": [
+        {
+          "exact": "We may fail & recover.",
+          "start": 23,
+          "end": 45,
+          "start_utf16": 23,
+          "end_utf16": 45
+        }
+      ]
+    },
+    {
+      "id": "html-ixbrl-hidden",
+      "description": "Hidden inline-XBRL headers (display:none div, ix:header) are dropped.",
+      "media_type": "text/html",
+      "normalizer": "html+sr-norm-1",
+      "input": "<div style=\"display:none\"><ix:header>dei:DocumentType</ix:header></div><div><p>ITEM 1.05 MATERIAL CYBERSECURITY INCIDENTS</p><p>An attack was detected.</p></div>",
+      "normalized": "ITEM 1.05 MATERIAL CYBERSECURITY INCIDENTS\n\nAn attack was detected.",
+      "length": 67,
+      "length_utf16": 67,
+      "source_hash": "sha256:2ce190f7c456f571d5ed7f84f54f51459e45c14d8a950e1b8e759ad04b9bfcd4",
+      "doc_id_for_tenant_acme": "sr:doc:acme/e7f6122bd2cda81d0c92d3b1382f6711",
+      "quotes": [
+        {
+          "exact": "An attack was detected.",
+          "start": 44,
+          "end": 67,
+          "start_utf16": 44,
+          "end_utf16": 67
+        }
+      ]
+    },
+    {
+      "id": "webvtt",
+      "description": "Cue text only, one cue per line; timings become the document's cue table.",
+      "media_type": "text/vtt",
+      "normalizer": "webvtt+sr-norm-1",
+      "input": "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\n<v Speaker>Welcome  to the update.</v>\n\n00:00:05.000 --> 00:00:09.500\nOur systems were not breached.\n",
+      "normalized": "Welcome to the update.\nOur systems were not breached.",
+      "length": 53,
+      "length_utf16": 53,
+      "source_hash": "sha256:a4960aa80397b5d1efb5d5b7a6f9aa478f4857d38cfa7a058e79682a6c01fd19",
+      "doc_id_for_tenant_acme": "sr:doc:acme/110b580f95a3954b15a2c5190843b12d",
+      "quotes": [
+        {
+          "exact": "Our systems were not breached.",
+          "start": 23,
+          "end": 53,
+          "start_utf16": 23,
+          "end_utf16": 53
+        }
+      ],
+      "cues": [
+        {
+          "start_s": 1.0,
+          "end_s": 4.0,
+          "start": 0,
+          "end": 22
+        },
+        {
+          "start_s": 5.0,
+          "end_s": 9.5,
+          "start": 23,
+          "end": 53
+        }
+      ]
+    }
+  ],
+  "pipelines_note": "Informative. HTML and WebVTT extraction run on the server before sr-norm-1. For documents the server fetched itself, read splitrisk://documents/{doc_id} for the exact normalized text instead of re-implementing extraction."
+}

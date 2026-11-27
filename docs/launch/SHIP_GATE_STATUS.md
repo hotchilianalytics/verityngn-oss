@@ -15,6 +15,8 @@
 | Packaging + release docs | Committed on `release/v3.0.0`; tagged `v3.0.1` (GitHub Latest) |
 | PyPI `3.0.1` vs repo `verityngn/` | Sdist code diff-clean vs repo (local-only runtime dirs excluded) |
 | Fact-checked release kit | [`docs/releases/v3.0.1/`](../releases/v3.0.1/) · corrections log checked in |
+| MCP stdio 3.1 surface | Command strings only; does not run analyses. Was previously counted as "MCP PASS" (corrected 2026-10-28) |
+| MCP v2 hosted execution | `python scripts/ci/mcp_ship_gate.py [--live]` asserts real tool results over HTTP. 2026-10-29 on a lean install with `--live`: 10 REAL, 4 BLOCKED (rfkit engine, video stack, OpenSanctions key, CourtListener adapter), 0 FAIL. Branch `cursor/verityngn-mcp-v2-24bd`, not on the 3.0.1 release |
 
 ## Public install lock (all posts)
 

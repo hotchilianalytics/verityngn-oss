@@ -131,6 +131,19 @@ jobs:
           pip install -e ".[dev]" --quiet
           python -m pytest test/unit/test_deepresearch.py test/unit/test_authenticity_and_vision.py tests/test_cli_and_boundary.py -q
 
+      - name: MCP tests (stdio surface + v2 hosted execution, offline)
+        shell: bash -l {0}
+        run: |
+          conda activate verityngn
+          pip install -e ".[dev,mcp]" --quiet
+          python -m pytest test/unit/test_mcp_server.py test/unit/test_claim_risk_schema.py test/unit/mcp_v2 -m "not live" -q
+
+      - name: MCP ship gate (real tool results, not command strings)
+        shell: bash -l {0}
+        run: |
+          conda activate verityngn
+          python scripts/ci/mcp_ship_gate.py
+
   secret-scan:
     name: Secret scan (regex)
     runs-on: ubuntu-latest
