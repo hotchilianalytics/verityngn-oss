@@ -27,7 +27,8 @@ services:
       # GCS configuration
       - GCS_BUCKET_NAME=verityindex_bucket
       - PROJECT_ID=verityindex-0-0-1
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/config/credentials.json
+      # Mount host SA JSON via GOOGLE_APPLICATION_CREDENTIALS (never bake keys into image/package)
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-sa.json
       
       # API Keys (override with your actual keys)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -41,8 +42,8 @@ services:
       - DEBUG_OUTPUTS=true
       
     volumes:
-      # Mount credentials file if it exists
-      - "./config/verityindex-0-0-1-6a21e94ca0a3.json:/app/config/credentials.json:ro"
+      # Point host path at a key OUTSIDE the installable package tree
+      - "${GOOGLE_APPLICATION_CREDENTIALS:?set GOOGLE_APPLICATION_CREDENTIALS to your SA JSON}:/secrets/gcp-sa.json:ro"
       # Mount local directories for development
       - "./tmp_downloads:/app/downloads"
       - "./tmp_outputs:/app/outputs"

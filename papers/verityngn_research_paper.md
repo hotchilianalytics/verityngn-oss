@@ -5,7 +5,7 @@
 **Date:** September 5, 2026  
 **Version:** 3.0.0
 
-> **Release note (v3.0.0):** Deep Research, optional authenticity/spectral cues, and MediaPipe Face Landmarker are now part of the Apache OSS engine. Predictions and RiskFactor remain closed overlays. See companion release paper [`verityngn_oss_v3_release.md`](verityngn_oss_v3_release.md) and figures in [`figures/`](figures/).
+> **Release note (v3.0.1):** Install `pip install 'verityngn[deep]==3.0.1'`. Deep Research, pixel-sourced claims (`visual_text` / `graphic` / `chart` / `demonstration`), adaptive 1–6 fps sampling, `brand_safety_scores.json`, and exhibit maps are default-on for full runs. Optional authenticity/spectral cues, MediaPipe Face Landmarker, and CEO RiskFactor **sensors** (`verityngn[predictions]`) ship in Apache OSS. Hosted credits/SaaS stay commercial. Companion: [`verityngn_oss_v3_release.md`](verityngn_oss_v3_release.md).
 
 ---
 
@@ -1129,10 +1129,11 @@ A comprehensive logging system captures detailed debug information throughout th
    - Alert system for new contradictory evidence
    - Temporal score tracking
 
-3. **Enhanced Visual Analysis**
-   - Deeper computer vision integration
-   - Object detection and tracking
-   - Visual manipulation detection (cheapfakes)
+3. **Enhanced Visual Analysis (v3.0.1 live + 3.1/3.2 roadmap)**
+   - **Live in 3.0.1:** adaptive 1–6 fps sampling; pixel claims (`visual_text` / `graphic` / `chart` / `demonstration`); `brand_safety_scores.json`; exhibit maps; Deep Research `visual_only_claims`
+   - **3.1:** object / prop / action semantics; visual–spoken contradiction; temporal splice risk (today’s prompts under-extract physical demos — 4/81 across 10 v3 release runs)
+   - **3.2:** default-on pose / lip / face / audio congruence atop MediaPipe + MultiSense sleeves already in the wheel (delivery/conviction risk only — not lie detection)
+   - Merges Spot Runner / Mayew / Banker HFAsy / Krykoniuk / Kim disclosure research with negative-result hygiene (refuse near-chance S14; no synthetic vision fills)
 
 4. **Community Validation**
    - Crowd-sourced evidence submission

@@ -1,9 +1,9 @@
-# VerityNgn platform overview — 3.0.0
+# VerityNgn platform overview — 3.0.1
 
-**Branch:** `release/v3.0.0` · **Candidate SHA:** `b13bcf1`  
+**Branch / tag:** `release/v3.0.0` · PyPI `verityngn==3.0.1` (`3.0.0` yanked) · Launch: **Monday Nov 23, 2026** · Examples: [`docs/launch/EXAMPLES.md`](../launch/EXAMPLES.md) · Multimodal brief: [`docs/launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](../launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md)  
 **Framing:** claim-level **risk abatement** platform — not a lie detector, not earnings alpha.
 
-VerityNgn started as a YouTube → truthfulness report pipeline. v3.0.0 ships that pipeline as the durable **engine** of a layered platform: open domain sleeves, an agent surface, a hosted control plane on [verityindex.com](https://verityindex.com), and paid apps/services (ClearFactor disclosure review first).
+VerityNgn started as a YouTube → truthfulness report pipeline. **v3.0.1** ships that pipeline as the durable **engine** of a layered platform: open domain sleeves (including default-on pixel risk + brand-safety / exhibit sidecars), an agent surface, a hosted control plane on [verityindex.com](https://verityindex.com), and paid apps/services (ClearFactor disclosure review first).
 
 ## Layer stack
 
@@ -11,21 +11,21 @@ VerityNgn started as a YouTube → truthfulness report pipeline. v3.0.0 ships th
 flowchart TB
   signals["L0 Signals: video, audio, OCR, EDGAR, press, YouTube CI"]
   engine["L1 Engine OSS: extract, six claim kinds, verify, counter-intel, Deep Research"]
-  sleeves["L2 Domain sleeves OSS: video claim risk, predictions CEO, disclosure rfkit, brand safety"]
+  sleeves["L2 Domain sleeves OSS: video claim risk, predictions CEO opt-in, brand safety; disclosure companion"]
   agent["L3 Agent surface OSS: CLI, Python SDK, MCP server, Agent Plugin skills"]
   control["L4 Control plane verityindex.com: workspaces, runs API, evidence registry, gallery, billing, BYOC"]
   apps["L5 Apps and services: ClearFactor disclosure review, sponsor readiness, bespoke builds"]
   signals --> engine --> sleeves --> agent --> control --> apps
 ```
 
-| Layer | What it is | License / home |
-|-------|------------|----------------|
-| **L0 Signals** | Multimodal video, captions, EDGAR filings, press, YouTube counter-intel | Inputs to OSS |
-| **L1 Engine** | Extract → six claim kinds → verify → CI → Deep Research | Apache-2.0 `verityngn-oss` |
-| **L2 Sleeves** | Domain packs (CRAAP, SIFT, disclosure, legal, health, brand) | Apache extras / companion OSS |
-| **L3 Agent** | CLI, Python SDK; MCP + Agent Plugin in 3.1.0 | Apache-2.0 |
-| **L4 Control plane** | Workspaces, runs API, gallery, billing, BYOC | Hosted on verityindex.com |
-| **L5 Apps / services** | ClearFactor counsel briefs, vault, quarterly monitor, bespoke | Paid |
+| Layer | What it is | Live in 3.0.1 | License / home |
+|-------|------------|---------------|----------------|
+| **L0 Signals** | Multimodal video (adaptive 1–6 fps), captions, OCR/exhibits, EDGAR, press, YouTube CI | Default-on | Inputs to OSS |
+| **L1 Engine** | Extract → six claim kinds → pixel modalities → verify → CI → Deep Research + `visual_only_claims` | Default-on | Apache-2.0 `verityngn-oss` / PyPI `3.0.1` |
+| **L2 Sleeves** | Domain packs (CRAAP, SIFT, legal, health, brand) + MediaPipe / MultiSense / audio extras; disclosure via rfkit companion | Video packs default-on; vision/audio/predictions **opt-in** → default-on in **3.1/3.2**; `verityngn[disclosure]` empty in 3.0.1 | Apache extras + companion |
+| **L3 Agent** | CLI, Python SDK; MCP + Agent Plugin in 3.1.0 | CLI/SDK now; MCP 3.1 | Apache-2.0 |
+| **L4 Control plane** | Workspaces, runs API, gallery, billing, BYOC | Hosted | verityindex.com |
+| **L5 Apps / services** | ClearFactor counsel briefs, vault, quarterly monitor, bespoke | Paid | Commercial |
 
 ## Morph: report → platform
 
@@ -42,7 +42,7 @@ flowchart TB
 Do not conflate:
 
 1. **Predictions / RiskFactor sensors (S00–S15)** — CEO video delivery / instrument risk measurement, already in OSS (`verityngn[predictions]`). See [docs/predictions/](../predictions/).
-2. **ClearFactor / rfkit disclosure RiskFactor** — Item 1A hedge vs own 8-K / incident log; counsel brief (Rewrite / Keep / Move / Remove). Engine path: open as Apache sleeve; vault + engagements stay paid. See [COMMERCIAL_MAP.md](COMMERCIAL_MAP.md).
+2. **ClearFactor / rfkit disclosure RiskFactor** — Item 1A hedge vs own 8-K / incident log; counsel brief (Rewrite / Keep / Move / Remove). **Companion** (not in the `verityngn==3.0.1` wheel); vault + engagements stay paid. See [COMMERCIAL_MAP.md](COMMERCIAL_MAP.md).
 
 ## External schema we map onto
 

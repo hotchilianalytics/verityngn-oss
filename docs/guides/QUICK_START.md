@@ -170,7 +170,7 @@ python -m verityngn.workflows.main_workflow --url "https://www.youtube.com/watch
 
 **VerityNgn excels at:**
 - Detecting unsubstantiated health claims
-- Finding scientific evidence (PubMed, studies)
+- Finding scientific evidence via counter-intelligence web search (peer-reviewed domains ranked higher)
 - Identifying press releases and promotional content
 - Discovering contradictory reviews
 
@@ -236,7 +236,7 @@ Without Google Custom Search API:
 With Google Custom Search API:
 - ✅ Full evidence gathering
 - ✅ Credible source validation
-- ✅ Scientific database integration
+- ✅ Source-reputation-weighted web search
 
 See [Setup Guide - API Keys](SETUP.md#api-keys-optional-but-recommended)
 

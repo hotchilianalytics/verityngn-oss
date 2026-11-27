@@ -15,13 +15,15 @@ Launch article (features, benefits, applications): [`../../launch/BLOG_POST.md`]
 6. [CEO audio/video lanes](06-ceo-audio-video-lanes.md) — affect/vision/fusion opt-in; S14 refuse
 7. [Ten-video battery](07-ten-video-battery.md) — primary-10 coverage matrix
 8. [Open-core after absorb](08-open-core-after-absorb.md) — hoster pin + control plane
-9. [From truthfulness report to claim-risk platform](09-report-to-platform.md) — morph narrative
+9. [From truthfulness report to claim-risk platform](09-report-to-platform.md) — morph narrative + 3.1/3.2 multimodal futures
+
+**Futures capstone (NotebookLM / launch):** [`../../launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](../../launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md) — pixel-risk proof in 3.0.1 → object/action semantics + visual–spoken contradiction (3.1) → pose/lip/audio congruence (3.2).
 
 Charts: `assets/`. Classification diagram: `assets/verityngn-claim-classification-diagram.png`  
 Platform docs: [`../../platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md).
 
 Creator walkthrough (Chris): [`../analyst_risk_taxonomy_chris_review_2026-09-25.md`](../analyst_risk_taxonomy_chris_review_2026-09-25.md).
 
-Package version: **3.0.0**. Candidate SHA and live gates: [`../../launch/RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md).  
+Package version: **`verityngn==3.0.1`** (PyPI; `3.0.0` yanked) · Launch **Monday Nov 16, 2026**. Live gates: [`../../launch/RELEASE_TEST_MATRIX_v3.md`](../../launch/RELEASE_TEST_MATRIX_v3.md).  
 Video slate: [`../../launch/OSS_RELEASE_VIDEO_SLATE_v3.md`](../../launch/OSS_RELEASE_VIDEO_SLATE_v3.md).  
 Battery: [`../../launch/BATTERY_RESULTS_v3.md`](../../launch/BATTERY_RESULTS_v3.md).

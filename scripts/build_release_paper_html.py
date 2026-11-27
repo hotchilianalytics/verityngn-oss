@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build print-ready HTML for the OSS v3 release paper (figures + live gallery stats)."""
+"""Build print-ready HTML for the OSS v3.0.1 release paper (figures + live gallery stats)."""
 from __future__ import annotations
 
 import json
@@ -33,7 +33,7 @@ def main() -> None:
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>VerityNgn OSS 3.0.0 — Release Paper</title>
+<title>VerityNgn OSS 3.0.1 — Release Paper</title>
 <style>
   :root {{ color-scheme: light; }}
   body {{
@@ -72,34 +72,48 @@ def main() -> None:
 </style>
 </head>
 <body>
-<span class="badge">VerityNgn OSS · v3.0.0</span>
-<h1>VerityNgn OSS 3.0.0 — Public Engine Release</h1>
-<p class="meta">HotChili Analytics / VerityNgn Research · 2026-08-29 · Apache-2.0 engine<br/>
-Companion to <a href="https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0">GitHub release v3.0.0</a>
-· Live gallery: <a href="https://verityindex.com/gallery">verityindex.com/gallery</a></p>
+<span class="badge">VerityNgn OSS · v3.0.1</span>
+<h1>VerityNgn OSS 3.0.1 — Public Engine Release</h1>
+<p class="meta">HotChili Analytics / VerityNgn Research · 2026-11-13 · Apache-2.0 engine<br/>
+PyPI <a href="https://pypi.org/project/verityngn/3.0.1/">verityngn==3.0.1</a>
+· Engine tip <a href="https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0">v3.0.0 / 1b2cca8</a>
+· Gallery: <a href="https://verityindex.com/gallery">verityindex.com/gallery</a></p>
 
 <div class="callout">
-<strong>Claim-risk platform, not a lie detector.</strong> Deep Research, six claim kinds, genre-aware CRAAP/SIFT, and optional CEO sensors ship in Apache OSS.
-verityindex.com is the hosted control plane. ClearFactor is the first paid disclosure app. Predictions <em>sensors</em> are OSS extras — not allocation alpha.
+<strong>Claim-risk platform, not a lie detector.</strong> Pixel-sourced claims, adaptive 1–6&nbsp;fps sampling,
+<code>brand_safety_scores.json</code>, and exhibit maps are <em>default-on</em> in full runs.
+Deep Research, six claim kinds, CRAAP/SIFT, and optional CEO sensors ship in Apache OSS.
+verityindex.com is the hosted control plane. ClearFactor is the first paid disclosure app.
 </div>
 
 <h2>1. Abstract</h2>
-<p>We release <strong>VerityNgn OSS 3.0.0</strong>, a standalone multimodal engine for claim extraction and verification from video.
-This release restores <strong>Deep Research</strong> (grounded forensic summarization) to the public tree, adds optional authenticity and spectral voice cues,
-and documents the open-core boundary. We do <em>not</em> claim earnings prediction, allocation factors, or lie detection.</p>
+<p>We release <strong>VerityNgn OSS 3.0.1</strong>, a standalone multimodal engine for claim-level risk abatement from video.
+Across 10 v3 release runs, <strong>81</strong> verified claims exist only in pixels (never spoken; <strong>69</strong> within the final primary-10 battery), including
+<strong>45%</strong> of SB1507 legislative claims. We do <em>not</em> claim earnings prediction, allocation factors, or lie detection.</p>
 
 {_img("figures/open_core_architecture.png", "Open-core architecture", "Figure 1. OSS Apache engine vs hosted control plane and paid apps.")}
 {_img("figures/platform_layers.png", "Platform layers", "Figure 1b. L0 signals through L5 apps. Apache owns L0–L3.")}
 
-<h2>2. System overview</h2>
+<h2>2. Multimodal risk live in 3.0.1</h2>
 <pre>Video URL or file
-  → multimodal analysis + claim extraction
+  → adaptive 1–6 fps multimodal analysis + claim extraction (spoken + visual)
   → counter-intelligence (YouTube / press-release / Sherlock CI)
   → probabilistic verification (TRUE / FALSE / UNCERTAIN)
-  → standard report (MD / HTML / JSON / PDF)
-  → optional Deep Research (Gemini grounded pass + combined report)
-  → optional authenticity / spectral / Face Landmarker cues</pre>
+  → standard report + brand_safety_scores.json + exhibit_map.json
+  → optional Deep Research (visual_only_claims first)
+  → optional authenticity / MediaPipe / MultiSense (extras)</pre>
 
+<table>
+  <thead><tr><th>Source type</th><th>Count (v3 benchmark)</th><th>Role</th></tr></thead>
+  <tbody>
+  <tr><td><code>visual_text</code></td><td>43</td><td>Lower-thirds, authority cards, OCR supers</td></tr>
+  <tr><td><code>graphic</code></td><td>23</td><td>Spec slides, deal graphics, LRO figures</td></tr>
+  <tr><td><code>chart</code></td><td>11</td><td>Tables / projected revenue charts</td></tr>
+  <tr><td><code>demonstration</code></td><td>4</td><td>Physical / on-camera actions (under-extracted today)</td></tr>
+  </tbody>
+</table>
+<p><strong>81</strong> pixel-only claims across 10 release runs (<strong>69</strong> in the final primary-10) · SB1507 <strong>18/40 (45%)</strong> visual · Lipozem <strong>5</strong> silent cards ·
+T-ABL-006 only-MM share of union <strong>0.67–0.74</strong> on slide/exhibit seeds.</p>
 <p><code>verityngn analyze &lt;url&gt; --deep</code> runs after the standard report JSON exists.</p>
 
 <h2>3. Live gallery evidence (verityindex.com)</h2>
@@ -130,23 +144,32 @@ labels = {json.dumps(live['label_counts'])}.</p>
 {_img("figures/accuracy_stages.png", "Accuracy stages", "Figure 7. Prior evaluation narrative: accuracy lift across verification stages (baseline → counter-intel → Deep Research).")}
 
 <h2>5. Install</h2>
-<pre>pip install 'verityngn[deep]'
-verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
-verityngn analyze --file deposition.mp4 --title "Matter clip"</pre>
+<pre>pip install 'verityngn[deep]==3.0.1'
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=VIDEO_ID'
+verityngn analyze --file deposition.mp4 --title "Matter clip" --tier local-full</pre>
+<p>Prefer <strong>3.0.1</strong>. Do not pin yanked <code>3.0.0</code>.</p>
 
 <h2>6. Open-core dependency model</h2>
-<p>Hosters pin <strong>OSS ≥3.0.0</strong>. Research sleeves (including CEO sensors) live in the public tree.
+<p>Hosters pin <strong>OSS ≥3.0.1</strong>. Research sleeves (including CEO sensors) live in the public tree.
 Boundary CI fails on commercial markers (Stripe, credits paths), not on research package names.
 See <code>docs/OPEN_CORE.md</code> and <code>docs/platform/PLATFORM_OVERVIEW.md</code>.</p>
 
 <div class="warn">
-<strong>What we will not claim:</strong> earnings prediction / allocation alpha; “lie detector” branding; crawl or surveillance.
+<strong>What we will not claim:</strong> earnings prediction / allocation alpha; “lie detector” branding; crawl or surveillance;
+employment / HR / education screening with face or affect cues.
 </div>
 
-<h2>7. Links</h2>
+<h2>7. Futures (3.1 / 3.2)</h2>
+<p><strong>Roadmap:</strong> Visual Text / Exhibits &amp; Brand-Safety (<em>live in 3.0.1</em>)
+→ Object / Action Semantics, Visual–Spoken Contradiction, and Cross-Modal Pose / Lip / Audio Congruence
+(<em>default-on in 3.1 / 3.2</em> on top of MediaPipe + MultiSense sleeves already in the repo).</p>
+<p>Merges Spot Runner / Mayew / Banker HFAsy / Krykoniuk / Kim disclosure research with negative-result hygiene
+(refuse near-chance S14; ban synthetic 0.5 vision fills; within-speaker baselines; fail-closed provenance).</p>
+
+<h2>8. Links</h2>
 <ul>
-  <li>Release: <a href="https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0">v3.0.0</a></li>
+  <li>PyPI: <a href="https://pypi.org/project/verityngn/3.0.1/">verityngn 3.0.1</a></li>
+  <li>Engine cut: <a href="https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.0">v3.0.0</a></li>
   <li>Repo: <a href="https://github.com/hotchilianalytics/verityngn-oss">verityngn-oss</a></li>
   <li>Gallery: <a href="https://verityindex.com/gallery">verityindex.com/gallery</a></li>
   <li>Demo: <a href="https://verityngn.streamlit.app">verityngn.streamlit.app</a></li>

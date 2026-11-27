@@ -1,8 +1,9 @@
-# Dependency model — OSS as base (v3.0.0+)
+# Dependency model — OSS as base (v3.0.1+)
 
 ```
-verityngn-oss (Apache-2.0) ──► PyPI verityngn==3.0.0
-        │  (engine + research: claims, DR, predictions/RiskFactor sensors)
+verityngn-oss (Apache-2.0) ──► PyPI verityngn==3.0.1
+        │  (engine + research: claims, DR, predictions sensors)
+        │  (disclosure companion: rfkit / ClearFactor — not in the 3.0.1 wheel)
         │
         ├── verityngn-cloudrun-batch   (pin OSS tag / submodule)
         ├── verityngn-core-commercial (overlay: packaging, outreach)
@@ -12,10 +13,10 @@ verityngn-oss (Apache-2.0) ──► PyPI verityngn==3.0.0
 ## How commercial consumes OSS
 
 1. **Preferred:** pin a promoted OSS release/ref inside commercial and batch images.
-   - stable: `pip install verityngn==3.0.0`
-   - research extras: `pip install verityngn[predictions]`
-   - disclosure sleeve (Phase 1): `pip install -e ../rfkit-oss` then `verityngn[disclosure]`
-   - pre-cutover smoke: git ref `release/v3.0.0`
+   - stable: `pip install verityngn==3.0.1` (or `pip install 'verityngn[deep]==3.0.1'`)
+   - research extras: `pip install 'verityngn[predictions]==3.0.1'`
+   - disclosure companion (not in-wheel): install rfkit / ClearFactor separately; `verityngn[disclosure]` is an empty placeholder in 3.0.1
+   - pre-cutover smoke: git ref `release/v3.0.0` / tag `v3.0.1`
 2. **Legacy:** Docker `COPY` / git submodule of `verityngn-oss` (still used by some Cloud Run builds).
 3. **Do not fork** predictions/quant/fusion back into commercial after the 2026-10-05 absorb — pin OSS and keep only hosted extras.
 

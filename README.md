@@ -7,30 +7,53 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Research](https://img.shields.io/badge/status-research-yellow.svg)]()
 
-> **Current OSS runtime:** `release/v3.0.0` is the canonical public engine.
-> The local-first path now defaults analysis, verification, and Deep Research to
-> `gemini-3.8-flash`, always emits both `report.html` and `deep.html`, and uses
-> a shared fallback policy when Vertex model/location availability differs across
-> `global` and `us-central1`.
+> **Current OSS runtime:** `verityngn==3.0.1` on PyPI (`release/v3.0.0` branch; `3.0.0` yanked).
+> Launch lock: **Monday, Nov 23, 2026** · docs tip `f6aeb2e` (tag `v3.0.1`). Analysis / verification / Deep Research default to
+> `gemini-3.8-flash`, always emit `report.html` + `deep.html`, and share a Vertex fallback
+> policy across `global` and `us-central1`.
 
 ---
 
-## Quick start (v3)
+## Quick start (v3.0.1)
 
 ```bash
-pip install 'verityngn[deep]'
-verityngn analyze --tier auto 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze --tier light 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
-verityngn analyze --tier full --modality video 'https://www.youtube.com/watch?v=VIDEO_ID'
-verityngn analyze --file /path/to/video.mp4 --title "Local clip"
-# Local test helpers
-verityngn local analyze --file clip.mp4 -o outputs/local --arm full
-verityngn local analyze --url 'https://www.youtube.com/watch?v=VIDEO_ID' --arm direct --offline
-verityngn ablate --video-id tLJC8hkK-ao --url '...' --arms direct --offline -o outputs/ablation_tL
+pip install 'verityngn[deep]==3.0.1'
+# Optional sleeves already in the wheel:
+#   pip install 'verityngn[vision,audio,predictions]==3.0.1'
+# Public Lipozem demo
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
+# Analyst local file (SB1507 — provide your own path to the mp4)
+verityngn analyze --tier local-full --deep -f /path/to/sb1507.mp4 -o outputs/release_v3_sb1507_dense
+# CEO talking-head
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=lb_ZJylekWo'
 ```
 
+Copy-paste fixtures, scorecard counts, and what is *not* in the wheel: [`docs/launch/EXAMPLES.md`](docs/launch/EXAMPLES.md).  
+Multimodal pitch + 3.1/3.2 futures brief: [`docs/launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md`](docs/launch/v3_release_pack/MULTIMODAL_AND_FUTURES_v3.md).
+
 Open-core boundary: [`docs/OPEN_CORE.md`](docs/OPEN_CORE.md) · Dependency model: [`docs/DEPENDENCY_MODEL.md`](docs/DEPENDENCY_MODEL.md) · Promotion checklist: [`docs/launch/OSS_BATCH_COMMERCIAL_PROMOTION.md`](docs/launch/OSS_BATCH_COMMERCIAL_PROMOTION.md) · Gemini gap: [`docs/research/GEMINI_2026_CAPABILITY_GAP.md`](docs/research/GEMINI_2026_CAPABILITY_GAP.md)
+
+---
+
+## What's in v3.0.1 (Multimodal Risk Today)
+
+Default-on in every full run (no extra extras required):
+
+- **Adaptive 1–6 fps content-aware sampling** — `lecture_vsl` @ 1 fps → `montage_motion` @ 3 → HIGH `exhibit_slide` @ 4 (depositions/earnings) → HIGH `flash_ocr` @ 6 (ads/Shorts); `--tier auto` escalates slide-heavy videos via optical `visual_text_density`.
+- **Pixel-sourced claims** — four modalities (`visual_text`, `graphic`, `chart`, `demonstration`). 10 v3 release runs: **81** verified pixel-only claims (69 within the final primary-10); **18/40 (45%)** on SB1507 legislative charts/tables; silent testimonial/credential cards on Lipozem; exhibit OCR on Butler Kahn; CES/CNBC boards.
+- **Visual risk sidecars** — `brand_safety_scores.json` (`visual_only_high_risk_count`, credential-flash, sub-1000ms disclosure blink risk) and `{video_id}_exhibit_map.json` (Bates/OCR ledger). Deep Research (`--deep`) leads with a `visual_only_claims` array.
+- **Six claim kinds**, CRAAP/SIFT domain packs, counter-intel, calibrated Supported / Contested / Unresolved.
+
+**Opt-in sleeves already shipped in the 3.0.1 wheel** (not default-on): `verityngn[vision]` (MediaPipe 478 landmarks / 52 blendshapes / HFAsy_proxy), `verityngn[audio]` (prosody / VAD / TTS cues), `verityngn[predictions]` + `MULTISENSE_ENABLED=1` (S00–S15, Tier A/B), `VN_AGENTIC_VIDEO=1`, fail-closed AuthenticityGate.
+
+## Roadmap (v3.1 / v3.2): Multimodal Semantics & Cross-Modal Congruence
+
+| Release | Turning default-on |
+|---------|-------------------|
+| **3.1** | Object / prop / action semantics; visual–spoken contradiction; temporal splice risk (today’s prompts catch slides/OCR more than physical demos — 4/81 demonstrations across the 10 v3 release runs) |
+| **3.2** | Pose / lip / face / audio congruence atop in-repo MediaPipe + MultiSense sleeves — framed as **delivery / conviction / disclosure risk**, never lie detection |
+
+Heritage threads merging into that roadmap: Spot Runner emotional-arc indexing, Speech Craft / Mayew vocal Q&A reactivity, Banker HFAsy, Krykoniuk derailment, Kim/Muhn disclosure → ClearFactor, plus negative-result hygiene (refuse near-chance S14; no synthetic vision fills).
 
 ---
 
@@ -66,10 +89,11 @@ YouTube URL or mp4 -> JSON-first analysis -> claim extraction -> verification + 
 ```bash
 git clone https://github.com/hotchilianalytics/verityngn-oss.git
 cd verityngn-oss
-pip install -e .
+pip install 'verityngn[deep]==3.0.1'
+# Or from a clone: pip install -e '.[deep]'
 
 # Set Vertex / search keys in .env (see .env.example)
-verityngn analyze "https://www.youtube.com/watch?v=tLJC8hkK-ao"
+verityngn analyze --tier full --deep "https://www.youtube.com/watch?v=tLJC8hkK-ao"
 
 # Local file (depositions, court video) — no YouTube required
 verityngn analyze --file /path/to/clip.mp4 --title "Expert witness excerpt"
@@ -128,48 +152,24 @@ See [docs/DEPLOYMENT_COLAB.md](docs/DEPLOYMENT_COLAB.md) for details.
 
 ---
 
-## What's New in v2.0
+## Heritage (v2 → v3)
 
-### 🚀 Intelligent Video Segmentation
-- **Context-aware segmentation**: Automatically calculates optimal segment sizes based on model context window (1M tokens)
-- **86% fewer API calls**: 33-minute video processed in 1 segment instead of 7
-- **58% context utilization**: Maximizes use of available token budget
-- **6-7x faster**: Typical 30-minute videos complete in 8-12 minutes instead of 56-84 minutes
-- **Token economics**: 290 tokens/second consumption rate with smart overhead management
-
-### 🎯 Enhanced Claims Extraction
-- **Multi-pass extraction**: Initial broad extraction → specificity scoring → quality filtering → ranking
-- **Absence claim generation**: Automatically identifies what's NOT mentioned (e.g., "no peer-reviewed studies cited")
-- **Specificity scoring**: Rates claims from 0-100 on verifiability
-- **Type classification**: Scientific, statistical, causal, comparative, testimonial, expert opinion
-- **Intelligent filtering**: Removes vague claims, keeps high-quality verifiable statements
-
-### 🔧 Improved Counter-Intelligence
-- **Balanced impact model**: Refined from -0.35 to -0.20 for YouTube review influence
-- **Enhanced credibility weighting**: Views, channel authority, and engagement metrics
-- **Better integration**: Seamlessly works with intelligent segmentation
-- **Maintained accuracy**: 94% precision on press release detection, 76% on review detection
-
-### 📊 Performance Improvements
-- **API efficiency**: 86% reduction in calls for typical videos
-- **Context utilization**: 3% → 58% (19x improvement)
-- **Processing speed**: 6-7x faster for 30-minute videos
-- **Cost reduction**: Proportional to API call reduction
-
----
+Earlier releases established multimodal segmentation, claim extraction, and counter-intelligence.
+**v3.0.1** is the current public surface — see [What's in v3.0.1](#whats-in-v301-multimodal-risk-today) above.
+Do not pin yanked `verityngn==3.0.0`.
 
 ## Key Features
 
 ### 🎯 Multimodal Video Analysis
 - Analyzes visual content, audio, on-screen text (OCR), and motion
-- Uses Google Gemini 2.5 Flash (1M token context window)
+- Uses Google Gemini multimodal models (large context window)
 - **Intelligent segmentation**: Context-aware segment calculation (up to 47.7 minutes per segment)
 - Processes videos up to 2+ hours with optimized segment-based analysis
 - 290 tokens/second consumption rate with automatic overhead management
 
 ### 🔬 Evidence-Based Verification
 - Web search with credibility weighting
-- Scientific database integration (PubMed, academic sources)
+- Counter-intelligence web search with source-reputation weighting (peer-reviewed and government domains ranked higher)
 - Source validation power scoring (peer-reviewed = 1.5, press release = -1.0)
 
 ### 🕵️ Counter-Intelligence System

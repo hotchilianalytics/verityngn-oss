@@ -8,7 +8,7 @@
 | 2.1.x   | :white_check_mark: (security fixes only) |
 | < 2.1   | :x: |
 
-**Note:** VerityNgn OSS 3.0.0 is the canonical public engine release. Report vulnerabilities privately (see below).
+**Note:** VerityNgn OSS **3.0.1** is the current public engine release (`3.0.0` is yanked on PyPI). Report vulnerabilities privately (see below).
 
 ---
 
@@ -107,18 +107,22 @@ What can an attacker do with this vulnerability?
 
 **Local Development:**
 ```bash
-# Use restrictive file permissions
+# Keep SA JSON outside the installable package tree (never under verityngn/config/)
+# e.g. ~/proj/secrets/verityngn/verityindex-sa-research-NEW.json
 chmod 600 .env
-chmod 600 verityngn/config/*.json
+chmod 600 "$GOOGLE_APPLICATION_CREDENTIALS"
 
-# Check for exposed credentials before committing
+# Check for exposed credentials before committing / building a release
 git diff --cached | grep -E "(private_key|api_key|secret)"
+# Fail the release if a private_key lands in the built artifacts:
+python -m build && (unzip -l dist/*.whl; tar -tzf dist/*.tar.gz) | grep -Ei 'private_key|credentials\.json|verityindex.*\.json' && exit 1
 ```
 
 **Docker:**
 ```bash
 # Use secrets for credentials (not environment variables in Dockerfile)
-docker secret create gcp_key verityngn/config/your-key.json
+# Mount a host path outside verityngn/; do not COPY SA JSON into the image
+docker secret create gcp_key "$GOOGLE_APPLICATION_CREDENTIALS"
 docker service create --secret gcp_key verityngn:latest
 
 # Or use .env file mounting

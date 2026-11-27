@@ -9,7 +9,7 @@
 
 ## Thesis
 
-One CRAAP video and one SIFT video are not enough after the predictions absorb. The primary 10 prove genre lanes, CEO multi-player coverage, legal, podcast, and health CI — without publishing private full HTML.
+One CRAAP video and one SIFT video are not enough after the predictions absorb. The primary 10 prove genre lanes, CEO multi-player coverage, legal, podcast, and health CI. SB1507 is public (Chris approved); the source mp4 stays out of git.
 
 ## Coverage matrix (what each gate proves)
 
@@ -35,7 +35,7 @@ All ten **PASS** on claims>0. Live rows 3–10: **263 claims** total.
 
 ## What we skip publicly
 
-- Chris / SB1507 full HTML gated  
+- Source `sb1507.mp4` (local path only — not committed)  
 - No per-video probability banners in launch posts  
 - No claim that every row has `deep.html` until regen path is fixed  
 

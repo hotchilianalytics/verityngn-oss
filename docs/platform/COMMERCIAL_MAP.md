@@ -8,8 +8,8 @@
 |---------|------|-------------|
 | `verityngn-oss` | Canonical engine + research sleeves | GitHub `hotchilianalytics/verityngn-oss` |
 | `verityngn[predictions]` | CEO / RiskFactor **sensors** (S00–S15) | Extra on OSS |
-| `verityngn[disclosure]` (Phase 1) | Pins public `rfkit` disclosure engine | Extra on OSS |
-| `rfkit` (Phase 1 public) | Item 1A vs 8-K matcher, specimen, review CLI | New Apache repo (fresh history) |
+| `verityngn[disclosure]` (placeholder) | Empty extra in 3.0.1; install rfkit / ClearFactor separately | Extra marker only |
+| `rfkit` / ClearFactor (companion) | Item 1A vs 8-K matcher, specimen, review CLI | Companion repo — not shipped in the 3.0.1 wheel |
 | verityindex.com | Workspaces, runs API, gallery, billing, app catalog | VerityEngine (Replit) + commercial backend |
 | ClearFactor Advisory | Paid disclosure app + services brand | Offer sheet private; engine OSS |
 

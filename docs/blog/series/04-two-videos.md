@@ -5,7 +5,7 @@
 
 ---
 
-One video cannot prove both the classic consumer path and the analyst-genre path. The 3.0.0 candidate uses two fixtures.
+One video cannot prove both the classic consumer path and the analyst-genre path. The 3.0.0 release uses two fixtures.
 
 ## Lipozem — old ladder (public)
 
@@ -19,14 +19,14 @@ One video cannot prove both the classic consumer path and the analyst-genre path
 
 **Pass criteria:** claims > 0; genre `consumer_factual`; §9 is CRAAP; `deep.html` present; a clinical “% reduction” style claim stays `source_backed_fact`.
 
-## SB1507 — analyst lanes (Chris; full report gated)
+## SB1507 — analyst lanes (Chris; public)
 
 | Field | Value |
 |-------|-------|
-| Source | Local `sb1507.mp4` (Chris Schuermyer, Oregon QSBS / SB 1507) |
-| Command | `verityngn analyze --tier local-full --deep -f sb1507.mp4 -o outputs/release_v3_sb1507_dense` |
+| Source | Local `sb1507.mp4` (Chris Schuermyer, Oregon QSBS / SB 1507) — mp4 not in git |
+| Command | `verityngn analyze --tier local-full --deep -f /path/to/sb1507.mp4 -o outputs/release_v3_sb1507_dense` |
 | What it shows | Six kinds, risk chips, **SIFT** instead of CRAAP, on-screen $ / method claims in `data_derived_inference` |
-| Public until Chris approves | Charts in `docs/blog/series/assets/` and aggregate scorecard counts only. Full HTML/transcript stay private. |
+| Public | Aggregate scorecard + report artifacts under `outputs/release_v3_sb1507_dense/` (Chris approved). Source mp4 stays local. |
 
 **Offline re-stamp (Sep 23 smoke):** 28 claims → 13 facts, 7 data-derived, 4 causal, 2 prediction, 2 unverified; quant→inference 83.3%; scorecard `all_green`.
 
@@ -55,7 +55,7 @@ Several rows still point at `dQw4w9WgXcQ`. John Oliver and deposition ids are FA
 | Lipozem gallery / report link | Yes |
 | Density / kind-mix charts | Yes |
 | Classification diagram | Yes |
-| Full SB1507 analyst HTML | Only with Chris approval |
+| SB1507 analyst report / scorecard | Yes (Chris approved; mp4 stays local) |
 
 ---
 

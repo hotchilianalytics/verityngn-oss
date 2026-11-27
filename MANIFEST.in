@@ -1,0 +1,8 @@
+# Never ship GCP / local credential JSON (defense in depth vs package-data mistakes)
+recursive-exclude verityngn/config *.json
+global-exclude credentials.json
+global-exclude verityindex*.json
+global-exclude *service*account*.json
+prune verityngn/.outputs
+prune verityngn/.outputs_debug
+prune verityngn/.downloads

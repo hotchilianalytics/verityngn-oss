@@ -1,11 +1,11 @@
 # VerityNgn 3.0: an open claim-risk engine you can run on a video
 
-**Release:** OSS 3.0.0 · Apache-2.0 · branch `release/v3.0.0`  
-**CTA:** [GitHub](https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0) · [gallery](https://verityindex.com/gallery) · `pip install -e '.[deep]'` from the branch until PyPI is cut
+**Release:** OSS **3.0.1** · Apache-2.0 · on [PyPI](https://pypi.org/project/verityngn/3.0.1/) · engine tip `1b2cca8` · docs tip `f6aeb2e`  
+**CTA:** [PyPI](https://pypi.org/project/verityngn/3.0.1/) · [gallery](https://verityindex.com/gallery) · `pip install 'verityngn[deep]==3.0.1'`
 
 Take a YouTube URL or a local file. Get a claim-level **risk** report: what was said, what the pixels showed, what independent sources contradict, and what residual risk remains if someone acts on it.
 
-That is v3.0.0. It is not a lie detector, not an earnings model, and not a crawl of the open web. It is a multimodal engine — extract, classify, verify, report — and the open core of a small risk platform.
+That is VerityNgn 3.0. It is not a lie detector, not an earnings model, and not a crawl of the open web. It is a multimodal engine — extract, classify, verify, report — and the open core of a small risk platform.
 
 ---
 
@@ -35,14 +35,16 @@ flowchart LR
 
 | Feature | What it is | Benefit |
 |---------|------------|---------|
-| **Multimodal extract** | Speech, on-screen text, charts, and exhibits — not transcript-only | You catch claims that live on a slide or a supers, not only in the VO |
+| **Adaptive 1–6 fps multimodal extract** | Content-aware sampling + speech, OCR, charts, exhibits — not transcript-only | You catch claims that live on a slide or a supers, not only in the VO |
+| **Pixel claim proof (v3.0.1)** | 81 verified pixel-only claims across 10 release runs; **18/40 (45%)** on SB1507; silent Lipozem credential cards | Transcript-only would miss nearly half an analyst binder and every silent testimonial card |
+| **Visual risk sidecars** | `brand_safety_scores.json` + `{id}_exhibit_map.json` auto-emitted on full runs | Brand/sponsor teams get visual-only high-risk, credential-flash, and blink-disclosure counts |
 | **Six claim kinds** | Fact, data-derived inference, causal/analytical, reasoned opinion, prediction, unverified assertion | A forecast is not “false because it hasn’t happened”; an opinion is not scored as a fact |
 | **Counter-intelligence** | Actively search for contradictory reviews; down-weight press-release-shaped sources | You do not treat the subject’s own PR as independent confirmation |
 | **Genre-aware §9** | Consumer videos → CRAAP. Analyst videos → SIFT + risk chips | The method review matches the genre instead of forcing one rubric |
 | **Analysis tiers** | `light` / `full` / `local-light` / `local-full` | Triage in minutes, or a full diligence pass, without a second product |
-| **Deep Research (`--deep`)** | Grounded forensic brief over the claim binder, in the Apache tree | A second model stresses cites without a closed “pro” fork of quality |
+| **Deep Research (`--deep`)** | Grounded forensic brief with a `visual_only_claims` lead | A second model stresses cites — including pixel-only risk — without a closed “pro” fork |
 | **Captions CLI** | `verityngn captions <url>` | Operators can see whether VTT actually arrived (YouTube Data API metadata is not a caption download) |
-| **Open-core engine** | Apache-2.0 CLI + optional `verityngn[predictions]` sensors | Research quality lives in OSS; hosted credits and apps sit on verityindex.com |
+| **Open-core engine** | Apache-2.0 CLI + optional `verityngn[vision,audio,predictions]` sleeves | Research quality lives in OSS; hosted credits and apps sit on verityindex.com |
 
 ![Six claim kinds](../../blog/assets/verityngn-claim-classification-diagram.png)
 
@@ -90,10 +92,10 @@ flowchart TB
   engine --> d["Disclosure<br/>Item 1A vs own 8-K"]
 ```
 
-| Application | Who | What v3.0.0 gives them | Proven on |
+| Application | Who | What v3.0.1 gives them | Proven on |
 |-------------|-----|------------------------|-----------|
-| **Sponsor-readiness** | Agencies, brands | Claim-level review of a promotional video before money attaches | Lipozem, 39 claims, CRAAP |
-| **Analyst method review** | Creators who sell analysis | Typed claims + SIFT so a modeled number is not treated as a news fact | SB1507 local, 40 claims |
+| **Sponsor-readiness** | Agencies, brands | Claim-level review of a promotional video before money attaches | Lipozem — primary-10 battery **39** claims; Monday commercial smoke **37** claims (same video, later pin) · CRAAP |
+| **Analyst method review** | Creators who sell analysis | Typed claims + SIFT so a modeled number is not treated as a news fact | SB1507 local scorecard **40** claims (Chris-approved report; source mp4 not in git) |
 | **CEO interview risk** | IR, boards, journalists | What was said on camera, timestamped, against the public record | Karp / Huang / Nadella battery |
 | **Deposition / legal spoken** | Counsel, experts | Structured claims from testimony, not a transcript dump | Butler Kahn, 39 claims |
 | **Health counter-intel** | Reviewers of contested lab / peptide claims | Contradictory sources sought on purpose | Carney Peptides, 40 claims |
@@ -107,6 +109,8 @@ Hosted gallery and credits live on [verityindex.com](https://verityindex.com). T
 
 Ten videos. Every row extracted claims. One documented swap (Huang Squawk replaced a 12-hour LIVE restream that died mid-job). Not a leaderboard. A coverage matrix.
 
+**Claim counts below are the primary-10 battery run** (`docs/launch/BATTERY_RESULTS_v3.md`). A later Cloud Run / Batch pin of the same Lipozem URL (`tLJC8hkK-ao`, 2026-11-08 smoke) returned **37** claims — label the run when you cite a number.
+
 ```mermaid
 xychart-beta
     title "Claims extracted — primary-10 battery"
@@ -115,7 +119,7 @@ xychart-beta
     bar [39, 40, 37, 32, 16, 40, 19, 40, 39, 40]
 ```
 
-![Gallery claims per video](../../../papers/figures/gallery_live_claims_per_video.png)
+![Gallery claims per video](../../papers/figures/gallery_live_claims_per_video.png)
 
 | Lane | Videos | Claims (this battery) |
 |------|--------|------------------------|
@@ -146,7 +150,7 @@ flowchart TB
   oss --> hosted
 ```
 
-![Open-core architecture](../../../papers/figures/open_core_architecture.png)
+![Open-core architecture](../../papers/figures/open_core_architecture.png)
 
 If verification, Deep Research, or the claim typology lived only behind a paywall, the open-core story would be a lie. Those stay in OSS. What you pay for is hosted scale, credits, a gallery, and counsel-side services (vault, engagement, calendar) — not a better engine.
 
@@ -159,18 +163,35 @@ Two names that must not be mashed together:
 
 ## Try it
 
-From `release/v3.0.0` until the tag and PyPI move (those clicks stay gated on an explicit operator ask):
-
 ```bash
-pip install -e '.[deep]'
+pip install 'verityngn[deep]==3.0.1'
 verityngn analyze --tier light 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
 verityngn analyze --tier full 'https://www.youtube.com/watch?v=VIDEO_ID' --deep
 verityngn captions 'https://www.youtube.com/watch?v=VIDEO_ID'
+# Analyst local-file path (mp4 you already have):
+# verityngn analyze --tier local-full -f /path/to/clip.mp4 --deep
 ```
 
-Gemini / Vertex credentials are required for the LLM path. `VERTEX_LOCATION=global` for current Vertex models. Cookies for yt-dlp when YouTube blocks anonymous caption fetch.
+Gemini / Vertex credentials are required for the LLM path. `VERTEX_LOCATION=global` for current Vertex models. Cookies for yt-dlp when YouTube blocks anonymous caption fetch. Prefer **`3.0.1`** (do not pin yanked `3.0.0`).
 
-Public gallery: [verityindex.com/gallery](https://verityindex.com/gallery).
+Public gallery: [verityindex.com/gallery](https://verityindex.com/gallery). Examples: [EXAMPLES.md](../EXAMPLES.md). Notes: [RELEASE_NOTES_v3.0.1.md](../RELEASE_NOTES_v3.0.1.md).
+
+---
+
+## Where the research goes next (3.1 / 3.2)
+
+**Live today:** Visual Text / Exhibits & Brand-Safety — adaptive 1–6 fps, four pixel modalities, `brand_safety_scores.json`, exhibit maps.
+
+**Honest gap:** early prompts catch slides/OCR (77/81) more than physical demos (4/81). That under-extraction is the 3.1 job.
+
+| Release | Turning default-on |
+|---------|-------------------|
+| **3.1** | Object / prop / action semantics; visual–spoken contradiction; temporal splice risk |
+| **3.2** | Pose / lip / face / audio congruence atop MediaPipe + MultiSense + librosa sleeves already in the wheel |
+
+Heritage merging into that track: Spot Runner arcs, Speech Craft / Mayew vocal Q&A, Banker HFAsy, Krykoniuk derailment, Kim disclosure → ClearFactor — plus negative-result hygiene (refuse near-chance S14; no synthetic vision fills). Framed as **delivery / conviction / disclosure risk**, never lie detection.
+
+Full brief: [MULTIMODAL_AND_FUTURES_v3.md](MULTIMODAL_AND_FUTURES_v3.md).
 
 ---
 
@@ -181,13 +202,15 @@ Public gallery: [verityindex.com/gallery](https://verityindex.com/gallery).
 - Not an open-web, podcast, or social crawler.
 - English-first. YouTube + local file; not TikTok-native.
 - LLM-assisted briefs still need a human. If a report looks wrong, the video id is the bug report.
+- Opt-in MediaPipe / MultiSense congruence is **in the 3.0.1 wheel** but not default-on until 3.2.
 
 ---
 
 ## Read next
 
+- Multimodal + futures: [MULTIMODAL_AND_FUTURES_v3.md](MULTIMODAL_AND_FUTURES_v3.md)
 - Platform layers: [PLATFORM_OVERVIEW.md](../../platform/PLATFORM_OVERVIEW.md)
 - Domain packs: [DOMAIN_PACKS.md](../../platform/DOMAIN_PACKS.md)
 - Open-core boundary: [OPEN_CORE.md](../../OPEN_CORE.md)
 - Series: [docs/blog/series/](../../blog/series/README.md) (history → features → battery → platform morph)
-- Release notes: [RELEASE_NOTES_v3.0.0.md](../RELEASE_NOTES_v3.0.0.md)
+- Release notes: [RELEASE_NOTES_v3.0.1.md](../RELEASE_NOTES_v3.0.1.md) · [3.0.0](../RELEASE_NOTES_v3.0.0.md)

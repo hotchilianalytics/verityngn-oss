@@ -1,83 +1,63 @@
-# Media pack checklist — VerityNgn OSS v3.0.0 launch
+# Media pack checklist — VerityNgn OSS v3.0.1 launch
 
-Use this list before HN / Reddit / LinkedIn / X posts.  
-**Do not post on the same day as the live test run.**  
-**Candidate:** `b13bcf1` · matrix: [`../RELEASE_TEST_MATRIX_v3.md`](../RELEASE_TEST_MATRIX_v3.md) · slate: [`../OSS_RELEASE_VIDEO_SLATE_v3.md`](../OSS_RELEASE_VIDEO_SLATE_v3.md) · results: [`../BATTERY_RESULTS_v3.md`](../BATTERY_RESULTS_v3.md) · platform: [`../../platform/PLATFORM_OVERVIEW.md`](../../platform/PLATFORM_OVERVIEW.md)
+Use this list before HN / Reddit / LinkedIn / X / Bluesky posts.  
+**Package:** `verityngn==3.0.1` on PyPI · engine tip `1b2cca8` · docs tip `f6aeb2e` · Launch **Monday Nov 23, 2026** · examples: [`../EXAMPLES.md`](../EXAMPLES.md) · notes: [`../RELEASE_NOTES_v3.0.1.md`](../RELEASE_NOTES_v3.0.1.md) · multimodal: [`MULTIMODAL_AND_FUTURES_v3.md`](MULTIMODAL_AND_FUTURES_v3.md) · pack: [`README.md`](README.md) · surfaces: [`SURFACES.md`](SURFACES.md) · figures: [`FIGURES.md`](FIGURES.md) · orgs: [`ORG_INTEREST_2026-11.md`](ORG_INTEREST_2026-11.md) · ship: [`../SHIP_GATE_STATUS.md`](../SHIP_GATE_STATUS.md)
 
 ## Core assets
 
-- [ ] Release paper PDF: `papers/verityngn_oss_v3_release.pdf` (rebuild: `bash scripts/render_release_paper_pdf.sh`)
-- [x] White paper one-pager: `docs/launch/v3_release_pack/WHITE_PAPER_ONE_PAGER.md` (refreshed)
-- [x] Architecture figure: `papers/figures/open_core_architecture.png`
-- [x] Platform layers figure: `papers/figures/platform_layers.png`
-- [x] Gallery charts: `papers/figures/gallery_*.png`
-- [x] Series charts: `docs/blog/series/assets/01_history_timeline.png`
-- [x] Series charts: `docs/blog/series/assets/02_before_after_density.png` (**primary Reddit image**)
-- [x] Series charts: `docs/blog/series/assets/03_kind_mix.png`
-- [x] Series charts: `docs/blog/series/assets/04_three_reports.png`
-- [x] Classification diagram: `docs/blog/assets/verityngn-claim-classification-diagram.png`
+- [x] Release paper PDF: `papers/verityngn_oss_v3_release.pdf` (Chrome headless rebuild 2026-11-22; 81/69 scope)
+- [x] White paper one-pager: `WHITE_PAPER_ONE_PAGER.md`
+- [x] Multimodal + futures NotebookLM brief: `MULTIMODAL_AND_FUTURES_v3.md`
+- [x] Opt-in sophisticated media paths: `OPTIN_MEDIA_PATHS_v3.md`
+- [x] NotebookLM source index + ask prompts: `NOTEBOOKLM_PACK.md`
+- [x] Architecture / platform / gallery figures (see [`FIGURES.md`](FIGURES.md))
+- [x] Figures kit index: `FIGURES.md` (Lipozem / SB1507 / Nadella table)
 
-## Copy drafts
+## Copy drafts (3.0.1 / PyPI-first)
 
-- [x] Series: `docs/blog/series/01`–`04` (+ README)
-- [ ] Series Wave B: `05`–`08` + Part 9 platform morph (fill in this refresh)
-- [ ] Chris walkthrough: `docs/blog/analyst_risk_taxonomy_chris_review_2026-09-25.md` (private share until approved)
-- [x] Blog: `docs/launch/BLOG_POST.md` (full features / benefits / applications; pack copy synced)
-- [x] HN: `docs/launch/v3_release_pack/HN_POST.md`
-- [x] Reddit: pack README
-- [x] X thread: `docs/launch/v3_release_pack/X_THREAD.md`
-- [x] LinkedIn: `docs/launch/v3_release_pack/LINKEDIN_POST.md`
-- [ ] Exec summary: `docs/launch/EXEC_SUMMARY_v3.md`
+- [x] Blog: `BLOG_POST.md` (+ `docs/launch/BLOG_POST.md` mirror) — pixel proof + 3.1/3.2 futures
+- [x] HN: `HN_POST.md`
+- [x] Reddit: pack `README.md`
+- [x] X thread: `X_THREAD.md`
+- [x] LinkedIn: `LINKEDIN_POST.md`
+- [x] Bluesky / Lobsters / TLDR / Changelog: `SURFACES.md`
+- [x] Org interest memo: `ORG_INTEREST_2026-11.md` (no cold-email unfreeze)
+- [x] Release notes: `../RELEASE_NOTES_v3.0.1.md` (+ pack copy)
 
 ## Demo
 
-- [x] Lipozem public: `outputs/release_v3_lipozem` (CRAAP / deep.html)
-- [x] SB1507 internal: `outputs/release_v3_sb1507_dense` (SIFT / chips) — **no public full HTML without Chris OK**
-- [x] Primary-10: `outputs/release_v3_battery_2026-10-18`
-- [ ] Tutorial script: `docs/launch/DEMO_VIDEO_SCRIPT.md`
-- [ ] Optional screen capture: light then full+deep
+- [x] **Withhold** `docs/launch/decks/VerityNgn_3_Release_with_examples.pptx` (stale 3.0.0 front matter) — attach golden + Multimodal + papers PDFs instead
+
+- [x] Lipozem / SB1507 / Primary-10 / live gallery (unchanged Monday proof)
+- [ ] Optional: wake Streamlit https://verityngn.streamlit.app (secondary CTA)
 - [x] Operator tip: `verityngn captions <url>` with fresh cookies
 
-## Technical gates (release matrix)
+## Technical gates
 
-- [x] Offline: `pytest test/unit/test_claim_kind.py`
-- [x] Offline: `python scripts/ci/open_core_boundary_scan.py`
-- [x] Offline: `python scripts/sb1507_risk_taxonomy_scorecard.py`
-- [x] Live Lipozem full+deep (**PASS**)
-- [x] Live SB1507 local-full dense (**PASS**)
-- [x] Density gate cleared
-- [x] Primary-10 battery (**PASS**)
-- [ ] `PARITY_TEST_v3.md` optional after live
-- [ ] Paper PDF rebuild if figures changed
-- [ ] `pip install` smoke in clean venv (**no PyPI publish until operator go**)
-- [ ] **Do not post** until operator clears; stagger 1–2 days; Chris full HTML gated
-- [ ] Retag / merge / PyPI — **explicit operator ask only**
-
-## Staggered posting order (1–2 days apart)
-
-1. r/MachineLearning `[P]` — method + density chart + **one** repo/branch link  
-2. r/LanguageTechnology — six kinds + dual metrics  
-3. r/opensource — install, Apache-2.0, open-core boundary  
-4. r/OSINT — SIFT vs CRAAP, counter-intel (no hype)  
-5. HN → then X → LinkedIn (same claims, shorter)
-
-Public proof: gallery or Lipozem. SB1507 full report gated.
+- [x] Primary-10 / SB1507 / open-core (Monday tip)
+- [x] PyPI `3.0.1` published + secret-scan PASS
+- [x] PyPI `3.0.0` yanked
+- [ ] Commit packaging + pack updates; optional GitHub tag `v3.0.1`
+- [ ] Clean-venv smoke: `pip install 'verityngn[deep]==3.0.1'`
+- [ ] Stagger social posts per `SURFACES.md`
 
 ## Honest messaging locks
 
 - Not lie detector / not earnings prediction
 - Risk platform / claim-level abatement — not “truth score”
-- Two RiskFactor names: video sensors (OSS) vs ClearFactor disclosure (engine OSS / services paid)
-- Lipozem-class VSL = weak multimodal proof
-- YouTube API key ≠ `.en.vtt` for third-party videos
+- **Install:** `pip install 'verityngn[deep]==3.0.1'` — never advertise `==3.0.0`
+- **Pixel pitch:** 45% SB1507 + Lipozem doctor cards are pixel-only; 1–6 fps + brand-safety/exhibit JSONs live in 3.0.1
+- **Futures hook (1 sentence):** 3.1 object/action semantics + visual–spoken contradiction; 3.2 pose/lip/audio congruence
 - One primary link per post
-- Do not claim tag/`pip install verityngn==3.0.0` until retag + publish
+- Creator cold email stays frozen — public posts only
+- Launch date lock: **Monday, Nov 23, 2026**
 
 ## Links
 
 | Asset | URL |
 |-------|-----|
-| GitHub branch | https://github.com/hotchilianalytics/verityngn-oss/tree/release/v3.0.0 |
+| PyPI 3.0.1 | https://pypi.org/project/verityngn/3.0.1/ |
 | Gallery | https://verityindex.com/gallery |
-| Streamlit demo | https://verityngn.streamlit.app |
-| PyPI | only after explicit publish |
+| Repo | https://github.com/hotchilianalytics/verityngn-oss |
+| Engine cut (GitHub) | https://github.com/hotchilianalytics/verityngn-oss/releases/tag/v3.0.1 |
+| Streamlit (optional) | https://verityngn.streamlit.app |

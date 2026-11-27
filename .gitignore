@@ -51,6 +51,8 @@ ENV/
 env/
 .venv
 .venv-ship-gate
+docs/launch/decks/_build/
+docs/launch/perplexity_review_2026-10-27/_render/
 .conda/
 *.conda
 conda-meta/
@@ -184,7 +186,11 @@ config.yml
 # Old internal docs with credentials
 CONFIG_SETUP.md
 QUICK_START_WITH_CREDENTIALS.md
-verityngn/config/verityindex-0-0-1-6a21e94ca0a3.json
+# SA / GCP credential JSONs — never under the installable package tree
+verityngn/config/*.json
+**/verityindex*.json
+**/credentials.json
+**/service-account.json
 test_results/
 
 # Scraped live gallery HTML (stats live in gallery_live_stats.json)

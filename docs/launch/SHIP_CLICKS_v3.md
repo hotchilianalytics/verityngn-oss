@@ -1,25 +1,25 @@
-# Ship clicks — v3.0.0 (gated)
+# Ship clicks — v3.0.1 go-now (Monday Nov 23, 2026)
 
-**Status:** Operator **go** received 2026-10-26. Pre-flight PASS. Executing retag / merge / PyPI.
+**Status:** PyPI **`verityngn==3.0.1` live**. `3.0.0` **yanked**. Public posts use the install lock below. Engine tip `1b2cca8`; docs/release tip `f6aeb2e` (tag `v3.0.1`).
 
-| Action | Command / note | Allowed now? |
-|--------|----------------|--------------|
-| Push `release/v3.0.0` | `git push -u origin HEAD` | Only on ask |
-| Retag `v3.0.0` | move tag to absorb SHA `8d6a8e3` (or later battery tip) | Only on ask |
-| Merge to `main` | PR or fast-forward — **never** without ask | Only on ask |
-| PyPI publish | `twine` / release workflow | Only on ask |
+| Action | Status / note |
+|--------|----------------|
+| PyPI `3.0.1` upload | **Done** |
+| Yank `3.0.0` | **Done** |
+| Release pack copy → 3.0.1 | **Updated** (`docs/launch/v3_release_pack/`) |
+| Commit packaging + pack on `release/v3.0.0` | **Done** |
+| GitHub tag/release `v3.0.1` | **Done** (Latest) — retag after final docs commit if tip moves |
+| Fast-forward `main` | **Done** (tracks `release/v3.0.0`) |
+| Fact-checked Notebook kit | **Done** — `docs/releases/v3.0.1/` |
+| Publish Substack 3.0.1 permalink | Operator Monday |
+| Wake Streamlit | Optional secondary CTA |
+| Public blast | Stagger per [`v3_release_pack/SURFACES.md`](v3_release_pack/SURFACES.md) |
 
-**Pre-ship checklist**
-
-1. [`RELEASE_TEST_MATRIX_v3.md`](RELEASE_TEST_MATRIX_v3.md) offline PASS  
-2. Lipozem + SB1507 live PASS (done)  
-3. Primary-10 PENDING cleared **or** operator accepts freeze carve-out  
-4. Wave B blogs drafted if public launch same week  
-5. Chris full HTML still gated  
-
-**Battery when unfrozen**
+**Install lock (all posts)**
 
 ```bash
-export VERTEX_LOCATION=global
-bash scripts/run_release_v3_battery.sh   # SKIP_PRIOR=1 by default
+pip install 'verityngn[deep]==3.0.1'
+verityngn analyze --tier full --deep 'https://www.youtube.com/watch?v=tLJC8hkK-ao'
 ```
+
+**Reproduce fixtures** — see [`EXAMPLES.md`](EXAMPLES.md).
